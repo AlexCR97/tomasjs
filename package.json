@@ -13,6 +13,7 @@
   "author": "Author's Name",
   "license": "ISC",
   "devDependencies": {
+    "@types/mongodb": "^4.0.7",
     "@types/winston": "^2.4.4",
     "nodemon": "^2.0.20",
     "ts-node": "^10.9.1",

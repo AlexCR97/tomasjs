@@ -8,6 +8,8 @@ import { WinstonLoggerProvider } from "./infrastructure/logger/winston";
 import { UserService } from "./infrastructure/services/user";
 
 async function main(...args: any[]) {
+  const logger = new WinstonLoggerProvider().createLogger("main.ts");
+
   container
     .register(ILoggerProviderToken, { useClass: WinstonLoggerProvider })
     .register(IUserRepositoryToken, { useClass: UserRepository })
@@ -16,7 +18,8 @@ async function main(...args: any[]) {
   await MongoDB.initializeAsync();
 
   const userService = container.resolve(UserService);
-  await userService.getAsync();
+  const users = await userService.getAsync();
+  logger.debug("Found users:", { users });
 }
 
 main();
