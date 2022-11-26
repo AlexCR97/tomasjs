@@ -1,6 +1,7 @@
+import { injectable } from "tsyringe";
 import winston from "winston";
-import { ILogger } from "./ILogger";
-import { ILoggerProvider } from "./ILoggerProvider";
+import { ILogger } from "@/core/logger/ILogger";
+import { ILoggerProvider } from "@/core/logger/ILoggerProvider";
 import { WinstonLogger } from "./WinstonLogger";
 
 const DefaultLevel = "silly";
@@ -12,6 +13,7 @@ const DefaultFormat: winston.Logform.Format = winston.format.combine(
   winston.format.padLevels() // Adds equal padding to each message
 );
 
+@injectable()
 export class WinstonLoggerProvider implements ILoggerProvider {
   createLogger(category: string): ILogger {
     const logger = winston.createLogger({
