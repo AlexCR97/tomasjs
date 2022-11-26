@@ -1,7 +1,7 @@
 import { ILogger } from "@/core/logger/ILogger";
 import { ILoggerProvider, ILoggerProviderToken } from "@/core/logger/ILoggerProvider";
 import { IUserService, IUserServiceToken } from "@/core/services/user/IUserService";
-import { IUserRepository, IUserRepositoryToken } from "@/infrastructure/data/users/UserRepository";
+import { IUserRepository, IUserRepositoryToken } from "@/infrastructure/data/repositories/users/UserRepository";
 import { inject, injectable } from "tsyringe";
 
 @injectable()

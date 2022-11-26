@@ -2,6 +2,7 @@ import { IRepository } from "@/core/data/IRepository";
 import { ILogger } from "@/core/logger/ILogger";
 import { ILoggerProvider, ILoggerProviderToken } from "@/core/logger/ILoggerProvider";
 import { inject, injectable } from "tsyringe";
+import { MongoDB } from "../../mongo/MongoDb";
 
 export const IUserRepositoryToken = "IUserRepository";
 
@@ -18,7 +19,7 @@ export class UserRepository implements IUserRepository {
   async getAsync(): Promise<any[]> {
     try {
       this.logger.debug("Getting users...");
-      return [1, 2, 3, 4, 5];
+      return await MongoDB.instance.getRepository(Object).findAll();
     } finally {
       this.logger.debug("Got users!");
     }

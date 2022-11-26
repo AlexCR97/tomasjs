@@ -1,15 +1,22 @@
 import "reflect-metadata";
 import { container } from "tsyringe";
-import { ILoggerProviderToken } from "./core/logger/ILoggerProvider";
-import { IUserServiceToken } from "./core/services/user/IUserService";
-import { IUserRepositoryToken, UserRepository } from "./infrastructure/data/users/UserRepository";
+import { ILoggerProviderToken } from "./core/logger";
+import { IUserServiceToken } from "./core/services/user";
+import { MongoDB } from "./infrastructure/data/mongo";
+import { IUserRepositoryToken, UserRepository } from "./infrastructure/data/repositories/users";
 import { WinstonLoggerProvider } from "./infrastructure/logger/winston";
-import { UserService } from "./infrastructure/services/user/UserService";
+import { UserService } from "./infrastructure/services/user";
 
-container
-  .register(ILoggerProviderToken, { useClass: WinstonLoggerProvider })
-  .register(IUserRepositoryToken, { useClass: UserRepository })
-  .register(IUserServiceToken, { useClass: UserService });
+async function main(...args: any[]) {
+  container
+    .register(ILoggerProviderToken, { useClass: WinstonLoggerProvider })
+    .register(IUserRepositoryToken, { useClass: UserRepository })
+    .register(IUserServiceToken, { useClass: UserService });
 
-const userService = container.resolve(UserService);
-userService.getAsync();
+  await MongoDB.initializeAsync();
+
+  const userService = container.resolve(UserService);
+  await userService.getAsync();
+}
+
+main();
