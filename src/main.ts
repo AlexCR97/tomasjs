@@ -1,5 +1,4 @@
-import { hello } from "@/core";
+import { WinstonLoggerProvider } from "./shared/logger/WinstonLoggerProvider";
 
-console.log("main");
-
-hello("Username");
+const logger = new WinstonLoggerProvider().createLogger("main.ts");
+logger.debug("This is a log!", { someField: "This is some metadata!" });
