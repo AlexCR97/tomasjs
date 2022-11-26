@@ -1,0 +1,29 @@
+{
+  "name": "typescript-dependency-injection",
+  "version": "1.0.0",
+  "description": "A base project with TypeScript",
+  "main": "src/main.ts",
+  "scripts": {
+    "build:local": "tsc -b",
+    "serve-dist:local": "node ./dist/main.js",
+    "serve-src:local": "ts-node -r tsconfig-paths/register ./src/main.ts",
+    "watch": "nodemon -r tsconfig-paths/register ./src/main.ts",
+    "start:prod": "node -r ts-node/register/transpile-only -r tsconfig-paths/register ./dist/src/main.js"
+  },
+  "author": "Author's Name",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.20",
+    "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.1.0",
+    "typescript": "^4.9.3"
+  },
+  "dependencies": {
+    "@automapper/classes": "^8.7.7",
+    "@automapper/core": "^8.7.7",
+    "@mikro-orm/core": "^5.5.3",
+    "@mikro-orm/mongodb": "^5.5.3",
+    "@mikro-orm/reflection": "^5.5.3",
+    "reflect-metadata": "^0.1.13"
+  }
+}
