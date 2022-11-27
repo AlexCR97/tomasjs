@@ -6,6 +6,7 @@ import { MongoDB } from "./infrastructure/data/mongo";
 import { IUserRepositoryToken, UserRepository } from "./infrastructure/data/repositories/users";
 import { WinstonLoggerProvider } from "./infrastructure/logger/winston";
 import { UserService } from "./infrastructure/services/user";
+import "./infrastructure/mapper/MappingProfile";
 
 async function main(...args: any[]) {
   const logger = new WinstonLoggerProvider().createLogger("main.ts");
@@ -18,8 +19,8 @@ async function main(...args: any[]) {
   await MongoDB.initializeAsync();
 
   const userService = container.resolve(UserService);
-  const users = await userService.getAsync();
-  logger.debug("Found users:", { users });
+  const usersPagedResult = await userService.getAsync();
+  logger.debug("Found users:", { users: usersPagedResult });
 }
 
 main();

@@ -1,4 +1,6 @@
-import { IRepository } from "@/core/data/IRepository";
+import { IGetRequest } from "@/core/data/mongo";
+import { IMongoRepository } from "@/core/data/mongo/IMongoRepository";
+import { PagedResult, PagedResultBuilder } from "@/core/data/responses";
 import { User } from "@/core/entities/User";
 import { ILogger } from "@/core/logger/ILogger";
 import { ILoggerProvider, ILoggerProviderToken } from "@/core/logger/ILoggerProvider";
@@ -8,7 +10,7 @@ import { MongoDB } from "../../mongo";
 
 export const IUserRepositoryToken = "IUserRepository";
 
-export interface IUserRepository extends IRepository<User> {}
+export interface IUserRepository extends IMongoRepository<User> {}
 
 @injectable()
 export class UserRepository implements IUserRepository {
@@ -18,13 +20,31 @@ export class UserRepository implements IUserRepository {
     this.logger = this.loggerProvider.createLogger(IUserRepositoryToken);
   }
 
-  async getAsync(): Promise<User[]> {
+  async getAsync(request?: IGetRequest | undefined): Promise<PagedResult<User>> {
+    // TODO Use request
     try {
       this.logger.debug("Getting users...");
-      return await this.repository.findAll();
+      const users = await this.repository.findAll();
+      return new PagedResultBuilder<User>().setData(users).setTotalCount(users.length).build();
     } finally {
       this.logger.debug("Got users!");
     }
+  }
+
+  getByIdAsync(id: string): Promise<User> {
+    throw new Error("Method not implemented.");
+  }
+
+  createAsync(document: User): Promise<string> {
+    throw new Error("Method not implemented.");
+  }
+
+  updateAsync(id: string, document: User): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
+
+  deleteAsync(id: string): Promise<void> {
+    throw new Error("Method not implemented.");
   }
 
   private get repository(): EntityRepository<User> {
