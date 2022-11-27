@@ -26,6 +26,9 @@
     "@mikro-orm/core": "^5.5.3",
     "@mikro-orm/mongodb": "^5.5.3",
     "@mikro-orm/reflection": "^5.5.3",
+    "@types/express": "^4.17.14",
+    "express": "^4.18.2",
+    "express-async-errors": "^3.1.1",
     "reflect-metadata": "^0.1.13",
     "tsyringe": "^4.7.0",
     "winston": "^3.8.2"
