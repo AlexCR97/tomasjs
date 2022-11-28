@@ -85,6 +85,11 @@ export class ApiBuilder {
     return this;
   }
 
+  // TODO Figure out correct data type for middleware parameter
+  useMiddleware(middleware: any) {
+    this.app.use(middleware);
+  }
+
   build() {
     const server = this.app
       .listen(environment.api.port, () => {

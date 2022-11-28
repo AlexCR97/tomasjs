@@ -1,1 +1,2 @@
-export { GreeterController } from './GreeterController'
+export { ErrorsController } from "./ErrorsController";
+export { GreeterController } from "./GreeterController";

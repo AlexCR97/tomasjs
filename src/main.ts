@@ -8,7 +8,8 @@ import { WinstonLoggerProvider } from "./infrastructure/logger/winston";
 import "./infrastructure/mapper/MappingProfile";
 import { UserService } from "./infrastructure/services/user";
 import { ApiBuilder } from "./api/ApiBuilder";
-import { GreeterController } from "./api/controllers";
+import { ErrorsController, GreeterController } from "./api/controllers";
+import { ErrorsMiddleware } from "./api/middleware";
 
 async function main(...args: any[]) {
   const logger = new WinstonLoggerProvider().createLogger("main.ts");
@@ -28,7 +29,10 @@ async function main(...args: any[]) {
   const apiBuilder = container.resolve(ApiBuilder);
   apiBuilder.useBasePath("api");
 
-  registerControllers(container, apiBuilder, [GreeterController]);
+  registerControllers(container, apiBuilder, [GreeterController, ErrorsController]);
+
+  // ErrorsMiddleware must go right before the .build method
+  apiBuilder.useMiddleware(ErrorsMiddleware());
 
   apiBuilder.build();
 }
