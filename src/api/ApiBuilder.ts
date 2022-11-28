@@ -1,9 +1,10 @@
 import { ILogger, ILoggerProvider, ILoggerProviderToken } from "@/core/logger";
 import { environment } from "@/environment";
-import express from "express";
+import express, { NextFunction, Request, Response } from "express";
 import { inject, injectable } from "tsyringe";
 import { BaseController } from "./controllers/core";
 import { ActionHandler, AsyncActionHandler } from "./controllers/core/types";
+import { ErrorMiddleware, Middleware } from "./middleware/core";
 
 @injectable()
 export class ApiBuilder {
@@ -85,9 +86,18 @@ export class ApiBuilder {
     return this;
   }
 
-  // TODO Figure out correct data type for middleware parameter
-  useMiddleware(middleware: any) {
-    this.app.use(middleware);
+  useMiddleware(middleware: Middleware | ErrorMiddleware): ApiBuilder {
+    if (middleware instanceof Middleware) {
+      this.app.use((req: Request, res: Response, next: NextFunction) =>
+        middleware.handle(req, res, next)
+      );
+    } else if (middleware instanceof ErrorMiddleware) {
+      this.app.use((err: any, req: Request, res: Response, next: NextFunction) =>
+        middleware.handle(err, req, res, next)
+      );
+    }
+
+    return this;
   }
 
   build() {
