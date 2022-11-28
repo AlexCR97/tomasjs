@@ -4,9 +4,8 @@
   "description": "A base project with TypeScript",
   "main": "src/main.ts",
   "scripts": {
-    "build:local": "tsc -b",
-    "serve-dist:local": "node ./dist/main.js",
-    "serve-src:local": "ts-node -r tsconfig-paths/register ./src/main.ts",
+    "build": "tsc -b",
+    "serve": "ts-node -r tsconfig-paths/register ./src/main.ts",
     "watch": "nodemon -r tsconfig-paths/register ./src/main.ts",
     "start:prod": "node -r ts-node/register/transpile-only -r tsconfig-paths/register ./dist/src/main.js"
   },

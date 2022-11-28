@@ -7,4 +7,8 @@ export class WinstonLogger implements ILogger {
   debug(message: string, metadata?: any): void {
     this.logger.debug(message, metadata, undefined);
   }
+
+  error(message: string, metadata?: any): void {
+    this.logger.error(message, metadata, undefined);
+  }
 }

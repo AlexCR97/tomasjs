@@ -1,20 +1,22 @@
 import "reflect-metadata";
-import { container } from "tsyringe";
+import { container, DependencyContainer } from "tsyringe";
 import { ILoggerProviderToken } from "./core/logger";
 import { IUserServiceToken } from "./core/services/user";
 import { MongoDB } from "./infrastructure/data/mongo";
 import { IUserRepositoryToken, UserRepository } from "./infrastructure/data/repositories/users";
 import { WinstonLoggerProvider } from "./infrastructure/logger/winston";
-import { UserService } from "./infrastructure/services/user";
 import "./infrastructure/mapper/MappingProfile";
-import { ApiBuilder, API_BUILDER_TOKEN } from "./api/ApiBuilder";
+import { UserService } from "./infrastructure/services/user";
+import { ApiBuilder } from "./api/ApiBuilder";
+import { GreeterController } from "./api/controllers";
 
 async function main(...args: any[]) {
   const logger = new WinstonLoggerProvider().createLogger("main.ts");
+
   logger.debug("Initializing DI container...");
 
   container
-    .register(API_BUILDER_TOKEN, { useClass: ApiBuilder })
+    .register(ApiBuilder.name, ApiBuilder)
     .register(ILoggerProviderToken, { useClass: WinstonLoggerProvider })
     .register(IUserRepositoryToken, { useClass: UserRepository })
     .register(IUserServiceToken, { useClass: UserService });
@@ -24,7 +26,23 @@ async function main(...args: any[]) {
   await MongoDB.initializeAsync();
 
   const apiBuilder = container.resolve(ApiBuilder);
+  apiBuilder.useBasePath("api");
+
+  registerControllers(container, apiBuilder, [GreeterController]);
+
   apiBuilder.build();
 }
 
-main();
+function registerControllers(
+  container: DependencyContainer,
+  apiBuilder: ApiBuilder,
+  controllers: any[]
+) {
+  for (const controller of controllers) {
+    container.register(controller.name, controller);
+    const service = container.resolve(controller);
+    apiBuilder.useController(service as any);
+  }
+}
+
+main(); // Use main function because initialization of architecture is asynchronous (async/await is needed)
