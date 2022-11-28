@@ -9,7 +9,11 @@ import "./infrastructure/mapper/MappingProfile";
 import { UserService } from "./infrastructure/services/user";
 import { ApiBuilder } from "./api/ApiBuilder";
 import { ErrorsController, GreeterController } from "./api/controllers";
-import { ErrorHandlerMiddleware, RequestLoggerMiddleware } from "./api/middleware";
+import {
+  ErrorHandlerMiddleware,
+  RequestLoggerMiddleware,
+  SampleAsyncMiddleware,
+} from "./api/middleware";
 
 async function main(...args: any[]) {
   const logger = new WinstonLoggerProvider().createLogger("main.ts");
@@ -27,12 +31,14 @@ async function main(...args: any[]) {
   await MongoDB.initializeAsync();
 
   const apiBuilder = container.resolve(ApiBuilder);
-  apiBuilder.useBasePath("api").useMiddleware(container.resolve(RequestLoggerMiddleware));
+  apiBuilder
+    .useBasePath("api")
+    .useMiddleware(container.resolve(RequestLoggerMiddleware))
+    .useMiddleware(container.resolve(SampleAsyncMiddleware));
 
   useControllers(container, apiBuilder, [GreeterController, ErrorsController]);
 
   // ErrorsMiddleware must go right before the .build method
-  // apiBuilder.useMiddleware(ErrorsMiddleware());
   apiBuilder.useMiddleware(container.resolve(ErrorHandlerMiddleware));
   apiBuilder.build();
 }

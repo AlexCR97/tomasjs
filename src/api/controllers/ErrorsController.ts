@@ -12,8 +12,19 @@ export class ErrorsController extends BaseController {
       throw new Error("This is an error");
     });
 
+    this.get("/error/async", async (req: Request, res: Response) => {
+      throw new Error("This is an async error");
+    });
+
     this.get("/domainError", (req: Request, res: Response) => {
       throw new DomainError("domain_error", "This is a DomainError", {
+        key: "someKey",
+        value: "someValue",
+      });
+    });
+
+    this.get("/domainError/async", async (req: Request, res: Response) => {
+      throw new DomainError("async_domain_error", "This is an async DomainError", {
         key: "someKey",
         value: "someValue",
       });
@@ -24,6 +35,18 @@ export class ErrorsController extends BaseController {
         key: "someKey",
         value: "someValue",
       });
+    });
+
+    this.get("/statusCodeError/async", (req: Request, res: Response) => {
+      throw new StatusCodeError(
+        400,
+        "async_status_code_error",
+        "This is an async StatusCodeError",
+        {
+          key: "someKey",
+          value: "someValue",
+        }
+      );
     });
   }
 }

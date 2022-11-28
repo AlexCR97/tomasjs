@@ -4,7 +4,7 @@ import express, { NextFunction, Request, Response } from "express";
 import { inject, injectable } from "tsyringe";
 import { BaseController } from "./controllers/core";
 import { ActionHandler, AsyncActionHandler } from "./controllers/core/types";
-import { ErrorMiddleware, Middleware } from "./middleware/core";
+import { AsyncMiddleware, ErrorMiddleware, Middleware } from "./middleware/core";
 
 @injectable()
 export class ApiBuilder {
@@ -86,10 +86,15 @@ export class ApiBuilder {
     return this;
   }
 
-  useMiddleware(middleware: Middleware | ErrorMiddleware): ApiBuilder {
+  useMiddleware(middleware: Middleware | AsyncMiddleware | ErrorMiddleware): ApiBuilder {
     if (middleware instanceof Middleware) {
       this.app.use((req: Request, res: Response, next: NextFunction) =>
         middleware.handle(req, res, next)
+      );
+    } else if (middleware instanceof AsyncMiddleware) {
+      this.app.use(
+        async (req: Request, res: Response, next: NextFunction) =>
+          await middleware.handleAsync(req, res, next)
       );
     } else if (middleware instanceof ErrorMiddleware) {
       this.app.use((err: any, req: Request, res: Response, next: NextFunction) =>
