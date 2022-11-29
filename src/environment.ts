@@ -1,4 +1,19 @@
+import path from "path";
+
 export const environment = {
+  host: {
+    /** The path of the hosting directory. This is the directory where the node process is running. */
+    path: path.join(__dirname, ".."),
+
+    /** The path of the /src directory  */
+    srcPath: __dirname,
+
+    /** The path of the /dist directory */
+    distPath: path.join(__dirname, "..", "/dist"),
+
+    /** The path of the /web directory */
+    webPath: path.join(__dirname, "..", "/web"),
+  },
   api: {
     port: 3031,
     basePath: "api",

@@ -16,12 +16,12 @@ import { environment } from "./environment";
 import { MikroOrmInstance, MongoDb } from "./infrastructure/data/mongo";
 
 async function main(...args: any[]) {
-  const logger = new DefaultLogger(main.name, { level: "info" });
-  logger.debug("main()");
+  const logger = new DefaultLogger(main.name, { level: "debug" });
+  logger.debug("environment", environment);
 
   const app = new AppBuilder();
 
-  // NOTE: Order of registration matters!
+  // IMPORTANT: Order of registration matters!
 
   /* #region MongoDB */
   await (async () => {
@@ -46,6 +46,14 @@ async function main(...args: any[]) {
         .register(IUserServiceToken, { useClass: UserService });
     })
     .useJson()
+    .useSpa({
+      /**
+       * NOTES:
+       * - Put .useSpa before .useMiddleware(RequestLoggerMiddleware) to prevent logging GET requests to SPA
+       * - Put .useSpa before .useMiddleware(SampleAsyncMiddleware) to prevent fixed delay in SampleAsyncMiddleware
+       */
+      spaPath: environment.host.webPath,
+    })
     .useMiddleware(RequestLoggerMiddleware)
     .useMiddleware(SampleAsyncMiddleware)
     .useBasePath(environment.api.basePath)

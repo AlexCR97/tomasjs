@@ -121,6 +121,17 @@ export class AppBuilder {
     return this;
   }
 
+  useSpa(options: { spaPath: string }): AppBuilder {
+    this.app.use(express.static(options.spaPath));
+
+    this.app.get("/*", (req, res) => {
+      const spaIndexFile = `${options.spaPath}/index.html`;
+      res.sendFile(spaIndexFile);
+    });
+
+    return this;
+  }
+
   // TODO Add return type
   build() {
     const server = this.app
