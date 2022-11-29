@@ -13,13 +13,11 @@ import {
 } from "./api/middleware";
 import { AppBuilder } from "./api/AppBuilder";
 import { environment } from "./environment";
-import { MongoDB } from "./infrastructure/data/mongo";
+
 
 async function main(...args: any[]) {
   const logger = new DefaultLogger(main.name);
   logger.debug("main()");
-
-  await MongoDB.initializeAsync();
 
   const app = new AppBuilder();
 
@@ -37,6 +35,7 @@ async function main(...args: any[]) {
     .useController(GreeterController)
     .useController(ErrorsController)
     .useMiddleware(ErrorHandlerMiddleware)
+    .useMongoDb()
     .build();
 }
 

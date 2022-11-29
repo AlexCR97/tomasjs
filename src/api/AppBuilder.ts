@@ -1,4 +1,5 @@
 import { environment } from "@/environment";
+import { MikroOrmInstance, MongoDb } from "@/infrastructure/data/mongo";
 import { WinstonLoggerProvider } from "@/infrastructure/logger/winston";
 import express, { json, Express, NextFunction, Request, Response, Router } from "express";
 import { container, DependencyContainer } from "tsyringe";
@@ -33,6 +34,13 @@ export class AppBuilder {
         type: "*/*", // TODO is this needed?
       })
     );
+    return this;
+  }
+
+  useMongoDb(): AppBuilder {
+    this.logger.debug(`.${this.useMongoDb.name}`);
+    MikroOrmInstance.initializeAsync() // TODO How to await this?
+    container.register(MongoDb.name, { useClass: MongoDb })
     return this;
   }
 

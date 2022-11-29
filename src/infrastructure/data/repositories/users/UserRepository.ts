@@ -6,7 +6,7 @@ import { ILogger } from "@/core/logger/ILogger";
 import { ILoggerProvider, ILoggerProviderToken } from "@/core/logger/ILoggerProvider";
 import { EntityRepository } from "@mikro-orm/mongodb";
 import { inject, injectable } from "tsyringe";
-import { MongoDB } from "../../mongo";
+import { MikroOrmInstance } from "../../mongo";
 
 export const IUserRepositoryToken = "IUserRepository";
 
@@ -48,6 +48,6 @@ export class UserRepository implements IUserRepository {
   }
 
   private get repository(): EntityRepository<User> {
-    return MongoDB.instance.getRepository(User);
+    return MikroOrmInstance.instance.orm.em.getRepository(User)
   }
 }
