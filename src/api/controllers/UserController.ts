@@ -1,7 +1,10 @@
 import { CommandDispatcher } from "@/core/cqrs/core/commands";
-import { CreateUserCommand } from "@/core/cqrs/users/CreateUserCommand";
+import { QueryDispatcher } from "@/core/cqrs/core/queries";
+import { SignUpUserCommand, GetUserByEmailQuery } from "@/core/cqrs/users";
+import { UserModel } from "@/core/models";
 import { IUserService, IUserServiceToken } from "@/core/services/user";
 import { Request, Response } from "express";
+import { ObjectId } from "mongodb";
 import { inject, injectable } from "tsyringe";
 import { StatusCodes } from "../core";
 import { BaseController } from "./core";
@@ -12,7 +15,8 @@ export class UserController extends BaseController {
 
   constructor(
     @inject(IUserServiceToken) readonly userService: IUserService,
-    @inject(CommandDispatcher) readonly commandDispatcher: CommandDispatcher
+    @inject(CommandDispatcher) readonly commandDispatcher: CommandDispatcher,
+    @inject(QueryDispatcher) readonly queryDispatcher: QueryDispatcher
   ) {
     super();
 
@@ -44,17 +48,22 @@ export class UserController extends BaseController {
     });
 
     this.get("/email/:email", async (req: Request, res: Response) => {
-      const user = await userService.getByEmailAsync(req.params.email);
+      const user = await queryDispatcher.dispatchAsync<UserModel>(
+        new GetUserByEmailQuery(req.params.email)
+      );
       res.json(user);
     });
 
     this.post("/signUp", async (req: Request, res: Response) => {
-      commandDispatcher.dispatch(
-        new CreateUserCommand({
+      const id = new ObjectId().toString();
+      await commandDispatcher.dispatchAsync(
+        new SignUpUserCommand({
+          id,
           email: req.body.email,
+          password: req.body.password,
         })
       );
-      res.status(StatusCodes.created).send();
+      res.status(StatusCodes.created).send(id);
     });
   }
 }

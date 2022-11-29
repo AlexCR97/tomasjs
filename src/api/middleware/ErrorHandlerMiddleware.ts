@@ -15,6 +15,7 @@ export class ErrorHandlerMiddleware extends ErrorMiddleware {
   constructor(@inject(ILoggerProviderToken) private readonly loggerProvider: ILoggerProvider) {
     super();
     this.logger = this.loggerProvider.createLogger(ErrorHandlerMiddleware.name);
+    this.logger.debug(`new ${ErrorHandlerMiddleware.name}`);
   }
 
   handle(
@@ -38,6 +39,7 @@ export class ErrorHandlerMiddleware extends ErrorMiddleware {
         status: 500,
         code: "Unhandled",
         message: "Unhandled error",
+        details: { err },
       };
     }
 

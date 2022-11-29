@@ -104,6 +104,11 @@ export class AppBuilder {
     return this;
   }
 
+  useQueryHandler(queryHandlerClass: any): AppBuilder {
+    container.register(queryHandlerClass.name, queryHandlerClass);
+    return this;
+  }
+
   useMiddleware(middlewareClass: any): AppBuilder {
     container.register(middlewareClass.name, middlewareClass);
     const middleware = container.resolve(middlewareClass) as any;

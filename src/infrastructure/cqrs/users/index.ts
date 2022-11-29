@@ -1,1 +1,2 @@
-export { CreateUserCommandHandler } from "./CreateUserCommandHandler";
+export { SignUpUserCommandHandler } from "./SignUpUserCommandHandler";
+export { GetUserByEmailQueryHandler } from "./GetUserByEmailQueryHandler";

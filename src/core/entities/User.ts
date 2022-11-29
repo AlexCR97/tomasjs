@@ -10,6 +10,7 @@ export class User extends RecordEntity {
   email!: string;
 
   @Property()
+  @AutoMap()
   password!: string;
 
   @Property({ nullable: true })

@@ -1,16 +1,16 @@
 import "reflect-metadata";
+import "./infrastructure/mapper/MappingProfile";
 import { DefaultLogger, ILoggerProviderToken } from "./core/logger";
 import { IUserServiceToken } from "./core/services/user";
 import { IUserRepositoryToken, UserRepository } from "./infrastructure/data/repositories/users";
 import { WinstonLoggerProvider } from "./infrastructure/logger/winston";
-import "./infrastructure/mapper/MappingProfile";
 import { UserService } from "./infrastructure/services/user";
 import { ErrorsController, GreeterController, UserController } from "./api/controllers";
 import { ErrorHandlerMiddleware, RequestLoggerMiddleware } from "./api/middleware";
 import { AppBuilder } from "./api/AppBuilder";
 import { environment } from "./environment";
 import { MikroOrmInstance, MongoDb } from "./infrastructure/data/mongo";
-import { CreateUserCommandHandler } from "./infrastructure/cqrs/users";
+import { GetUserByEmailQueryHandler, SignUpUserCommandHandler } from "./infrastructure/cqrs/users";
 
 async function main(...args: any[]) {
   const logger = new DefaultLogger(main.name, { level: "debug" });
@@ -49,12 +49,13 @@ async function main(...args: any[]) {
     .useController(GreeterController)
     .useController(ErrorsController)
     .useController(UserController)
-    .useCommandHandler(CreateUserCommandHandler)
-    .useMiddleware(ErrorHandlerMiddleware)
+    .useQueryHandler(GetUserByEmailQueryHandler)
+    .useCommandHandler(SignUpUserCommandHandler)
     .useSpa({
-      // NOTE: Put .useSpa at the end so it does not clash with api
+      // NOTE: Put .useSpa after controllers so it does not clash with api
       spaPath: environment.host.webPath,
-    });
+    })
+    .useMiddleware(ErrorHandlerMiddleware); // The ErrorHandlerMiddleware must always go last
 
   app.build();
 }
