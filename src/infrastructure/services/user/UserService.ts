@@ -1,14 +1,10 @@
 import { IGetRequest } from "@/core/data/mongo";
 import { PagedResult, PagedResultBuilder } from "@/core/data/responses";
 import { User } from "@/core/entities/User";
-import { ILogger } from "@/core/logger/ILogger";
-import { ILoggerProvider, ILoggerProviderToken } from "@/core/logger/ILoggerProvider";
+import { ILogger, ILoggerProvider, ILoggerProviderToken } from "@/core/logger";
 import { UserModel } from "@/core/models/UserModel";
-import { IUserService, IUserServiceToken } from "@/core/services/user/IUserService";
-import {
-  IUserRepository,
-  IUserRepositoryToken,
-} from "@/infrastructure/data/repositories/users/UserRepository";
+import { IUserService, IUserServiceToken } from "@/core/services/user";
+import { IUserRepository, IUserRepositoryToken } from "@/infrastructure/data/repositories/users";
 import { Mapper } from "@/infrastructure/mapper";
 import { inject, injectable } from "tsyringe";
 
@@ -20,21 +16,34 @@ export class UserService implements IUserService {
     @inject(ILoggerProviderToken) private readonly loggerProvider: ILoggerProvider,
     @inject(IUserRepositoryToken) private readonly userRepository: IUserRepository
   ) {
-    this.logger = this.loggerProvider.createLogger(IUserServiceToken);
+    this.logger = this.loggerProvider.createLogger(IUserServiceToken, { level: "info" });
+    this.logger.debug(`new ${UserService.name}`);
   }
 
-  async getAsync(request?: IGetRequest | undefined): Promise<PagedResult<UserModel>> {
-    try {
-      this.logger.debug("Getting users...");
+  async getAsync(request?: IGetRequest): Promise<PagedResult<UserModel>> {
+    const pagedResult = await this.userRepository.getAsync(request);
+    return new PagedResultBuilder<UserModel>()
+      .setData(Mapper.mapArray(pagedResult.data, User, UserModel))
+      .setTotalCount(pagedResult.totalCount)
+      .build();
+  }
 
-      const pagedResult = await this.userRepository.getAsync(request);
+  async getByIdAsync(id: string): Promise<UserModel> {
+    const user = await this.userRepository.getByIdAsync(id);
+    return Mapper.map(user, User, UserModel);
+  }
 
-      return new PagedResultBuilder<UserModel>()
-        .setData(Mapper.mapArray(pagedResult.data, User, UserModel))
-        .setTotalCount(pagedResult.totalCount)
-        .build();
-    } finally {
-      this.logger.debug("Got users!");
-    }
+  async createAsync(model: UserModel): Promise<string> {
+    const document = Mapper.map(model, UserModel, User);
+    return await this.userRepository.createAsync(document);
+  }
+
+  async updateAsync(id: string, model: UserModel): Promise<void> {
+    const document = Mapper.map(model, UserModel, User);
+    await this.userRepository.updateAsync(id, document);
+  }
+
+  async deleteAsync(id: string): Promise<void> {
+    await this.userRepository.deleteAsync(id);
   }
 }

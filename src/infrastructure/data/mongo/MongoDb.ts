@@ -7,7 +7,7 @@ export class MongoDb {
   private readonly logger: ILogger;
 
   constructor(@inject(ILoggerProviderToken) private readonly loggerProvider: ILoggerProvider) {
-    this.logger = this.loggerProvider.createLogger(MongoDb.name);
+    this.logger = this.loggerProvider.createLogger(MongoDb.name, { level: "info" });
     this.logger.debug(`new ${MongoDb.name}`);
   }
 

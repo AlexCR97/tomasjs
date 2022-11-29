@@ -6,7 +6,7 @@ import { ILogger } from "@/core/logger/ILogger";
 import { ILoggerProvider, ILoggerProviderToken } from "@/core/logger/ILoggerProvider";
 import { EntityRepository } from "@mikro-orm/mongodb";
 import { inject, injectable } from "tsyringe";
-import { MikroOrmInstance } from "../../mongo";
+import { MongoDb } from "@/infrastructure/data/mongo";
 
 export const IUserRepositoryToken = "IUserRepository";
 
@@ -16,38 +16,38 @@ export interface IUserRepository extends IMongoRepository<User> {}
 export class UserRepository implements IUserRepository {
   private readonly logger: ILogger;
 
-  constructor(@inject(ILoggerProviderToken) private readonly loggerProvider: ILoggerProvider) {
-    this.logger = this.loggerProvider.createLogger(IUserRepositoryToken);
+  constructor(
+    @inject(ILoggerProviderToken) private readonly loggerProvider: ILoggerProvider,
+    @inject(MongoDb.name) private readonly mongo: MongoDb
+  ) {
+    this.logger = this.loggerProvider.createLogger(IUserRepositoryToken, { level: "info" });
+    this.logger.debug(`new ${UserRepository.name}`);
   }
 
-  async getAsync(request?: IGetRequest | undefined): Promise<PagedResult<User>> {
+  async getAsync(request?: IGetRequest): Promise<PagedResult<User>> {
     // TODO Use request
-    try {
-      this.logger.debug("Getting users...");
-      const users = await this.repository.findAll();
-      return new PagedResultBuilder<User>().setData(users).setTotalCount(users.length).build();
-    } finally {
-      this.logger.debug("Got users!");
-    }
+    const users = await this.repository.findAll();
+    return new PagedResultBuilder<User>().setData(users).setTotalCount(users.length).build();
   }
 
-  getByIdAsync(id: string): Promise<User> {
-    throw new Error("Method not implemented.");
+  async getByIdAsync(id: string): Promise<User> {
+    return await this.repository.findOneOrFail({ id });
   }
 
-  createAsync(document: User): Promise<string> {
-    throw new Error("Method not implemented.");
+  async createAsync(document: User): Promise<string> {
+    const id = await this.repository.nativeInsert(document);
+    return id.toString();
   }
 
-  updateAsync(id: string, document: User): Promise<void> {
-    throw new Error("Method not implemented.");
+  async updateAsync(id: string, document: User): Promise<void> {
+    await this.repository.nativeUpdate({ id }, document);
   }
 
-  deleteAsync(id: string): Promise<void> {
-    throw new Error("Method not implemented.");
+  async deleteAsync(id: string): Promise<void> {
+    await this.repository.nativeDelete({ id });
   }
 
   private get repository(): EntityRepository<User> {
-    return MikroOrmInstance.instance.orm.em.getRepository(User)
+    return this.mongo.em.getRepository(User);
   }
 }

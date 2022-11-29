@@ -11,7 +11,7 @@ export class SampleAsyncMiddleware extends AsyncMiddleware {
 
   constructor(@inject(ILoggerProviderToken) private readonly loggerProvider: ILoggerProvider) {
     super();
-    this.logger = this.loggerProvider.createLogger(SampleAsyncMiddleware.name);
+    this.logger = this.loggerProvider.createLogger(SampleAsyncMiddleware.name, { level: "info" });
   }
 
   async handleAsync(
@@ -19,7 +19,7 @@ export class SampleAsyncMiddleware extends AsyncMiddleware {
     res: Response<any, Record<string, any>>,
     next: NextFunction
   ): Promise<void> {
-    this.logger.debug(
+    this.logger.info(
       "This is an async middleware! The HTTP pipeline will continue in 1000 milliseconds..."
     );
 
@@ -29,7 +29,7 @@ export class SampleAsyncMiddleware extends AsyncMiddleware {
       }, 1000);
     });
 
-    this.logger.debug("1000 milliseconds have passed asynchronously...");
+    this.logger.info("1000 milliseconds have passed asynchronously!");
 
     next();
   }

@@ -4,3 +4,4 @@ import { UserModel } from "@/core/models/UserModel";
 import { Mapper } from "./Mapper";
 
 createMap(Mapper, User, UserModel);
+createMap(Mapper, UserModel, User);

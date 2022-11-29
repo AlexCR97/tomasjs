@@ -5,7 +5,7 @@ import { IUserRepositoryToken, UserRepository } from "./infrastructure/data/repo
 import { WinstonLoggerProvider } from "./infrastructure/logger/winston";
 import "./infrastructure/mapper/MappingProfile";
 import { UserService } from "./infrastructure/services/user";
-import { ErrorsController, GreeterController } from "./api/controllers";
+import { ErrorsController, GreeterController, UserController } from "./api/controllers";
 import {
   ErrorHandlerMiddleware,
   RequestLoggerMiddleware,
@@ -21,20 +21,7 @@ async function main(...args: any[]) {
 
   const app = new AppBuilder();
 
-  app
-    .register((container) => {
-      container
-        .register(ILoggerProviderToken, { useClass: WinstonLoggerProvider })
-        .register(IUserRepositoryToken, { useClass: UserRepository })
-        .register(IUserServiceToken, { useClass: UserService });
-    })
-    .useJson()
-    .useMiddleware(RequestLoggerMiddleware)
-    .useMiddleware(SampleAsyncMiddleware)
-    .useBasePath(environment.api.basePath)
-    .useController(GreeterController)
-    .useController(ErrorsController)
-    .useMiddleware(ErrorHandlerMiddleware);
+  // NOTE: Order of registration matters!
 
   /* #region MongoDB */
   await (async () => {
@@ -50,6 +37,22 @@ async function main(...args: any[]) {
     });
   })();
   /* #endregion */
+
+  app
+    .register((container) => {
+      container
+        .register(ILoggerProviderToken, { useClass: WinstonLoggerProvider })
+        .register(IUserRepositoryToken, { useClass: UserRepository })
+        .register(IUserServiceToken, { useClass: UserService });
+    })
+    .useJson()
+    .useMiddleware(RequestLoggerMiddleware)
+    .useMiddleware(SampleAsyncMiddleware)
+    .useBasePath(environment.api.basePath)
+    .useController(GreeterController)
+    .useController(ErrorsController)
+    .useController(UserController)
+    .useMiddleware(ErrorHandlerMiddleware);
 
   app.build();
 }
