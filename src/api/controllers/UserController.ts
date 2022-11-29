@@ -21,6 +21,11 @@ export class UserController extends BaseController {
       res.json(user);
     });
 
+    this.get("/email/:email", async (req: Request, res: Response) => {
+      const user = await userService.getByEmailAsync(req.params.email);
+      res.json(user);
+    });
+
     this.post("/", async (req: Request, res: Response) => {
       // TODO Validate model?
       const id = await userService.createAsync(req.body); // TODO Map body to UserModel class?

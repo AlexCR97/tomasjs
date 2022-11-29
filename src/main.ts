@@ -6,11 +6,7 @@ import { WinstonLoggerProvider } from "./infrastructure/logger/winston";
 import "./infrastructure/mapper/MappingProfile";
 import { UserService } from "./infrastructure/services/user";
 import { ErrorsController, GreeterController, UserController } from "./api/controllers";
-import {
-  ErrorHandlerMiddleware,
-  RequestLoggerMiddleware,
-  SampleAsyncMiddleware,
-} from "./api/middleware";
+import { ErrorHandlerMiddleware, RequestLoggerMiddleware } from "./api/middleware";
 import { AppBuilder } from "./api/AppBuilder";
 import { environment } from "./environment";
 import { MikroOrmInstance, MongoDb } from "./infrastructure/data/mongo";
@@ -46,21 +42,18 @@ async function main(...args: any[]) {
         .register(IUserServiceToken, { useClass: UserService });
     })
     .useJson()
-    .useSpa({
-      /**
-       * NOTES:
-       * - Put .useSpa before .useMiddleware(RequestLoggerMiddleware) to prevent logging GET requests to SPA
-       * - Put .useSpa before .useMiddleware(SampleAsyncMiddleware) to prevent fixed delay in SampleAsyncMiddleware
-       */
-      spaPath: environment.host.webPath,
-    })
+
     .useMiddleware(RequestLoggerMiddleware)
-    .useMiddleware(SampleAsyncMiddleware)
+    // .useMiddleware(SampleAsyncMiddleware)
     .useControllersBasePath(environment.api.basePath)
     .useController(GreeterController)
     .useController(ErrorsController)
     .useController(UserController)
-    .useMiddleware(ErrorHandlerMiddleware);
+    .useMiddleware(ErrorHandlerMiddleware)
+    .useSpa({
+      // NOTE: Put .useSpa at the end so it does not clash with api
+      spaPath: environment.host.webPath,
+    });
 
   app.build();
 }

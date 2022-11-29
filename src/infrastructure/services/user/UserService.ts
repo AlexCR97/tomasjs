@@ -33,6 +33,11 @@ export class UserService implements IUserService {
     return Mapper.map(user, User, UserModel);
   }
 
+  async getByEmailAsync(email: string): Promise<UserModel> {
+    const user = await this.userRepository.getByEmailAsync(email);
+    return Mapper.map(user, User, UserModel);
+  }
+
   async createAsync(model: UserModel): Promise<string> {
     const document = Mapper.map(model, UserModel, User);
     return await this.userRepository.createAsync(document);
