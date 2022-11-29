@@ -9,7 +9,7 @@ import { AsyncMiddleware, ErrorMiddleware, Middleware } from "./middleware/core"
 export class AppBuilder {
   private readonly app: Express;
   private readonly logger = new DefaultLogger(AppBuilder.name, { level: "info" });
-  private basePath?: string;
+  private controllersBasePath?: string;
 
   constructor() {
     this.logger.debug("Building app...");
@@ -36,9 +36,9 @@ export class AppBuilder {
     return this;
   }
 
-  useBasePath(basePath: string): AppBuilder {
-    this.logger.debug(`.${this.useBasePath.name}`, { basePath });
-    this.basePath = basePath;
+  useControllersBasePath(basePath: string): AppBuilder {
+    this.logger.debug(`.${this.useControllersBasePath.name}`, { basePath });
+    this.controllersBasePath = basePath;
     return this;
   }
 
@@ -85,13 +85,13 @@ export class AppBuilder {
     });
 
     if (
-      this.basePath === undefined ||
-      this.basePath === null ||
-      this.basePath.trim().length === 0
+      this.controllersBasePath === undefined ||
+      this.controllersBasePath === null ||
+      this.controllersBasePath.trim().length === 0
     ) {
       this.app.use(`/${controller.route}`, router);
     } else {
-      this.app.use(`/${this.basePath}/${controller.route}`, router);
+      this.app.use(`/${this.controllersBasePath}/${controller.route}`, router);
     }
 
     this.logger.debug(`Registered [${controller.route}] controller successfully\n`);

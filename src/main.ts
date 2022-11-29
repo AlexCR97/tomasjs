@@ -56,7 +56,7 @@ async function main(...args: any[]) {
     })
     .useMiddleware(RequestLoggerMiddleware)
     .useMiddleware(SampleAsyncMiddleware)
-    .useBasePath(environment.api.basePath)
+    .useControllersBasePath(environment.api.basePath)
     .useController(GreeterController)
     .useController(ErrorsController)
     .useController(UserController)
