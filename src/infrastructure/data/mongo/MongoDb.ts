@@ -4,17 +4,15 @@ import { MikroOrmInstance } from "./MikroOrmInstance";
 
 @injectable()
 export class MongoDb {
-    private readonly logger: ILogger;
+  private readonly logger: ILogger;
 
-    constructor(
-        @inject(ILoggerProviderToken)
-        private readonly loggerProvider: ILoggerProvider
-    ) {
-        this.logger = this.loggerProvider.createLogger(MongoDb.name);
-        this.logger.debug(`new ${MongoDb.name}`);
-    }
+  constructor(@inject(ILoggerProviderToken) private readonly loggerProvider: ILoggerProvider) {
+    this.logger = this.loggerProvider.createLogger(MongoDb.name);
+    this.logger.debug(`new ${MongoDb.name}`);
+  }
 
-    get em() {
-        return MikroOrmInstance.instance.orm.em;
-    }
+  // TODO Add return type
+  get em() {
+    return MikroOrmInstance.instance.orm.em;
+  }
 }
