@@ -99,6 +99,11 @@ export class AppBuilder {
     return this;
   }
 
+  useCommandHandler(commandHandlerClass: any): AppBuilder {
+    container.register(commandHandlerClass.name, commandHandlerClass);
+    return this;
+  }
+
   useMiddleware(middlewareClass: any): AppBuilder {
     container.register(middlewareClass.name, middlewareClass);
     const middleware = container.resolve(middlewareClass) as any;
