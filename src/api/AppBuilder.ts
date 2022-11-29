@@ -1,43 +1,60 @@
-import { ILogger, ILoggerProvider, ILoggerProviderToken } from "@/core/logger";
 import { environment } from "@/environment";
-import express, { NextFunction, Request, Response } from "express";
-import { inject, injectable } from "tsyringe";
+import { WinstonLoggerProvider } from "@/infrastructure/logger/winston";
+import express, { json, Express, NextFunction, Request, Response, Router } from "express";
+import { container, DependencyContainer } from "tsyringe";
 import { BaseController } from "./controllers/core";
 import { ActionHandler, AsyncActionHandler } from "./controllers/core/types";
 import { AsyncMiddleware, ErrorMiddleware, Middleware } from "./middleware/core";
 
-@injectable()
-export class ApiBuilder {
-  private readonly logger: ILogger;
-  private readonly app: express.Express;
+export class AppBuilder {
+  private readonly app: Express;
+  private readonly logger = new WinstonLoggerProvider().createLogger(AppBuilder.name);
+  private basePath?: string;
 
-  constructor(@inject(ILoggerProviderToken) private readonly loggerProvider: ILoggerProvider) {
-    this.logger = this.loggerProvider.createLogger(ApiBuilder.name);
-    this.logger.debug("Initializing api...");
-
+  constructor() {
+    this.logger.debug("Building app...");
     this.app = express();
+  }
 
+  register(containerSetup: (container: DependencyContainer) => void): AppBuilder {
+    containerSetup(container);
+    return this;
+  }
+
+  use(appSetup: (app: Express) => void): AppBuilder {
+    appSetup(this.app);
+    return this;
+  }
+
+  useJson(): AppBuilder {
+    this.logger.debug(`.${this.useJson.name}`);
     this.app.use(
-      express.json({
+      json({
         type: "*/*", // TODO is this needed?
       })
     );
+    return this;
   }
 
-  private basePath?: string;
-  useBasePath(basePath: string): ApiBuilder {
+  useBasePath(basePath: string): AppBuilder {
+    this.logger.debug(`.${this.useBasePath.name}`, { basePath });
     this.basePath = basePath;
     return this;
   }
 
-  useController<TController extends BaseController>(controller: TController): ApiBuilder {
+  useController(controllerClass: any): AppBuilder {
+    this.logger.debug(`.${this.useController.name}`, { controllerClass });
+
+    container.register(controllerClass.name, controllerClass);
+    const controller = container.resolve(controllerClass) as BaseController;
+
     this.logger.debug(`Registering controller ${controller.route}`);
 
     if (controller.actions.length === 0) {
       return this;
     }
 
-    const router = express.Router();
+    const router = Router();
 
     controller.actions.forEach((action) => {
       const actionStr = `[${action.method}] ${action.path} (${action.handlers.length} handlers)`;
@@ -61,14 +78,10 @@ export class ApiBuilder {
         | ActionHandler
         | AsyncActionHandler;
 
-      return router[action.method](
-        action.path,
-        middleware,
-        async (req: express.Request, res: express.Response) => {
-          const handlerResponse = handler(req, res);
-          await Promise.resolve(handlerResponse);
-        }
-      );
+      return router[action.method](action.path, middleware, async (req: Request, res: Response) => {
+        const handlerResponse = handler(req, res);
+        await Promise.resolve(handlerResponse);
+      });
     });
 
     if (
@@ -86,7 +99,10 @@ export class ApiBuilder {
     return this;
   }
 
-  useMiddleware(middleware: Middleware | AsyncMiddleware | ErrorMiddleware): ApiBuilder {
+  useMiddleware(middlewareClass: any): AppBuilder {
+    container.register(middlewareClass.name, middlewareClass);
+    const middleware = container.resolve(middlewareClass) as any;
+
     if (middleware instanceof Middleware) {
       this.app.use((req: Request, res: Response, next: NextFunction) =>
         middleware.handle(req, res, next)
@@ -105,15 +121,18 @@ export class ApiBuilder {
     return this;
   }
 
+  // TODO Add return type
   build() {
     const server = this.app
       .listen(environment.api.port, () => {
-        this.logger.debug("Initialized api successfully!");
+        this.logger.debug("App built successfully!");
         this.logger.debug("Server address:", server.address());
       })
       .on("error", (err) => {
         this.logger.error(err.message);
         throw err;
       });
+
+    return server;
   }
 }
