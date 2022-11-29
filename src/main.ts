@@ -16,7 +16,7 @@ import { environment } from "./environment";
 import { MikroOrmInstance, MongoDb } from "./infrastructure/data/mongo";
 
 async function main(...args: any[]) {
-  const logger = new DefaultLogger(main.name);
+  const logger = new DefaultLogger(main.name, { level: "info" });
   logger.debug("main()");
 
   const app = new AppBuilder();

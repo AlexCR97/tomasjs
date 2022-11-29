@@ -3,6 +3,7 @@ import winston from "winston";
 import { ILogger } from "@/core/logger/ILogger";
 import { ILoggerProvider } from "@/core/logger/ILoggerProvider";
 import { WinstonLogger } from "./WinstonLogger";
+import { LoggerOptions } from "@/core/logger";
 
 const DefaultLevel = "silly";
 
@@ -15,9 +16,9 @@ const DefaultFormat: winston.Logform.Format = winston.format.combine(
 
 @injectable()
 export class WinstonLoggerProvider implements ILoggerProvider {
-  createLogger(category: string): ILogger {
+  createLogger(category: string, options?: LoggerOptions): ILogger {
     const logger = winston.createLogger({
-      level: DefaultLevel,
+      level: options?.level ?? DefaultLevel,
       format: DefaultFormat,
       defaultMeta: { _category: category },
       transports: [

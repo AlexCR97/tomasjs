@@ -14,7 +14,7 @@ export class MikroOrmInstance {
   private static mikroOrm: MikroOrmInstance;
 
   static async initializeAsync(options: MikroOrmInstanceOptions): Promise<void> {
-    const logger = new DefaultLogger(MikroOrmInstance.name);
+    const logger = new DefaultLogger(MikroOrmInstance.name, { level: "info" });
     logger.debug(`Initializing ${MikroOrmInstance.name}...`);
 
     const orm = await MikroORM.init<MongoDriver>({

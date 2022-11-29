@@ -1,5 +1,5 @@
+import { DefaultLogger } from "@/core/logger";
 import { environment } from "@/environment";
-import { WinstonLoggerProvider } from "@/infrastructure/logger/winston";
 import express, { json, Express, NextFunction, Request, Response, Router } from "express";
 import { container, DependencyContainer } from "tsyringe";
 import { BaseController } from "./controllers/core";
@@ -8,7 +8,7 @@ import { AsyncMiddleware, ErrorMiddleware, Middleware } from "./middleware/core"
 
 export class AppBuilder {
   private readonly app: Express;
-  private readonly logger = new WinstonLoggerProvider().createLogger(AppBuilder.name);
+  private readonly logger = new DefaultLogger(AppBuilder.name, { level: "info" });
   private basePath?: string;
 
   constructor() {
@@ -126,7 +126,7 @@ export class AppBuilder {
     const server = this.app
       .listen(environment.api.port, () => {
         this.logger.debug("App built successfully!");
-        this.logger.debug("Server address:", server.address());
+        this.logger.info("Server address:", server.address());
       })
       .on("error", (err) => {
         this.logger.error(err.message);

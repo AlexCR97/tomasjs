@@ -1,5 +1,6 @@
 import winston from "winston";
 import { ILogger } from "./ILogger";
+import { LoggerOptions } from "./LoggerOptions";
 
 const DefaultLevel = "silly";
 
@@ -13,9 +14,9 @@ const DefaultFormat: winston.Logform.Format = winston.format.combine(
 export class DefaultLogger implements ILogger {
   private readonly logger: winston.Logger;
 
-  constructor(category: string) {
+  constructor(category: string, options?: LoggerOptions) {
     this.logger = winston.createLogger({
-      level: DefaultLevel,
+      level: options?.level ?? DefaultLevel,
       format: DefaultFormat,
       defaultMeta: { _category: category },
       transports: [
