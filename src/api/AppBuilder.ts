@@ -99,13 +99,18 @@ export class AppBuilder {
     return this;
   }
 
+  useQueryHandler(queryHandlerClass: any): AppBuilder {
+    container.register(queryHandlerClass.name, queryHandlerClass);
+    return this;
+  }
+
   useCommandHandler(commandHandlerClass: any): AppBuilder {
     container.register(commandHandlerClass.name, commandHandlerClass);
     return this;
   }
 
-  useQueryHandler(queryHandlerClass: any): AppBuilder {
-    container.register(queryHandlerClass.name, queryHandlerClass);
+  useEventHandler(eventHandlerClass: any): AppBuilder {
+    container.register(eventHandlerClass.name, eventHandlerClass);
     return this;
   }
 

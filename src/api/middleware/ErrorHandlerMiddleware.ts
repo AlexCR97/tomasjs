@@ -14,7 +14,7 @@ export class ErrorHandlerMiddleware extends ErrorMiddleware {
 
   constructor(@inject(ILoggerProviderToken) private readonly loggerProvider: ILoggerProvider) {
     super();
-    this.logger = this.loggerProvider.createLogger(ErrorHandlerMiddleware.name);
+    this.logger = this.loggerProvider.createLogger(ErrorHandlerMiddleware.name, { level: "info" });
     this.logger.debug(`new ${ErrorHandlerMiddleware.name}`);
   }
 

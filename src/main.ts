@@ -10,7 +10,11 @@ import { ErrorHandlerMiddleware, RequestLoggerMiddleware } from "./api/middlewar
 import { AppBuilder } from "./api/AppBuilder";
 import { environment } from "./environment";
 import { MikroOrmInstance, MongoDb } from "./infrastructure/data/mongo";
-import { GetUserByEmailQueryHandler, SignUpUserCommandHandler } from "./infrastructure/cqrs/users";
+import {
+  GetUserByEmailQueryHandler,
+  SignUpUserCommandHandler,
+  UserCreatedEventHandler,
+} from "./infrastructure/cqrs/users";
 
 async function main(...args: any[]) {
   const logger = new DefaultLogger(main.name, { level: "debug" });
@@ -51,6 +55,7 @@ async function main(...args: any[]) {
     .useController(UserController)
     .useQueryHandler(GetUserByEmailQueryHandler)
     .useCommandHandler(SignUpUserCommandHandler)
+    .useEventHandler(UserCreatedEventHandler)
     .useSpa({
       // NOTE: Put .useSpa after controllers so it does not clash with api
       spaPath: environment.host.webPath,

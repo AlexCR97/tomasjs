@@ -2,7 +2,7 @@ import { createMap } from "@automapper/core";
 import { User } from "@/core/entities/User";
 import { UserModel } from "@/core/models/UserModel";
 import { Mapper } from "./Mapper";
-import { SignUpUserCommand } from "@/core/cqrs/users";
+import { SignUpUserCommand, UserCreatedEvent } from "@/core/cqrs/users";
 
 createMap(Mapper, User, UserModel);
 createMap(Mapper, UserModel, User);
@@ -25,3 +25,4 @@ createMap(
   //   mapFrom((command) => command.id)
   // )
 );
+createMap(Mapper, User, UserCreatedEvent);
