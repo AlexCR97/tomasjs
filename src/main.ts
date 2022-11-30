@@ -15,6 +15,7 @@ import {
   SignUpUserCommandHandler,
   UserCreatedEventHandler,
 } from "./infrastructure/cqrs/users";
+import { GetUsersRequestHandler } from "./infrastructure/requests/users/GetUsersRequestHandler";
 
 async function main(...args: any[]) {
   const logger = new DefaultLogger(main.name, { level: "debug" });
@@ -52,6 +53,7 @@ async function main(...args: any[]) {
     .useControllersBasePath(environment.api.basePath)
     .useController(GreeterController)
     .useController(ErrorsController)
+    .useRequestHandler("get", "/api/users/paged", GetUsersRequestHandler)
     .useController(UserController)
     .useQueryHandler(GetUserByEmailQueryHandler)
     .useCommandHandler(SignUpUserCommandHandler)

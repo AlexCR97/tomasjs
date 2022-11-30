@@ -1,9 +1,11 @@
 import { DefaultLogger } from "@/core/logger";
+import { RequestHandler } from "@/core/requests/core";
 import { environment } from "@/environment";
 import express, { json, Express, NextFunction, Request, Response, Router } from "express";
 import { container, DependencyContainer } from "tsyringe";
+import { constructor } from "tsyringe/dist/typings/types";
 import { BaseController } from "./controllers/core";
-import { ActionHandler, AsyncActionHandler } from "./controllers/core/types";
+import { ActionHandler, AsyncActionHandler, HttpMethod } from "./controllers/core/types";
 import { AsyncMiddleware, ErrorMiddleware, Middleware } from "./middleware/core";
 
 export class AppBuilder {
@@ -95,6 +97,33 @@ export class AppBuilder {
     }
 
     this.logger.debug(`Registered [${controller.route}] controller successfully\n`);
+
+    return this;
+  }
+
+  useRequestHandler<T>(
+    method: HttpMethod,
+    path: string,
+    requestHandlerClass: constructor<T>
+  ): AppBuilder {
+    container.register(requestHandlerClass.name, requestHandlerClass);
+
+    // this.app.get(path, (req, res) => {
+    //   const handler = container.resolve(requestHandlerClass) as ApiRequestHandler<any, any>;
+    //   const handlerResponse = handler.handle(req.body);
+    //   res.send(handlerResponse); // TODO Add support for json, plaintext, etc.
+    // });
+
+    this.app[method](path, (req: Request, res: Response) => {
+      // TODO Add support for query params
+      const handler = container.resolve(requestHandlerClass) as RequestHandler<any, any>;
+      const handlerResponse = handler.handle({
+        query: req.query,
+        body: req.body,
+        headers: req.headers,
+      });
+      res.send(handlerResponse); // TODO Add support for json, plaintext, etc.
+    });
 
     return this;
   }
