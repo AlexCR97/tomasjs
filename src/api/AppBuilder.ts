@@ -112,12 +112,7 @@ export class AppBuilder {
   useRequestContext(): AppBuilder {
     this.app.use((req, res, next) => {
       const requestContext = container.resolve(RequestContext);
-
-      // Since RequestContext properties are readonly, use "any" to bypass TypeScript compiler
-      (requestContext as any).headers = req.headers;
-      (requestContext as any).query = req.query;
-      (requestContext as any).body = req.body;
-
+      this.bindRequestContext(requestContext, req);
       next();
     });
     this.isRequestContextInitialized = true;
@@ -141,6 +136,8 @@ export class AppBuilder {
 
     this.app[method](path, async (req: Request, res: Response) => {
       const requestContext = container.resolve(RequestContext);
+      this.bindRequestContext(requestContext, req); // TODO Figure out a way to do this only in the .useRequestContext method
+
       const requestHandler = container.resolve(requestHandlerClass) as
         | RequestHandler<any>
         | AsyncRequestHandler<any>;
@@ -248,5 +245,14 @@ export class AppBuilder {
       });
 
     return server;
+  }
+
+  private bindRequestContext(context: RequestContext, req: Request) {
+    // Since RequestContext properties are readonly, use "any" to bypass TypeScript compiler
+    (context as any).path = req.path;
+    (context as any).headers = req.headers;
+    (context as any).params = req.params;
+    (context as any).query = req.query;
+    (context as any).body = req.body;
   }
 }

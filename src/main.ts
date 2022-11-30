@@ -17,6 +17,7 @@ import {
 } from "./infrastructure/cqrs/users";
 import { GetUsersRequestHandler } from "./infrastructure/requests/users/GetUsersRequestHandler";
 import { HealthCheckRequestHandler } from "./infrastructure/requests/health";
+import { UpdateProfileRequestHandler } from "./infrastructure/requests/users";
 
 async function main(...args: any[]) {
   const logger = new DefaultLogger(main.name, { level: "debug" });
@@ -57,6 +58,7 @@ async function main(...args: any[]) {
     .useRequestContext()
     .useRequestHandler("get", "/api/health", HealthCheckRequestHandler)
     .useRequestHandler("get", "/api/users/paged", GetUsersRequestHandler)
+    .useRequestHandler("patch", "/api/users/:id/profile", UpdateProfileRequestHandler)
     .useController(UserController)
     .useQueryHandler(GetUserByEmailQueryHandler)
     .useCommandHandler(SignUpUserCommandHandler)
