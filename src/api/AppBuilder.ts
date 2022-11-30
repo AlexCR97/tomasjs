@@ -1,11 +1,7 @@
 import { DefaultLogger } from "@/core/logger";
-import { AsyncRequestHandler, RequestContext, RequestHandler } from "@/core/requests/core";
-import {
-  JsonResponse,
-  PlainTextResponse,
-  StatusCodeResponse,
-} from "@/core/requests/core/responses";
-import { BaseResponse } from "@/core/requests/core/responses/BaseResponse";
+import { AsyncRequestHandler, RequestContext, RequestHandler } from "@/core/httpx/core/requests";
+import { JsonResponse, PlainTextResponse, StatusCodeResponse } from "@/core/httpx/core/responses";
+import { BaseResponse } from "@/core/httpx/core/responses/BaseResponse";
 import { environment } from "@/environment";
 import express, { json, Express, NextFunction, Request, Response, Router } from "express";
 import { container, DependencyContainer } from "tsyringe";
@@ -13,7 +9,7 @@ import { constructor } from "tsyringe/dist/typings/types";
 import { BaseController } from "./controllers/core";
 import { ActionHandler, AsyncActionHandler, HttpMethod } from "./controllers/core/types";
 import { StatusCodes } from "./core";
-import { AsyncMiddleware, ErrorMiddleware, Middleware } from "./middleware/core";
+import { AsyncMiddleware, ErrorMiddleware, Middleware } from "@/core/httpx/core/middleware/core";
 
 export class AppBuilder {
   private readonly app: Express;

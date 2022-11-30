@@ -1,9 +1,9 @@
+import { AsyncMiddleware } from "@/core/httpx/core/middleware/core";
 import { ILogger, ILoggerProvider, ILoggerProviderToken } from "@/core/logger";
 import { Request, Response, NextFunction } from "express";
 import { ParamsDictionary } from "express-serve-static-core";
 import { ParsedQs } from "qs";
 import { inject, injectable } from "tsyringe";
-import { AsyncMiddleware } from "./core";
 
 @injectable()
 export class SampleAsyncMiddleware extends AsyncMiddleware {
