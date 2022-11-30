@@ -1,13 +1,5 @@
-import { Headers } from "./Headers";
-import { IRequestContext } from "./IRequestContext";
-import { Payload } from "./Payload";
-import { QueryParams } from "./QueryParams";
+import { RequestContext } from "./RequestContext";
 
-export abstract class RequestHandler<
-  THeaders extends Headers = Headers,
-  TQueryParams extends QueryParams = QueryParams,
-  TPayload extends Payload = Payload,
-  TResponse = any
-> {
-  abstract handle(context: IRequestContext<THeaders, TQueryParams, TPayload>): TResponse;
+export abstract class RequestHandler<TResponse = void> {
+  abstract handle(context: RequestContext): TResponse;
 }

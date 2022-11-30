@@ -1,33 +1,36 @@
 import { PagedResult, PagedResultBuilder } from "@/core/data/responses";
+import { User } from "@/core/entities";
 import { ILogger, ILoggerProvider, ILoggerProviderToken } from "@/core/logger";
 import { UserModel } from "@/core/models";
-import { Headers, Payload, RequestHandler } from "@/core/requests/core";
-import { IRequestContext } from "@/core/requests/core/IRequestContext";
-import { GetUsersRequest } from "@/core/requests/users/GetUsersRequest";
+import { AsyncRequestHandler } from "@/core/requests/core";
+import { RequestContext } from "@/core/requests/core/RequestContext";
+import { JsonResponse } from "@/core/requests/core/responses";
+import { IUserRepositoryToken, UserRepository } from "@/infrastructure/data/repositories/users";
+import { Mapper } from "@/infrastructure/mapper";
 import { inject, injectable } from "tsyringe";
 
 @injectable()
-export class GetUsersRequestHandler extends RequestHandler<
-  Headers,
-  GetUsersRequest,
-  Payload,
-  PagedResult<UserModel>
+export class GetUsersRequestHandler extends AsyncRequestHandler<
+  JsonResponse<PagedResult<UserModel>>
 > {
   private readonly logger: ILogger;
 
-  constructor(@inject(ILoggerProviderToken) readonly loggerProvider: ILoggerProvider) {
+  constructor(
+    @inject(ILoggerProviderToken) readonly loggerProvider: ILoggerProvider,
+    @inject(IUserRepositoryToken) readonly userRepository: UserRepository
+  ) {
     super();
     this.logger = this.loggerProvider.createLogger(GetUsersRequestHandler.name, { level: "info" });
+    this.logger.info(`new ${GetUsersRequestHandler.name}`);
   }
 
-  handle(context: IRequestContext<Headers, GetUsersRequest, Payload>): PagedResult<UserModel> {
-    this.logger.info(GetUsersRequestHandler.name, { context });
-    return new PagedResultBuilder<UserModel>().setData([]).setTotalCount(0).build();
+  async handleAsync(context: RequestContext): Promise<JsonResponse<PagedResult<UserModel>>> {
+    const pagedResult = await this.userRepository.getAsync(context.getQuery());
+    return new JsonResponse(
+      new PagedResultBuilder<UserModel>()
+        .setData(Mapper.mapArray(pagedResult.data, User, UserModel))
+        .setTotalCount(pagedResult.totalCount)
+        .build()
+    );
   }
-
-  // handle(context: IRequestContext<Headers, QueryParams, GetUsersRequest>): PagedResult<UserModel> {
-  // }
-
-  // handle(request: GetUsersRequest): PagedResult<UserModel> {
-  // }
 }

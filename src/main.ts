@@ -16,6 +16,7 @@ import {
   UserCreatedEventHandler,
 } from "./infrastructure/cqrs/users";
 import { GetUsersRequestHandler } from "./infrastructure/requests/users/GetUsersRequestHandler";
+import { HealthCheckRequestHandler } from "./infrastructure/requests/health";
 
 async function main(...args: any[]) {
   const logger = new DefaultLogger(main.name, { level: "debug" });
@@ -53,6 +54,8 @@ async function main(...args: any[]) {
     .useControllersBasePath(environment.api.basePath)
     .useController(GreeterController)
     .useController(ErrorsController)
+    .useRequestContext()
+    .useRequestHandler("get", "/api/health", HealthCheckRequestHandler)
     .useRequestHandler("get", "/api/users/paged", GetUsersRequestHandler)
     .useController(UserController)
     .useQueryHandler(GetUserByEmailQueryHandler)

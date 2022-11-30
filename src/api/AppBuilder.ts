@@ -1,17 +1,25 @@
 import { DefaultLogger } from "@/core/logger";
-import { RequestHandler } from "@/core/requests/core";
+import { AsyncRequestHandler, RequestContext, RequestHandler } from "@/core/requests/core";
+import {
+  JsonResponse,
+  PlainTextResponse,
+  StatusCodeResponse,
+} from "@/core/requests/core/responses";
+import { BaseResponse } from "@/core/requests/core/responses/BaseResponse";
 import { environment } from "@/environment";
 import express, { json, Express, NextFunction, Request, Response, Router } from "express";
 import { container, DependencyContainer } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
 import { BaseController } from "./controllers/core";
 import { ActionHandler, AsyncActionHandler, HttpMethod } from "./controllers/core/types";
+import { StatusCodes } from "./core";
 import { AsyncMiddleware, ErrorMiddleware, Middleware } from "./middleware/core";
 
 export class AppBuilder {
   private readonly app: Express;
   private readonly logger = new DefaultLogger(AppBuilder.name, { level: "info" });
   private controllersBasePath?: string;
+  private isRequestContextInitialized = false;
 
   constructor() {
     this.logger.debug("Building app...");
@@ -101,28 +109,79 @@ export class AppBuilder {
     return this;
   }
 
+  useRequestContext(): AppBuilder {
+    this.app.use((req, res, next) => {
+      const requestContext = container.resolve(RequestContext);
+
+      // Since RequestContext properties are readonly, use "any" to bypass TypeScript compiler
+      (requestContext as any).headers = req.headers;
+      (requestContext as any).query = req.query;
+      (requestContext as any).body = req.body;
+
+      next();
+    });
+    this.isRequestContextInitialized = true;
+    return this;
+  }
+
   useRequestHandler<T>(
     method: HttpMethod,
     path: string,
     requestHandlerClass: constructor<T>
   ): AppBuilder {
+    this.logger.debug(`.${this.useRequestHandler.name}`, { method, path, requestHandlerClass });
+
+    if (!this.isRequestContextInitialized) {
+      throw new Error(
+        `The ${RequestContext.name} singleton has not been initialized. Please use the ${this.useRequestContext.name} method before calling ${this.useRequestHandler.name}.`
+      );
+    }
+
     container.register(requestHandlerClass.name, requestHandlerClass);
 
-    // this.app.get(path, (req, res) => {
-    //   const handler = container.resolve(requestHandlerClass) as ApiRequestHandler<any, any>;
-    //   const handlerResponse = handler.handle(req.body);
-    //   res.send(handlerResponse); // TODO Add support for json, plaintext, etc.
-    // });
+    this.app[method](path, async (req: Request, res: Response) => {
+      const requestContext = container.resolve(RequestContext);
+      const requestHandler = container.resolve(requestHandlerClass) as
+        | RequestHandler<any>
+        | AsyncRequestHandler<any>;
+      const syncRequestHandler = requestHandler as RequestHandler<any>;
+      const asyncRequestHandler = requestHandler as AsyncRequestHandler<any>;
+      let handlerResponse: any;
 
-    this.app[method](path, (req: Request, res: Response) => {
-      // TODO Add support for query params
-      const handler = container.resolve(requestHandlerClass) as RequestHandler<any, any>;
-      const handlerResponse = handler.handle({
-        query: req.query,
-        body: req.body,
-        headers: req.headers,
-      });
-      res.send(handlerResponse); // TODO Add support for json, plaintext, etc.
+      if (syncRequestHandler.handle !== undefined) {
+        handlerResponse = syncRequestHandler.handle(requestContext);
+      } else if (asyncRequestHandler.handleAsync !== undefined) {
+        handlerResponse = await asyncRequestHandler.handleAsync(requestContext);
+      } else {
+        throw new Error(
+          `Could not convert provided request handler into a valid ${RequestHandler.name} or ${AsyncRequestHandler.name}.`
+        );
+      }
+
+      if (handlerResponse instanceof BaseResponse) {
+        const defaultStatusCode = StatusCodes.ok;
+
+        if (handlerResponse instanceof JsonResponse) {
+          return res
+            .status(handlerResponse.status ?? defaultStatusCode)
+            .json(handlerResponse.data)
+            .send();
+        }
+
+        if (handlerResponse instanceof PlainTextResponse) {
+          return res.status(handlerResponse.status ?? defaultStatusCode).send(handlerResponse.data);
+        }
+
+        if (handlerResponse instanceof StatusCodeResponse) {
+          return res.sendStatus(handlerResponse.status ?? defaultStatusCode);
+        }
+      }
+
+      if (handlerResponse !== undefined) {
+        return res.send(handlerResponse);
+      }
+
+      return res.send();
     });
 
     return this;
