@@ -1,10 +1,10 @@
 import { RequestHandler } from "express";
 import { container } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
-import { Middleware } from "../middleware";
-import { OnBeforeMiddleware } from "./types";
+import { Middleware } from "../../middleware";
+import { OnBeforeMiddleware } from "../types";
 
-export class ExpressRequestHandlerFactory {
+export abstract class ExpressRequestHandlerFactory {
   private constructor() {}
 
   static fromMiddlewares(
