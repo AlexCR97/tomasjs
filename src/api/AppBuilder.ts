@@ -9,7 +9,12 @@ import { constructor } from "tsyringe/dist/typings/types";
 import { BaseController } from "./controllers/core";
 import { ActionHandler, AsyncActionHandler, HttpMethod } from "./controllers/core/types";
 import { StatusCodes } from "./core";
-import { AsyncMiddleware, ErrorMiddleware, Middleware } from "@/core/httpx/core/middleware/core";
+import {
+  AnonymousMiddleware,
+  AsyncMiddleware,
+  ErrorMiddleware,
+  Middleware,
+} from "@/core/httpx/core/middleware";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -115,10 +120,13 @@ export class AppBuilder {
     return this;
   }
 
-  useRequestHandler<T>(
+  useRequestHandler(
     method: HttpMethod,
     path: string,
-    requestHandlerClass: constructor<T>
+    requestHandlerClass: constructor<any>,
+    options?: {
+      onBefore?: AnonymousMiddleware | constructor<any>;
+    }
   ): AppBuilder {
     this.logger.debug(`.${this.useRequestHandler.name}`, { method, path, requestHandlerClass });
 
@@ -130,7 +138,22 @@ export class AppBuilder {
 
     container.register(requestHandlerClass.name, requestHandlerClass);
 
-    this.app[method](path, async (req: Request, res: Response) => {
+    const middlewareHandlers: express.RequestHandler[] = [];
+
+    if (options?.onBefore !== undefined && options?.onBefore !== null) {
+      if (options.onBefore instanceof AnonymousMiddleware) {
+        middlewareHandlers.push((req, res, next) => {
+          (options.onBefore as AnonymousMiddleware).handle(req, res, next);
+        });
+      } else {
+        const middlewareInstance = container.resolve(options!.onBefore!) as Middleware;
+        middlewareHandlers.push((req, res, next) => {
+          middlewareInstance.handle(req, res, next);
+        });
+      }
+    }
+
+    this.app[method](path, ...middlewareHandlers, async (req: Request, res: Response) => {
       const requestContext = container.resolve(RequestContext);
       this.bindRequestContext(requestContext, req); // TODO Figure out a way to do this only in the .useRequestContext method
 

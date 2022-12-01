@@ -17,7 +17,12 @@ import {
 import { GetUsersRequestHandler } from "./infrastructure/requests/users/GetUsersRequestHandler";
 import { HealthCheckRequestHandler } from "./infrastructure/requests/health";
 import { UpdateProfileRequestHandler } from "./infrastructure/requests/users";
-import { ErrorHandlerMiddleware, RequestLoggerMiddleware } from "./infrastructure/httpx/middleware";
+import {
+  ErrorHandlerMiddleware,
+  RequestLoggerMiddleware,
+  SampleOnBeforeMiddleware,
+} from "./infrastructure/httpx/middleware";
+import { AnonymousMiddleware } from "./core/httpx/core/middleware";
 
 async function main(...args: any[]) {
   const logger = new DefaultLogger(main.name, { level: "debug" });
@@ -56,8 +61,16 @@ async function main(...args: any[]) {
     .useController(GreeterController)
     .useController(ErrorsController)
     .useRequestContext()
-    .useRequestHandler("get", "/api/health", HealthCheckRequestHandler)
-    .useRequestHandler("get", "/api/users/paged", GetUsersRequestHandler)
+    .useRequestHandler("get", "/api/health", HealthCheckRequestHandler, {
+      onBefore: new AnonymousMiddleware((req, res, next) => {
+        const logger = new DefaultLogger(AnonymousMiddleware.name);
+        logger.info(`The ${AnonymousMiddleware.name} got triggered!`);
+        next();
+      }),
+    })
+    .useRequestHandler("get", "/api/users/paged", GetUsersRequestHandler, {
+      onBefore: SampleOnBeforeMiddleware,
+    })
     .useRequestHandler("patch", "/api/users/:id/profile", UpdateProfileRequestHandler)
     .useController(UserController)
     .useQueryHandler(GetUserByEmailQueryHandler)
