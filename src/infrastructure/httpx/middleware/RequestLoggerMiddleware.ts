@@ -1,4 +1,4 @@
-import { Middleware } from "@/core/httpx/core/middleware";
+import { Middleware } from "@/core/httpx/middleware";
 import { ILogger, ILoggerProvider, ILoggerProviderToken } from "@/core/logger";
 import { Request, Response, NextFunction } from "express";
 import { ParamsDictionary } from "express-serve-static-core";

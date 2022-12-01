@@ -1,6 +1,6 @@
 import { DomainError, StatusCodeError } from "@/core/errors";
+import { BaseController } from "@/core/httpx/controllers";
 import { Request, Response } from "express";
-import { BaseController } from "./core";
 
 export class ErrorsController extends BaseController {
   route = "errors";

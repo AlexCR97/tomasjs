@@ -1,13 +1,13 @@
 import { CommandDispatcher } from "@/core/cqrs/core/commands";
 import { QueryDispatcher } from "@/core/cqrs/core/queries";
 import { SignUpUserCommand, GetUserByEmailQuery } from "@/core/cqrs/users";
+import { StatusCodes } from "@/core/httpx";
+import { BaseController } from "@/core/httpx/controllers";
 import { UserModel } from "@/core/models";
 import { IUserService, IUserServiceToken } from "@/core/services/user";
 import { Request, Response } from "express";
 import { ObjectId } from "mongodb";
 import { inject, injectable } from "tsyringe";
-import { StatusCodes } from "../core";
-import { BaseController } from "./core";
 
 @injectable()
 export class UserController extends BaseController {

@@ -1,7 +1,7 @@
+import { BaseController } from "@/core/httpx/controllers";
 import { ILogger, ILoggerProvider, ILoggerProviderToken } from "@/core/logger";
 import { Request, Response } from "express";
 import { inject, injectable } from "tsyringe";
-import { BaseController } from "./core";
 
 @injectable()
 export class GreeterController extends BaseController {

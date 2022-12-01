@@ -5,8 +5,7 @@ import { IUserServiceToken } from "./core/services/user";
 import { IUserRepositoryToken, UserRepository } from "./infrastructure/data/repositories/users";
 import { WinstonLoggerProvider } from "./infrastructure/logger/winston";
 import { UserService } from "./infrastructure/services/user";
-import { ErrorsController, GreeterController, UserController } from "./api/controllers";
-import { AppBuilder } from "./api/AppBuilder";
+import { AppBuilder } from "./core/httpx/builder";
 import { environment } from "./environment";
 import { MikroOrmInstance, MongoDb } from "./infrastructure/data/mongo";
 import {
@@ -22,7 +21,8 @@ import {
   RequestLoggerMiddleware,
   SampleOnBeforeMiddleware,
 } from "./infrastructure/httpx/middleware";
-import { AnonymousMiddleware } from "./core/httpx/core/middleware";
+import { AnonymousMiddleware } from "./core/httpx/middleware";
+import { ErrorsController, GreeterController, UserController } from "./infrastructure/controllers";
 
 async function main(...args: any[]) {
   const logger = new DefaultLogger(main.name, { level: "debug" });

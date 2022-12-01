@@ -1,5 +1,5 @@
-import { RequestContext, RequestHandler } from "@/core/httpx/core/requests";
-import { PlainTextResponse } from "@/core/httpx/core/responses";
+import { RequestContext, RequestHandler } from "@/core/httpx/requests";
+import { PlainTextResponse } from "@/core/httpx/responses";
 import { injectable } from "tsyringe";
 
 @injectable()

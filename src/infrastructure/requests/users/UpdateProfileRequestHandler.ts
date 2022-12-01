@@ -1,6 +1,6 @@
-import { StatusCodes } from "@/api/core";
-import { AsyncRequestHandler, RequestContext } from "@/core/httpx/core/requests";
-import { StatusCodeResponse } from "@/core/httpx/core/responses";
+import { StatusCodes } from "@/core/httpx";
+import { AsyncRequestHandler, RequestContext } from "@/core/httpx/requests";
+import { StatusCodeResponse } from "@/core/httpx/responses";
 import { IUserRepository, IUserRepositoryToken } from "@/infrastructure/data/repositories/users";
 import { inject, injectable } from "tsyringe";
 
@@ -19,4 +19,3 @@ export class UpdateProfileRequestHandler extends AsyncRequestHandler<StatusCodeR
     return new StatusCodeResponse(StatusCodes.noContent);
   }
 }
-
