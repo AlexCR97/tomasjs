@@ -1,4 +1,5 @@
-import { ControllerActionHandler, HttpMethod } from "./types";
+import { HttpMethod } from "../HttpMethod";
+import { ControllerActionHandler } from "./types";
 
 export interface ControllerAction {
   method: HttpMethod;

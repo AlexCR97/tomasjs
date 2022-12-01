@@ -1,6 +1,7 @@
 import path from "path";
 
 export const environment = {
+  name: "development",
   host: {
     /** The path of the hosting directory. This is the directory where the node process is running. */
     path: path.join(__dirname, ".."),

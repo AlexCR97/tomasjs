@@ -20,7 +20,7 @@ export class GetUsersRequestHandler extends AsyncRequestHandler<
   ) {
     super();
     this.logger = this.loggerProvider.createLogger(GetUsersRequestHandler.name, { level: "info" });
-    this.logger.info(`new ${GetUsersRequestHandler.name}`);
+    this.logger.debug(`new ${GetUsersRequestHandler.name}`);
   }
 
   async handleAsync(context: RequestContext): Promise<JsonResponse<PagedResult<UserModel>>> {

@@ -1,21 +1,15 @@
-import express from "express";
+import { NextFunction, Request, Response } from "express";
 
-export type HttpMethod = "get" | "post" | "put" | "delete" | "patch";
+export type ActionHandler = (req: Request, res: Response) => void;
 
-export type ActionHandler = (req: express.Request, res: express.Response) => void;
+export type AsyncActionHandler = (req: Request, res: Response) => Promise<void>;
 
-export type AsyncActionHandler = (req: express.Request, res: express.Response) => Promise<void>;
-
-export type MiddlewareHandler = (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
-) => void;
+export type MiddlewareHandler = (req: Request, res: Response, next: NextFunction) => void;
 
 export type AsyncMiddlewareHandler = (
-  req: express.Request,
-  res: express.Response,
-  next: express.NextFunction
+  req: Request,
+  res: Response,
+  next: NextFunction
 ) => Promise<void>;
 
 export type ControllerActionHandler =

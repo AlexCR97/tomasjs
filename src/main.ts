@@ -26,7 +26,7 @@ import { ErrorsController, GreeterController, UserController } from "./infrastru
 
 async function main(...args: any[]) {
   const logger = new DefaultLogger(main.name, { level: "debug" });
-  logger.debug("environment", environment);
+  logger.debug("environment", { name: environment.name });
 
   const app = new AppBuilder();
 
@@ -71,7 +71,16 @@ async function main(...args: any[]) {
     .useRequestHandler("get", "/api/users/paged", GetUsersRequestHandler, {
       onBefore: SampleOnBeforeMiddleware,
     })
-    .useRequestHandler("patch", "/api/users/:id/profile", UpdateProfileRequestHandler)
+    .useRequestHandler("patch", "/api/users/:id/profile", UpdateProfileRequestHandler, {
+      onBefore: [
+        new AnonymousMiddleware((req, res, next) => {
+          const logger = new DefaultLogger(AnonymousMiddleware.name);
+          logger.info(`The ${AnonymousMiddleware.name} got triggered!`);
+          next();
+        }),
+        SampleOnBeforeMiddleware,
+      ],
+    })
     .useController(UserController)
     .useQueryHandler(GetUserByEmailQueryHandler)
     .useCommandHandler(SignUpUserCommandHandler)

@@ -10,26 +10,24 @@ import { environment } from "@/environment";
 import express, { json, Express, NextFunction, Request, Response, Router } from "express";
 import { container, DependencyContainer } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
-import {
-  AnonymousMiddleware,
-  AsyncMiddleware,
-  ErrorMiddleware,
-  Middleware,
-} from "@/core/httpx/middleware";
+import { AsyncMiddleware, ErrorMiddleware, Middleware } from "@/core/httpx/middleware";
 import { StatusCodes } from "@/core/httpx";
-import { ActionHandler, AsyncActionHandler, HttpMethod } from "@/core/httpx/controllers/types";
+import { ActionHandler, AsyncActionHandler } from "@/core/httpx/controllers/types";
 import { BaseController } from "@/core/httpx/controllers";
+import { HttpMethod } from "../HttpMethod";
+import { OnBeforeMiddleware } from "./types";
+import { ExpressRequestHandlerFactory } from "./ExpressRequestHandlerFactory";
 
 export class AppBuilder {
   private readonly app: Express;
   private readonly logger = new DefaultLogger(AppBuilder.name, { level: "info" });
-  private controllersBasePath?: string;
-  private isRequestContextInitialized = false;
 
   constructor() {
     this.logger.debug("Building app...");
     this.app = express();
   }
+
+  /* #region Standard Setup */
 
   register(containerSetup: (container: DependencyContainer) => void): AppBuilder {
     containerSetup(container);
@@ -41,6 +39,10 @@ export class AppBuilder {
     return this;
   }
 
+  /* #endregion */
+
+  /* #region Formatters */
+
   useJson(): AppBuilder {
     this.logger.debug(`.${this.useJson.name}`);
     this.app.use(
@@ -50,6 +52,38 @@ export class AppBuilder {
     );
     return this;
   }
+
+  /* #endregion */
+
+  /* #region Middleware */
+
+  useMiddleware(middlewareClass: any): AppBuilder {
+    container.register(middlewareClass.name, middlewareClass);
+    const middleware = container.resolve(middlewareClass) as any;
+
+    if (middleware instanceof Middleware) {
+      this.app.use((req: Request, res: Response, next: NextFunction) =>
+        middleware.handle(req, res, next)
+      );
+    } else if (middleware instanceof AsyncMiddleware) {
+      this.app.use(
+        async (req: Request, res: Response, next: NextFunction) =>
+          await middleware.handleAsync(req, res, next)
+      );
+    } else if (middleware instanceof ErrorMiddleware) {
+      this.app.use((err: any, req: Request, res: Response, next: NextFunction) =>
+        middleware.handle(err, req, res, next)
+      );
+    }
+
+    return this;
+  }
+
+  /* #endregion */
+
+  /* #region Controllers */
+
+  private controllersBasePath?: string;
 
   useControllersBasePath(basePath: string): AppBuilder {
     this.logger.debug(`.${this.useControllersBasePath.name}`, { basePath });
@@ -114,6 +148,12 @@ export class AppBuilder {
     return this;
   }
 
+  /* #endregion */
+
+  /* #region Request Handlers */
+
+  private isRequestContextInitialized = false;
+
   useRequestContext(): AppBuilder {
     this.app.use((req, res, next) => {
       const requestContext = container.resolve(RequestContext);
@@ -129,7 +169,7 @@ export class AppBuilder {
     path: string,
     requestHandlerClass: constructor<any>,
     options?: {
-      onBefore?: AnonymousMiddleware | constructor<any>;
+      onBefore?: OnBeforeMiddleware | OnBeforeMiddleware[];
     }
   ): AppBuilder {
     this.logger.debug(`.${this.useRequestHandler.name}`, { method, path, requestHandlerClass });
@@ -142,68 +182,77 @@ export class AppBuilder {
 
     container.register(requestHandlerClass.name, requestHandlerClass);
 
-    const middlewareHandlers: express.RequestHandler[] = [];
+    this.app[method](
+      path,
+      ...ExpressRequestHandlerFactory.fromMiddlewares(options?.onBefore),
+      async (req: Request, res: Response) => {
+        const requestContext = container.resolve(RequestContext);
+        this.bindRequestContext(requestContext, req); // TODO Figure out a way to do this only in the .useRequestContext method
 
-    if (options?.onBefore !== undefined && options?.onBefore !== null) {
-      if (options.onBefore instanceof AnonymousMiddleware) {
-        middlewareHandlers.push((req, res, next) => {
-          (options.onBefore as AnonymousMiddleware).handle(req, res, next);
-        });
-      } else {
-        const middlewareInstance = container.resolve(options!.onBefore!) as Middleware;
-        middlewareHandlers.push((req, res, next) => {
-          middlewareInstance.handle(req, res, next);
-        });
-      }
-    }
+        const requestHandler = container.resolve(requestHandlerClass) as
+          | RequestHandler<any>
+          | AsyncRequestHandler<any>;
+        const syncRequestHandler = requestHandler as RequestHandler<any>;
+        const asyncRequestHandler = requestHandler as AsyncRequestHandler<any>;
+        let handlerResponse: any;
 
-    this.app[method](path, ...middlewareHandlers, async (req: Request, res: Response) => {
-      const requestContext = container.resolve(RequestContext);
-      this.bindRequestContext(requestContext, req); // TODO Figure out a way to do this only in the .useRequestContext method
-
-      const requestHandler = container.resolve(requestHandlerClass) as
-        | RequestHandler<any>
-        | AsyncRequestHandler<any>;
-      const syncRequestHandler = requestHandler as RequestHandler<any>;
-      const asyncRequestHandler = requestHandler as AsyncRequestHandler<any>;
-      let handlerResponse: any;
-
-      if (syncRequestHandler.handle !== undefined) {
-        handlerResponse = syncRequestHandler.handle(requestContext);
-      } else if (asyncRequestHandler.handleAsync !== undefined) {
-        handlerResponse = await asyncRequestHandler.handleAsync(requestContext);
-      } else {
-        throw new Error(
-          `Could not convert provided request handler into a valid ${RequestHandler.name} or ${AsyncRequestHandler.name}.`
-        );
-      }
-
-      if (handlerResponse instanceof BaseResponse) {
-        const defaultStatusCode = StatusCodes.ok;
-
-        if (handlerResponse instanceof JsonResponse) {
-          return res
-            .status(handlerResponse.status ?? defaultStatusCode)
-            .json(handlerResponse.data)
-            .send();
+        if (syncRequestHandler.handle !== undefined) {
+          handlerResponse = syncRequestHandler.handle(requestContext);
+        } else if (asyncRequestHandler.handleAsync !== undefined) {
+          handlerResponse = await asyncRequestHandler.handleAsync(requestContext);
+        } else {
+          throw new Error(
+            `Could not convert provided request handler into a valid ${RequestHandler.name} or ${AsyncRequestHandler.name}.`
+          );
         }
 
-        if (handlerResponse instanceof PlainTextResponse) {
-          return res.status(handlerResponse.status ?? defaultStatusCode).send(handlerResponse.data);
+        if (handlerResponse instanceof BaseResponse) {
+          const defaultStatusCode = StatusCodes.ok;
+
+          if (handlerResponse instanceof JsonResponse) {
+            return res
+              .status(handlerResponse.status ?? defaultStatusCode)
+              .json(handlerResponse.data)
+              .send();
+          }
+
+          if (handlerResponse instanceof PlainTextResponse) {
+            return res
+              .status(handlerResponse.status ?? defaultStatusCode)
+              .send(handlerResponse.data);
+          }
+
+          if (handlerResponse instanceof StatusCodeResponse) {
+            return res.sendStatus(handlerResponse.status ?? defaultStatusCode);
+          }
         }
 
-        if (handlerResponse instanceof StatusCodeResponse) {
-          return res.sendStatus(handlerResponse.status ?? defaultStatusCode);
+        if (handlerResponse !== undefined) {
+          return res.send(handlerResponse);
         }
+
+        return res.send();
       }
+    );
 
-      if (handlerResponse !== undefined) {
-        return res.send(handlerResponse);
-      }
+    return this;
+  }
 
-      return res.send();
-    });
+  private bindRequestContext(context: RequestContext, req: Request) {
+    // Since RequestContext properties are readonly, use "any" to bypass TypeScript compiler
+    (context as any).path = req.path;
+    (context as any).headers = req.headers;
+    (context as any).params = req.params;
+    (context as any).query = req.query;
+    (context as any).body = req.body;
+  }
 
+  /* #endregion */
+
+  /* #region CQRS */
+
+  useCommandHandler(commandHandlerClass: any): AppBuilder {
+    container.register(commandHandlerClass.name, commandHandlerClass);
     return this;
   }
 
@@ -212,37 +261,14 @@ export class AppBuilder {
     return this;
   }
 
-  useCommandHandler(commandHandlerClass: any): AppBuilder {
-    container.register(commandHandlerClass.name, commandHandlerClass);
-    return this;
-  }
-
   useEventHandler(eventHandlerClass: any): AppBuilder {
     container.register(eventHandlerClass.name, eventHandlerClass);
     return this;
   }
 
-  useMiddleware(middlewareClass: any): AppBuilder {
-    container.register(middlewareClass.name, middlewareClass);
-    const middleware = container.resolve(middlewareClass) as any;
+  /* #endregion */
 
-    if (middleware instanceof Middleware) {
-      this.app.use((req: Request, res: Response, next: NextFunction) =>
-        middleware.handle(req, res, next)
-      );
-    } else if (middleware instanceof AsyncMiddleware) {
-      this.app.use(
-        async (req: Request, res: Response, next: NextFunction) =>
-          await middleware.handleAsync(req, res, next)
-      );
-    } else if (middleware instanceof ErrorMiddleware) {
-      this.app.use((err: any, req: Request, res: Response, next: NextFunction) =>
-        middleware.handle(err, req, res, next)
-      );
-    }
-
-    return this;
-  }
+  /* #region Hosting */
 
   useSpa(options: { spaPath: string }): AppBuilder {
     this.app.use(express.static(options.spaPath));
@@ -254,6 +280,8 @@ export class AppBuilder {
 
     return this;
   }
+
+  /* #endregion */
 
   // TODO Add return type
   build() {
@@ -268,14 +296,5 @@ export class AppBuilder {
       });
 
     return server;
-  }
-
-  private bindRequestContext(context: RequestContext, req: Request) {
-    // Since RequestContext properties are readonly, use "any" to bypass TypeScript compiler
-    (context as any).path = req.path;
-    (context as any).headers = req.headers;
-    (context as any).params = req.params;
-    (context as any).query = req.query;
-    (context as any).body = req.body;
   }
 }
