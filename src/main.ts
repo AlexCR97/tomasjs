@@ -23,6 +23,7 @@ import {
 } from "./infrastructure/httpx/middleware";
 import { AnonymousMiddleware } from "./core/httpx/middleware";
 import { ErrorsController, GreeterController, UserController } from "./infrastructure/controllers";
+import { Request, Response } from "express";
 
 async function main(...args: any[]) {
   const logger = new DefaultLogger(main.name, { level: "debug" });
@@ -53,6 +54,11 @@ async function main(...args: any[]) {
         .register(ILoggerProviderToken, { useClass: WinstonLoggerProvider })
         .register(IUserRepositoryToken, { useClass: UserRepository })
         .register(IUserServiceToken, { useClass: UserService });
+    })
+    .use((exp) => {
+      exp.get("/", (req: Request, res: Response) => {
+        res.send("Hello World!");
+      });
     })
     .useJson()
     .useMiddleware(RequestLoggerMiddleware)
