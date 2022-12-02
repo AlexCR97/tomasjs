@@ -1,5 +1,5 @@
+import { BaseController } from "@/@thomas/controllers";
 import { DomainError, StatusCodeError } from "@/core/errors";
-import { BaseController } from "@/core/httpx/controllers";
 import { Request, Response } from "express";
 
 export class ErrorsController extends BaseController {

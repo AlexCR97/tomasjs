@@ -1,6 +1,6 @@
-import { StatusCodes } from "@/core/httpx";
-import { AsyncRequestHandler, RequestContext } from "@/core/httpx/requests";
-import { StatusCodeResponse } from "@/core/httpx/responses";
+import { StatusCodes } from "@/@thomas";
+import { AsyncRequestHandler, RequestContext } from "@/@thomas/requests";
+import { StatusCodeResponse } from "@/@thomas/responses";
 import { IUserRepository, IUserRepositoryToken } from "@/infrastructure/data/repositories/users";
 import { inject, injectable } from "tsyringe";
 

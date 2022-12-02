@@ -1,5 +1,5 @@
-import { RequestContext, RequestHandler } from "@/core/httpx/requests";
-import { PlainTextResponse } from "@/core/httpx/responses";
+import { RequestContext, RequestHandler } from "@/@thomas/requests";
+import { PlainTextResponse } from "@/@thomas/responses";
 import { GreetRequest } from "./GreetRequest";
 
 export class GreetRequestHandler extends RequestHandler<PlainTextResponse> {

@@ -5,7 +5,7 @@ import { IUserServiceToken } from "./core/services/user";
 import { IUserRepositoryToken, UserRepository } from "./infrastructure/data/repositories/users";
 import { WinstonLoggerProvider } from "./infrastructure/logger/winston";
 import { UserService } from "./infrastructure/services/user";
-import { AppBuilder } from "./core/httpx/builder";
+import { AppBuilder } from "./@thomas/builder";
 import { environment } from "./environment";
 import { MikroOrmInstance, MongoDb } from "./infrastructure/data/mongo";
 import {
@@ -16,14 +16,16 @@ import {
 import { GetUsersRequestHandler } from "./infrastructure/requests/users/GetUsersRequestHandler";
 import { HealthCheckRequestHandler } from "./infrastructure/requests/health";
 import { UpdateProfileRequestHandler } from "./infrastructure/requests/users";
+
+import { AnonymousMiddleware } from "./@thomas/middleware";
+import { ErrorsController, GreeterController, UserController } from "./infrastructure/controllers";
+import { Request, Response } from "express";
 import {
   ErrorHandlerMiddleware,
   RequestLoggerMiddleware,
   SampleOnBeforeMiddleware,
 } from "./infrastructure/httpx/middleware";
-import { AnonymousMiddleware } from "./core/httpx/middleware";
-import { ErrorsController, GreeterController, UserController } from "./infrastructure/controllers";
-import { Request, Response } from "express";
+import { SampleController } from "./infrastructure/controllers/SampleController";
 
 async function main(...args: any[]) {
   const logger = new DefaultLogger(main.name, { level: "debug" });
@@ -88,6 +90,7 @@ async function main(...args: any[]) {
       ],
     })
     .useController(UserController)
+    .useControllerx(SampleController)
     .useQueryHandler(GetUserByEmailQueryHandler)
     .useCommandHandler(SignUpUserCommandHandler)
     .useEventHandler(UserCreatedEventHandler)

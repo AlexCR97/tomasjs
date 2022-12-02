@@ -1,12 +1,12 @@
 import { DefaultLogger } from "@/core/logger";
-import { RequestContext } from "@/core/httpx/requests";
+import { RequestContext } from "@/@thomas/requests";
 import { environment } from "@/environment";
 import express, { json, Express, NextFunction, Request, Response, Router } from "express";
 import { container, DependencyContainer } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
-import { AsyncMiddleware, ErrorMiddleware, Middleware } from "@/core/httpx/middleware";
-import { ActionHandler, AsyncActionHandler } from "@/core/httpx/controllers/types";
-import { BaseController } from "@/core/httpx/controllers";
+import { AsyncMiddleware, ErrorMiddleware, Middleware } from "@/@thomas/middleware";
+import { ActionHandler, AsyncActionHandler } from "@/@thomas/controllers/types";
+import { BaseController, Controller } from "@/@thomas/controllers";
 import { HttpMethod } from "../HttpMethod";
 import { OnBeforeMiddleware } from "./types";
 import {
@@ -14,6 +14,7 @@ import {
   RequestHandlerResolver,
   RequestHandlerResponseAdapter,
 } from "./requests";
+import { ActionMap } from "../controllers/Controller";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -141,6 +142,35 @@ export class AppBuilder {
     }
 
     this.logger.debug(`Registered [${controller.route}] controller successfully\n`);
+
+    return this;
+  }
+
+  useControllerx<TController extends Controller>(
+    controllerConstructor: constructor<TController>
+  ): AppBuilder {
+    this.logger.debug(`.${this.useControllerx.name}`, { controllerConstructor });
+
+    container.register(controllerConstructor.name, controllerConstructor);
+    const controllerInstance = container.resolve(controllerConstructor);
+    const controllerActions: ActionMap<any>[] = (controllerInstance as any).actions;
+
+    if (
+      controllerActions === undefined ||
+      controllerActions === null ||
+      controllerActions.length === 0
+    ) {
+      return this;
+    }
+
+    for (const action of controllerActions) {
+      const path = `/${controllerInstance.route}${action.path}`;
+      this.app[action.method](path, async (req, res) => {
+        const requestContext = this.resolveAndBindRequestContext(req);
+        const actionResponse = await action.handler(requestContext); // TODO Will this action work with DI?
+        return RequestHandlerResponseAdapter.toExpressResponse(res, actionResponse);
+      });
+    }
 
     return this;
   }
