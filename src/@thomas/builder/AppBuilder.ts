@@ -153,6 +153,7 @@ export class AppBuilder {
 
     container.register(controllerConstructor.name, controllerConstructor);
     const controllerInstance = container.resolve(controllerConstructor);
+    // const controllerOnBeforeMiddlewares = ControllerMid
     const controllerActions: ActionMap<any>[] = (controllerInstance as any).actions;
 
     if (
