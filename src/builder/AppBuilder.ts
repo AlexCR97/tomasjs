@@ -291,4 +291,20 @@ export class AppBuilder {
 
     return server;
   }
+
+  // TODO Add return type
+  buildAsync(): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
+      const server = this.app
+        .listen(environment.api.port, () => {
+          this.logger.debug("App built successfully!");
+          this.logger.info("Server address:", server.address());
+          return resolve(server);
+        })
+        .on("error", (err) => {
+          this.logger.error(err.message);
+          return reject(err);
+        });
+    });
+  }
 }
