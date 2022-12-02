@@ -1,8 +1,8 @@
 import { CommandDispatcher } from "@/core/cqrs/core/commands";
 import { QueryDispatcher } from "@/core/cqrs/core/queries";
 import { SignUpUserCommand, GetUserByEmailQuery } from "@/core/cqrs/users";
-import { StatusCodes } from "@/@thomas";
-import { BaseController } from "@/@thomas/controllers";
+import { StatusCodes } from "@/StatusCodes";
+import { BaseController } from "@/controllers";
 import { UserModel } from "@/core/models";
 import { IUserService, IUserServiceToken } from "@/core/services/user";
 import { Request, Response } from "express";

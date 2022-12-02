@@ -1,5 +1,5 @@
-import { RequestContext, RequestHandler } from "@/@thomas/requests";
-import { PlainTextResponse } from "@/@thomas/responses";
+import { RequestContext, RequestHandler } from "@/requests";
+import { PlainTextResponse } from "@/responses";
 import { injectable } from "tsyringe";
 
 @injectable()

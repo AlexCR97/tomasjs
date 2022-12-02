@@ -2,11 +2,11 @@ import { NextFunction, Request, Response } from "express";
 import "express-async-errors";
 import { ErrorResponse } from "@/core/data/responses/ErrorResponse";
 import { DomainError, StatusCodeError } from "@/core/errors";
-import { ErrorMiddleware } from "../../../@thomas/middleware";
 import { inject, injectable } from "tsyringe";
 import { ParamsDictionary } from "express-serve-static-core";
 import { ParsedQs } from "qs";
 import { ILogger, ILoggerProvider, ILoggerProviderToken } from "@/core/logger";
+import { ErrorMiddleware } from "@/middleware";
 
 @injectable()
 export class ErrorHandlerMiddleware extends ErrorMiddleware {
