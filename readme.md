@@ -1,10 +1,10 @@
-# {{coolname}}
+# ThomasJS
 
-## What is {{coolname}}?
+## What is ThomasJS?
 
-{{coolname}} is the modern express framework 🔥😎.
+ThomasJS is the modern lightweight express framework 🔥😎.
 
-Rapidly build highly scalable server side applications using {{coolname}}'s built-in:
+Rapidly build highly scalable server side applications using ThomasJS's built-in:
 
 - AppBuilder fluent api
 - Dependency injection
