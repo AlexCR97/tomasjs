@@ -9,7 +9,7 @@
     "watch": "nodemon -r tsconfig-paths/register ./src/main.ts",
     "start:prod": "node -r ts-node/register/transpile-only -r tsconfig-paths/register ./dist/src/main.js"
   },
-  "author": "Author's Name",
+  "author": "viex",
   "license": "ISC",
   "devDependencies": {
     "@types/mongodb": "^4.0.7",
