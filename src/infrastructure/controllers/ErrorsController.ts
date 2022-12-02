@@ -1,4 +1,4 @@
-import { BaseController } from "@/@thomas/controllers";
+import { BaseController } from "@/controllers";
 import { DomainError, StatusCodeError } from "@/core/errors";
 import { Request, Response } from "express";
 

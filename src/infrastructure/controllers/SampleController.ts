@@ -1,6 +1,6 @@
-import { Controller } from "@/@thomas/controllers";
-import { RequestContext } from "@/@thomas/requests";
-import { JsonResponse, PlainTextResponse } from "@/@thomas/responses";
+import { Controller } from "@/controllers";
+import { RequestContext } from "@/requests";
+import { JsonResponse, PlainTextResponse } from "@/responses";
 import { injectable } from "tsyringe";
 
 @injectable()

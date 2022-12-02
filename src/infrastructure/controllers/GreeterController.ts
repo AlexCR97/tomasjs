@@ -1,4 +1,4 @@
-import { BaseController } from "@/@thomas/controllers";
+import { BaseController } from "@/controllers";
 import { ILogger, ILoggerProvider, ILoggerProviderToken } from "@/core/logger";
 import { Request, Response } from "express";
 import { inject, injectable } from "tsyringe";

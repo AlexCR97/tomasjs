@@ -1,12 +1,8 @@
 import { DefaultLogger } from "@/core/logger";
-import { RequestContext } from "@/@thomas/requests";
 import { environment } from "@/environment";
 import express, { json, Express, NextFunction, Request, Response, Router } from "express";
 import { container, DependencyContainer } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
-import { AsyncMiddleware, ErrorMiddleware, Middleware } from "@/@thomas/middleware";
-import { ActionHandler, AsyncActionHandler } from "@/@thomas/controllers/types";
-import { BaseController, Controller } from "@/@thomas/controllers";
 import { HttpMethod } from "../HttpMethod";
 import { OnBeforeMiddleware } from "./types";
 import {
@@ -14,7 +10,11 @@ import {
   RequestHandlerResolver,
   RequestHandlerResponseAdapter,
 } from "./requests";
-import { ActionMap } from "../controllers/Controller";
+import { ActionMap, Controller } from "../controllers/Controller";
+import { AsyncMiddleware, ErrorMiddleware, Middleware } from "@/middleware";
+import { BaseController } from "@/controllers";
+import { ActionHandler, AsyncActionHandler } from "@/controllers/types";
+import { RequestContext } from "@/requests";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -290,5 +290,21 @@ export class AppBuilder {
       });
 
     return server;
+  }
+
+  // TODO Add return type
+  buildAsync(port: number): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
+      const server = this.app
+        .listen(port, () => {
+          this.logger.debug("App built successfully!");
+          this.logger.info("Server address:", server.address());
+          return resolve(server);
+        })
+        .on("error", (err) => {
+          this.logger.error(err.message);
+          return reject(err);
+        });
+    });
   }
 }

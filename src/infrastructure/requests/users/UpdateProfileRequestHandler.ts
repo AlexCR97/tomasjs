@@ -1,8 +1,8 @@
-import { StatusCodes } from "@/@thomas";
-import { AsyncRequestHandler, RequestContext } from "@/@thomas/requests";
-import { StatusCodeResponse } from "@/@thomas/responses";
+import { AsyncRequestHandler, RequestContext } from "@/requests";
+import { StatusCodeResponse } from "@/responses";
 import { IUserRepository, IUserRepositoryToken } from "@/infrastructure/data/repositories/users";
 import { inject, injectable } from "tsyringe";
+import { StatusCodes } from "@/StatusCodes";
 
 @injectable()
 export class UpdateProfileRequestHandler extends AsyncRequestHandler<StatusCodeResponse> {
