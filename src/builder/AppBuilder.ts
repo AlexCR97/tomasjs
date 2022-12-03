@@ -1,6 +1,6 @@
 import { DefaultLogger } from "@/core/logger";
 import { environment } from "@/environment";
-import express, { json, Express, NextFunction, Request, Response, Router } from "express";
+import express, { json, Express, NextFunction, Request, Response } from "express";
 import { container, DependencyContainer } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
 import { HttpMethod } from "../HttpMethod";
@@ -10,11 +10,10 @@ import {
   RequestHandlerResolver,
   RequestHandlerResponseAdapter,
 } from "./requests";
-import { ActionMap, Controller } from "../controllers/Controller";
 import { AsyncMiddleware, ErrorMiddleware, Middleware } from "@/middleware";
-import { BaseController } from "@/controllers";
-import { ActionHandler, AsyncActionHandler } from "@/controllers/types";
+import { Controller } from "@/controllers";
 import { RequestContext } from "@/requests";
+import { ControllerActionMap } from "@/controllers/types";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -81,98 +80,112 @@ export class AppBuilder {
 
   /* #region Controllers */
 
-  private controllersBasePath?: string;
+  // private controllersBasePath?: string;
 
-  useControllersBasePath(basePath: string): AppBuilder {
-    this.logger.debug(`.${this.useControllersBasePath.name}`, { basePath });
-    this.controllersBasePath = basePath;
-    return this;
-  }
+  // useControllersBasePath(basePath: string): AppBuilder {
+  //   this.logger.debug(`.${this.useControllersBasePath.name}`, { basePath });
+  //   this.controllersBasePath = basePath;
+  //   return this;
+  // }
 
-  useController(controllerClass: any): AppBuilder {
-    this.logger.debug(`.${this.useController.name}`, { controllerClass });
+  // useController(controllerClass: any): AppBuilder {
+  //   this.logger.debug(`.${this.useController.name}`, { controllerClass });
 
-    container.register(controllerClass.name, controllerClass);
-    const controller = container.resolve(controllerClass) as BaseController;
+  //   container.register(controllerClass.name, controllerClass);
+  //   const controller = container.resolve(controllerClass) as BaseController;
 
-    this.logger.debug(`Registering controller ${controller.route}`);
+  //   this.logger.debug(`Registering controller ${controller.route}`);
 
-    if (controller.actions.length === 0) {
-      return this;
-    }
+  //   if (controller.actions.length === 0) {
+  //     return this;
+  //   }
 
-    const router = Router();
+  //   const router = Router();
 
-    controller.actions.forEach((action) => {
-      const actionStr = `[${action.method}] ${action.path} (${action.handlers.length} handlers)`;
-      this.logger.debug(`Registering controller action: ${actionStr}`);
+  //   controller.actions.forEach((action) => {
+  //     const actionStr = `[${action.method}] ${action.path} (${action.handlers.length} handlers)`;
+  //     this.logger.debug(`Registering controller action: ${actionStr}`);
 
-      if (action.handlers.length == 0) {
-        return;
-      }
+  //     if (action.handlers.length == 0) {
+  //       return;
+  //     }
 
-      if (action.handlers.length == 1) {
-        return router[action.method](action.path, async (req, res) => {
-          const actionHandler = action.handlers[0] as ActionHandler | AsyncActionHandler;
-          const handlerResponse = actionHandler(req, res);
-          await Promise.resolve(handlerResponse);
-        });
-      }
+  //     if (action.handlers.length == 1) {
+  //       return router[action.method](action.path, async (req, res) => {
+  //         const actionHandler = action.handlers[0] as ActionHandler | AsyncActionHandler;
+  //         const handlerResponse = actionHandler(req, res);
+  //         await Promise.resolve(handlerResponse);
+  //       });
+  //     }
 
-      const middleware = action.handlers.slice(0, action.handlers.length - 1);
+  //     const middleware = action.handlers.slice(0, action.handlers.length - 1);
 
-      const handler = action.handlers[action.handlers.length - 1] as
-        | ActionHandler
-        | AsyncActionHandler;
+  //     const handler = action.handlers[action.handlers.length - 1] as
+  //       | ActionHandler
+  //       | AsyncActionHandler;
 
-      return router[action.method](action.path, middleware, async (req: Request, res: Response) => {
-        const handlerResponse = handler(req, res);
-        await Promise.resolve(handlerResponse);
-      });
-    });
+  //     return router[action.method](action.path, middleware, async (req: Request, res: Response) => {
+  //       const handlerResponse = handler(req, res);
+  //       await Promise.resolve(handlerResponse);
+  //     });
+  //   });
 
-    if (
-      this.controllersBasePath === undefined ||
-      this.controllersBasePath === null ||
-      this.controllersBasePath.trim().length === 0
-    ) {
-      this.app.use(`/${controller.route}`, router);
-    } else {
-      this.app.use(`/${this.controllersBasePath}/${controller.route}`, router);
-    }
+  //   if (
+  //     this.controllersBasePath === undefined ||
+  //     this.controllersBasePath === null ||
+  //     this.controllersBasePath.trim().length === 0
+  //   ) {
+  //     this.app.use(`/${controller.route}`, router);
+  //   } else {
+  //     this.app.use(`/${this.controllersBasePath}/${controller.route}`, router);
+  //   }
 
-    this.logger.debug(`Registered [${controller.route}] controller successfully\n`);
+  //   this.logger.debug(`Registered [${controller.route}] controller successfully\n`);
 
-    return this;
-  }
+  //   return this;
+  // }
 
-  useControllerx<TController extends Controller>(
-    controllerConstructor: constructor<TController>
+  useController<TController extends Controller>(
+    controller: TController | constructor<TController>
   ): AppBuilder {
-    this.logger.debug(`.${this.useControllerx.name}`, { controllerConstructor });
+    this.logger.debug(`.${this.useController.name}`, { controllerConstructor: controller });
 
-    container.register(controllerConstructor.name, controllerConstructor);
-    const controllerInstance = container.resolve(controllerConstructor);
-    const controllerActions: ActionMap<any>[] = (controllerInstance as any).actions;
+    if (controller instanceof Controller) {
+      this.registerController(controller);
+    } else {
+      container.register(controller.name, controller);
+      const controllerInstance = container.resolve(controller);
+      this.registerController(controllerInstance);
+    }
+
+    return this;
+  }
+
+  private registerController(controllerInstance: Controller) {
+    const controllerActions: ControllerActionMap<any>[] = (controllerInstance as any).actions;
 
     if (
       controllerActions === undefined ||
       controllerActions === null ||
       controllerActions.length === 0
     ) {
-      return this;
+      return;
     }
 
     for (const action of controllerActions) {
-      const path = `/${controllerInstance.route}${action.path}`;
+      const controllerPath: string = (controllerInstance as any).path?.trim();
+
+      const path =
+        controllerPath !== undefined && controllerPath !== null && controllerPath.length > 0
+          ? `/${controllerPath}${action.path}`
+          : `/${action.path}`;
+
       this.app[action.method](path, async (req, res) => {
         const requestContext = this.resolveAndBindRequestContext(req);
         const actionResponse = await action.handler(requestContext); // TODO Will this action work with DI?
         return RequestHandlerResponseAdapter.toExpressResponse(res, actionResponse);
       });
     }
-
-    return this;
   }
 
   /* #endregion */
