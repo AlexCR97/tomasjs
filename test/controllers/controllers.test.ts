@@ -4,7 +4,6 @@ import { tryCloseServerAsync } from "../utils/server";
 import { AppBuilder } from "../../src/builder";
 import { Controller } from "../../src/controllers";
 import { HttpContext, StatusCodes } from "../../src/core";
-import { environment } from "../environment";
 import fetch from "node-fetch";
 import { NextFunction, Request, Response } from "express";
 import { AnonymousMiddleware, Middleware } from "../../src/middleware";
@@ -13,10 +12,11 @@ import { ParsedQs } from "qs";
 import { tick } from "../utils/time";
 import { StatusCodeResponse } from "../../src/responses";
 
-describe("AppBuilder", () => {
-  let server: any; // TODO Set http.Server type
-  const serverAddress = `http://localhost:${environment.api.port}`;
+describe("Controllers", () => {
+  const port = 3031;
+  const serverAddress = `http://localhost:${port}`;
   const serverTeardownOffsetMilliseconds = 100;
+  let server: any; // TODO Set http.Server type
 
   beforeEach(async () => {
     await tick(serverTeardownOffsetMilliseconds);
@@ -39,9 +39,7 @@ describe("AppBuilder", () => {
       }
     }
 
-    server = await new AppBuilder()
-      .useController(new TestController())
-      .buildAsync(environment.api.port);
+    server = await new AppBuilder().useController(new TestController()).buildAsync(port);
 
     // Act
     const response = await fetch(serverAddress);
@@ -62,7 +60,7 @@ describe("AppBuilder", () => {
       }
     }
 
-    server = await new AppBuilder().useController(TestController).buildAsync(environment.api.port);
+    server = await new AppBuilder().useController(TestController).buildAsync(port);
 
     // Act
     const response = await fetch(serverAddress);
@@ -87,7 +85,7 @@ describe("AppBuilder", () => {
       }
     }
 
-    server = await new AppBuilder().useController(TestController).buildAsync(environment.api.port);
+    server = await new AppBuilder().useController(TestController).buildAsync(port);
 
     // Act/Assert GET
     const getResponse = await fetch(serverAddress, { method: "get" });
@@ -135,7 +133,7 @@ describe("AppBuilder", () => {
       }
     }
 
-    server = await new AppBuilder().useController(TestController).buildAsync(environment.api.port);
+    server = await new AppBuilder().useController(TestController).buildAsync(port);
 
     // Act/Assert - Default action path
     const defaultPathResponse = await fetch(`${serverAddress}/${controllerPath}`);
@@ -160,7 +158,7 @@ describe("AppBuilder", () => {
       }
     }
 
-    server = await new AppBuilder().useController(TestController).buildAsync(environment.api.port);
+    server = await new AppBuilder().useController(TestController).buildAsync(port);
 
     // Act
     const response = await fetch(serverAddress);
@@ -184,7 +182,7 @@ describe("AppBuilder", () => {
       }
     }
 
-    server = await new AppBuilder().useController(TestController).buildAsync(environment.api.port);
+    server = await new AppBuilder().useController(TestController).buildAsync(port);
 
     // Act
     const response = await fetch(serverAddress);
@@ -213,7 +211,7 @@ describe("AppBuilder", () => {
       }
     }
 
-    server = await new AppBuilder().useController(TestController).buildAsync(environment.api.port);
+    server = await new AppBuilder().useController(TestController).buildAsync(port);
 
     // Act
     const response = await fetch(serverAddress);
@@ -264,7 +262,7 @@ describe("AppBuilder", () => {
       }
     }
 
-    server = await new AppBuilder().useController(TestController).buildAsync(environment.api.port);
+    server = await new AppBuilder().useController(TestController).buildAsync(port);
 
     // Act
     const response = await fetch(serverAddress);
