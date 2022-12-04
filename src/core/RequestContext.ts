@@ -1,7 +1,5 @@
-import { singleton } from "tsyringe";
 import { request } from "express";
 
-@singleton()
 export class RequestContext {
   readonly path!: typeof request.path;
   readonly headers!: typeof request.headers;

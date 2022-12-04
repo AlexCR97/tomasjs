@@ -1,6 +1,7 @@
+import { HttpContext } from "@/core";
 import { container } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
-import { AsyncRequestHandler, RequestContext, RequestHandler } from "../../requests";
+import { AsyncRequestHandler, RequestHandler } from "../../requests";
 
 export abstract class RequestHandlerResolver {
   private constructor() {}
@@ -8,7 +9,7 @@ export abstract class RequestHandlerResolver {
   static async resolveAndHandleAsync<
     TConstructor extends RequestHandler<TResponse> | AsyncRequestHandler<TResponse>,
     TResponse = void
-  >(constructor: constructor<TConstructor>, requestContext: RequestContext) {
+  >(constructor: constructor<TConstructor>, context: HttpContext) {
     const instance = container.resolve(constructor) as
       | RequestHandler<TResponse>
       | AsyncRequestHandler<TResponse>;
@@ -18,11 +19,11 @@ export abstract class RequestHandlerResolver {
     const asyncRequestHandler = instance as AsyncRequestHandler<TResponse>;
 
     if (requestHandler.handle !== undefined) {
-      return requestHandler.handle(requestContext);
+      return requestHandler.handle(context);
     }
 
     if (asyncRequestHandler.handleAsync !== undefined) {
-      return await asyncRequestHandler.handleAsync(requestContext);
+      return await asyncRequestHandler.handleAsync(context);
     }
 
     throw new Error(

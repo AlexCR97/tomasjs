@@ -1,5 +1,5 @@
-import { RequestContext } from "./RequestContext";
+import { HttpContext } from "@/core/HttpContext";
 
 export abstract class RequestHandler<TResponse = void> {
-  abstract handle(context: RequestContext): TResponse;
+  abstract handle(context: HttpContext): TResponse;
 }

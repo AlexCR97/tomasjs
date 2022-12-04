@@ -1,5 +1,5 @@
-import { RequestContext } from "./RequestContext";
+import { HttpContext } from "@/core";
 
 export abstract class AsyncRequestHandler<TResponse = void> {
-  abstract handleAsync(context: RequestContext): Promise<TResponse>;
+  abstract handleAsync(context: HttpContext): Promise<TResponse>;
 }

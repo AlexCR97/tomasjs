@@ -10,14 +10,14 @@ import {
   RequestHandlerResolver,
   RequestHandlerResponseAdapter,
 } from "./requests";
-import { AsyncMiddleware, ErrorMiddleware, Middleware } from "@/middleware";
+import { ErrorMiddleware, Middleware } from "@/middleware";
 import { Controller } from "@/controllers";
-import { RequestContext } from "@/requests";
-import { ControllerActionMap } from "@/controllers/types";
+import { ControllerActionMap, ControllerMiddleware } from "@/controllers/types";
+import { HttpContext, RequestContext } from "@/core";
 
 export class AppBuilder {
   private readonly app: Express;
-  private readonly logger = new DefaultLogger(AppBuilder.name, { level: "info" });
+  private readonly logger = new DefaultLogger(AppBuilder.name, { level: "warn" });
 
   constructor() {
     this.logger.debug("Building app...");
@@ -54,96 +54,38 @@ export class AppBuilder {
 
   /* #region Middleware */
 
-  useMiddleware(middlewareClass: any): AppBuilder {
-    container.register(middlewareClass.name, middlewareClass);
-    const middleware = container.resolve(middlewareClass) as any;
-
-    if (middleware instanceof Middleware) {
-      this.app.use((req: Request, res: Response, next: NextFunction) =>
-        middleware.handle(req, res, next)
-      );
-    } else if (middleware instanceof AsyncMiddleware) {
-      this.app.use(
-        async (req: Request, res: Response, next: NextFunction) =>
-          await middleware.handleAsync(req, res, next)
-      );
-    } else if (middleware instanceof ErrorMiddleware) {
-      this.app.use((err: any, req: Request, res: Response, next: NextFunction) =>
-        middleware.handle(err, req, res, next)
-      );
+  useMiddleware<TMiddleware extends Middleware | ErrorMiddleware>(
+    middleware: TMiddleware | constructor<TMiddleware>
+  ): AppBuilder {
+    if (middleware instanceof Middleware || middleware instanceof ErrorMiddleware) {
+      this.registerMiddleware(middleware);
+    } else {
+      container.register(middleware.name, middleware);
+      const middlewareInstance = container.resolve(middleware);
+      this.registerMiddleware(middlewareInstance);
     }
 
     return this;
   }
 
+  private registerMiddleware(middleware: Middleware | ErrorMiddleware) {
+    if (middleware instanceof Middleware) {
+      this.app.use(
+        async (req: Request, res: Response, next: NextFunction) =>
+          await middleware.handle(req, res, next)
+      );
+    } else if (middleware instanceof ErrorMiddleware) {
+      this.app.use((err: any, req: Request, res: Response, next: NextFunction) =>
+        middleware.handle(err, req, res, next)
+      );
+    } else {
+      throw new Error(`Unknown middleware: "${middleware}"`);
+    }
+  }
+
   /* #endregion */
 
   /* #region Controllers */
-
-  // private controllersBasePath?: string;
-
-  // useControllersBasePath(basePath: string): AppBuilder {
-  //   this.logger.debug(`.${this.useControllersBasePath.name}`, { basePath });
-  //   this.controllersBasePath = basePath;
-  //   return this;
-  // }
-
-  // useController(controllerClass: any): AppBuilder {
-  //   this.logger.debug(`.${this.useController.name}`, { controllerClass });
-
-  //   container.register(controllerClass.name, controllerClass);
-  //   const controller = container.resolve(controllerClass) as BaseController;
-
-  //   this.logger.debug(`Registering controller ${controller.route}`);
-
-  //   if (controller.actions.length === 0) {
-  //     return this;
-  //   }
-
-  //   const router = Router();
-
-  //   controller.actions.forEach((action) => {
-  //     const actionStr = `[${action.method}] ${action.path} (${action.handlers.length} handlers)`;
-  //     this.logger.debug(`Registering controller action: ${actionStr}`);
-
-  //     if (action.handlers.length == 0) {
-  //       return;
-  //     }
-
-  //     if (action.handlers.length == 1) {
-  //       return router[action.method](action.path, async (req, res) => {
-  //         const actionHandler = action.handlers[0] as ActionHandler | AsyncActionHandler;
-  //         const handlerResponse = actionHandler(req, res);
-  //         await Promise.resolve(handlerResponse);
-  //       });
-  //     }
-
-  //     const middleware = action.handlers.slice(0, action.handlers.length - 1);
-
-  //     const handler = action.handlers[action.handlers.length - 1] as
-  //       | ActionHandler
-  //       | AsyncActionHandler;
-
-  //     return router[action.method](action.path, middleware, async (req: Request, res: Response) => {
-  //       const handlerResponse = handler(req, res);
-  //       await Promise.resolve(handlerResponse);
-  //     });
-  //   });
-
-  //   if (
-  //     this.controllersBasePath === undefined ||
-  //     this.controllersBasePath === null ||
-  //     this.controllersBasePath.trim().length === 0
-  //   ) {
-  //     this.app.use(`/${controller.route}`, router);
-  //   } else {
-  //     this.app.use(`/${this.controllersBasePath}/${controller.route}`, router);
-  //   }
-
-  //   this.logger.debug(`Registered [${controller.route}] controller successfully\n`);
-
-  //   return this;
-  // }
 
   useController<TController extends Controller>(
     controller: TController | constructor<TController>
@@ -162,29 +104,40 @@ export class AppBuilder {
   }
 
   private registerController(controllerInstance: Controller) {
-    const controllerActions: ControllerActionMap<any>[] = (controllerInstance as any).actions;
+    const controllerInstanceAny = controllerInstance as any;
+
+    const onBeforeMiddlewares: ControllerMiddleware[] = controllerInstanceAny.onBeforeMiddleware;
+    const controllerActions: ControllerActionMap<any>[] = controllerInstanceAny.actions;
 
     if (
-      controllerActions === undefined ||
-      controllerActions === null ||
-      controllerActions.length === 0
+      onBeforeMiddlewares !== undefined &&
+      onBeforeMiddlewares !== null &&
+      onBeforeMiddlewares.length > 0
     ) {
-      return;
+      onBeforeMiddlewares.forEach((middleware) => {
+        this.useMiddleware(middleware);
+      });
     }
 
-    for (const action of controllerActions) {
-      const controllerPath: string = (controllerInstance as any).path?.trim();
+    if (
+      controllerActions !== undefined &&
+      controllerActions !== null &&
+      controllerActions.length > 0
+    ) {
+      for (const action of controllerActions) {
+        const controllerPath: string = (controllerInstance as any).path?.trim();
 
-      const path =
-        controllerPath !== undefined && controllerPath !== null && controllerPath.length > 0
-          ? `/${controllerPath}${action.path}`
-          : `/${action.path}`;
+        const path =
+          controllerPath !== undefined && controllerPath !== null && controllerPath.length > 0
+            ? `/${controllerPath}${action.path}`
+            : `/${action.path}`;
 
-      this.app[action.method](path, async (req, res) => {
-        const requestContext = this.resolveAndBindRequestContext(req);
-        const actionResponse = await action.handler(requestContext); // TODO Will this action work with DI?
-        return RequestHandlerResponseAdapter.toExpressResponse(res, actionResponse);
-      });
+        this.app[action.method](path, async (req, res) => {
+          const requestContext = this.resolveAndBindHttpContext(req, res);
+          const actionResponse = await action.handler(requestContext); // TODO Will this action work with DI?
+          return RequestHandlerResponseAdapter.toExpressResponse(res, actionResponse);
+        });
+      }
     }
   }
 
@@ -196,7 +149,7 @@ export class AppBuilder {
 
   useRequestContext(): AppBuilder {
     this.app.use((req, res, next) => {
-      this.resolveAndBindRequestContext(req);
+      this.resolveAndBindHttpContext(req, res);
       next();
     });
     this.isRequestContextInitialized = true;
@@ -229,7 +182,7 @@ export class AppBuilder {
       path,
       ...ExpressRequestHandlerFactory.fromMiddlewares(options?.onBefore),
       async (req: Request, res: Response) => {
-        const requestContext = this.resolveAndBindRequestContext(req); // TODO Figure out a way to do this only in the .useRequestContext method
+        const requestContext = this.resolveAndBindHttpContext(req, res); // TODO Figure out a way to do this only in the .useRequestContext method
         const customResponse = await RequestHandlerResolver.resolveAndHandleAsync<any, any>(
           requestHandlerConstructor,
           requestContext
@@ -241,17 +194,23 @@ export class AppBuilder {
     return this;
   }
 
-  private resolveAndBindRequestContext(req: Request): RequestContext {
+  private resolveAndBindHttpContext(req: Request, res: Response): HttpContext {
     const context = container.resolve(RequestContext);
 
     // Since RequestContext properties are readonly, use "any" to bypass TypeScript compiler
-    (context as any).path = req.path;
-    (context as any).headers = req.headers;
-    (context as any).params = req.params;
-    (context as any).query = req.query;
-    (context as any).body = req.body;
+    const contextAny = context as any;
 
-    return context;
+    // Request
+    contextAny.path = req.path;
+    contextAny.headers = req.headers;
+    contextAny.params = req.params;
+    contextAny.query = req.query;
+    contextAny.body = req.body;
+
+    // Response
+    contextAny.response = res;
+
+    return contextAny;
   }
 
   /* #endregion */

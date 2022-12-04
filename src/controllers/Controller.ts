@@ -24,14 +24,6 @@ export abstract class Controller {
   }
   /* #endregion */
 
-  /* #region On After (per-controller middleware) */
-  private readonly onAfterMiddleware: ControllerMiddleware[] = [];
-  onAfter(middleware: ControllerMiddleware): Controller {
-    this.onAfterMiddleware.push(middleware);
-    return this;
-  }
-  /* #endregion */
-
   /* #region Actions/Middlewares (per-path actions/middlewares*/
 
   private readonly actions: ControllerActionMap<any>[] = [];

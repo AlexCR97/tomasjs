@@ -1,5 +1,5 @@
 import { HttpMethod } from "@/core";
-import { ExpressMiddlewareHandler, RequestHandler } from "@/core/handlers";
+import { RequestHandler } from "@/core/handlers";
 import { Middleware } from "@/middleware";
 import { constructor } from "tsyringe/dist/typings/types";
 
@@ -9,10 +9,7 @@ export interface ControllerActionMap<TResponse = void> {
   handler: RequestHandler<TResponse>;
 }
 
-export type ControllerMiddleware<T extends Middleware = Middleware> =
-  | ExpressMiddlewareHandler
-  | Middleware
-  | constructor<T>;
+export type ControllerMiddleware<T extends Middleware = Middleware> = Middleware | constructor<T>;
 
 export interface ControllerActionOptions {
   onBefore?: ControllerMiddleware[];
