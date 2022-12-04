@@ -1,6 +1,6 @@
 import { DefaultLogger } from "@/core/logger";
 import { environment } from "@/environment";
-import express, { json, Express, NextFunction, Request, Response } from "express";
+import express, { json, Express, NextFunction, Request, Response, Router } from "express";
 import { container, DependencyContainer } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
 import { HttpMethod } from "../HttpMethod";
@@ -83,6 +83,36 @@ export class AppBuilder {
     }
   }
 
+  private useMiddlewareRouter<TMiddleware extends Middleware | ErrorMiddleware>(
+    router: Router,
+    middleware: TMiddleware | constructor<TMiddleware>
+  ): AppBuilder {
+    if (middleware instanceof Middleware || middleware instanceof ErrorMiddleware) {
+      this.registerMiddlewareRouter(router, middleware);
+    } else {
+      container.register(middleware.name, middleware);
+      const middlewareInstance = container.resolve(middleware);
+      this.registerMiddlewareRouter(router, middlewareInstance);
+    }
+
+    return this;
+  }
+
+  private registerMiddlewareRouter(router: Router, middleware: Middleware | ErrorMiddleware) {
+    if (middleware instanceof Middleware) {
+      router.use(
+        async (req: Request, res: Response, next: NextFunction) =>
+          await middleware.handle(req, res, next)
+      );
+    } else if (middleware instanceof ErrorMiddleware) {
+      router.use((err: any, req: Request, res: Response, next: NextFunction) =>
+        middleware.handle(err, req, res, next)
+      );
+    } else {
+      throw new Error(`Unknown middleware: "${middleware}"`);
+    }
+  }
+
   /* #endregion */
 
   /* #region Controllers */
@@ -93,19 +123,33 @@ export class AppBuilder {
     this.logger.debug(`.${this.useController.name}`, { controllerConstructor: controller });
 
     if (controller instanceof Controller) {
-      this.registerController(controller);
+      const router = this.toRouter(controller);
+      const controllerPath = this.getRoutingPath(controller);
+      this.app.use(controllerPath, router);
     } else {
       container.register(controller.name, controller);
       const controllerInstance = container.resolve(controller);
-      this.registerController(controllerInstance);
+      const router = this.toRouter(controllerInstance);
+      const controllerPath = this.getRoutingPath(controllerInstance);
+      this.app.use(controllerPath, router);
     }
 
     return this;
   }
 
-  private registerController(controllerInstance: Controller) {
-    const controllerInstanceAny = controllerInstance as any;
+  private getRoutingPath(controller: Controller) {
+    const path = controller.path?.trim();
 
+    if (path === undefined || path === null || path.length === 0) {
+      return "/";
+    }
+
+    return `/${path}`;
+  }
+
+  private toRouter(controllerInstance: Controller): Router {
+    const router = Router();
+    const controllerInstanceAny = controllerInstance as any;
     const onBeforeMiddlewares: ControllerMiddleware[] = controllerInstanceAny.onBeforeMiddleware;
     const controllerActions: ControllerActionMap<any>[] = controllerInstanceAny.actions;
 
@@ -115,7 +159,7 @@ export class AppBuilder {
       onBeforeMiddlewares.length > 0
     ) {
       onBeforeMiddlewares.forEach((middleware) => {
-        this.useMiddleware(middleware);
+        this.useMiddlewareRouter(router, middleware);
       });
     }
 
@@ -125,20 +169,15 @@ export class AppBuilder {
       controllerActions.length > 0
     ) {
       for (const action of controllerActions) {
-        const controllerPath: string = (controllerInstance as any).path?.trim();
-
-        const path =
-          controllerPath !== undefined && controllerPath !== null && controllerPath.length > 0
-            ? `/${controllerPath}${action.path}`
-            : `/${action.path}`;
-
-        this.app[action.method](path, async (req, res) => {
+        router[action.method](action.path, async (req, res) => {
           const requestContext = this.resolveAndBindHttpContext(req, res);
           const actionResponse = await action.handler(requestContext); // TODO Will this action work with DI?
           return RequestHandlerResponseAdapter.toExpressResponse(res, actionResponse);
         });
       }
     }
+
+    return router;
   }
 
   /* #endregion */
@@ -249,6 +288,8 @@ export class AppBuilder {
 
   /* #endregion */
 
+  /* #region Build */
+
   // TODO Add return type
   build() {
     const server = this.app
@@ -279,4 +320,6 @@ export class AppBuilder {
         });
     });
   }
+
+  /* #endregion */
 }

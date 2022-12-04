@@ -28,7 +28,6 @@ export abstract class Controller {
 
   private readonly actions: ControllerActionMap<any>[] = [];
   private readonly onBeforeMiddlewareMap: ControllerMiddlewareMap[] = [];
-  private readonly onAfterMiddlewareMap: ControllerMiddlewareMap[] = [];
 
   get<TResponse = void>(
     path: string,
@@ -83,10 +82,6 @@ export abstract class Controller {
   ) {
     this.onBeforeMiddlewareMap.push(
       ...this.toControllerMiddlewareMaps(method, path, options?.onBefore)
-    );
-
-    this.onAfterMiddlewareMap.push(
-      ...this.toControllerMiddlewareMaps(method, path, options?.onAfter)
     );
 
     this.actions.push({
