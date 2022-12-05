@@ -13,7 +13,9 @@ import {
 import { ErrorMiddleware, Middleware } from "@/middleware";
 import { Controller } from "@/controllers";
 import { ControllerActionMap, ControllerMiddleware } from "@/controllers/types";
-import { HttpContext, RequestContext } from "@/core";
+import { HttpContext } from "@/core";
+import { RequestHandler } from "@/requests";
+import { HttpContextBinder } from "@/core/HttpContextBinder";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -170,8 +172,8 @@ export class AppBuilder {
     ) {
       for (const action of controllerActions) {
         router[action.method](action.path, async (req, res) => {
-          const requestContext = this.resolveAndBindHttpContext(req, res);
-          const actionResponse = await action.handler(requestContext); // TODO Will this action work with DI?
+          const httpContext = this.resolveAndBindHttpContext(req, res);
+          const actionResponse = await action.handler(httpContext); // TODO Will this action work with DI?
           return RequestHandlerResponseAdapter.toExpressResponse(res, actionResponse);
         });
       }
@@ -184,21 +186,27 @@ export class AppBuilder {
 
   /* #region Request Handlers */
 
-  private isRequestContextInitialized = false;
+  private isHttpContextInitialized = false;
 
-  useRequestContext(): AppBuilder {
+  useHttpContext(): AppBuilder {
     this.app.use((req, res, next) => {
       this.resolveAndBindHttpContext(req, res);
       next();
     });
-    this.isRequestContextInitialized = true;
+    this.isHttpContextInitialized = true;
     return this;
   }
 
-  useRequestHandler(
+  private resolveAndBindHttpContext(req: Request, res: Response): HttpContext {
+    const context = container.resolve(HttpContext);
+    HttpContextBinder.fromExpress(context, req, res);
+    return context;
+  }
+
+  useRequestHandler<TRequestHandler extends RequestHandler<any>>(
     method: HttpMethod,
     path: string,
-    requestHandlerConstructor: constructor<any>,
+    requestHandler: TRequestHandler | constructor<TRequestHandler>,
     options?: {
       onBefore?: OnBeforeMiddleware | OnBeforeMiddleware[];
     }
@@ -206,50 +214,46 @@ export class AppBuilder {
     this.logger.debug(`.${this.useRequestHandler.name}`, {
       method,
       path,
-      requestHandlerConstructor,
+      requestHandlerConstructor: requestHandler,
     });
 
-    if (!this.isRequestContextInitialized) {
+    if (!this.isHttpContextInitialized) {
       throw new Error(
-        `The ${RequestContext.name} singleton has not been initialized. Please use the ${this.useRequestContext.name} method before calling ${this.useRequestHandler.name}.`
+        `The ${HttpContext.name} singleton has not been initialized. Please use the ${this.useHttpContext.name} method before calling ${this.useRequestHandler.name}.`
       );
     }
 
-    container.register(requestHandlerConstructor.name, requestHandlerConstructor);
-
-    this.app[method](
-      path,
-      ...ExpressRequestHandlerFactory.fromMiddlewares(options?.onBefore),
-      async (req: Request, res: Response) => {
-        const requestContext = this.resolveAndBindHttpContext(req, res); // TODO Figure out a way to do this only in the .useRequestContext method
-        const customResponse = await RequestHandlerResolver.resolveAndHandleAsync<any, any>(
-          requestHandlerConstructor,
-          requestContext
-        );
-        return RequestHandlerResponseAdapter.toExpressResponse(res, customResponse);
-      }
-    );
+    if (requestHandler instanceof RequestHandler) {
+      this.registerRequestHandler<TRequestHandler>(method, path, requestHandler, options);
+    } else {
+      container.register(requestHandler.name, requestHandler);
+      const requestHandlerInstance = container.resolve(requestHandler);
+      this.registerRequestHandler<TRequestHandler>(method, path, requestHandlerInstance, options);
+    }
 
     return this;
   }
 
-  private resolveAndBindHttpContext(req: Request, res: Response): HttpContext {
-    const context = container.resolve(RequestContext);
-
-    // Since RequestContext properties are readonly, use "any" to bypass TypeScript compiler
-    const contextAny = context as any;
-
-    // Request
-    contextAny.path = req.path;
-    contextAny.headers = req.headers;
-    contextAny.params = req.params;
-    contextAny.query = req.query;
-    contextAny.body = req.body;
-
-    // Response
-    contextAny.response = res;
-
-    return contextAny;
+  private registerRequestHandler<TRequestHandler extends RequestHandler<any>>(
+    method: HttpMethod,
+    path: string,
+    requestHandler: TRequestHandler,
+    options?: {
+      onBefore?: OnBeforeMiddleware | OnBeforeMiddleware[];
+    }
+  ) {
+    this.app[method](
+      path,
+      ...ExpressRequestHandlerFactory.fromMiddlewares(options?.onBefore),
+      async (req: Request, res: Response) => {
+        const httpContext = this.resolveAndBindHttpContext(req, res); // TODO Figure out a way to do this only in the .useHttpContext method
+        const customResponse = await RequestHandlerResolver.handleAsync<TRequestHandler>(
+          requestHandler,
+          httpContext
+        );
+        return RequestHandlerResponseAdapter.toExpressResponse(res, customResponse);
+      }
+    );
   }
 
   /* #endregion */

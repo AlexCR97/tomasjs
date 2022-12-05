@@ -4,6 +4,6 @@ import { RequestContext } from "./RequestContext";
 
 @singleton()
 export class HttpContext {
-  readonly request!: RequestContext;
-  readonly response!: typeof response;
+  request!: RequestContext; // TODO Make readonly?
+  response!: typeof response; // TODO Make readonly?
 }

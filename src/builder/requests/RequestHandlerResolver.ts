@@ -6,19 +6,24 @@ import { RequestHandler } from "../../requests";
 export abstract class RequestHandlerResolver {
   private constructor() {}
 
-  static async resolveAndHandleAsync<
-    TConstructor extends RequestHandler<TResponse>,
-    TResponse = void
-  >(constructor: constructor<TConstructor>, context: HttpContext) {
-    const instance = container.resolve(constructor) as RequestHandler<TResponse>;
-    const requestHandler = instance as RequestHandler<TResponse>;
-
+  static async handleAsync<TRequestHandler extends RequestHandler<any>>(
+    requestHandler: TRequestHandler,
+    context: HttpContext
+  ) {
     if (requestHandler.handle !== undefined) {
-      return requestHandler.handle(context);
+      return await requestHandler.handle(context);
     }
 
     throw new Error(
       `Could not convert provided request handler into a valid ${RequestHandler.name}.`
     );
+  }
+
+  static async resolveAndHandleAsync<TRequestHandler extends RequestHandler<any>>(
+    constructor: constructor<TRequestHandler>,
+    context: HttpContext
+  ) {
+    const requestHandler = container.resolve(constructor);
+    return await this.handleAsync(requestHandler, context);
   }
 }
