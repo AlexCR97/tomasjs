@@ -18,12 +18,4 @@ export class RequestContext {
   getBody<T>(): T {
     return this.body as T;
   }
-
-  getQuery<T>(): T {
-    return this.query as T;
-  }
-
-  getQueryParam<T>(key: string): T {
-    return this.query[key] as T;
-  }
 }

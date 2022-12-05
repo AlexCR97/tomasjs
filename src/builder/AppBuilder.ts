@@ -1,6 +1,6 @@
 import { DefaultLogger } from "@/core/logger";
 import { environment } from "@/environment";
-import express, { json, Express, NextFunction, Request, Response, Router } from "express";
+import express, { json, Express, NextFunction, Request, Response, Router, text } from "express";
 import { container, DependencyContainer } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
 import { HttpMethod } from "../HttpMethod";
@@ -41,6 +41,12 @@ export class AppBuilder {
   /* #endregion */
 
   /* #region Formatters */
+
+  useText(): AppBuilder {
+    this.logger.debug(`.${this.useText.name}`);
+    this.app.use(text());
+    return this;
+  }
 
   useJson(): AppBuilder {
     this.logger.debug(`.${this.useJson.name}`);

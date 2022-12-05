@@ -159,6 +159,167 @@ describe("RequestHandlers", () => {
     expect(jsonResponse.json()).resolves.toEqual(JsonRequestHandler.expectedJson);
   });
 
+  it(`The request path can be extracted from the HttpContext`, async () => {
+    // Arrange
+    const expectedPath = "/path/to/resource";
+
+    class TestRequestHandler extends RequestHandler<string> {
+      handle(context: HttpContext): string {
+        return context.request.path;
+      }
+    }
+
+    server = await new AppBuilder()
+      .useHttpContext()
+      .useRequestHandler("get", expectedPath, TestRequestHandler)
+      .buildAsync(port);
+
+    // Act
+    const response = await fetch(`${serverAddress}${expectedPath}`);
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.text()).resolves.toEqual(expectedPath);
+  });
+
+  it(`The request headers can be extracted from the HttpContext`, async () => {
+    // Arrange
+    interface TestHeader {
+      key: string;
+      value: string;
+    }
+
+    class TestRequestHandler extends RequestHandler<JsonResponse> {
+      handle(context: HttpContext): JsonResponse {
+        return new JsonResponse(context.request.headers);
+      }
+    }
+
+    const expectedResponseHeader: TestHeader = {
+      key: "test-header-key",
+      value: "test-header-value",
+    };
+
+    server = await new AppBuilder()
+      .useJson()
+      .useHttpContext()
+      .useRequestHandler("get", "/", TestRequestHandler)
+      .buildAsync(port);
+
+    // Act
+    const customHeaders: any = {};
+    customHeaders[expectedResponseHeader.key] = expectedResponseHeader.value;
+
+    const response = await fetch(serverAddress, {
+      headers: { ...customHeaders },
+    });
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+
+    const responseJson = await response.json();
+    expect(responseJson[expectedResponseHeader.key]).toEqual(expectedResponseHeader.value);
+  });
+
+  it(`The request params can be extracted from the HttpContext`, async () => {
+    // Arrange
+    const expectedPath = "/users/:id/profile/:profileId";
+    const expectedPathValues = {
+      id: 123,
+      profileId: 246,
+    };
+
+    class TestRequestHandler extends RequestHandler<JsonResponse> {
+      handle(context: HttpContext): JsonResponse {
+        return new JsonResponse({
+          id: Number(context.request.params.id),
+          profileId: Number(context.request.params.profileId),
+        });
+      }
+    }
+
+    server = await new AppBuilder()
+      .useHttpContext()
+      .useRequestHandler("get", expectedPath, TestRequestHandler)
+      .buildAsync(port);
+
+    // Act
+    const response = await fetch(
+      `${serverAddress}${expectedPath
+        .replace(":id", expectedPathValues.id.toString())
+        .replace(":profileId", expectedPathValues.profileId.toString())}`
+    );
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.json()).resolves.toEqual(expectedPathValues);
+  });
+
+  it(`The request query can be extracted from the HttpContext`, async () => {
+    // Arrange
+    const expectedPath = "/users";
+    // const expectedPathQuery = "/users?pageIndex=3&pageSize=16";
+    const expectedPathValues = {
+      pageIndex: 3,
+      pageSize: 16,
+    };
+
+    class TestRequestHandler extends RequestHandler<JsonResponse> {
+      handle(context: HttpContext): JsonResponse {
+        return new JsonResponse({
+          pageIndex: Number(context.request.query.pageIndex),
+          pageSize: Number(context.request.query.pageSize),
+        });
+      }
+    }
+
+    server = await new AppBuilder()
+      .useHttpContext()
+      .useRequestHandler("get", expectedPath, TestRequestHandler)
+      .buildAsync(port);
+
+    // Act
+    const queryParams = new URLSearchParams();
+    queryParams.set("pageIndex", "3");
+    queryParams.set("pageSize", "16");
+    const requestUrl = `${serverAddress}${expectedPath}?${queryParams.toString()}`;
+    console.log("requestUrl", requestUrl);
+    const response = await fetch(requestUrl);
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.json()).resolves.toEqual(expectedPathValues);
+  });
+
+  it(`The request body can be extracted as plain text from the HttpContext if the "useText" method was used first`, async () => {
+    // Arrange
+    const expectedResponse = "Plain text body works!";
+
+    class TestRequestHandler extends RequestHandler<string> {
+      handle(context: HttpContext): string {
+        console.log("context.request.body", context.request.body);
+        return context.request.body;
+      }
+    }
+
+    server = await new AppBuilder()
+      .useText()
+      .useHttpContext()
+      .useRequestHandler("post", "/", TestRequestHandler)
+      .buildAsync(port);
+
+    // Act
+    const response = await fetch(serverAddress, {
+      method: "post",
+      body: expectedResponse,
+      headers: { "Content-Type": "text/plain" },
+    });
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.text()).resolves.toEqual(expectedResponse);
+  });
+
   it(`The request body can be extracted as json from the HttpContext if the "useJson" method was used first`, async () => {
     // Arrange
     interface TestBody {
