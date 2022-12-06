@@ -8,14 +8,27 @@ import {
   RequestHandlerResolver,
   RequestHandlerResponseAdapter,
 } from "./requests";
-import { ErrorMiddleware, Middleware } from "@/middleware";
+import {
+  ErrorMiddleware,
+  ErrorMiddlewareAdapter,
+  Middleware,
+  MiddlewareAdapter,
+  ThomasErrorMiddleware,
+  ThomasMiddleware,
+} from "@/middleware";
 import { Controller } from "@/controllers";
 import { ControllerAction } from "@/controllers/types";
 import { HttpContext } from "@/core";
 import { RequestHandler } from "@/requests";
 import { HttpContextBinder } from "@/core/HttpContextBinder";
 import { ExpressRequestHandler } from "@/core/handlers";
-import { MiddlewareHandler } from "@/middleware/types";
+import {
+  ExpressErrorMiddlewareHandler,
+  ExpressMiddlewareHandler,
+  MiddlewareHandler,
+  ThomasErrorMiddlewareHandler,
+  ThomasMiddlewareHandler,
+} from "@/middleware/types";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -119,6 +132,57 @@ export class AppBuilder {
     } else {
       throw new Error(`Unknown middleware: "${middleware}"`);
     }
+  }
+
+  useMiddlewarex(
+    middleware: ThomasMiddlewareHandler | ThomasMiddleware | constructor<ThomasMiddleware>
+  ): AppBuilder {
+    return this.useMiddlewareFor(middleware, { app: this.app });
+  }
+
+  private useMiddlewareFor(
+    middleware: ThomasMiddlewareHandler | ThomasMiddleware | constructor<ThomasMiddleware>,
+    source: { app?: Express; router?: Router }
+  ): AppBuilder {
+    let expressMiddleware: ExpressMiddlewareHandler;
+
+    if (typeof middleware === "function") {
+      expressMiddleware = MiddlewareAdapter.fromTypeToExpress(middleware as any);
+    } else if (middleware instanceof ThomasMiddleware) {
+      expressMiddleware = MiddlewareAdapter.fromInstanceToExpress(middleware);
+    } else {
+      expressMiddleware = MiddlewareAdapter.fromConstructorToExpress(middleware);
+    }
+
+    source.app?.use(expressMiddleware);
+    source.router?.use(expressMiddleware);
+
+    return this;
+  }
+
+  /* #endregion */
+
+  /* #region ErrorMiddleware */
+
+  useErrorMiddleware(
+    middleware:
+      | ThomasErrorMiddlewareHandler
+      | ThomasErrorMiddleware
+      | constructor<ThomasErrorMiddleware>
+  ): AppBuilder {
+    let expressErrorMiddleware: ExpressErrorMiddlewareHandler;
+
+    if (typeof middleware === "function") {
+      expressErrorMiddleware = ErrorMiddlewareAdapter.fromTypeToExpress(middleware as any);
+    } else if (middleware instanceof ThomasErrorMiddleware) {
+      expressErrorMiddleware = ErrorMiddlewareAdapter.fromInstanceToExpress(middleware);
+    } else {
+      expressErrorMiddleware = ErrorMiddlewareAdapter.fromConstructorToExpress(middleware);
+    }
+
+    this.app.use(expressErrorMiddleware);
+
+    return this;
   }
 
   /* #endregion */
