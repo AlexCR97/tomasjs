@@ -9,7 +9,8 @@
     "watch": "nodemon -r tsconfig-paths/register ./src/main.ts",
     "start:prod": "node -r ts-node/register/transpile-only -r tsconfig-paths/register ./dist/src/main.js",
     "test": "jest",
-    "test-watch": "jest --watchAll --verbose"
+    "test-watch": "jest --watchAll --verbose",
+    "serve-sample-controllers": "ts-node -r tsconfig-paths/register ./samples/crud-with-controllers/main.ts"
   },
   "author": "viex",
   "license": "ISC",
