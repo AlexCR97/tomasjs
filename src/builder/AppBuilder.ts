@@ -10,10 +10,12 @@ import {
 } from "./requests";
 import { ErrorMiddleware, Middleware } from "@/middleware";
 import { Controller } from "@/controllers";
-import { ControllerActionMap, ControllerMiddleware } from "@/controllers/types";
+import { ControllerAction } from "@/controllers/types";
 import { HttpContext } from "@/core";
 import { RequestHandler } from "@/requests";
 import { HttpContextBinder } from "@/core/HttpContextBinder";
+import { ExpressRequestHandler } from "@/core/handlers";
+import { MiddlewareHandler } from "@/middleware/types";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -155,9 +157,8 @@ export class AppBuilder {
 
   private toRouter(controllerInstance: Controller): Router {
     const router = Router();
-    const controllerInstanceAny = controllerInstance as any;
-    const onBeforeMiddlewares: ControllerMiddleware[] = controllerInstanceAny.onBeforeMiddleware;
-    const controllerActions: ControllerActionMap<any>[] = controllerInstanceAny.actions;
+    const onBeforeMiddlewares = controllerInstance.onBeforeMiddlewares;
+    const actions = controllerInstance.actions;
 
     if (
       onBeforeMiddlewares !== undefined &&
@@ -169,21 +170,38 @@ export class AppBuilder {
       });
     }
 
-    if (
-      controllerActions !== undefined &&
-      controllerActions !== null &&
-      controllerActions.length > 0
-    ) {
-      for (const action of controllerActions) {
-        router[action.method](action.path, async (req, res) => {
-          const httpContext = this.resolveAndBindHttpContext(req, res);
-          const actionResponse = await action.handler(httpContext); // TODO Will this action work with DI?
-          return RequestHandlerResponseAdapter.toExpressResponse(res, actionResponse);
-        });
+    if (actions !== undefined && actions !== null && actions.length > 0) {
+      for (const action of actions) {
+        router[action.method](
+          action.path,
+          ...action.actions.map((action) => this.fromControllerActionToExpressHandler(action))
+        );
       }
     }
 
     return router;
+  }
+
+  private fromControllerActionToExpressHandler(
+    action: ControllerAction
+  ): ExpressRequestHandler | MiddlewareHandler {
+    if (action instanceof Middleware) {
+      return async (req, res, next) => {
+        await action.handle(req, res, next); // TODO Will this work with DI?
+      };
+    } else if (typeof action === "function") {
+      return async (req: Request, res: Response) => {
+        const httpContext = this.resolveAndBindHttpContext(req, res);
+        const actionResponse = await (action as any)(httpContext);
+        return RequestHandlerResponseAdapter.toExpressResponse(res, actionResponse);
+      };
+    } else {
+      const middleware = action as constructor<Middleware>;
+      const middlewareInstance = container.resolve(middleware);
+      return async (req, res, next) => {
+        await middlewareInstance.handle(req, res, next); // TODO Will this work with DI?
+      };
+    }
   }
 
   /* #endregion */

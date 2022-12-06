@@ -274,6 +274,8 @@ describe("Controllers", () => {
       expect(response.headers.get(header.key)).toEqual(header.value);
     }
   });
+
+  it("Action level Middlewares work", async () => {});
 });
 
 class OnBeforeMiddleware extends Middleware {

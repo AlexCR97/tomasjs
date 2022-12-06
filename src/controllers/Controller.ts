@@ -1,110 +1,64 @@
-import { RequestHandler } from "@/core/handlers";
 import { HttpMethod } from "@/HttpMethod";
-import {
-  ControllerActionMap,
-  ControllerActionOptions,
-  ControllerMiddleware,
-  ControllerMiddlewareMap,
-} from "./types";
+import { ControllerAction, ControllerActionMap, ControllerMiddleware } from "./types";
 
 export abstract class Controller {
   /* #region Route */
-  path?: string; // This will be used in AppBuilder (hacking with the "any" type) // TODO Set to private
+
+  path?: string; // TODO Mark as private
+
   route(path: string): Controller {
     this.path = path;
     return this;
   }
+
   /* #endregion */
 
-  /* #region On Before (per-controller middleware) */
-  private readonly onBeforeMiddleware: ControllerMiddleware[] = [];
+  /* #region On Before Middleware */
+
+  readonly onBeforeMiddlewares: ControllerMiddleware[] = []; // TODO Mark as private
+
   onBefore(middleware: ControllerMiddleware): Controller {
-    this.onBeforeMiddleware.push(middleware);
+    this.onBeforeMiddlewares.push(middleware);
     return this;
   }
+
   /* #endregion */
 
-  /* #region Actions/Middlewares (per-path actions/middlewares*/
+  /* #region Actions */
 
-  private readonly actions: ControllerActionMap<any>[] = [];
-  private readonly onBeforeMiddlewareMap: ControllerMiddlewareMap[] = [];
+  readonly actions: ControllerActionMap[] = []; // TODO Mark as private
 
-  get<TResponse = void>(
-    path: string,
-    handler: RequestHandler<TResponse>,
-    options?: ControllerActionOptions
-  ): Controller {
-    this.registerAction("get", path, handler, options);
-    return this;
+  get(path: string, ...actions: ControllerAction[]): Controller {
+    return this.registerAction("get", path, ...actions);
   }
 
-  post<TResponse = void>(
-    path: string,
-    handler: RequestHandler<TResponse>,
-    options?: ControllerActionOptions
-  ): Controller {
-    this.registerAction("post", path, handler, options);
-    return this;
+  post(path: string, ...actions: ControllerAction[]): Controller {
+    return this.registerAction("post", path, ...actions);
   }
 
-  put<TResponse = void>(
-    path: string,
-    handler: RequestHandler<TResponse>,
-    options?: ControllerActionOptions
-  ): Controller {
-    this.registerAction("put", path, handler, options);
-    return this;
+  put(path: string, ...actions: ControllerAction[]): Controller {
+    return this.registerAction("put", path, ...actions);
   }
 
-  patch<TResponse = void>(
-    path: string,
-    handler: RequestHandler<TResponse>,
-    options?: ControllerActionOptions
-  ): Controller {
-    this.registerAction("patch", path, handler, options);
-    return this;
+  patch(path: string, ...actions: ControllerAction[]): Controller {
+    return this.registerAction("patch", path, ...actions);
   }
 
-  delete<TResponse = void>(
-    path: string,
-    handler: RequestHandler<TResponse>,
-    options?: ControllerActionOptions
-  ): Controller {
-    this.registerAction("delete", path, handler, options);
-    return this;
+  delete(path: string, ...actions: ControllerAction[]): Controller {
+    return this.registerAction("delete", path, ...actions);
   }
 
-  private registerAction<TResponse = void>(
+  private registerAction(
     method: HttpMethod,
     path: string,
-    handler: RequestHandler<TResponse>,
-    options?: ControllerActionOptions
-  ) {
-    this.onBeforeMiddlewareMap.push(
-      ...this.toControllerMiddlewareMaps(method, path, options?.onBefore)
-    );
-
+    ...actions: ControllerAction[]
+  ): Controller {
     this.actions.push({
       method,
       path,
-      handler, // TODO Is an arrow function required here?
+      actions,
     });
-  }
-
-  private toControllerMiddlewareMaps(
-    method: HttpMethod,
-    path: string,
-    middlewares: ControllerMiddleware[] | undefined
-  ): ControllerMiddlewareMap[] {
-    if (middlewares === undefined || middlewares === null || middlewares.length === 0) {
-      return [];
-    }
-
-    return middlewares.map((middleware) => ({
-      method,
-      path,
-      middleware,
-    }));
+    return this;
   }
 
   /* #endregion */
