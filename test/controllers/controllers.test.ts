@@ -281,6 +281,71 @@ describe("Controllers", () => {
     expect(response.json()).resolves.toEqual(expectedQueryParams);
   });
 
+  it(`The request body can be extracted as plain text from the HttpContext if the "useText" method was used first`, async () => {
+    // Arrange
+    const expectedResponse = "Plain text body works!";
+
+    class TestController extends Controller {
+      constructor() {
+        super();
+        this.post("/", (context: HttpContext) => {
+          return context.request.body;
+        });
+      }
+    }
+
+    server = await new AppBuilder().useText().useController(TestController).buildAsync(port);
+
+    // Act
+    const response = await fetch(serverAddress, {
+      method: "post",
+      body: expectedResponse,
+      headers: { "Content-Type": "text/plain" },
+    });
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.text()).resolves.toEqual(expectedResponse);
+  });
+
+  it(`The request body can be extracted as json from the HttpContext if the "useJson" method was used first`, async () => {
+    // Arrange
+    interface TestBody {
+      email: string;
+      password: string;
+    }
+
+    class TestController extends Controller {
+      constructor() {
+        super();
+        this.post("/", (context: HttpContext) => {
+          const body = context.request.getBody<TestBody>();
+          return new JsonResponse(body, {
+            status: StatusCodes.created,
+          });
+        });
+      }
+    }
+
+    const expectedResponse: TestBody = {
+      email: "example@address.com",
+      password: "123456",
+    };
+
+    server = await new AppBuilder().useJson().useController(TestController).buildAsync(port);
+
+    // Act
+    const response = await fetch(serverAddress, {
+      method: "post",
+      body: JSON.stringify(expectedResponse),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.created);
+    expect(response.json()).resolves.toEqual(expectedResponse);
+  });
+
   it('Controller level "onBefore" with Middleware instance works', async () => {
     // Arrange
     class TestController extends Controller {
