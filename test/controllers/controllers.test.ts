@@ -475,7 +475,73 @@ describe("Controllers", () => {
     }
   });
 
-  it("Action level Middlewares work", async () => {});
+  it("Action level Middlewares work", async () => {
+    // Arrange
+    interface TestHeader {
+      key: string;
+      value: string;
+    }
+
+    const controllerHeader: TestHeader = {
+      key: "header-from-controller",
+      value: "value-from-controller",
+    };
+
+    const actionHeader1: TestHeader = {
+      key: "header-from-action-1",
+      value: "value-from-action-1",
+    };
+
+    const actionHeader2: TestHeader = {
+      key: "header-from-action-2",
+      value: "value-from-action-2",
+    };
+
+    class TestController extends Controller {
+      constructor() {
+        super();
+
+        this.onBefore(
+          new AnonymousMiddleware((req, res, next) => {
+            req.headers[controllerHeader.key] = controllerHeader.value;
+            res.setHeader(controllerHeader.key, controllerHeader.value);
+            next();
+          })
+        );
+
+        this.get(
+          "/",
+          new AnonymousMiddleware((req, res, next) => {
+            req.headers[actionHeader1.key] = actionHeader1.value;
+            res.setHeader(actionHeader1.key, actionHeader1.value);
+            next();
+          }),
+          new AnonymousMiddleware((req, res, next) => {
+            req.headers[actionHeader2.key] = actionHeader2.value;
+            res.setHeader(actionHeader2.key, actionHeader2.value);
+            next();
+          }),
+          (context: HttpContext) => {
+            return new JsonResponse(context.request.headers);
+          }
+        );
+      }
+    }
+
+    server = await new AppBuilder().useController(TestController).buildAsync(port);
+
+    // Act
+    const response = await fetch(serverAddress);
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+    const responseJson = await response.json();
+
+    for (const header of [controllerHeader, actionHeader1, actionHeader2]) {
+      expect(response.headers.get(header.key)).toEqual(header.value);
+      expect(responseJson[header.key]).toEqual(header.value);
+    }
+  });
 });
 
 class OnBeforeMiddleware extends Middleware {
