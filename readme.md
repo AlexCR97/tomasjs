@@ -9,61 +9,45 @@ Rapidly build highly scalable server side applications using ThomasJS's built-in
 - AppBuilder fluent api
 - Dependency injection
 - TypeScript-first support
-- Object Oriented Programming design patterns
-- And more!
+- Object Oriented approach
 
-## Use whatever pattern you like the most!
+## Use the pattern you like the most!
 
-### Classic `Controllers`? we got'em!
+### Classic Controllers? we got'em!
 
 ```typescript
-@injectable()
-class GreeterController extends BaseController {
-  route = "greeter";
+class GreeterController extends Controller {
   constructor() {
     super();
-    this.post("/greet", (req: Request, res: Response) => {
-      const name = req.body.name;
-      return res.json({ message: `Hello ${name}!` });
+    this.route("greeter");
+    this.post("/greet", (context: HttpContext) => {
+      const name = context.request.body.name;
+      return `Hello ${name}!`;
     });
   }
 }
 
-appBuilder.useController(GreeterController);
+appBuilder.useJson().useController(GreeterController);
 ```
 
-### Feeling bold? Use `RequestHandler`s!
+### Feeling bold? Use RequestHandlers!
 
 ```typescript
-@injectable()
-class GreetRequestHandler extends RequestHandler<PlainTextResponse> {
-  handle(context: RequestContext): PlainTextResponse {
-    const request = context.getBody<GreetRequest>();
+class GreetHandler extends RequestHandler<PlainTextResponse> {
+  constructor() {
+    super();
+    this.method("post").path("/greeter/greet");
+  }
+  handle(context: HttpContext): PlainTextResponse {
+    const request = context.request.getBody<GreetRequest>();
     return new PlainTextResponse(`Hello ${request.name}!`);
   }
 }
 
-appBuilder.useRequestHandler("post", "/greeter/greet", GreetRequestHandler);
+appBuilder.useJson().useHttpContext().useRequestHandler(GreetHandler);
 ```
 
-### `CQRS`? Weird... but supported!
-
-```typescript
-@injectable()
-class GreeterCommandHandler extends CommandHandler<GreeterCommand> {
-  constructor(@inject(EventDispatcher) eventDispatcher: EventDispatcher) {
-    super();
-  }
-
-  handle(command: GreeterCommand) {
-    this.eventDispatcher.dispatch(new GreetedEvent(command.name));
-  }
-}
-
-appBuilder.useCommandHandler(GreeterCommandHandler);
-```
-
-### Easy to use `Middleware`!
+### Easy to use Middleware!
 
 ```typescript
 @injectable()
@@ -84,7 +68,7 @@ class RequestLoggerMiddleware extends Middleware {
 appBuilder.useMiddleware(RequestLoggerMiddleware);
 ```
 
-### Old school `express`? Go for it!
+### Old school express? Go for it!
 
 ```typescript
 appBuilder.use((app) => {
