@@ -35,7 +35,7 @@ describe("RequestHandlers", () => {
 
     // Act/Assert
     expect(() => {
-      new AppBuilder().useRequestHandler("get", "/", TestRequestHandler);
+      new AppBuilder().useRequestHandler(TestRequestHandler);
     }).toThrow();
   });
 
@@ -49,7 +49,7 @@ describe("RequestHandlers", () => {
 
     // Act/Assert
     expect(() => {
-      new AppBuilder().useHttpContext().useRequestHandler("get", "/", TestRequestHandler);
+      new AppBuilder().useHttpContext().useRequestHandler(TestRequestHandler);
     }).not.toThrow();
   });
 
@@ -63,7 +63,7 @@ describe("RequestHandlers", () => {
 
     server = await new AppBuilder()
       .useHttpContext()
-      .useRequestHandler("get", "/", new TestRequestHandler())
+      .useRequestHandler(new TestRequestHandler())
       .buildAsync(port);
 
     // Act
@@ -83,7 +83,7 @@ describe("RequestHandlers", () => {
 
     server = await new AppBuilder()
       .useHttpContext()
-      .useRequestHandler("get", "/", TestRequestHandler)
+      .useRequestHandler(TestRequestHandler)
       .buildAsync(port);
 
     // Act
@@ -99,9 +99,7 @@ describe("RequestHandlers", () => {
     server = await new AppBuilder()
       .useHttpContext()
       .useRequestHandler(
-        "get",
-        "/",
-        new AnonymousRequestHandler(() => {
+        new AnonymousRequestHandler("get", "/", () => {
           return new OkResponse();
         })
       )
@@ -120,6 +118,10 @@ describe("RequestHandlers", () => {
     class StatusCodeRequestHandler extends RequestHandler<StatusCodeResponse> {
       static path = "status-code";
       static expectedStatusCode = StatusCodes.noContent;
+      constructor() {
+        super();
+        this.path(`/${StatusCodeRequestHandler.path}`);
+      }
       handle(context: HttpContext): StatusCodeResponse {
         return new StatusCodeResponse(StatusCodeRequestHandler.expectedStatusCode);
       }
@@ -128,6 +130,10 @@ describe("RequestHandlers", () => {
     class PlainTextRequestHandler extends RequestHandler<PlainTextResponse> {
       static path = "plain-text";
       static expectedPlainText = "plain text test";
+      constructor() {
+        super();
+        this.path(`/${PlainTextRequestHandler.path}`);
+      }
       handle(context: HttpContext): PlainTextResponse {
         return new PlainTextResponse(PlainTextRequestHandler.expectedPlainText);
       }
@@ -136,6 +142,10 @@ describe("RequestHandlers", () => {
     class JsonRequestHandler extends RequestHandler<JsonResponse> {
       static path = "json";
       static expectedJson = { key: "test-key", value: "test-value" };
+      constructor() {
+        super();
+        this.path(`/${JsonRequestHandler.path}`);
+      }
       handle(context: HttpContext): JsonResponse {
         return new JsonResponse(JsonRequestHandler.expectedJson);
       }
@@ -143,9 +153,9 @@ describe("RequestHandlers", () => {
 
     server = await new AppBuilder()
       .useHttpContext()
-      .useRequestHandler("get", `/${StatusCodeRequestHandler.path}`, StatusCodeRequestHandler)
-      .useRequestHandler("get", `/${PlainTextRequestHandler.path}`, PlainTextRequestHandler)
-      .useRequestHandler("get", `/${JsonRequestHandler.path}`, JsonRequestHandler)
+      .useRequestHandler(StatusCodeRequestHandler)
+      .useRequestHandler(PlainTextRequestHandler)
+      .useRequestHandler(JsonRequestHandler)
       .buildAsync(port);
 
     // Act
@@ -164,6 +174,10 @@ describe("RequestHandlers", () => {
     const expectedPath = "/path/to/resource";
 
     class TestRequestHandler extends RequestHandler<string> {
+      constructor() {
+        super();
+        this.path(expectedPath);
+      }
       handle(context: HttpContext): string {
         return context.request.path;
       }
@@ -171,7 +185,7 @@ describe("RequestHandlers", () => {
 
     server = await new AppBuilder()
       .useHttpContext()
-      .useRequestHandler("get", expectedPath, TestRequestHandler)
+      .useRequestHandler(TestRequestHandler)
       .buildAsync(port);
 
     // Act
@@ -203,7 +217,7 @@ describe("RequestHandlers", () => {
     server = await new AppBuilder()
       .useJson()
       .useHttpContext()
-      .useRequestHandler("get", "/", TestRequestHandler)
+      .useRequestHandler(TestRequestHandler)
       .buildAsync(port);
 
     // Act
@@ -230,6 +244,10 @@ describe("RequestHandlers", () => {
     };
 
     class TestRequestHandler extends RequestHandler<JsonResponse> {
+      constructor() {
+        super();
+        this.path(expectedPath);
+      }
       handle(context: HttpContext): JsonResponse {
         return new JsonResponse({
           id: Number(context.request.params.id),
@@ -240,7 +258,7 @@ describe("RequestHandlers", () => {
 
     server = await new AppBuilder()
       .useHttpContext()
-      .useRequestHandler("get", expectedPath, TestRequestHandler)
+      .useRequestHandler(TestRequestHandler)
       .buildAsync(port);
 
     // Act
@@ -265,6 +283,10 @@ describe("RequestHandlers", () => {
     };
 
     class TestRequestHandler extends RequestHandler<JsonResponse> {
+      constructor() {
+        super();
+        this.path(expectedPath);
+      }
       handle(context: HttpContext): JsonResponse {
         return new JsonResponse({
           pageIndex: Number(context.request.query.pageIndex),
@@ -275,7 +297,7 @@ describe("RequestHandlers", () => {
 
     server = await new AppBuilder()
       .useHttpContext()
-      .useRequestHandler("get", expectedPath, TestRequestHandler)
+      .useRequestHandler(TestRequestHandler)
       .buildAsync(port);
 
     // Act
@@ -296,6 +318,10 @@ describe("RequestHandlers", () => {
     const expectedResponse = "Plain text body works!";
 
     class TestRequestHandler extends RequestHandler<string> {
+      constructor() {
+        super();
+        this.method("post");
+      }
       handle(context: HttpContext): string {
         console.log("context.request.body", context.request.body);
         return context.request.body;
@@ -305,7 +331,7 @@ describe("RequestHandlers", () => {
     server = await new AppBuilder()
       .useText()
       .useHttpContext()
-      .useRequestHandler("post", "/", TestRequestHandler)
+      .useRequestHandler(TestRequestHandler)
       .buildAsync(port);
 
     // Act
@@ -328,6 +354,10 @@ describe("RequestHandlers", () => {
     }
 
     class TestRequestHandler extends RequestHandler<JsonResponse> {
+      constructor() {
+        super();
+        this.method("post");
+      }
       handle(context: HttpContext): JsonResponse {
         const body = context.request.getBody<TestBody>();
         return new JsonResponse(body, {
@@ -344,7 +374,7 @@ describe("RequestHandlers", () => {
     server = await new AppBuilder()
       .useJson()
       .useHttpContext()
-      .useRequestHandler("post", "/", TestRequestHandler)
+      .useRequestHandler(TestRequestHandler)
       .buildAsync(port);
 
     // Act

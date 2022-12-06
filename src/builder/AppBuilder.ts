@@ -3,8 +3,6 @@ import { environment } from "@/environment";
 import express, { json, Express, NextFunction, Request, Response, Router, text } from "express";
 import { container, DependencyContainer } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
-import { HttpMethod } from "../HttpMethod";
-import { OnBeforeMiddleware } from "./types";
 import {
   ExpressRequestHandlerFactory,
   RequestHandlerResolver,
@@ -210,17 +208,10 @@ export class AppBuilder {
   }
 
   useRequestHandler<TRequestHandler extends RequestHandler<any>>(
-    method: HttpMethod,
-    path: string,
-    requestHandler: TRequestHandler | constructor<TRequestHandler>,
-    options?: {
-      onBefore?: OnBeforeMiddleware | OnBeforeMiddleware[];
-    }
+    requestHandler: TRequestHandler | constructor<TRequestHandler>
   ): AppBuilder {
     this.logger.debug(`.${this.useRequestHandler.name}`, {
-      method,
-      path,
-      requestHandlerConstructor: requestHandler,
+      requestHandler: requestHandler,
     });
 
     if (!this.isHttpContextInitialized) {
@@ -230,27 +221,22 @@ export class AppBuilder {
     }
 
     if (requestHandler instanceof RequestHandler) {
-      this.registerRequestHandler<TRequestHandler>(method, path, requestHandler, options);
+      this.registerRequestHandler<TRequestHandler>(requestHandler);
     } else {
       container.register(requestHandler.name, requestHandler);
       const requestHandlerInstance = container.resolve(requestHandler);
-      this.registerRequestHandler<TRequestHandler>(method, path, requestHandlerInstance, options);
+      this.registerRequestHandler<TRequestHandler>(requestHandlerInstance);
     }
 
     return this;
   }
 
   private registerRequestHandler<TRequestHandler extends RequestHandler<any>>(
-    method: HttpMethod,
-    path: string,
-    requestHandler: TRequestHandler,
-    options?: {
-      onBefore?: OnBeforeMiddleware | OnBeforeMiddleware[];
-    }
+    requestHandler: TRequestHandler
   ) {
-    this.app[method](
-      path,
-      ...ExpressRequestHandlerFactory.fromMiddlewares(options?.onBefore),
+    this.app[requestHandler._method](
+      requestHandler._path,
+      ...ExpressRequestHandlerFactory.fromMiddlewares(requestHandler.onBeforeMiddlewares),
       async (req: Request, res: Response) => {
         const httpContext = this.resolveAndBindHttpContext(req, res); // TODO Figure out a way to do this only in the .useHttpContext method
         const customResponse = await RequestHandlerResolver.handleAsync<TRequestHandler>(
