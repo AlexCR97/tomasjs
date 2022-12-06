@@ -10,7 +10,7 @@ import { AnonymousMiddleware, Middleware } from "../../src/middleware";
 import { ParamsDictionary } from "express-serve-static-core";
 import { ParsedQs } from "qs";
 import { tick } from "../utils/time";
-import { StatusCodeResponse } from "../../src/responses";
+import { JsonResponse, StatusCodeResponse } from "../../src/responses";
 
 describe("Controllers", () => {
   const port = 3031;
@@ -144,6 +144,141 @@ describe("Controllers", () => {
     const customPathResponse = await fetch(`${serverAddress}/${controllerPath}/${actionPath}`);
     const customPathResponseText = await customPathResponse.text();
     expect(customPathResponseText).toEqual(expectedResponse);
+  });
+
+  it("The request path can be extracted from the HttpContext", async () => {
+    // Arrange
+    const controllerRoute = "test";
+    const expectedPath = "/path/to/resource";
+
+    class TestController extends Controller {
+      constructor() {
+        super();
+        this.route(controllerRoute).get(
+          expectedPath,
+          (context: HttpContext) => context.request.path
+        );
+      }
+    }
+
+    server = await new AppBuilder().useController(TestController).buildAsync(port);
+
+    // Act
+    const requestUrl = `${serverAddress}/${controllerRoute}${expectedPath}`;
+    const response = await fetch(requestUrl);
+
+    // Assert - Custom action path
+    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.text()).resolves.toEqual(expectedPath);
+  });
+
+  it("The request headers can be extracted from the HttpContext", async () => {
+    // Arrange
+    interface TestHeader {
+      key: string;
+      value: string;
+    }
+
+    const controllerRoute = "test";
+
+    class TestController extends Controller {
+      constructor() {
+        super();
+        this.route(controllerRoute).get("/", (context: HttpContext) => context.request.headers);
+      }
+    }
+
+    const expectedResponseHeader: TestHeader = {
+      key: "test-header-key",
+      value: "test-header-value",
+    };
+
+    server = await new AppBuilder().useController(TestController).buildAsync(port);
+
+    // Act
+    const customHeaders: any = {};
+    customHeaders[expectedResponseHeader.key] = expectedResponseHeader.value;
+
+    const requestUrl = `${serverAddress}/${controllerRoute}`;
+    const response = await fetch(requestUrl, {
+      headers: { ...customHeaders },
+    });
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+
+    const responseJson = await response.json();
+    expect(responseJson[expectedResponseHeader.key]).toEqual(expectedResponseHeader.value);
+  });
+
+  it("The request params can be extracted from the HttpContext", async () => {
+    // Arrange
+    const controllerRoute = "test";
+    const expectedPath = "users/:id/profile/:profileId";
+    const expectedPathValues = {
+      id: 123,
+      profileId: 246,
+    };
+
+    class TestController extends Controller {
+      constructor() {
+        super();
+        this.route(controllerRoute).get(`/${expectedPath}`, (context: HttpContext) => {
+          return new JsonResponse({
+            id: Number(context.request.params.id),
+            profileId: Number(context.request.params.profileId),
+          });
+        });
+      }
+    }
+
+    server = await new AppBuilder().useController(TestController).buildAsync(port);
+
+    // Act
+    const response = await fetch(
+      `${serverAddress}/${controllerRoute}/${expectedPath
+        .replace(":id", expectedPathValues.id.toString())
+        .replace(":profileId", expectedPathValues.profileId.toString())}`
+    );
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.json()).resolves.toEqual(expectedPathValues);
+  });
+
+  it("The request query can be extracted from the HttpContext", async () => {
+    // Arrange
+    const controllerRoute = "test";
+    const expectedPath = "users";
+    const expectedQueryParams = {
+      pageIndex: 3,
+      pageSize: 16,
+    };
+
+    class TestController extends Controller {
+      constructor() {
+        super();
+        this.route(controllerRoute).get(`/${expectedPath}`, (context: HttpContext) => {
+          return new JsonResponse({
+            pageIndex: Number(context.request.query.pageIndex),
+            pageSize: Number(context.request.query.pageSize),
+          });
+        });
+      }
+    }
+
+    server = await new AppBuilder().useController(TestController).buildAsync(port);
+
+    // Act
+    const queryParams = new URLSearchParams();
+    queryParams.set("pageIndex", "3");
+    queryParams.set("pageSize", "16");
+    const requestUrl = `${serverAddress}/${controllerRoute}/${expectedPath}?${queryParams.toString()}`;
+    const response = await fetch(requestUrl);
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.json()).resolves.toEqual(expectedQueryParams);
   });
 
   it('Controller level "onBefore" with Middleware instance works', async () => {

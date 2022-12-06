@@ -277,8 +277,7 @@ describe("RequestHandlers", () => {
   it(`The request query can be extracted from the HttpContext`, async () => {
     // Arrange
     const expectedPath = "/users";
-    // const expectedPathQuery = "/users?pageIndex=3&pageSize=16";
-    const expectedPathValues = {
+    const expectedQueryParams = {
       pageIndex: 3,
       pageSize: 16,
     };
@@ -306,12 +305,11 @@ describe("RequestHandlers", () => {
     queryParams.set("pageIndex", "3");
     queryParams.set("pageSize", "16");
     const requestUrl = `${serverAddress}${expectedPath}?${queryParams.toString()}`;
-    console.log("requestUrl", requestUrl);
     const response = await fetch(requestUrl);
 
     // Assert
     expect(response.status).toBe(StatusCodes.ok);
-    expect(response.json()).resolves.toEqual(expectedPathValues);
+    expect(response.json()).resolves.toEqual(expectedQueryParams);
   });
 
   it(`The request body can be extracted as plain text from the HttpContext if the "useText" method was used first`, async () => {
@@ -324,7 +322,6 @@ describe("RequestHandlers", () => {
         this.method("post");
       }
       handle(context: HttpContext): string {
-        console.log("context.request.body", context.request.body);
         return context.request.body;
       }
     }
@@ -404,7 +401,6 @@ describe("RequestHandlers", () => {
           .onBefore(
             new AnonymousMiddleware((req, res, next) => {
               const token = req.headers[headerKey];
-              console.log("token", token);
               return token !== secretKey ? res.status(StatusCodes.unauthorized).send() : next();
             })
           );
