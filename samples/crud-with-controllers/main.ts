@@ -5,9 +5,12 @@ import { UserController } from "./UserController";
 const PORT = 3030;
 
 async function main() {
-  console.log("Creating app...");
+  console.log("Creating Controllers app...");
+
   const app = new AppBuilder().useJson().useController(UserController);
+
   await app.buildAsync(PORT);
+
   console.log("App is running!");
 }
 

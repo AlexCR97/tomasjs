@@ -10,7 +10,8 @@
     "start:prod": "node -r ts-node/register/transpile-only -r tsconfig-paths/register ./dist/src/main.js",
     "test": "jest",
     "test-watch": "jest --watchAll --verbose",
-    "serve-sample-controllers": "ts-node -r tsconfig-paths/register ./samples/crud-with-controllers/main.ts"
+    "serve-sample-controllers": "ts-node -r tsconfig-paths/register ./samples/crud-with-controllers/main.ts",
+    "serve-sample-request-handlers": "ts-node -r tsconfig-paths/register ./samples/crud-with-request-handlers/main.ts"
   },
   "author": "viex",
   "license": "ISC",
