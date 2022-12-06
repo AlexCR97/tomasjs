@@ -2,12 +2,12 @@ import { Request, Response, NextFunction } from "express";
 import { Middleware } from "./Middleware";
 import { MiddlewareHandler } from "./types";
 
-export class AnonymousMiddleware extends Middleware {
-  constructor(private readonly handler: MiddlewareHandler) {
+export class AnonymousMiddleware<T = any> extends Middleware<T> {
+  constructor(private readonly handler: MiddlewareHandler<T>) {
     super();
   }
 
-  handle(req: Request, res: Response, next: NextFunction): void {
-    this.handler(req, res, next);
+  handle(req: Request, res: Response, next: NextFunction): T | Promise<T> {
+    return this.handler(req, res, next);
   }
 }

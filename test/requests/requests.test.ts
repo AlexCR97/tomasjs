@@ -8,6 +8,7 @@ import { HttpContext, StatusCodes } from "../../src/core";
 import fetch from "node-fetch";
 import { OkResponse, StatusCodeResponse } from "../../src/responses/status-codes";
 import { JsonResponse, PlainTextResponse } from "../../src/responses";
+import { AnonymousMiddleware } from "../../src/middleware";
 
 describe("RequestHandlers", () => {
   const port = 3032;
@@ -387,5 +388,53 @@ describe("RequestHandlers", () => {
     // Assert
     expect(response.status).toBe(StatusCodes.created);
     expect(response.json()).resolves.toEqual(expectedResponse);
+  });
+
+  it(`An OnBefore Middleware can intercept the request headers`, async () => {
+    // Arrange
+    const path = "path/to/authorized/resource";
+    const headerKey = "authorization";
+    const secretKey = "superSecretKey";
+
+    class TestRequestHandler extends RequestHandler<string> {
+      constructor() {
+        super();
+        this.method("post")
+          .path(`/${path}`)
+          .onBefore(
+            new AnonymousMiddleware((req, res, next) => {
+              const token = req.headers[headerKey];
+              console.log("token", token);
+              return token !== secretKey ? res.status(StatusCodes.unauthorized).send() : next();
+            })
+          );
+      }
+      handle(context: HttpContext): string {
+        return context.request.headers[headerKey] as string;
+      }
+    }
+
+    server = await new AppBuilder()
+      .useJson()
+      .useHttpContext()
+      .useRequestHandler(TestRequestHandler)
+      .buildAsync(port);
+
+    // Act
+    const unauthorizedResponse = await fetch(`${serverAddress}/${path}`, {
+      method: "post",
+    });
+
+    const customHeaders: any = {};
+    customHeaders[headerKey] = secretKey;
+    const authorizedResponse = await fetch(`${serverAddress}/${path}`, {
+      method: "post",
+      headers: { ...customHeaders },
+    });
+
+    // Assert
+    expect(unauthorizedResponse.status).toBe(StatusCodes.unauthorized);
+    expect(authorizedResponse.status).toBe(StatusCodes.ok);
+    expect(authorizedResponse.text()).resolves.toEqual(secretKey);
   });
 });
