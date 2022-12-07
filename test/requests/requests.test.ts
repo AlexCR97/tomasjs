@@ -10,7 +10,7 @@ import { OkResponse, StatusCodeResponse } from "../../src/responses/status-codes
 import { JsonResponse, PlainTextResponse } from "../../src/responses";
 import { AnonymousMiddleware } from "../../src/middleware";
 
-describe("RequestHandlers", () => {
+describe.skip("RequestHandlers", () => {
   const port = 3032;
   const serverAddress = `http://localhost:${port}`;
   const serverTeardownOffsetMilliseconds = 100;

@@ -335,7 +335,9 @@ export class AppBuilder {
 
   /* #region Endpoints */
 
-  useEndpoint(endpoint: Endpoint | constructor<Endpoint>): AppBuilder {
+  useEndpoint<TEndpoint extends Endpoint = Endpoint>(
+    endpoint: TEndpoint | constructor<TEndpoint>
+  ): AppBuilder {
     if (endpoint instanceof Endpoint) {
       return this.useEndpointInstance(endpoint);
     }

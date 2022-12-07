@@ -43,5 +43,5 @@ export abstract class Endpoint {
 
   /* #endregion */
 
-  abstract handle<TResponse>(context: HttpContext): TResponse | Promise<TResponse>;
+  abstract handle(context: HttpContext): any | Promise<any>;
 }
