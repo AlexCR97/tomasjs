@@ -10,9 +10,13 @@
     "start:prod": "node -r ts-node/register/transpile-only -r tsconfig-paths/register ./dist/src/main.js",
     "test": "jest",
     "test-watch": "jest --watchAll --verbose",
+    "test-sample-crud-watch": "jest --testNamePattern crud-sample --watchAll --verbose",
     "serve-sample-controllers": "ts-node -r tsconfig-paths/register ./samples/crud-with-controllers/main.ts",
-    "serve-sample-request-handlers": "ts-node -r tsconfig-paths/register ./samples/crud-with-request-handlers/main.ts",
-    "serve-sample-jwt-authentication": "ts-node -r tsconfig-paths/register ./samples/jwt-authentication/main.ts"
+    "watch-sample-controllers": "nodemon -r tsconfig-paths/register ./samples/crud-with-controllers/main.ts",
+    "serve-sample-endpoints": "ts-node -r tsconfig-paths/register ./samples/crud-with-endpoints/main.ts",
+    "watch-sample-endpoints": "nodemon -r tsconfig-paths/register ./samples/crud-with-endpoints/main.ts",
+    "serve-sample-jwt-authentication": "ts-node -r tsconfig-paths/register ./samples/jwt-authentication/main.ts",
+    "watch-sample-jwt-authentication": "nodemon -r tsconfig-paths/register ./samples/jwt-authentication/main.ts"
   },
   "author": "viex",
   "license": "ISC",

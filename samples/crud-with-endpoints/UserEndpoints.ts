@@ -1,45 +1,80 @@
-import { HttpContext } from "../../src/core";
-import { RequestHandler } from "../../src/requests";
-import { BaseResponse, StatusCodeResponse } from "../../src/responses";
+import { HttpContext, StatusCodes } from "../../src/core";
+import { Endpoint } from "../../src/endpoints";
+import { PlainTextResponse } from "../../src/responses";
 import {
   BadRequestResponse,
-  CreatedResponse,
   NoContentResponse,
   NotFoundResponse,
+  OkResponse,
 } from "../../src/responses/status-codes";
 import { User } from "./User";
 
-let lastGeneratedId = 0;
-const users: User[] = [];
+export const seedUsersCount = 3; // Used by tests
+let lastGeneratedId = 1;
+let users: User[] = [];
 
-export class GetAllUsersHandler extends RequestHandler<User[]> {
+export class SeedUsersEndpoint extends Endpoint {
+  constructor() {
+    super();
+    this.method("post").path("/users/seed");
+  }
+  handle(context: HttpContext) {
+    lastGeneratedId = 1;
+    users = [];
+
+    Array.from(Array(seedUsersCount).keys()).forEach(() => {
+      users.push({
+        id: lastGeneratedId,
+        email: `user${lastGeneratedId}@domain.com`,
+        password: `user${lastGeneratedId}@123456`,
+      });
+      lastGeneratedId += 1;
+    });
+
+    return new OkResponse();
+  }
+}
+
+export class ClearUsersEndpoint extends Endpoint {
+  constructor() {
+    super();
+    this.method("delete").path("/users/clear");
+  }
+  handle(context: HttpContext) {
+    lastGeneratedId = 1;
+    users = [];
+    return new OkResponse();
+  }
+}
+
+export class GetAllUsersEndpoint extends Endpoint {
   constructor() {
     super();
     this.path("/users");
   }
-  handle(context: HttpContext): User[] {
+  handle(context: HttpContext) {
     return users;
   }
 }
 
-export class GetUserByIdHandler extends RequestHandler<User | StatusCodeResponse> {
+export class GetUserByIdEndpoint extends Endpoint {
   constructor() {
     super();
     this.path("/users/:id");
   }
-  handle(context: HttpContext): User | StatusCodeResponse {
+  handle(context: HttpContext) {
     const userId = Number(context.request.params.id);
     const user = users.find((x) => x.id === userId);
     return user === undefined ? new NotFoundResponse() : user;
   }
 }
 
-export class CreateUserHandler extends RequestHandler<BaseResponse> {
+export class CreateUserEndpoint extends Endpoint {
   constructor() {
     super();
     this.method("post").path("/users");
   }
-  handle(context: HttpContext): BaseResponse {
+  handle(context: HttpContext) {
     const user = context.request.getBody<User>();
 
     if (user.email === undefined || user.email.trim().length === 0) {
@@ -53,16 +88,16 @@ export class CreateUserHandler extends RequestHandler<BaseResponse> {
     lastGeneratedId += 1;
     user.id = lastGeneratedId;
     users.push(user);
-    return new CreatedResponse();
+    return new PlainTextResponse(user.id.toString(), { status: StatusCodes.created });
   }
 }
 
-export class UpdateUserHandler extends RequestHandler<BaseResponse> {
+export class UpdateUserEndpoint extends Endpoint {
   constructor() {
     super();
     this.method("put").path("/users/:id");
   }
-  handle(context: HttpContext): BaseResponse {
+  handle(context: HttpContext) {
     const userId = Number(context.request.params.id);
     const userFromBody = context.request.getBody<User>();
 
@@ -92,12 +127,12 @@ export class UpdateUserHandler extends RequestHandler<BaseResponse> {
   }
 }
 
-export class UpdateUserProfileHandler extends RequestHandler<BaseResponse> {
+export class UpdateUserProfileEndpoint extends Endpoint {
   constructor() {
     super();
     this.method("patch").path("/users/:id/profile");
   }
-  handle(context: HttpContext): BaseResponse | Promise<BaseResponse> {
+  handle(context: HttpContext) {
     interface PatchRequest {
       id: number;
       firstName?: string;
@@ -123,12 +158,12 @@ export class UpdateUserProfileHandler extends RequestHandler<BaseResponse> {
   }
 }
 
-export class DeleteUserHandler extends RequestHandler<BaseResponse> {
+export class DeleteUserEndpoint extends Endpoint {
   constructor() {
     super();
     this.method("delete").path("/users/:id");
   }
-  handle(context: HttpContext): BaseResponse | Promise<BaseResponse> {
+  handle(context: HttpContext) {
     const userId = Number(context.request.params.id);
     const existingUser = users.find((x) => x.id === userId);
 
