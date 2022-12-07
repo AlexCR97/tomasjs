@@ -1,16 +1,16 @@
 import { HttpContext } from "@/core";
 import { NextFunction, Request, Response } from "express";
 
-export type ExpressMiddlewareHandler<TResult = any> = (
+export type ExpressMiddlewareHandler = (
   req: Request,
   res: Response,
   next: NextFunction
-) => TResult | Promise<TResult>;
+) => void | Promise<void>;
 
-export type ThomasMiddlewareHandler<TResult = any> = (
+export type ThomasMiddlewareHandler = (
   context: HttpContext,
   next: NextFunction
-) => TResult | Promise<TResult>;
+) => void | Promise<void>;
 
 // TODO Deprecate this and use ExpressMiddlewareHandler
 export type MiddlewareHandler<T = any> = (
@@ -19,15 +19,15 @@ export type MiddlewareHandler<T = any> = (
   next: NextFunction
 ) => T | Promise<T>;
 
-export type ExpressErrorMiddlewareHandler<TError = any, TResult = any> = (
+export type ExpressErrorMiddlewareHandler<TError = any> = (
   err: TError,
   req: Request,
   res: Response,
   next: NextFunction
-) => TResult | Promise<TResult>;
+) => void | Promise<void>;
 
-export type ThomasErrorMiddlewareHandler<TError = any, TResult = any> = (
+export type ThomasErrorMiddlewareHandler<TError = any> = (
   err: TError,
   context: HttpContext,
   next: NextFunction
-) => TResult | Promise<TResult>;
+) => void | Promise<void>;

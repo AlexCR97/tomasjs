@@ -29,6 +29,7 @@ import {
   ThomasErrorMiddlewareHandler,
   ThomasMiddlewareHandler,
 } from "@/middleware/types";
+import { Endpoint, EndpointAdapter } from "@/endpoints";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -328,6 +329,25 @@ export class AppBuilder {
         return RequestHandlerResponseAdapter.toExpressResponse(res, customResponse);
       }
     );
+  }
+
+  /* #endregion */
+
+  /* #region Endpoints */
+
+  useEndpoint(endpoint: Endpoint | constructor<Endpoint>): AppBuilder {
+    if (endpoint instanceof Endpoint) {
+      return this.useEndpointInstance(endpoint);
+    }
+
+    const endpointInstance = container.resolve(endpoint);
+    return this.useEndpointInstance(endpointInstance);
+  }
+
+  private useEndpointInstance(endpoint: Endpoint): AppBuilder {
+    const expressHandlers = EndpointAdapter.fromInstanceToExpress(endpoint);
+    this.app[endpoint._method](endpoint._path, ...expressHandlers);
+    return this;
   }
 
   /* #endregion */

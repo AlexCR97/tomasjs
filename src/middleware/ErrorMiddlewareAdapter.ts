@@ -7,21 +7,21 @@ import { ExpressErrorMiddlewareHandler, ThomasErrorMiddlewareHandler } from "./t
 export class ErrorMiddlewareAdapter {
   private constructor() {}
 
-  static fromTypeToExpress<TError, TResult>(
-    middleware: ThomasErrorMiddlewareHandler<TError, TResult>
-  ): ExpressErrorMiddlewareHandler<TError, TResult> {
-    return (err, req, res, next) => {
+  static fromTypeToExpress<TError>(
+    middleware: ThomasErrorMiddlewareHandler<TError>
+  ): ExpressErrorMiddlewareHandler<TError> {
+    return async (err, req, res, next) => {
       const context = HttpContextResolver.fromExpress(req, res); // HttpContext needs to be resolved at runtime to support DI
-      return middleware(err, context, next);
+      await middleware(err, context, next);
     };
   }
 
-  static fromInstanceToExpress<TError, TResult>(
+  static fromInstanceToExpress<TError>(
     middleware: ThomasErrorMiddleware
-  ): ExpressErrorMiddlewareHandler<TError, TResult> {
-    return (err, req, res, next) => {
+  ): ExpressErrorMiddlewareHandler<TError> {
+    return async (err, req, res, next) => {
       const context = HttpContextResolver.fromExpress(req, res); // HttpContext needs to be resolved at runtime to support DI
-      return middleware.handle(err, context, next);
+      await middleware.handle(err, context, next);
     };
   }
 
@@ -29,11 +29,11 @@ export class ErrorMiddlewareAdapter {
     TError,
     TResult,
     TMiddleware extends ThomasErrorMiddleware = ThomasErrorMiddleware
-  >(middleware: constructor<TMiddleware>): ExpressErrorMiddlewareHandler<TError, TResult> {
-    return (err, req, res, next) => {
+  >(middleware: constructor<TMiddleware>): ExpressErrorMiddlewareHandler<TError> {
+    return async (err, req, res, next) => {
       const middlewareInstance = container.resolve(middleware); // ErrorMiddleware needs to be resolved at runtime to support DI
       const context = HttpContextResolver.fromExpress(req, res); // HttpContext needs to be resolved at runtime to support DI
-      return middlewareInstance.handle(err, context, next);
+      await middlewareInstance.handle(err, context, next);
     };
   }
 }

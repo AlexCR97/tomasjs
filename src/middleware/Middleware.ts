@@ -7,8 +7,5 @@ export abstract class Middleware<T = any> {
 }
 
 export abstract class ThomasMiddleware {
-  abstract handle<TResult = any>(
-    context: HttpContext,
-    next: NextFunction
-  ): TResult | Promise<TResult>;
+  abstract handle(context: HttpContext, next: NextFunction): void | Promise<void>;
 }

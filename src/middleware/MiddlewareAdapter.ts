@@ -7,31 +7,39 @@ import { ExpressMiddlewareHandler, ThomasMiddlewareHandler } from "./types";
 export class MiddlewareAdapter {
   private constructor() {}
 
-  static fromTypeToExpress<TResult>(
-    middleware: ThomasMiddlewareHandler<TResult>
-  ): ExpressMiddlewareHandler<TResult> {
-    return (req, res, next) => {
+  static fromThomasToExpress(
+    middleware: ThomasMiddlewareHandler | ThomasMiddleware | constructor<ThomasMiddleware>
+  ) {
+    if (typeof middleware === "function") {
+      return MiddlewareAdapter.fromTypeToExpress(middleware as any);
+    }
+    if (middleware instanceof ThomasMiddleware) {
+      return MiddlewareAdapter.fromInstanceToExpress(middleware);
+    }
+    return MiddlewareAdapter.fromConstructorToExpress(middleware);
+  }
+
+  static fromTypeToExpress(middleware: ThomasMiddlewareHandler): ExpressMiddlewareHandler {
+    return async (req, res, next) => {
       const context = HttpContextResolver.fromExpress(req, res); // HttpContext needs to be resolved at runtime to support DI
-      return middleware(context, next);
+      await middleware(context, next);
     };
   }
 
-  static fromInstanceToExpress<TResult>(
-    middleware: ThomasMiddleware
-  ): ExpressMiddlewareHandler<TResult> {
-    return (req, res, next) => {
+  static fromInstanceToExpress(middleware: ThomasMiddleware): ExpressMiddlewareHandler {
+    return async (req, res, next) => {
       const context = HttpContextResolver.fromExpress(req, res); // HttpContext needs to be resolved at runtime to support DI
-      return middleware.handle(context, next);
+      await middleware.handle(context, next);
     };
   }
 
-  static fromConstructorToExpress<TResult, TMiddleware extends ThomasMiddleware = ThomasMiddleware>(
+  static fromConstructorToExpress<TMiddleware extends ThomasMiddleware = ThomasMiddleware>(
     middleware: constructor<TMiddleware>
-  ): ExpressMiddlewareHandler<TResult> {
-    return (req, res, next) => {
+  ): ExpressMiddlewareHandler {
+    return async (req, res, next) => {
       const middlewareInstance = container.resolve(middleware); // Middleware needs to be resolved at runtime to support DI
       const context = HttpContextResolver.fromExpress(req, res); // HttpContext needs to be resolved at runtime to support DI
-      return middlewareInstance.handle(context, next);
+      await middlewareInstance.handle(context, next);
     };
   }
 }

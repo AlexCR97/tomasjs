@@ -14,11 +14,11 @@ export class AnonymousMiddleware<T = any> extends Middleware<T> {
   }
 }
 
-export class ThomasAnonymousMiddleware<TResult = any> extends ThomasMiddleware {
-  constructor(private readonly handler: ThomasMiddlewareHandler<TResult>) {
+export class ThomasAnonymousMiddleware extends ThomasMiddleware {
+  constructor(private readonly handler: ThomasMiddlewareHandler) {
     super();
   }
-  handle<TResult>(context: HttpContext, next: NextFunction): TResult | Promise<TResult> {
-    return this.handler(context, next) as any; // TODO Fix generic and remove "any"?
+  handle(context: HttpContext, next: NextFunction): void | Promise<void> {
+    return this.handler(context, next);
   }
 }
