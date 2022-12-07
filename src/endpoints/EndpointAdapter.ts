@@ -7,7 +7,7 @@ import { Request, Response } from "express";
 import { container } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
 import { Endpoint } from "./Endpoint";
-import { EndpointHandler } from "./types";
+import { EndpointHandler, IsEndpointHandler } from "./types";
 
 export abstract class EndpointAdapter {
   private constructor() {}
@@ -15,8 +15,8 @@ export abstract class EndpointAdapter {
   static fromThomasToExpress(
     endpoint: EndpointHandler<any> | Endpoint | constructor<Endpoint>
   ): (ExpressMiddlewareHandler | ExpressRequestHandler)[] {
-    if (typeof endpoint === "function") {
-      return [this.fromTypeToExpress(endpoint as any)];
+    if (IsEndpointHandler<any>(endpoint)) {
+      return [this.fromTypeToExpress(endpoint)];
     }
 
     if (endpoint instanceof Endpoint) {

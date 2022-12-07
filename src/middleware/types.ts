@@ -23,7 +23,7 @@ export function isThomasMiddlewareHandler(obj: any): obj is ThomasMiddlewareHand
   return (
     func.name.trim().length === 0 && // The name must be an empty string
     func.prototype === undefined && // The prototype must be undefined
-    func.length === 2 && // It must receive 2 parameters
+    func.length === 2 && // It must receive 2 arguments
     func.toString().includes("=>") // It must be an arrow function
   );
 }
