@@ -3,7 +3,6 @@ import { environment } from "@/environment";
 import express, { json, Express, NextFunction, Request, Response, Router, text } from "express";
 import { container, DependencyContainer } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
-import { RequestHandlerResponseAdapter } from "./requests";
 import {
   ErrorMiddleware,
   ErrorMiddlewareAdapter,
@@ -24,6 +23,7 @@ import {
 } from "@/middleware/types";
 import { Endpoint, EndpointAdapter } from "@/endpoints";
 import { HttpContextResolver } from "@/core";
+import { ResponseAdapter } from "@/responses";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -252,7 +252,7 @@ export class AppBuilder {
       return async (req: Request, res: Response) => {
         const httpContext = HttpContextResolver.fromExpress(req, res);
         const actionResponse = await (action as any)(httpContext);
-        return RequestHandlerResponseAdapter.toExpressResponse(res, actionResponse);
+        return ResponseAdapter.fromThomasToExpress(res, actionResponse);
       };
     } else {
       const middleware = action as constructor<Middleware>;
