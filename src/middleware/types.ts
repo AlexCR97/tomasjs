@@ -12,7 +12,23 @@ export type ThomasMiddlewareHandler = (
   next: NextFunction
 ) => void | Promise<void>;
 
-// TODO Deprecate this and use ExpressMiddlewareHandler
+export function isThomasMiddlewareHandler(obj: any): obj is ThomasMiddlewareHandler {
+  if (typeof obj !== "function") {
+    return false;
+  }
+
+  const func = obj as Function;
+
+  // Considering that a ThomasMiddlewareHandler must be anonymous function...
+  return (
+    func.name.trim().length === 0 && // The name must be an empty string
+    func.prototype === undefined && // The prototype must be undefined
+    func.length === 2 && // It must receive 2 parameters
+    func.toString().includes("=>") // It must be an arrow function
+  );
+}
+
+// TODO Deprecate this and use ThomasMiddlewareHandler
 export type MiddlewareHandler<T = any> = (
   req: Request,
   res: Response,

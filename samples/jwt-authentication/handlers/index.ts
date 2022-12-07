@@ -1,2 +1,2 @@
-export { AuthorizedCallHandler } from "./AuthorizedCallHandler";
-export { GetTokenHandler } from "./GetTokenHandler";
+export { AuthorizedCallEndpoint } from "./AuthorizedCallEndpoint";
+export { GetTokenEndpoint } from "./GetTokenEndpoint";

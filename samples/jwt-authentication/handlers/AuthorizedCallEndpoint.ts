@@ -1,9 +1,9 @@
 import { HttpContext } from "../../../src/core";
-import { RequestHandler } from "../../../src/requests";
 import { JwtMiddleware } from "../middleware";
 import { JsonResponse } from "../../../src/responses";
+import { Endpoint } from "../../../src/endpoints";
 
-export class AuthorizedCallHandler extends RequestHandler<JsonResponse> {
+export class AuthorizedCallEndpoint extends Endpoint {
   constructor() {
     super();
     this.method("post").path("/token");
@@ -12,7 +12,7 @@ export class AuthorizedCallHandler extends RequestHandler<JsonResponse> {
   handle(context: HttpContext): JsonResponse {
     return new JsonResponse({
       message: "You are authorized!",
-      user: (context.response as any).user,
+      user: context.user,
     });
   }
 }

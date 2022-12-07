@@ -1,10 +1,10 @@
 import { HttpContext } from "../../../src/core";
-import { RequestHandler } from "../../../src/requests";
 import { OAuthTokenResponse } from "../models";
 import { sign } from "jsonwebtoken";
 import { AuthOptions } from "./AuthOptions";
+import { Endpoint } from "../../../src/endpoints";
 
-export class GetTokenHandler extends RequestHandler<OAuthTokenResponse> {
+export class GetTokenEndpoint extends Endpoint {
   constructor() {
     super();
     this.path("/token");

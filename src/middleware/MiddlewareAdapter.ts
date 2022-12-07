@@ -2,7 +2,11 @@ import { HttpContextResolver } from "@/core/HttpContextResolver";
 import { container } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
 import { ThomasMiddleware } from "./Middleware";
-import { ExpressMiddlewareHandler, ThomasMiddlewareHandler } from "./types";
+import {
+  ExpressMiddlewareHandler,
+  isThomasMiddlewareHandler,
+  ThomasMiddlewareHandler,
+} from "./types";
 
 export class MiddlewareAdapter {
   private constructor() {}
@@ -10,8 +14,8 @@ export class MiddlewareAdapter {
   static fromThomasToExpress(
     middleware: ThomasMiddlewareHandler | ThomasMiddleware | constructor<ThomasMiddleware>
   ) {
-    if (typeof middleware === "function") {
-      return MiddlewareAdapter.fromTypeToExpress(middleware as any);
+    if (isThomasMiddlewareHandler(middleware)) {
+      return MiddlewareAdapter.fromTypeToExpress(middleware);
     }
     if (middleware instanceof ThomasMiddleware) {
       return MiddlewareAdapter.fromInstanceToExpress(middleware);

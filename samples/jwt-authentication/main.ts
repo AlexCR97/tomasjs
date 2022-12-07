@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { AppBuilder } from "../../src/builder";
-import { AuthorizedCallHandler, GetTokenHandler } from "./handlers";
+import { AuthorizedCallEndpoint, GetTokenEndpoint } from "./handlers";
 
 const PORT = 3030;
 
@@ -9,9 +9,8 @@ async function main() {
 
   const app = new AppBuilder()
     .useJson()
-    .useHttpContext()
-    .useRequestHandler(GetTokenHandler)
-    .useRequestHandler(AuthorizedCallHandler);
+    .useEndpoint(GetTokenEndpoint)
+    .useEndpoint(AuthorizedCallEndpoint);
 
   await app.buildAsync(PORT);
 
