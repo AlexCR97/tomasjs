@@ -5,7 +5,7 @@ import { AppBuilder } from "../../src/builder";
 import { environment } from "../environment";
 import { tryCloseServerAsync } from "../utils/server";
 
-describe.skip("AppBuilder", () => {
+describe("AppBuilder", () => {
   let server: any; // TODO Set http.Server type
 
   beforeEach(async () => {

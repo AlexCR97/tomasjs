@@ -3,11 +3,7 @@ import { environment } from "@/environment";
 import express, { json, Express, NextFunction, Request, Response, Router, text } from "express";
 import { container, DependencyContainer } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
-import {
-  ExpressRequestHandlerFactory,
-  RequestHandlerResolver,
-  RequestHandlerResponseAdapter,
-} from "./requests";
+import { RequestHandlerResponseAdapter } from "./requests";
 import {
   ErrorMiddleware,
   ErrorMiddlewareAdapter,
@@ -18,9 +14,6 @@ import {
 } from "@/middleware";
 import { Controller } from "@/controllers";
 import { ControllerAction } from "@/controllers/types";
-import { HttpContext } from "@/core";
-import { RequestHandler } from "@/requests";
-import { HttpContextBinder } from "@/core/HttpContextBinder";
 import { ExpressRequestHandler } from "@/core/handlers";
 import {
   ExpressErrorMiddlewareHandler,
@@ -30,6 +23,7 @@ import {
   ThomasMiddlewareHandler,
 } from "@/middleware/types";
 import { Endpoint, EndpointAdapter } from "@/endpoints";
+import { HttpContextResolver } from "@/core";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -256,7 +250,7 @@ export class AppBuilder {
       };
     } else if (typeof action === "function") {
       return async (req: Request, res: Response) => {
-        const httpContext = this.resolveAndBindHttpContext(req, res);
+        const httpContext = HttpContextResolver.fromExpress(req, res);
         const actionResponse = await (action as any)(httpContext);
         return RequestHandlerResponseAdapter.toExpressResponse(res, actionResponse);
       };
@@ -267,68 +261,6 @@ export class AppBuilder {
         await middlewareInstance.handle(req, res, next); // TODO Will this work with DI?
       };
     }
-  }
-
-  /* #endregion */
-
-  /* #region Request Handlers */
-
-  private isHttpContextInitialized = false;
-
-  useHttpContext(): AppBuilder {
-    this.app.use((req, res, next) => {
-      this.resolveAndBindHttpContext(req, res);
-      next();
-    });
-    this.isHttpContextInitialized = true;
-    return this;
-  }
-
-  private resolveAndBindHttpContext(req: Request, res: Response): HttpContext {
-    const context = container.resolve(HttpContext);
-    HttpContextBinder.fromExpress(context, req, res);
-    return context;
-  }
-
-  useRequestHandler<TRequestHandler extends RequestHandler<any>>(
-    requestHandler: TRequestHandler | constructor<TRequestHandler>
-  ): AppBuilder {
-    this.logger.debug(`.${this.useRequestHandler.name}`, {
-      requestHandler: requestHandler,
-    });
-
-    if (!this.isHttpContextInitialized) {
-      throw new Error(
-        `The ${HttpContext.name} singleton has not been initialized. Please use the ${this.useHttpContext.name} method before calling ${this.useRequestHandler.name}.`
-      );
-    }
-
-    if (requestHandler instanceof RequestHandler) {
-      this.registerRequestHandler<TRequestHandler>(requestHandler);
-    } else {
-      container.register(requestHandler.name, requestHandler);
-      const requestHandlerInstance = container.resolve(requestHandler);
-      this.registerRequestHandler<TRequestHandler>(requestHandlerInstance);
-    }
-
-    return this;
-  }
-
-  private registerRequestHandler<TRequestHandler extends RequestHandler<any>>(
-    requestHandler: TRequestHandler
-  ) {
-    this.app[requestHandler._method](
-      requestHandler._path,
-      ...ExpressRequestHandlerFactory.fromMiddlewares(requestHandler.onBeforeMiddlewares),
-      async (req: Request, res: Response) => {
-        const httpContext = this.resolveAndBindHttpContext(req, res); // TODO Figure out a way to do this only in the .useHttpContext method
-        const customResponse = await RequestHandlerResolver.handleAsync<TRequestHandler>(
-          requestHandler,
-          httpContext
-        );
-        return RequestHandlerResponseAdapter.toExpressResponse(res, customResponse);
-      }
-    );
   }
 
   /* #endregion */
