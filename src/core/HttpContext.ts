@@ -11,8 +11,7 @@ export class HttpContext {
   user?: UserContext;
   readonly metadata = new Map<string, any>();
 
-  respond(data: any): typeof response {
-    // TODO Implement
-    return ResponseAdapter.fromThomasToExpress(this.response, data);
+  respond(data: any): void {
+    ResponseAdapter.fromThomasToExpress(this.response, data);
   }
 }

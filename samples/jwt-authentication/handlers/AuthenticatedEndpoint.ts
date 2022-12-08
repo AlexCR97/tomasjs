@@ -3,15 +3,15 @@ import { JwtMiddleware } from "../middleware";
 import { JsonResponse } from "../../../src/responses";
 import { Endpoint } from "../../../src/endpoints";
 
-export class AuthorizedCallEndpoint extends Endpoint {
+export class AuthenticatedEndpoint extends Endpoint {
   constructor() {
     super();
-    this.method("post").path("/token");
+    this.method("post").path("/test-token");
     this.onBefore(JwtMiddleware);
   }
   handle(context: HttpContext): JsonResponse {
     return new JsonResponse({
-      message: "You are authorized!",
+      message: "You are authenticated!",
       user: context.user,
     });
   }
