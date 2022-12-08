@@ -16,7 +16,6 @@ import { ControllerAction } from "@/controllers/types";
 import { ExpressRequestHandler } from "@/core/handlers";
 import {
   ExpressErrorMiddlewareHandler,
-  ExpressMiddlewareHandler,
   MiddlewareHandler,
   ThomasErrorMiddlewareHandler,
   ThomasMiddlewareHandler,
@@ -24,6 +23,7 @@ import {
 import { Endpoint, EndpointAdapter } from "@/endpoints";
 import { HttpContextResolver } from "@/core";
 import { ResponseAdapter } from "@/responses";
+import { MiddlewareFactory } from "@/middleware/MiddlewareFactory";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -130,28 +130,29 @@ export class AppBuilder {
   }
 
   useMiddlewarex(
-    middleware: ThomasMiddlewareHandler | ThomasMiddleware | constructor<ThomasMiddleware>
+    middleware:
+      | ThomasMiddlewareHandler
+      | ThomasMiddleware
+      | constructor<ThomasMiddleware>
+      | MiddlewareFactory
   ): AppBuilder {
     return this.useMiddlewareFor(middleware, { app: this.app });
   }
 
   private useMiddlewareFor(
-    middleware: ThomasMiddlewareHandler | ThomasMiddleware | constructor<ThomasMiddleware>,
+    middleware:
+      | ThomasMiddlewareHandler
+      | ThomasMiddleware
+      | constructor<ThomasMiddleware>
+      | MiddlewareFactory,
     source: { app?: Express; router?: Router }
   ): AppBuilder {
-    let expressMiddleware: ExpressMiddlewareHandler;
-
-    if (typeof middleware === "function") {
-      expressMiddleware = MiddlewareAdapter.fromTypeToExpress(middleware as any);
-    } else if (middleware instanceof ThomasMiddleware) {
-      expressMiddleware = MiddlewareAdapter.fromInstanceToExpress(middleware);
-    } else {
-      expressMiddleware = MiddlewareAdapter.fromConstructorToExpress(middleware);
-    }
-
+    const expressMiddleware =
+      middleware instanceof MiddlewareFactory
+        ? MiddlewareAdapter.fromThomasToExpress(middleware.create())
+        : MiddlewareAdapter.fromThomasToExpress(middleware);
     source.app?.use(expressMiddleware);
     source.router?.use(expressMiddleware);
-
     return this;
   }
 
