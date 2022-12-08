@@ -149,8 +149,8 @@ export class AppBuilder {
   ): AppBuilder {
     const expressMiddleware =
       middleware instanceof MiddlewareFactory
-        ? MiddlewareAdapter.fromThomasToExpress(middleware.create())
-        : MiddlewareAdapter.fromThomasToExpress(middleware);
+        ? MiddlewareAdapter.from(middleware.create())
+        : MiddlewareAdapter.from(middleware);
     source.app?.use(expressMiddleware);
     source.router?.use(expressMiddleware);
     return this;

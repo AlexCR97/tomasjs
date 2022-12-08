@@ -31,3 +31,8 @@ export class ClaimMiddleware extends ThomasMiddleware {
     );
   }
 }
+
+console.log("ClaimMiddleware", ClaimMiddleware);
+console.log("ClaimMiddleware.length", ClaimMiddleware.length);
+console.log("ClaimMiddleware.name", ClaimMiddleware.name);
+console.log("ClaimMiddleware.prototype", ClaimMiddleware.prototype);

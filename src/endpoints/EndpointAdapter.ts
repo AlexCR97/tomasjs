@@ -39,8 +39,8 @@ export abstract class EndpointAdapter {
   ): (ExpressMiddlewareHandler | ExpressRequestHandler)[] {
     const expressMiddlewareHandlers = endpoint.onBeforeMiddlewares.map((middleware) => {
       return middleware instanceof MiddlewareFactory
-        ? MiddlewareAdapter.fromThomasToExpress(middleware.create())
-        : MiddlewareAdapter.fromThomasToExpress(middleware);
+        ? MiddlewareAdapter.from(middleware.create())
+        : MiddlewareAdapter.from(middleware);
     });
 
     const expressRequestHandler = async (req: Request, res: Response) => {
@@ -59,8 +59,8 @@ export abstract class EndpointAdapter {
 
     const expressMiddlewareHandlers = endpointInstance.onBeforeMiddlewares.map((middleware) => {
       return middleware instanceof MiddlewareFactory
-        ? MiddlewareAdapter.fromThomasToExpress(middleware.create())
-        : MiddlewareAdapter.fromThomasToExpress(middleware);
+        ? MiddlewareAdapter.from(middleware.create())
+        : MiddlewareAdapter.from(middleware);
     });
 
     const expressRequestHandler = async (req: Request, res: Response) => {
