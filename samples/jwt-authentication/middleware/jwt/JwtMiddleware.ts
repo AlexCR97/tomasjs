@@ -1,11 +1,14 @@
 import { NextFunction } from "express";
 import { JwtPayload, verify } from "jsonwebtoken";
-import { HttpContext, StatusCodes, UserContext } from "../../../src/core";
-import { ThomasMiddleware } from "../../../src/middleware";
-import { JsonResponse } from "../../../src/responses";
-import { environment } from "../environment";
+import { HttpContext, StatusCodes, UserContext } from "../../../../src/core";
+import { ThomasMiddleware } from "../../../../src/middleware";
+import { JsonResponse } from "../../../../src/responses";
+import { JwtMiddlewareOptions } from "./JwtMiddlewareOptions";
 
 export class JwtMiddleware extends ThomasMiddleware {
+  constructor(private readonly options: JwtMiddlewareOptions) {
+    super();
+  }
   async handle(context: HttpContext, next: NextFunction): Promise<void> {
     const authHeader = context.request.headers.authorization;
 
@@ -30,7 +33,7 @@ export class JwtMiddleware extends ThomasMiddleware {
     }
 
     try {
-      const user = await this.verifyTokenAsync(accessToken, environment.auth.secret);
+      const user = await this.verifyTokenAsync(accessToken, this.options.secret);
       context.user = new UserContext();
       context.user.claims = user;
       return next();
