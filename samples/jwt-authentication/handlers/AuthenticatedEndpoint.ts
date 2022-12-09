@@ -7,7 +7,7 @@ export class AuthenticatedEndpoint extends Endpoint {
   constructor() {
     super();
     this.method("post").path("/test-token");
-    this.onBefore(new JwtMiddlewareFactory());
+    this.onBefore(JwtMiddlewareFactory);
   }
   handle(context: HttpContext): JsonResponse {
     return new JsonResponse({

@@ -16,7 +16,6 @@ export function isMiddlewareFactoryHandler<TMiddleware extends ThomasMiddleware 
 
   // Considering that a MiddlewareFactoryHandler must be anonymous function...
   return (
-    func.name.trim().length === 0 && // The name must be an empty string
     func.prototype === undefined && // The prototype must be undefined
     func.length === 0 && // It must receive 0 arguments
     func.toString().includes("=>") // It must be an arrow function

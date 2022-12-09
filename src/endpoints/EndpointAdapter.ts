@@ -1,6 +1,7 @@
 import { HttpContextResolver } from "@/core";
 import { ExpressRequestHandler } from "@/core/handlers";
-import { MiddlewareAdapter, MiddlewareFactory } from "@/middleware";
+import { MiddlewareAdapter } from "@/middleware";
+import { MiddlewareFactoryAdapter } from "@/middleware/MiddlewareFactoryAdapter";
 import { ExpressMiddlewareHandler } from "@/middleware/types";
 import { ResponseAdapter } from "@/responses";
 import { Request, Response } from "express";
@@ -38,9 +39,10 @@ export abstract class EndpointAdapter {
     endpoint: Endpoint
   ): (ExpressMiddlewareHandler | ExpressRequestHandler)[] {
     const expressMiddlewareHandlers = endpoint.onBeforeMiddlewares.map((middleware) => {
-      return middleware instanceof MiddlewareFactory
-        ? MiddlewareAdapter.from(middleware.create())
-        : MiddlewareAdapter.from(middleware);
+      const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(middleware)
+        ? MiddlewareFactoryAdapter.from(middleware)
+        : middleware;
+      return MiddlewareAdapter.from(middlewareToAdapt);
     });
 
     const expressRequestHandler = async (req: Request, res: Response) => {
@@ -58,9 +60,10 @@ export abstract class EndpointAdapter {
     const endpointInstance = container.resolve(endpoint);
 
     const expressMiddlewareHandlers = endpointInstance.onBeforeMiddlewares.map((middleware) => {
-      return middleware instanceof MiddlewareFactory
-        ? MiddlewareAdapter.from(middleware.create())
-        : MiddlewareAdapter.from(middleware);
+      const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(middleware)
+        ? MiddlewareFactoryAdapter.from(middleware)
+        : middleware;
+      return MiddlewareAdapter.from(middlewareToAdapt);
     });
 
     const expressRequestHandler = async (req: Request, res: Response) => {

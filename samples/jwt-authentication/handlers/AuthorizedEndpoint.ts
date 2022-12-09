@@ -7,8 +7,8 @@ export class AuthorizedEndpoint extends Endpoint {
   constructor() {
     super();
     this.method("post").path("/test-claim");
-    this.onBefore(new JwtMiddlewareFactory());
-    this.onBefore(new RoleClaimMiddlewareFactory());
+    this.onBefore(JwtMiddlewareFactory);
+    this.onBefore(RoleClaimMiddlewareFactory);
   }
   handle(context: HttpContext): JsonResponse {
     return new JsonResponse({

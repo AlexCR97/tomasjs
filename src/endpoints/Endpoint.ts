@@ -1,5 +1,6 @@
 import { HttpContext, HttpMethod } from "@/core";
 import { MiddlewareFactory, ThomasMiddleware } from "@/middleware";
+import { MiddlewareFactoryHandler } from "@/middleware/MiddlewareFactoryHandler";
 import { ThomasMiddlewareHandler } from "@/middleware/types";
 import { constructor } from "tsyringe/dist/typings/types";
 
@@ -32,7 +33,9 @@ export abstract class Endpoint {
     | ThomasMiddlewareHandler
     | ThomasMiddleware
     | constructor<ThomasMiddleware>
+    | MiddlewareFactoryHandler
     | MiddlewareFactory
+    | constructor<MiddlewareFactory>
   )[] = []; // TODO Make private?
 
   onBefore(
@@ -40,7 +43,9 @@ export abstract class Endpoint {
       | ThomasMiddlewareHandler
       | ThomasMiddleware
       | constructor<ThomasMiddleware>
+      | MiddlewareFactoryHandler
       | MiddlewareFactory
+      | constructor<MiddlewareFactory>
   ): Endpoint {
     this.onBeforeMiddlewares.push(middleware);
     return this;
