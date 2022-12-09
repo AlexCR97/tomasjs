@@ -1,4 +1,4 @@
-import { HttpMethod } from "@/HttpMethod";
+import { HttpMethod } from "@/core";
 import { ControllerAction, ControllerActionMap, ControllerMiddleware } from "./types";
 
 export abstract class Controller {

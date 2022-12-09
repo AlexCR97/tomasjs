@@ -1,5 +1,3 @@
-import { DefaultLogger } from "@/core/logger";
-import { environment } from "@/environment";
 import express, { json, Express, NextFunction, Request, Response, Router, text } from "express";
 import { container, DependencyContainer } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
@@ -13,7 +11,6 @@ import {
 } from "@/middleware";
 import { Controller } from "@/controllers";
 import { ControllerAction } from "@/controllers/types";
-import { ExpressRequestHandler } from "@/core/handlers";
 import {
   ExpressErrorMiddlewareHandler,
   MiddlewareHandler,
@@ -24,13 +21,12 @@ import { Endpoint, EndpointAdapter } from "@/endpoints";
 import { HttpContextResolver } from "@/core";
 import { ResponseAdapter } from "@/responses";
 import { MiddlewareFactory } from "@/middleware/MiddlewareFactory";
+import { ExpressRequestHandler } from "@/core/express";
 
 export class AppBuilder {
   private readonly app: Express;
-  private readonly logger = new DefaultLogger(AppBuilder.name, { level: "warn" });
 
   constructor() {
-    this.logger.debug("Building app...");
     this.app = express();
   }
 
@@ -51,13 +47,11 @@ export class AppBuilder {
   /* #region Formatters */
 
   useText(): AppBuilder {
-    this.logger.debug(`.${this.useText.name}`);
     this.app.use(text());
     return this;
   }
 
   useJson(): AppBuilder {
-    this.logger.debug(`.${this.useJson.name}`);
     this.app.use(
       json({
         type: "*/*", // TODO is this needed?
@@ -188,8 +182,6 @@ export class AppBuilder {
   useController<TController extends Controller>(
     controller: TController | constructor<TController>
   ): AppBuilder {
-    this.logger.debug(`.${this.useController.name}`, { controllerConstructor: controller });
-
     if (controller instanceof Controller) {
       const router = this.toRouter(controller);
       const controllerPath = this.getRoutingPath(controller);
@@ -324,31 +316,13 @@ export class AppBuilder {
   /* #region Build */
 
   // TODO Add return type
-  build() {
-    const server = this.app
-      .listen(environment.api.port, () => {
-        this.logger.debug("App built successfully!");
-        this.logger.info("Server address:", server.address());
-      })
-      .on("error", (err) => {
-        this.logger.error(err.message);
-        throw err;
-      });
-
-    return server;
-  }
-
-  // TODO Add return type
   buildAsync(port: number): Promise<any> {
     return new Promise<any>((resolve, reject) => {
       const server = this.app
         .listen(port, () => {
-          this.logger.debug("App built successfully!");
-          this.logger.info("Server address:", server.address());
           return resolve(server);
         })
         .on("error", (err) => {
-          this.logger.error(err.message);
           return reject(err);
         });
     });

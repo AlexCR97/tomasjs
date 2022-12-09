@@ -1,6 +1,5 @@
-import { HttpContext } from "@/core";
+import { HttpContext, HttpMethod } from "@/core";
 import { RequestHandler } from "@/core/handlers";
-import { HttpMethod } from "@/HttpMethod";
 import { Endpoint } from "./Endpoint";
 
 export class AnonymousEndpoint<TResponse = any> extends Endpoint {

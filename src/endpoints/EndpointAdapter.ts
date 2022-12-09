@@ -1,5 +1,5 @@
 import { HttpContextResolver } from "@/core";
-import { ExpressRequestHandler } from "@/core/handlers";
+import { ExpressRequestHandler } from "@/core/express";
 import { MiddlewareAdapter } from "@/middleware";
 import { MiddlewareFactoryAdapter } from "@/middleware/MiddlewareFactoryAdapter";
 import { ExpressMiddlewareHandler } from "@/middleware/types";
