@@ -1,8 +1,16 @@
 {
-  "name": "typescript-dependency-injection",
-  "version": "1.0.0",
-  "description": "A base project with TypeScript",
-  "main": "src/main.ts",
+  "name": "@thomasjs",
+  "version": "0.1.0",
+  "description": "ThomasJS is the modern lightweight express framework 🔥😎.",
+  "author": "viex",
+  "license": "ISC",
+  "keywords": [
+    "express",
+    "framework",
+    "typescript",
+    "thomas",
+    "viex"
+  ],
   "scripts": {
     "build": "tsc -b",
     "serve": "ts-node -r tsconfig-paths/register ./src/main.ts",
@@ -19,8 +27,6 @@
     "serve-sample-jwt-authentication": "ts-node -r tsconfig-paths/register ./samples/jwt-authentication/main.ts",
     "watch-sample-jwt-authentication": "nodemon -r tsconfig-paths/register ./samples/jwt-authentication/main.ts"
   },
-  "author": "viex",
-  "license": "ISC",
   "devDependencies": {
     "@jest/globals": "^29.3.1",
     "@types/express": "^4.17.14",
