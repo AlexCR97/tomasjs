@@ -12,7 +12,7 @@ import { ParsedQs } from "qs";
 import { tick } from "../utils/time";
 import { JsonResponse, StatusCodeResponse } from "../../src/responses";
 
-describe("Controllers", () => {
+describe.skip("Controllers", () => {
   const port = 3031;
   const serverAddress = `http://localhost:${port}`;
   const serverTeardownOffsetMilliseconds = 100;
