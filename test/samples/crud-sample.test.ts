@@ -12,7 +12,7 @@ export interface User {
   lastName?: string;
 }
 
-// Test suite name must be crud-sample because of npm script "test-sample-crud-watch"
+// Test suite name must be "crud-sample" because of npm script "testw-sample-crud"
 describe.skip("crud-sample", () => {
   const port = 3030;
   const serverAddress = `http://localhost:${port}`;
