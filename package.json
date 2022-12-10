@@ -1,21 +1,24 @@
 {
-  "name": "@thomasjs",
+  "name": "tomasjs",
   "version": "0.1.0",
   "description": "ThomasJS is the modern lightweight express framework 🔥😎.",
   "author": "viex",
   "license": "ISC",
+  "types": "./**/*.d.ts",
   "keywords": [
     "express",
     "framework",
     "typescript",
-    "thomas",
+    "tomas",
     "viex"
   ],
   "scripts": {
-    "build": "tsc -b",
-    "serve": "ts-node -r tsconfig-paths/register ./src/main.ts",
-    "watch": "nodemon -r tsconfig-paths/register ./src/main.ts",
-    "start:prod": "node -r ts-node/register/transpile-only -r tsconfig-paths/register ./dist/src/main.js",
+    "compile-clean": "del dist /s /q",
+    "compile-build": "tsc -b && tsc-alias",
+    "compile": "npm run compile-clean && npm run compile-build && node ./dist/SetupPackage.js",
+    "pack": "cd ./dist && npm pack",
+    "link": "cd ./dist && npm link",
+    "publish": "cd ./dist && npm publish",
     "test": "jest",
     "testw": "jest --watchAll --verbose",
     "testw-dist": "jest --testNamePattern dist-test --watchAll --verbose",
@@ -39,6 +42,7 @@
     "nodemon": "^2.0.20",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
+    "tsc-alias": "^1.8.2",
     "tsconfig-paths": "^4.1.0",
     "typescript": "^4.9.3"
   },
