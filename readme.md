@@ -1,10 +1,10 @@
-# ThomasJS
+# TomasJS
 
-## What is ThomasJS?
+## What is TomasJS?
 
-ThomasJS is the modern lightweight express framework 🔥😎.
+TomasJS is the modern lightweight express framework 🔥😎.
 
-Rapidly build highly scalable server side applications using ThomasJS's built-in:
+Rapidly build highly scalable server side applications using TomasJS's built-in:
 
 - AppBuilder fluent api
 - Dependency injection
