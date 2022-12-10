@@ -1,43 +1,55 @@
 {
-  "name": "typescript-dependency-injection",
-  "version": "1.0.0",
-  "description": "A base project with TypeScript",
-  "main": "src/main.ts",
-  "scripts": {
-    "build": "tsc -b",
-    "serve": "ts-node -r tsconfig-paths/register ./src/main.ts",
-    "watch": "nodemon -r tsconfig-paths/register ./src/main.ts",
-    "start:prod": "node -r ts-node/register/transpile-only -r tsconfig-paths/register ./dist/src/main.js",
-    "test": "jest",
-    "test-watch": "jest --watchAll --verbose"
-  },
+  "name": "tomasjs",
+  "version": "0.1.0",
+  "description": "ThomasJS is the modern lightweight express framework 🔥😎.",
   "author": "viex",
   "license": "ISC",
+  "types": "./**/*.d.ts",
+  "keywords": [
+    "express",
+    "framework",
+    "typescript",
+    "tomas",
+    "viex"
+  ],
+  "scripts": {
+    "compile-clean": "del dist /s /q",
+    "compile-build": "tsc -b && tsc-alias",
+    "compile": "npm run compile-clean && npm run compile-build && node ./dist/SetupPackage.js",
+    "pack": "cd ./dist && npm pack",
+    "link": "cd ./dist && npm link",
+    "publish": "cd ./dist && npm publish",
+    "test": "jest",
+    "testw": "jest --watchAll --verbose",
+    "testw-dist": "jest --testNamePattern dist-test --watchAll --verbose",
+    "testw-sample-crud": "jest --testNamePattern crud-sample --watchAll --verbose",
+    "serve-sample-controllers": "ts-node -r tsconfig-paths/register ./samples/crud-with-controllers/main.ts",
+    "watch-sample-controllers": "nodemon -r tsconfig-paths/register ./samples/crud-with-controllers/main.ts",
+    "serve-sample-endpoints": "ts-node -r tsconfig-paths/register ./samples/crud-with-endpoints/main.ts",
+    "watch-sample-endpoints": "nodemon -r tsconfig-paths/register ./samples/crud-with-endpoints/main.ts",
+    "serve-sample-jwt-authentication": "ts-node -r tsconfig-paths/register ./samples/jwt-authentication/main.ts",
+    "watch-sample-jwt-authentication": "nodemon -r tsconfig-paths/register ./samples/jwt-authentication/main.ts"
+  },
   "devDependencies": {
     "@jest/globals": "^29.3.1",
     "@types/express": "^4.17.14",
     "@types/jest": "^29.2.3",
-    "@types/mongodb": "^4.0.7",
+    "@types/jsonwebtoken": "^8.5.9",
     "@types/node-fetch": "^2.6.2",
-    "@types/winston": "^2.4.4",
     "jest": "^29.3.1",
+    "jsonwebtoken": "^8.5.1",
     "node-fetch": "^2.6.7",
     "nodemon": "^2.0.20",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
+    "tsc-alias": "^1.8.2",
     "tsconfig-paths": "^4.1.0",
     "typescript": "^4.9.3"
   },
   "dependencies": {
-    "@automapper/classes": "^8.7.7",
-    "@automapper/core": "^8.7.7",
-    "@mikro-orm/core": "^5.5.3",
-    "@mikro-orm/mongodb": "^5.5.3",
-    "@mikro-orm/reflection": "^5.5.3",
     "express": "^4.18.2",
     "express-async-errors": "^3.1.1",
     "reflect-metadata": "^0.1.13",
-    "tsyringe": "^4.7.0",
-    "winston": "^3.8.2"
+    "tsyringe": "^4.7.0"
   }
 }

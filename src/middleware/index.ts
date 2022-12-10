@@ -1,4 +1,8 @@
-export { AnonymousMiddleware } from "./AnonymousMiddleware";
-export { AsyncMiddleware } from "./AsyncMiddleware";
-export { ErrorMiddleware } from "./ErrorMiddleware";
-export { Middleware } from "./Middleware";
+export { AnonymousMiddleware, ThomasAnonymousMiddleware } from "./AnonymousMiddleware";
+export { ErrorMiddleware, ThomasErrorMiddleware } from "./ErrorMiddleware";
+export { ErrorMiddlewareAdapter } from "./ErrorMiddlewareAdapter";
+export { Middleware, ThomasMiddleware } from "./Middleware";
+export { MiddlewareAdapter } from "./MiddlewareAdapter";
+export { MiddlewareFactory } from "./MiddlewareFactory";
+export { MiddlewareFactoryAdapter } from "./MiddlewareFactoryAdapter";
+export { MiddlewareFactoryHandler } from "./MiddlewareFactoryHandler";

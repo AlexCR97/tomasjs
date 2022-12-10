@@ -1,19 +1,20 @@
-import { NextFunction, Request, Response } from "express";
+import { HttpMethod } from "@/core";
+import { RequestHandler } from "@/core/handlers";
+import { Middleware, ThomasMiddleware } from "@/middleware";
+import { ThomasMiddlewareHandler } from "@/middleware/types";
+import { constructor } from "tsyringe/dist/typings/types";
 
-export type ActionHandler = (req: Request, res: Response) => void;
+export type ControllerMiddleware<T extends Middleware = Middleware> = Middleware | constructor<T>;
 
-export type AsyncActionHandler = (req: Request, res: Response) => Promise<void>;
+export type ControllerAction = ControllerMiddleware | RequestHandler<any>;
 
-export type MiddlewareHandler = (req: Request, res: Response, next: NextFunction) => void;
+export interface ControllerActionMap {
+  method: HttpMethod;
+  path: string;
+  actions: ControllerAction[];
+}
 
-export type AsyncMiddlewareHandler = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => Promise<void>;
-
-export type ControllerActionHandler =
-  | ActionHandler
-  | AsyncActionHandler
-  | MiddlewareHandler
-  | AsyncMiddlewareHandler;
+export type ThomasControllerMiddleware =
+  | ThomasMiddlewareHandler
+  | ThomasMiddleware
+  | constructor<ThomasMiddleware>;
