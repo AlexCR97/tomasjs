@@ -20,6 +20,7 @@ Rapidly build highly scalable server side applications using TomasJS's built-in:
    1. [AppBuilder](#21-appbuilder)
    2. [Endpoints](#22-endpoints)
    3. [Middlewares](#23-middlewares)
+3. [Samples](#3-samples)
 
 ## 1. Getting started
 
@@ -82,3 +83,13 @@ Coming soon
 ### 2.3 Middlewares
 
 Coming soon
+
+## 3. Samples
+
+You can find sample in this same repository under the /samples directory.
+
+Direct links are provided below.
+
+- CRUD with Endpoints: https://github.com/AlexCR97/tomasjs/tree/main/samples/crud-with-endpoints
+- CRUD with Controllers: https://github.com/AlexCR97/tomasjs/tree/main/samples/crud-with-controllers
+- JWT Authentication: https://github.com/AlexCR97/tomasjs/tree/main/samples/jwt-authentication
