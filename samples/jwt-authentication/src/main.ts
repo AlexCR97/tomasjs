@@ -1,6 +1,6 @@
 import "reflect-metadata";
-import { AppBuilder } from "../../src/builder";
-import { AuthenticatedEndpoint, AuthorizedEndpoint, GetTokenEndpoint } from "./handlers";
+import { AppBuilder } from "tomasjs/builder";
+import { AuthenticatedEndpoint, AuthorizedEndpoint, GetTokenEndpoint } from "./endpoints";
 
 const PORT = 3030;
 

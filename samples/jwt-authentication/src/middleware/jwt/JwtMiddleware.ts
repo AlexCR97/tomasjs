@@ -1,8 +1,8 @@
 import { NextFunction } from "express";
 import { JwtPayload, verify } from "jsonwebtoken";
-import { HttpContext, StatusCodes, UserContext } from "../../../../src/core";
-import { ThomasMiddleware } from "../../../../src/middleware";
-import { JsonResponse } from "../../../../src/responses";
+import { HttpContext, StatusCodes, UserContext } from "tomasjs/core";
+import { ThomasMiddleware } from "tomasjs/middleware";
+import { JsonResponse } from "tomasjs/responses";
 import { JwtMiddlewareOptions } from "./JwtMiddlewareOptions";
 
 export class JwtMiddleware extends ThomasMiddleware {

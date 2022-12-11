@@ -1,4 +1,4 @@
-import { MiddlewareFactory } from "../../../src/middleware";
+import { MiddlewareFactory } from "tomasjs/middleware";
 import { environment } from "../environment";
 import { ClaimMiddleware } from "../middleware/claim";
 
