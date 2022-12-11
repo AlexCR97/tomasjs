@@ -1,12 +1,12 @@
-import { HttpContext, StatusCodes } from "../../src/core";
-import { Endpoint } from "../../src/endpoints";
-import { PlainTextResponse } from "../../src/responses";
+import { HttpContext, StatusCodes } from "tomasjs/core";
+import { Endpoint } from "tomasjs/endpoints";
+import { PlainTextResponse } from "tomasjs/responses";
 import {
   BadRequestResponse,
   NoContentResponse,
   NotFoundResponse,
   OkResponse,
-} from "../../src/responses/status-codes";
+} from "tomasjs/responses/status-codes";
 import { User } from "./User";
 
 export const seedUsersCount = 3; // Used by tests
@@ -21,7 +21,6 @@ export class SeedUsersEndpoint extends Endpoint {
   handle(context: HttpContext) {
     lastGeneratedId = 1;
     users = [];
-
     Array.from(Array(seedUsersCount).keys()).forEach(() => {
       users.push({
         id: lastGeneratedId,

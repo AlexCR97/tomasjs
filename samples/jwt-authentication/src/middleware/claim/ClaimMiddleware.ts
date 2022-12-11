@@ -1,7 +1,7 @@
 import { NextFunction } from "express";
-import { HttpContext, StatusCodes } from "../../../../src/core";
-import { ThomasMiddleware } from "../../../../src/middleware";
-import { JsonResponse } from "../../../../src/responses";
+import { HttpContext, StatusCodes } from "tomasjs/core";
+import { ThomasMiddleware } from "tomasjs/middleware";
+import { JsonResponse } from "tomasjs/responses";
 import { ClaimMiddlewareOptions } from "./ClaimMiddlewareOptions";
 
 export class ClaimMiddleware extends ThomasMiddleware {

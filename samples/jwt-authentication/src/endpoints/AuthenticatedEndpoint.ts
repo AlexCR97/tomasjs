@@ -1,6 +1,6 @@
-import { HttpContext } from "../../../src/core";
-import { JsonResponse } from "../../../src/responses";
-import { Endpoint } from "../../../src/endpoints";
+import { HttpContext } from "tomasjs/core";
+import { JsonResponse } from "tomasjs/responses";
+import { Endpoint } from "tomasjs/endpoints";
 import { JwtMiddlewareFactory } from "../middleware-factories";
 
 export class AuthenticatedEndpoint extends Endpoint {

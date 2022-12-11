@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { AppBuilder } from "../../src/builder";
+import { AppBuilder } from "tomasjs/builder";
 import {
   GetAllUsersEndpoint,
   GetUserByIdEndpoint,
@@ -33,4 +33,3 @@ async function main() {
 }
 
 main();
-

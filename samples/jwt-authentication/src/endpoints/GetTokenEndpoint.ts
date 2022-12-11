@@ -1,8 +1,8 @@
-import { HttpContext } from "../../../src/core";
+import { HttpContext } from "tomasjs/core";
 import { OAuthTokenResponse } from "../models";
 import { sign } from "jsonwebtoken";
 import { environment } from "../environment";
-import { Endpoint } from "../../../src/endpoints";
+import { Endpoint } from "tomasjs/endpoints";
 
 export class GetTokenEndpoint extends Endpoint {
   constructor() {
