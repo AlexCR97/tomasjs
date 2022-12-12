@@ -6,7 +6,8 @@ import { tick } from "../utils/time";
 import { HttpContext, StatusCodes } from "../../src/core";
 import fetch from "node-fetch";
 import { AnonymousEndpoint, EndpointGroup } from "../../src/endpoints";
-import { OkResponse } from "../../src/responses/status-codes";
+import { ThomasAnonymousMiddleware } from "../../src/middleware";
+import { OkResponse, UnauthorizedResponse } from "../../src/responses/status-codes";
 
 describe(EndpointGroup.name, () => {
   const port = 3034;
@@ -62,5 +63,72 @@ describe(EndpointGroup.name, () => {
 
     const responseResource2 = await fetch(`${serverAddress}/${basePath}/${resourcePath2}`);
     expect(responseResource2.status).toEqual(StatusCodes.ok);
+  });
+
+  it(`The OnBefore Middlewares work`, async () => {
+    // Arrange
+    const basePath = "base-path";
+    const resourcePath1 = "resource-1";
+    const resourcePath2 = "resource-2";
+    const headerKey = "authorization";
+    const secretKey = "superSecretKey";
+
+    server = await new AppBuilder()
+      .useEndpointGroup((endpoints) =>
+        endpoints
+          .basePath(`/${basePath}`)
+          .onBefore(
+            new ThomasAnonymousMiddleware((context: HttpContext, next) => {
+              const token = context.request.headers[headerKey];
+
+              if (token !== secretKey) {
+                context.respond(new UnauthorizedResponse());
+                return;
+              }
+
+              next();
+            })
+          )
+          .useEndpoint(
+            new AnonymousEndpoint("post", "/", (context: HttpContext) => {
+              return context.request.headers[headerKey];
+            })
+          )
+          .useEndpoint(
+            new AnonymousEndpoint("post", `/${resourcePath1}`, (context: HttpContext) => {
+              return context.request.headers[headerKey];
+            })
+          )
+          .useEndpoint(
+            new AnonymousEndpoint("post", `/${resourcePath2}`, (context: HttpContext) => {
+              return context.request.headers[headerKey];
+            })
+          )
+      )
+      .buildAsync(port);
+
+    // Act/Assert
+
+    const unauthorizedResponse = await fetch(`${serverAddress}/${basePath}`, {
+      method: "post",
+    });
+    expect(unauthorizedResponse.status).toBe(StatusCodes.unauthorized);
+
+    const customHeaders: any = {};
+    customHeaders[headerKey] = secretKey;
+
+    const authorizedResponse1 = await fetch(`${serverAddress}/${basePath}/${resourcePath1}`, {
+      method: "post",
+      headers: { ...customHeaders },
+    });
+    expect(authorizedResponse1.status).toBe(StatusCodes.ok);
+    expect(authorizedResponse1.text()).resolves.toEqual(secretKey);
+
+    const authorizedResponse2 = await fetch(`${serverAddress}/${basePath}/${resourcePath2}`, {
+      method: "post",
+      headers: { ...customHeaders },
+    });
+    expect(authorizedResponse2.status).toBe(StatusCodes.ok);
+    expect(authorizedResponse2.text()).resolves.toEqual(secretKey);
   });
 });
