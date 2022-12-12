@@ -7,7 +7,7 @@ import { HttpContext, StatusCodes } from "../../../src/core";
 import { Endpoint } from "../../../src/endpoints";
 import { MongoInstance, MongoOrm, MongoSetupFactory } from "../../../src/mikro-orm/mongodb";
 import { PlainTextResponse } from "../../../src/responses";
-import { Entity, PrimaryKey, Property, SerializedPrimaryKey } from "@mikro-orm/core";
+import { Entity, EntityName, PrimaryKey, Property, SerializedPrimaryKey } from "@mikro-orm/core";
 import { ObjectId } from "@mikro-orm/mongodb";
 import { injectable } from "tsyringe";
 import fetch from "node-fetch";
@@ -38,12 +38,14 @@ describe("MikroORM - MongoDB", () => {
 
   beforeEach(async () => {
     await tick(serverTeardownOffsetMilliseconds);
+    await clearCollectionAsync(User);
     await MongoInstance.dispose(true);
     await tryCloseServerAsync(server);
   });
 
   afterEach(async () => {
     await tick(serverTeardownOffsetMilliseconds);
+    await clearCollectionAsync(User);
     await MongoInstance.dispose(true);
     await tryCloseServerAsync(server);
   });
@@ -56,6 +58,7 @@ describe("MikroORM - MongoDB", () => {
           clientUrl: connectionString,
           dbName: database,
           entities: [User],
+          allowGlobalContext: true,
         })
       )
       .buildAsync(port);
@@ -84,6 +87,7 @@ describe("MikroORM - MongoDB", () => {
           clientUrl: connectionString,
           dbName: database,
           entities: [User],
+          allowGlobalContext: true,
         })
       )
       .useEndpoint(CreateUserEndpoint)
@@ -100,4 +104,67 @@ describe("MikroORM - MongoDB", () => {
     expect(response.status).toBe(StatusCodes.ok);
     expect(response.text()).resolves.toEqual(successMessage);
   });
+
+  it(`Can use ${MongoOrm.name} to create a document`, async () => {
+    // Arrange
+    const resourcePath = "users";
+
+    @injectable()
+    class CreateUserEndpoint extends Endpoint {
+      constructor(private readonly mongo: MongoOrm) {
+        super();
+        this.method("post").path(`/${resourcePath}`);
+      }
+      async handle(context: HttpContext) {
+        const usersRepository = this.mongo.em.getRepository(User);
+        const createdUserId = await usersRepository.nativeInsert({
+          email: context.request.body.email,
+          password: context.request.body.password,
+        });
+        return new PlainTextResponse(createdUserId.toString());
+      }
+    }
+
+    server = await new AppBuilder()
+      .register(
+        new MongoSetupFactory({
+          clientUrl: connectionString,
+          dbName: database,
+          entities: [User],
+          allowGlobalContext: true,
+        })
+      )
+      .useJson()
+      .useEndpoint(CreateUserEndpoint)
+      .buildAsync(port);
+
+    // Act
+    const response = await fetch(`${serverAddress}/${resourcePath}`, {
+      method: "post",
+      body: JSON.stringify({
+        email: "sample@domain.com",
+        password: "123456",
+      }),
+      headers: { "Content-Type": "text/plain" },
+    });
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+
+    const createdUserId = await response.text();
+    expect(ObjectId.isValid(createdUserId)).toBeTruthy();
+  });
 });
+
+async function clearCollectionAsync<T extends object>(entityName: EntityName<T>) {
+  if (!MongoInstance.isInitialized) {
+    return;
+  }
+
+  const repo = MongoInstance.instance.orm.em.getRepository(entityName);
+  const entities = await repo.findAll();
+  for (const entity of entities) {
+    repo.remove(entity);
+  }
+  await repo.flush();
+}

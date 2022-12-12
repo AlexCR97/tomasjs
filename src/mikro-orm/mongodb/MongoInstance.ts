@@ -38,5 +38,9 @@ export class MongoInstance {
     return this._instance;
   }
 
+  static get isInitialized(): boolean {
+    return this._instance !== undefined;
+  }
+
   private constructor(public readonly orm: MikroORM) {}
 }
