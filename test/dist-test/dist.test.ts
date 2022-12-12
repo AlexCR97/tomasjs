@@ -9,7 +9,7 @@ import { tick } from "../utils/time";
 import { tryCloseServerAsync } from "../utils/server";
 
 // The test suite name must be "dist-test" because of npm script "testw-dist"
-describe("dist-test", () => {
+describe.skip("dist-test", () => {
   const port = 3033;
   const serverAddress = `http://localhost:${port}`;
   const serverTeardownOffsetMilliseconds = 50;
