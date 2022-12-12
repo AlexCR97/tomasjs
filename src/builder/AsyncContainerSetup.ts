@@ -1,8 +1,8 @@
 import { DependencyContainer } from "tsyringe";
 
-export type DeferredContainerSetup = (container: DependencyContainer) => Promise<void>;
+export type AsyncContainerSetup = (container: DependencyContainer) => Promise<void>;
 
-export function isDeferredContainerSetup(obj: any): obj is DeferredContainerSetup {
+export function isAsyncContainerSetup(obj: any): obj is AsyncContainerSetup {
   if (typeof obj !== "function") {
     return false;
   }

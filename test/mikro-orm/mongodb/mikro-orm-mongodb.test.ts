@@ -5,11 +5,18 @@ import { tick } from "../../utils/time";
 import { AppBuilder } from "../../../src/builder";
 import { HttpContext, StatusCodes } from "../../../src/core";
 import { Endpoint } from "../../../src/endpoints";
-import { MongoInstance, MongoOrm, MongoSetupFactory } from "../../../src/mikro-orm/mongodb";
+import {
+  MongoInstance,
+  MongoOrm,
+  MongoRepository,
+  MongoRepositoryName,
+  MongoRepositorySetupFactory,
+  MongoSetupFactory,
+} from "../../../src/mikro-orm/mongodb";
 import { PlainTextResponse } from "../../../src/responses";
 import { Entity, EntityName, PrimaryKey, Property, SerializedPrimaryKey } from "@mikro-orm/core";
 import { ObjectId } from "@mikro-orm/mongodb";
-import { injectable } from "tsyringe";
+import { inject, injectable } from "tsyringe";
 import fetch from "node-fetch";
 
 @Entity()
@@ -52,16 +59,18 @@ describe("MikroORM - MongoDB", () => {
 
   it(`Can connect via ${MongoSetupFactory.name}`, async () => {
     // Arrange
-    server = await new AppBuilder()
-      .register(
-        new MongoSetupFactory({
-          clientUrl: connectionString,
-          dbName: database,
-          entities: [User],
-          allowGlobalContext: true,
-        })
-      )
-      .buildAsync(port);
+    const app = new AppBuilder();
+
+    await app.registerAsync(
+      new MongoSetupFactory({
+        clientUrl: connectionString,
+        dbName: database,
+        entities: [User],
+        allowGlobalContext: true,
+      })
+    );
+
+    server = await app.buildAsync(port);
   });
 
   it(`Can inject ${MongoOrm.name}`, async () => {
@@ -81,17 +90,20 @@ describe("MikroORM - MongoDB", () => {
       }
     }
 
-    server = await new AppBuilder()
-      .register(
-        new MongoSetupFactory({
-          clientUrl: connectionString,
-          dbName: database,
-          entities: [User],
-          allowGlobalContext: true,
-        })
-      )
-      .useEndpoint(CreateUserEndpoint)
-      .buildAsync(port);
+    const app = new AppBuilder();
+
+    await app.registerAsync(
+      new MongoSetupFactory({
+        clientUrl: connectionString,
+        dbName: database,
+        entities: [User],
+        allowGlobalContext: true,
+      })
+    );
+
+    app.useEndpoint(CreateUserEndpoint);
+
+    server = await app.buildAsync(port);
 
     // Act
     const response = await fetch(`${serverAddress}/${resourcePath}`, {
@@ -125,18 +137,69 @@ describe("MikroORM - MongoDB", () => {
       }
     }
 
-    server = await new AppBuilder()
-      .register(
-        new MongoSetupFactory({
-          clientUrl: connectionString,
-          dbName: database,
-          entities: [User],
-          allowGlobalContext: true,
-        })
-      )
-      .useJson()
-      .useEndpoint(CreateUserEndpoint)
-      .buildAsync(port);
+    const app = await new AppBuilder().registerAsync(
+      new MongoSetupFactory({
+        clientUrl: connectionString,
+        dbName: database,
+        entities: [User],
+        allowGlobalContext: true,
+      })
+    );
+
+    server = await app.useJson().useEndpoint(CreateUserEndpoint).buildAsync(port);
+
+    // Act
+    const response = await fetch(`${serverAddress}/${resourcePath}`, {
+      method: "post",
+      body: JSON.stringify({
+        email: "sample@domain.com",
+        password: "123456",
+      }),
+      headers: { "Content-Type": "text/plain" },
+    });
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+
+    const createdUserId = await response.text();
+    expect(ObjectId.isValid(createdUserId)).toBeTruthy();
+  });
+
+  it(`Can use ${MongoRepositorySetupFactory.name} to create a document`, async () => {
+    // Arrange
+    const resourcePath = "users";
+
+    @injectable()
+    class CreateUserEndpoint extends Endpoint {
+      constructor(
+        @inject(MongoRepositoryName(User)) private readonly usersRepository: MongoRepository<User>
+      ) {
+        super();
+        this.method("post").path(`/${resourcePath}`);
+      }
+      async handle(context: HttpContext) {
+        const createdUserId = await this.usersRepository.nativeInsert({
+          email: context.request.body.email,
+          password: context.request.body.password,
+        });
+        return new PlainTextResponse(createdUserId.toString());
+      }
+    }
+
+    const app = new AppBuilder();
+
+    await app.registerAsync(
+      new MongoSetupFactory({
+        clientUrl: connectionString,
+        dbName: database,
+        entities: [User],
+        allowGlobalContext: true,
+      })
+    );
+
+    await app.registerAsync(new MongoRepositorySetupFactory(User));
+
+    server = await app.useJson().useEndpoint(CreateUserEndpoint).buildAsync(port);
 
     // Act
     const response = await fetch(`${serverAddress}/${resourcePath}`, {

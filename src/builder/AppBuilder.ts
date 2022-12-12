@@ -22,13 +22,12 @@ import { HttpContextResolver } from "@/core";
 import { ResponseAdapter } from "@/responses";
 import { MiddlewareFactory } from "@/middleware/MiddlewareFactory";
 import { ExpressRequestHandler } from "@/core/express";
-import { ContainerSetup } from "./types";
-import { DeferredContainerSetupFactory } from "./DeferredContainerSetupFactory";
-import { DeferredContainerSetup, isDeferredContainerSetup } from "./DeferredContainerSetup";
+import { ContainerSetup } from "./ContainerSetup";
+import { AsyncContainerSetup } from "./AsyncContainerSetup";
+import { AsyncContainerSetupFactory } from "./AsyncContainerSetupFactory";
 
 export class AppBuilder {
   private readonly app: Express;
-  private readonly deferredSetups: DeferredContainerSetup[] = [];
 
   constructor() {
     this.app = express();
@@ -36,21 +35,21 @@ export class AppBuilder {
 
   /* #region Standard Setup */
 
-  register(
-    containerSetup: ContainerSetup | DeferredContainerSetup | DeferredContainerSetupFactory
-  ): AppBuilder {
-    if (isDeferredContainerSetup(containerSetup)) {
-      this.deferredSetups.push(containerSetup);
-      return this;
-    }
-
-    if (containerSetup instanceof DeferredContainerSetupFactory) {
-      const deferredContainerSetup = containerSetup.create();
-      this.deferredSetups.push(deferredContainerSetup);
-      return this;
-    }
-
+  register(containerSetup: ContainerSetup): AppBuilder {
     containerSetup(container);
+    return this;
+  }
+
+  async registerAsync(
+    containerSetup: AsyncContainerSetup | AsyncContainerSetupFactory
+  ): Promise<AppBuilder> {
+    const asyncContainerSetup =
+      containerSetup instanceof AsyncContainerSetupFactory
+        ? containerSetup.create()
+        : containerSetup;
+
+    await asyncContainerSetup(container);
+
     return this;
   }
 
@@ -346,21 +345,10 @@ export class AppBuilder {
 
   // TODO Add return type
   async buildAsync(port: number): Promise<any> {
-    await this.tryResolveDeferredSetupsAsync();
     return await this.createServerAsync(port);
   }
 
-  private async tryResolveDeferredSetupsAsync() {
-    if (this.deferredSetups.length === 0) {
-      return;
-    }
-
-    for (const setup of this.deferredSetups) {
-      await setup(container);
-    }
-  }
-
-  private async createServerAsync(port: number) {
+  private async createServerAsync(port: number): Promise<any> {
     return new Promise<any>((resolve, reject) => {
       const server = this.app
         .listen(port, () => {

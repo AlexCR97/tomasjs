@@ -1,5 +1,5 @@
-import { Configuration, MikroORM, Options } from "@mikro-orm/core";
-import { MongoDriver } from "@mikro-orm/mongodb";
+import { Configuration, Options } from "@mikro-orm/core";
+import { MikroORM, MongoDriver } from "@mikro-orm/mongodb";
 
 export class MongoInstance {
   private static _instance?: MongoInstance;
@@ -7,8 +7,8 @@ export class MongoInstance {
   static async init(
     options: Options<MongoDriver> | Configuration<MongoDriver>,
     connect?: boolean
-  ): Promise<MikroORM<MongoDriver>> {
-    const orm = await MikroORM.init<MongoDriver>(
+  ): Promise<MikroORM> {
+    const orm = await MikroORM.init(
       {
         ...options,
         type: "mongo",
