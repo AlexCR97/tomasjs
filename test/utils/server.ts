@@ -1,4 +1,4 @@
-export async function tryCloseServerAsync(server: any) {
+export async function tryCloseServerAsync(server: any): Promise<void> {
   if (server === undefined || server === null) {
     return;
   }
