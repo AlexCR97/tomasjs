@@ -19,7 +19,8 @@ Rapidly build highly scalable server side applications using TomasJS's built-in:
 2. [Fundamentals](#2-fundamentals)
    1. [AppBuilder](#21-appbuilder)
    2. [Endpoints](#22-endpoints)
-   3. [Middlewares](#23-middlewares)
+   3. [EndpointGroups](#23-endpointgroups)
+   4. [Middlewares](#24-middlewares)
 3. [Samples](#3-samples)
 
 ## 1. Getting started
@@ -80,7 +81,11 @@ Coming soon
 
 Coming soon
 
-### 2.3 Middlewares
+### 2.3 EndpointGroups
+
+Coming soon
+
+### 2.4 Middlewares
 
 Coming soon
 

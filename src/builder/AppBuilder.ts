@@ -17,7 +17,7 @@ import {
   ThomasErrorMiddlewareHandler,
   ThomasMiddlewareHandler,
 } from "@/middleware/types";
-import { Endpoint, EndpointAdapter } from "@/endpoints";
+import { Endpoint, EndpointAdapter, EndpointGroup, EndpointGroupAdapter } from "@/endpoints";
 import { HttpContextResolver } from "@/core";
 import { ResponseAdapter } from "@/responses";
 import { MiddlewareFactory } from "@/middleware/MiddlewareFactory";
@@ -274,6 +274,18 @@ export class AppBuilder {
   private useEndpointInstance(endpoint: Endpoint): AppBuilder {
     const expressHandlers = EndpointAdapter.fromInstanceToExpress(endpoint);
     this.app[endpoint._method](endpoint._path, ...expressHandlers);
+    return this;
+  }
+
+  /* #endregion */
+
+  /* #region Endpoint Groups */
+
+  useEndpointGroup(endpoints: (endpoints: EndpointGroup) => void): AppBuilder {
+    const endpointGroup = new EndpointGroup();
+    endpoints(endpointGroup);
+    const { routerBasePath, router } = EndpointGroupAdapter.toExpressRouter(endpointGroup);
+    this.app.use(routerBasePath, router);
     return this;
   }
 

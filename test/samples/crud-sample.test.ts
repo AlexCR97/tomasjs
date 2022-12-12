@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { afterEach, describe, it } from "@jest/globals";
 import { StatusCodes } from "../../src/core";
 import fetch from "node-fetch";
-import { seedUsersCount } from "../../samples/crud-with-endpoints/UserEndpoints";
+import { seedUsersCount } from "../../samples/crud-with-endpoints/src/UserEndpoints";
 
 export interface User {
   id: number;
