@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { afterEach, beforeEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "../../utils/server";
 import { tick } from "../../utils/time";
-import { AppBuilder } from "../../../src/builder";
+import { AppBuilder, ContainerBuilder } from "../../../src/builder";
 import { HttpContext, StatusCodes } from "../../../src/core";
 import { Endpoint } from "../../../src/endpoints";
 import {
@@ -59,18 +59,18 @@ describe("MikroORM - MongoDB", () => {
 
   it(`Can connect via ${MongoSetupFactory.name}`, async () => {
     // Arrange
-    const app = new AppBuilder();
+    await new ContainerBuilder()
+      .setup(
+        new MongoSetupFactory({
+          clientUrl: connectionString,
+          dbName: database,
+          entities: [User],
+          allowGlobalContext: true,
+        })
+      )
+      .buildAsync();
 
-    await app.registerAsync(
-      new MongoSetupFactory({
-        clientUrl: connectionString,
-        dbName: database,
-        entities: [User],
-        allowGlobalContext: true,
-      })
-    );
-
-    server = await app.buildAsync(port);
+    server = await new AppBuilder().buildAsync(port);
   });
 
   it(`Can inject ${MongoOrm.name}`, async () => {
@@ -90,20 +90,18 @@ describe("MikroORM - MongoDB", () => {
       }
     }
 
-    const app = new AppBuilder();
+    await new ContainerBuilder()
+      .setup(
+        new MongoSetupFactory({
+          clientUrl: connectionString,
+          dbName: database,
+          entities: [User],
+          allowGlobalContext: true,
+        })
+      )
+      .buildAsync();
 
-    await app.registerAsync(
-      new MongoSetupFactory({
-        clientUrl: connectionString,
-        dbName: database,
-        entities: [User],
-        allowGlobalContext: true,
-      })
-    );
-
-    app.useEndpoint(CreateUserEndpoint);
-
-    server = await app.buildAsync(port);
+    server = await new AppBuilder().useEndpoint(CreateUserEndpoint).buildAsync(port);
 
     // Act
     const response = await fetch(`${serverAddress}/${resourcePath}`, {
@@ -137,16 +135,18 @@ describe("MikroORM - MongoDB", () => {
       }
     }
 
-    const app = await new AppBuilder().registerAsync(
-      new MongoSetupFactory({
-        clientUrl: connectionString,
-        dbName: database,
-        entities: [User],
-        allowGlobalContext: true,
-      })
-    );
+    await new ContainerBuilder()
+      .setup(
+        new MongoSetupFactory({
+          clientUrl: connectionString,
+          dbName: database,
+          entities: [User],
+          allowGlobalContext: true,
+        })
+      )
+      .buildAsync();
 
-    server = await app.useJson().useEndpoint(CreateUserEndpoint).buildAsync(port);
+    server = await new AppBuilder().useJson().useEndpoint(CreateUserEndpoint).buildAsync(port);
 
     // Act
     const response = await fetch(`${serverAddress}/${resourcePath}`, {
@@ -186,20 +186,19 @@ describe("MikroORM - MongoDB", () => {
       }
     }
 
-    const app = new AppBuilder();
+    await new ContainerBuilder()
+      .setup(
+        new MongoSetupFactory({
+          clientUrl: connectionString,
+          dbName: database,
+          entities: [User],
+          allowGlobalContext: true,
+        })
+      )
+      .setup(new MongoRepositorySetupFactory(User))
+      .buildAsync();
 
-    await app.registerAsync(
-      new MongoSetupFactory({
-        clientUrl: connectionString,
-        dbName: database,
-        entities: [User],
-        allowGlobalContext: true,
-      })
-    );
-
-    await app.registerAsync(new MongoRepositorySetupFactory(User));
-
-    server = await app.useJson().useEndpoint(CreateUserEndpoint).buildAsync(port);
+    server = await new AppBuilder().useJson().useEndpoint(CreateUserEndpoint).buildAsync(port);
 
     // Act
     const response = await fetch(`${serverAddress}/${resourcePath}`, {

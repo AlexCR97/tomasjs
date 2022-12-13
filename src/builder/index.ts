@@ -1,3 +1,4 @@
 export { AppBuilder } from "./AppBuilder";
-export { AsyncContainerSetup } from "./AsyncContainerSetup";
-export { AsyncContainerSetupFactory } from "./AsyncContainerSetupFactory";
+export { ContainerBuilder } from "./ContainerBuilder";
+export { ContainerSetup } from "./ContainerSetup";
+export { ContainerSetupFactory } from "./ContainerSetupFactory";

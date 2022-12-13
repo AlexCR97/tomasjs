@@ -23,8 +23,6 @@ import { ResponseAdapter } from "@/responses";
 import { MiddlewareFactory } from "@/middleware/MiddlewareFactory";
 import { ExpressRequestHandler } from "@/core/express";
 import { ContainerSetup } from "./ContainerSetup";
-import { AsyncContainerSetup } from "./AsyncContainerSetup";
-import { AsyncContainerSetupFactory } from "./AsyncContainerSetupFactory";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -37,19 +35,6 @@ export class AppBuilder {
 
   register(containerSetup: ContainerSetup): AppBuilder {
     containerSetup(container);
-    return this;
-  }
-
-  async registerAsync(
-    containerSetup: AsyncContainerSetup | AsyncContainerSetupFactory
-  ): Promise<AppBuilder> {
-    const asyncContainerSetup =
-      containerSetup instanceof AsyncContainerSetupFactory
-        ? containerSetup.create()
-        : containerSetup;
-
-    await asyncContainerSetup(container);
-
     return this;
   }
 
