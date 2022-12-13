@@ -22,7 +22,6 @@ import { HttpContextResolver } from "@/core";
 import { ResponseAdapter } from "@/responses";
 import { MiddlewareFactory } from "@/middleware/MiddlewareFactory";
 import { ExpressRequestHandler } from "@/core/express";
-import { ContainerSetup } from "./ContainerSetup";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -32,11 +31,6 @@ export class AppBuilder {
   }
 
   /* #region Standard Setup */
-
-  register(containerSetup: ContainerSetup): AppBuilder {
-    containerSetup(container);
-    return this;
-  }
 
   use(appSetup: (app: Express) => void): AppBuilder {
     appSetup(this.app);
