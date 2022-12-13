@@ -1,6 +1,6 @@
 {
   "name": "tomasjs",
-  "version": "0.1.4",
+  "version": "0.2.0",
   "description": "TomasJS is the modern lightweight express framework 🔥😎.",
   "author": "viex",
   "license": "ISC",
@@ -23,6 +23,7 @@
     "testw": "jest --watchAll --verbose",
     "testw-dist": "jest --testNamePattern dist-test --watchAll --verbose",
     "testw-sample-crud": "jest --testNamePattern crud-sample --watchAll --verbose",
+    "testw-mikro-orm": "jest --testNamePattern MikroORM --watchAll --verbose --detectOpenHandles",
     "serve-sample-controllers": "ts-node -r tsconfig-paths/register ./samples/crud-with-controllers/main.ts",
     "watch-sample-controllers": "nodemon -r tsconfig-paths/register ./samples/crud-with-controllers/main.ts",
     "serve-sample-endpoints": "ts-node -r tsconfig-paths/register ./samples/crud-with-endpoints/main.ts",
@@ -47,6 +48,9 @@
     "typescript": "^4.9.3"
   },
   "dependencies": {
+    "@mikro-orm/core": "^5.6.0",
+    "@mikro-orm/mongodb": "^5.6.0",
+    "@mikro-orm/reflection": "^5.6.0",
     "express": "^4.18.2",
     "express-async-errors": "^3.1.1",
     "reflect-metadata": "^0.1.13",

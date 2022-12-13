@@ -1,5 +1,5 @@
 import express, { json, Express, NextFunction, Request, Response, Router, text } from "express";
-import { container, DependencyContainer } from "tsyringe";
+import { container } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
 import {
   ErrorMiddleware,
@@ -31,11 +31,6 @@ export class AppBuilder {
   }
 
   /* #region Standard Setup */
-
-  register(containerSetup: (container: DependencyContainer) => void): AppBuilder {
-    containerSetup(container);
-    return this;
-  }
 
   use(appSetup: (app: Express) => void): AppBuilder {
     appSetup(this.app);
@@ -328,7 +323,11 @@ export class AppBuilder {
   /* #region Build */
 
   // TODO Add return type
-  buildAsync(port: number): Promise<any> {
+  async buildAsync(port: number): Promise<any> {
+    return await this.createServerAsync(port);
+  }
+
+  private async createServerAsync(port: number): Promise<any> {
     return new Promise<any>((resolve, reject) => {
       const server = this.app
         .listen(port, () => {
