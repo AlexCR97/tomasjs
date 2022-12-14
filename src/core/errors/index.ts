@@ -1,0 +1,1 @@
+export { StatusCodeError } from "./StatusCodeError";
