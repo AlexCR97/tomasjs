@@ -1,14 +1,14 @@
 import "reflect-metadata";
-import { afterEach, describe, it } from "@jest/globals";
-import { tryCloseServerAsync } from "../utils/server";
-import { AppBuilder } from "../../src/builder";
-import { tick } from "../utils/time";
-import { HttpContext, StatusCodes } from "../../src/core";
 import fetch from "node-fetch";
-import { OkResponse, StatusCodeResponse } from "../../src/responses/status-codes";
+import { afterEach, describe, it } from "@jest/globals";
+import { AppBuilder } from "../../src/builder";
+import { HttpContext, StatusCodes } from "../../src/core";
 import { AnonymousEndpoint, Endpoint } from "../../src/endpoints";
+import { AnonymousMiddleware } from "../../src/middleware";
 import { JsonResponse, PlainTextResponse } from "../../src/responses";
-import { ThomasAnonymousMiddleware } from "../../src/middleware";
+import { OkResponse, StatusCodeResponse } from "../../src/responses/status-codes";
+import { tryCloseServerAsync } from "../utils/server";
+import { tick } from "../utils/time";
 
 describe("Endpoints", () => {
   const port = 3033;
@@ -338,7 +338,7 @@ describe("Endpoints", () => {
         this.method("post")
           .path(`/${path}`)
           .onBefore(
-            new ThomasAnonymousMiddleware((context, next) => {
+            new AnonymousMiddleware((context, next) => {
               const token = context.request.headers[headerKey];
 
               if (token !== secretKey) {

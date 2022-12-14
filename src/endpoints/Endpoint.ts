@@ -1,7 +1,10 @@
 import { HttpContext, HttpMethod } from "@/core";
-import { MiddlewareFactory, ThomasMiddleware } from "@/middleware";
-import { MiddlewareFactoryHandler } from "@/middleware/MiddlewareFactoryHandler";
-import { ThomasMiddlewareHandler } from "@/middleware/types";
+import {
+  Middleware,
+  MiddlewareFactory,
+  MiddlewareFactoryHandler,
+  MiddlewareHandler,
+} from "@/middleware";
 import { constructor } from "tsyringe/dist/typings/types";
 
 export abstract class Endpoint {
@@ -30,9 +33,9 @@ export abstract class Endpoint {
   /* #region On Before Middleware */
 
   readonly onBeforeMiddlewares: (
-    | ThomasMiddlewareHandler
-    | ThomasMiddleware
-    | constructor<ThomasMiddleware>
+    | MiddlewareHandler
+    | Middleware
+    | constructor<Middleware>
     | MiddlewareFactoryHandler
     | MiddlewareFactory
     | constructor<MiddlewareFactory>
@@ -40,9 +43,9 @@ export abstract class Endpoint {
 
   onBefore(
     middleware:
-      | ThomasMiddlewareHandler
-      | ThomasMiddleware
-      | constructor<ThomasMiddleware>
+      | MiddlewareHandler
+      | Middleware
+      | constructor<Middleware>
       | MiddlewareFactoryHandler
       | MiddlewareFactory
       | constructor<MiddlewareFactory>

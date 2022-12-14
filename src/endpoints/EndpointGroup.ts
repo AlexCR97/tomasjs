@@ -1,5 +1,9 @@
-import { MiddlewareFactory, MiddlewareFactoryHandler, ThomasMiddleware } from "@/middleware";
-import { ThomasMiddlewareHandler } from "@/middleware/types";
+import {
+  Middleware,
+  MiddlewareFactory,
+  MiddlewareFactoryHandler,
+  MiddlewareHandler,
+} from "@/middleware";
 import { constructor } from "tsyringe/dist/typings/types";
 import { Endpoint } from "./Endpoint";
 
@@ -18,9 +22,9 @@ export class EndpointGroup {
   /* #region On Before Middleware */
 
   readonly onBeforeMiddlewares: (
-    | ThomasMiddlewareHandler
-    | ThomasMiddleware
-    | constructor<ThomasMiddleware>
+    | MiddlewareHandler
+    | Middleware
+    | constructor<Middleware>
     | MiddlewareFactoryHandler
     | MiddlewareFactory
     | constructor<MiddlewareFactory>
@@ -28,9 +32,9 @@ export class EndpointGroup {
 
   onBefore(
     middleware:
-      | ThomasMiddlewareHandler
-      | ThomasMiddleware
-      | constructor<ThomasMiddleware>
+      | MiddlewareHandler
+      | Middleware
+      | constructor<Middleware>
       | MiddlewareFactoryHandler
       | MiddlewareFactory
       | constructor<MiddlewareFactory>

@@ -1,12 +1,10 @@
-import { HttpContextResolver } from "@/core";
-import { ExpressRequestHandler } from "@/core/express";
-import { MiddlewareAdapter } from "@/middleware";
-import { MiddlewareFactoryAdapter } from "@/middleware/MiddlewareFactoryAdapter";
-import { ExpressMiddlewareHandler } from "@/middleware/types";
-import { ResponseAdapter } from "@/responses";
-import { Request, Response } from "express";
 import { container } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
+import { HttpContextResolver } from "@/core";
+import { ExpressMiddlewareHandler, ExpressRequestHandler } from "@/core/express";
+import { MiddlewareAdapter, MiddlewareFactoryAdapter } from "@/middleware";
+import { ResponseAdapter } from "@/responses";
+import { Request, Response } from "express";
 import { Endpoint } from "./Endpoint";
 import { EndpointHandler, IsEndpointHandler } from "./types";
 
