@@ -1,5 +1,6 @@
 import "reflect-metadata";
-import { AppBuilder } from "tomasjs/builder";
+import { AppBuilder, ContainerBuilder } from "tomasjs/builder";
+import { MongoRepositorySetupFactory, MongoSetupFactory } from "tomasjs/mikro-orm/mongodb";
 import {
   GetAllUsersEndpoint,
   GetUserByIdEndpoint,
@@ -9,25 +10,41 @@ import {
   DeleteUserEndpoint,
   SeedUsersEndpoint,
   ClearUsersEndpoint,
-} from "./UserEndpoints";
+} from "./endpoints/users";
+import { User } from "./entities/User";
 
 const PORT = 3030;
 
 async function main() {
   console.log("Creating Endpoints app...");
 
-  const app = new AppBuilder()
-    .useJson()
-    .useEndpoint(GetAllUsersEndpoint)
-    .useEndpoint(GetUserByIdEndpoint)
-    .useEndpoint(CreateUserEndpoint)
-    .useEndpoint(SeedUsersEndpoint)
-    .useEndpoint(UpdateUserEndpoint)
-    .useEndpoint(UpdateUserProfileEndpoint)
-    .useEndpoint(DeleteUserEndpoint)
-    .useEndpoint(ClearUsersEndpoint);
+  await new ContainerBuilder()
+    .setup(
+      new MongoSetupFactory({
+        clientUrl: "mongodb://127.0.0.1:27017",
+        dbName: "tomasjs-sample-crud-with-endpoints",
+        entities: [User],
+        allowGlobalContext: true,
+      })
+    )
+    .setup(new MongoRepositorySetupFactory(User))
+    .buildAsync();
 
-  await app.buildAsync(PORT);
+  await new AppBuilder()
+    .useJson()
+    .useEndpointGroup((endpoints) =>
+      endpoints
+        .basePath("/users")
+        .useEndpoint(GetAllUsersEndpoint)
+        .useEndpoint(GetUserByIdEndpoint)
+        .useEndpoint(CreateUserEndpoint)
+        .useEndpoint(UpdateUserEndpoint)
+        .useEndpoint(UpdateUserProfileEndpoint)
+        .useEndpoint(DeleteUserEndpoint)
+        .useEndpoint(SeedUsersEndpoint)
+        .useEndpoint(ClearUsersEndpoint)
+    )
+    .buildAsync(PORT);
 
   console.log("App is running!");
 }
