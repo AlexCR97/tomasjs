@@ -6,17 +6,23 @@ import { AppBuilder, ContainerBuilder } from "../../../src/builder";
 import { HttpContext, StatusCodes } from "../../../src/core";
 import { Endpoint } from "../../../src/endpoints";
 import {
-  MongoInstance,
-  MongoOrm,
-  MongoRepository,
-  MongoRepositoryName,
-  MongoRepositorySetupFactory,
-  MongoSetupFactory,
-} from "../../../src/mikro-orm/mongodb";
+  MikroOrmResolver,
+  MikroOrmSetup,
+  RepositorySetup,
+  inMikroOrm,
+} from "../../../src/mikro-orm";
+import { inRepository, Repository } from "../../../src/mikro-orm/mongodb";
 import { PlainTextResponse } from "../../../src/responses";
-import { Entity, EntityName, PrimaryKey, Property, SerializedPrimaryKey } from "@mikro-orm/core";
+import {
+  Entity,
+  EntityName,
+  PrimaryKey,
+  Property,
+  SerializedPrimaryKey,
+  MikroORM,
+} from "@mikro-orm/core";
 import { ObjectId } from "@mikro-orm/mongodb";
-import { inject, injectable } from "tsyringe";
+import { injectable } from "tsyringe";
 import fetch from "node-fetch";
 
 @Entity()
@@ -46,26 +52,25 @@ describe("MikroORM - MongoDB", () => {
   beforeEach(async () => {
     await tick(serverTeardownOffsetMilliseconds);
     await clearCollectionAsync(User);
-    await MongoInstance.dispose(true);
     await tryCloseServerAsync(server);
   });
 
   afterEach(async () => {
     await tick(serverTeardownOffsetMilliseconds);
     await clearCollectionAsync(User);
-    await MongoInstance.dispose(true);
     await tryCloseServerAsync(server);
   });
 
-  it(`Can connect via ${MongoSetupFactory.name}`, async () => {
+  it(`Can connect via ${MikroOrmSetup.name}`, async () => {
     // Arrange
     await new ContainerBuilder()
       .setup(
-        new MongoSetupFactory({
+        new MikroOrmSetup({
           clientUrl: connectionString,
           dbName: database,
           entities: [User],
           allowGlobalContext: true,
+          type: "mongo",
         })
       )
       .buildAsync();
@@ -73,30 +78,31 @@ describe("MikroORM - MongoDB", () => {
     server = await new AppBuilder().buildAsync(port);
   });
 
-  it(`Can inject ${MongoOrm.name}`, async () => {
+  it(`Can inject ${MikroORM.name}`, async () => {
     // Arrange
     const successMessage = "MongoOrm works!";
     const resourcePath = "users";
 
     @injectable()
     class CreateUserEndpoint extends Endpoint {
-      constructor(private readonly mongo: MongoOrm) {
+      constructor(@inMikroOrm("mongo") private readonly orm: MikroORM) {
         super();
         this.method("post").path(`/${resourcePath}`);
       }
       handle(context: HttpContext) {
-        const message = this.mongo?.em !== undefined ? successMessage : ":(";
+        const message = this.orm?.em !== undefined ? successMessage : ":(";
         return new PlainTextResponse(message);
       }
     }
 
     await new ContainerBuilder()
       .setup(
-        new MongoSetupFactory({
+        new MikroOrmSetup({
           clientUrl: connectionString,
           dbName: database,
           entities: [User],
           allowGlobalContext: true,
+          type: "mongo",
         })
       )
       .buildAsync();
@@ -115,18 +121,18 @@ describe("MikroORM - MongoDB", () => {
     expect(response.text()).resolves.toEqual(successMessage);
   });
 
-  it(`Can use ${MongoOrm.name} to create a document`, async () => {
+  it(`Can use ${MikroORM.name} to create a document`, async () => {
     // Arrange
     const resourcePath = "users";
 
     @injectable()
     class CreateUserEndpoint extends Endpoint {
-      constructor(private readonly mongo: MongoOrm) {
+      constructor(@inMikroOrm("mongo") private readonly orm: MikroORM) {
         super();
         this.method("post").path(`/${resourcePath}`);
       }
       async handle(context: HttpContext) {
-        const usersRepository = this.mongo.em.getRepository(User);
+        const usersRepository = this.orm.em.getRepository(User);
         const createdUserId = await usersRepository.nativeInsert({
           email: context.request.body.email,
           password: context.request.body.password,
@@ -137,11 +143,12 @@ describe("MikroORM - MongoDB", () => {
 
     await new ContainerBuilder()
       .setup(
-        new MongoSetupFactory({
+        new MikroOrmSetup({
           clientUrl: connectionString,
           dbName: database,
           entities: [User],
           allowGlobalContext: true,
+          type: "mongo",
         })
       )
       .buildAsync();
@@ -165,15 +172,13 @@ describe("MikroORM - MongoDB", () => {
     expect(ObjectId.isValid(createdUserId)).toBeTruthy();
   });
 
-  it(`Can use ${MongoRepositorySetupFactory.name} to create a document`, async () => {
+  it(`Can inject a Repository to create a document`, async () => {
     // Arrange
     const resourcePath = "users";
 
     @injectable()
     class CreateUserEndpoint extends Endpoint {
-      constructor(
-        @inject(MongoRepositoryName(User)) private readonly usersRepository: MongoRepository<User>
-      ) {
+      constructor(@inRepository(User) private readonly usersRepository: Repository<User>) {
         super();
         this.method("post").path(`/${resourcePath}`);
       }
@@ -188,14 +193,15 @@ describe("MikroORM - MongoDB", () => {
 
     await new ContainerBuilder()
       .setup(
-        new MongoSetupFactory({
+        new MikroOrmSetup({
           clientUrl: connectionString,
           dbName: database,
           entities: [User],
           allowGlobalContext: true,
+          type: "mongo",
         })
       )
-      .setup(new MongoRepositorySetupFactory(User))
+      .setup(new RepositorySetup("mongo", User))
       .buildAsync();
 
     server = await new AppBuilder().useJson().useEndpoint(CreateUserEndpoint).buildAsync(port);
@@ -219,14 +225,19 @@ describe("MikroORM - MongoDB", () => {
 });
 
 async function clearCollectionAsync<T extends object>(entityName: EntityName<T>) {
-  if (!MongoInstance.isInitialized) {
+  const orm = MikroOrmResolver.resolveOrDefault("mongo");
+
+  if (orm === undefined) {
     return;
   }
 
-  const repo = MongoInstance.instance.orm.em.getRepository(entityName);
+  const repo = orm.em.getRepository(entityName);
+
   const entities = await repo.findAll();
+
   for (const entity of entities) {
     repo.remove(entity);
   }
+
   await repo.flush();
 }
