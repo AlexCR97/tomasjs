@@ -8,7 +8,11 @@ import { HttpContext, StatusCodes } from "../../src/core";
 import { StatusCodeError } from "../../src/core/errors";
 import fetch from "node-fetch";
 import { AnonymousEndpoint } from "../../src/endpoints";
-import { AnonymousErrorMiddleware, ErrorMiddleware } from "../../src/middleware";
+import {
+  AnonymousErrorMiddleware,
+  DefaultErrorMiddleware,
+  ErrorMiddleware,
+} from "../../src/middleware";
 import { JsonResponse, PlainTextResponse } from "../../src/responses";
 
 describe("error-middleware", () => {
@@ -105,13 +109,43 @@ describe("error-middleware", () => {
 
     // Act/Assert
     const badRequestResponse = await fetch(`${serverAddress}/bad-request`);
-    const badRequestResponseText = await badRequestResponse.json();
-    console.log("badRequestResponseText", badRequestResponseText);
     expect(badRequestResponse.status).toBe(StatusCodes.badRequest);
 
     const notFoundResponse = await fetch(`${serverAddress}/not-found`);
-    const notFoundResponseText = await notFoundResponse.json();
-    console.log("notFoundResponseText", notFoundResponseText);
     expect(notFoundResponse.status).toBe(StatusCodes.notFound);
+  });
+
+  it(`The ${DefaultErrorMiddleware.name} can handle uncaught errors with default behavior`, async () => {
+    // Arrange
+    server = await new AppBuilder()
+      .useEndpoint(
+        new AnonymousEndpoint("get", "/bad-request", (context: HttpContext) => {
+          throw new StatusCodeError(StatusCodes.badRequest);
+        })
+      )
+      .useEndpoint(
+        new AnonymousEndpoint("get", "/not-found", (context: HttpContext) => {
+          throw new StatusCodeError(StatusCodes.notFound);
+        })
+      )
+      .useErrorMiddleware(DefaultErrorMiddleware)
+      .buildAsync(port);
+
+    // Act/Assert
+    const badRequestResponse = await fetch(`${serverAddress}/bad-request`);
+    expect(badRequestResponse.status).toBe(StatusCodes.badRequest);
+
+    const badRequestResponseJson = await badRequestResponse.json();
+    expect(badRequestResponseJson?.message).toEqual(
+      `An error occurred with status code ${StatusCodes.badRequest}`
+    );
+
+    const notFoundResponse = await fetch(`${serverAddress}/not-found`);
+    expect(notFoundResponse.status).toBe(StatusCodes.notFound);
+
+    const notFoundResponseJson = await notFoundResponse.json();
+    expect(notFoundResponseJson?.message).toEqual(
+      `An error occurred with status code ${StatusCodes.notFound}`
+    );
   });
 });

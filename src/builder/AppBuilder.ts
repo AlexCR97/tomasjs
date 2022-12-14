@@ -18,6 +18,7 @@ import {
   MiddlewareFactory,
   MiddlewareHandler,
 } from "@/middleware";
+import { isErrorMiddlewareHandler } from "@/middleware/ErrorMiddlewareHandler";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -91,8 +92,8 @@ export class AppBuilder {
   ): AppBuilder {
     let expressErrorMiddleware: ExpressErrorMiddlewareHandler;
 
-    if (typeof middleware === "function") {
-      expressErrorMiddleware = ErrorMiddlewareAdapter.fromTypeToExpress(middleware as any);
+    if (isErrorMiddlewareHandler(middleware)) {
+      expressErrorMiddleware = ErrorMiddlewareAdapter.fromTypeToExpress(middleware);
     } else if (middleware instanceof ErrorMiddleware) {
       expressErrorMiddleware = ErrorMiddlewareAdapter.fromInstanceToExpress(middleware);
     } else {

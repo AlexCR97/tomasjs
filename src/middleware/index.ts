@@ -1,5 +1,6 @@
 export { AnonymousErrorMiddleware } from "./AnonymousErrorMiddleware";
 export { AnonymousMiddleware } from "./AnonymousMiddleware";
+export { DefaultErrorMiddleware } from "./DefaultErrorMiddleware";
 export { ErrorMiddleware } from "./ErrorMiddleware";
 export { ErrorMiddlewareAdapter } from "./ErrorMiddlewareAdapter";
 export { ErrorMiddlewareHandler } from "./ErrorMiddlewareHandler";
