@@ -1,15 +1,15 @@
 import { User } from "@/entities/User";
 import { HttpContext, StatusCodes } from "tomasjs/core";
 import { Endpoint } from "tomasjs/endpoints";
-import { MongoRepository, MongoRepositoryName } from "tomasjs/mikro-orm/mongodb";
+import { inRepository, Repository } from "tomasjs/mikro-orm/mongodb";
 import { PlainTextResponse } from "tomasjs/responses";
 import { BadRequestResponse } from "tomasjs/responses/status-codes";
-import { inject, injectable } from "tsyringe";
+import { injectable } from "tsyringe";
 
 @injectable()
 export class CreateUserEndpoint extends Endpoint {
   constructor(
-    @inject(MongoRepositoryName(User)) private readonly usersRepository: MongoRepository<User>
+    @inRepository(User) private readonly usersRepository: Repository<User>
   ) {
     super();
     this.method("post");

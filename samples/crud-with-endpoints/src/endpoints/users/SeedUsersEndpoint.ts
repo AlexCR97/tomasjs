@@ -1,16 +1,16 @@
 import { User } from "@/entities/User";
 import { HttpContext } from "tomasjs/core";
 import { Endpoint } from "tomasjs/endpoints";
-import { MongoRepositoryName, MongoRepository } from "tomasjs/mikro-orm/mongodb";
+import { inRepository, Repository } from "tomasjs/mikro-orm/mongodb";
 import { OkResponse } from "tomasjs/responses/status-codes";
-import { inject, injectable } from "tsyringe";
+import { injectable } from "tsyringe";
 
 @injectable()
 export class SeedUsersEndpoint extends Endpoint {
   static readonly seedUsersCount = 3;
 
   constructor(
-    @inject(MongoRepositoryName(User)) private readonly usersRepository: MongoRepository<User>
+    @inRepository(User) private readonly usersRepository: Repository<User>
   ) {
     super();
     this.method("post").path("/seed");

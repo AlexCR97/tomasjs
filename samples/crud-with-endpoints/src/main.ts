@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { AppBuilder, ContainerBuilder } from "tomasjs/builder";
-import { MongoRepositorySetupFactory, MongoSetupFactory } from "tomasjs/mikro-orm/mongodb";
+import { MikroOrmSetup, RepositorySetup } from "tomasjs/mikro-orm";
 import {
   GetAllUsersEndpoint,
   GetUserByIdEndpoint,
@@ -20,14 +20,15 @@ async function main() {
 
   await new ContainerBuilder()
     .setup(
-      new MongoSetupFactory({
+      new MikroOrmSetup({
         clientUrl: "mongodb://127.0.0.1:27017",
         dbName: "tomasjs-sample-crud-with-endpoints",
         entities: [User],
         allowGlobalContext: true,
+        type: "mongo",
       })
     )
-    .setup(new MongoRepositorySetupFactory(User))
+    .setup(new RepositorySetup("mongo", User))
     .buildAsync();
 
   await new AppBuilder()
