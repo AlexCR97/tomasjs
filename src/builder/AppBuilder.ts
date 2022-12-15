@@ -1,27 +1,24 @@
-import express, { json, Express, NextFunction, Request, Response, Router, text } from "express";
+import express, { json, Express, Router, text } from "express";
 import { container } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
-import {
-  ErrorMiddleware,
-  ErrorMiddlewareAdapter,
-  Middleware,
-  MiddlewareAdapter,
-  ThomasErrorMiddleware,
-  ThomasMiddleware,
-} from "@/middleware";
 import { Controller } from "@/controllers";
 import { ControllerAction } from "@/controllers/types";
 import {
   ExpressErrorMiddlewareHandler,
-  MiddlewareHandler,
-  ThomasErrorMiddlewareHandler,
-  ThomasMiddlewareHandler,
-} from "@/middleware/types";
+  ExpressMiddlewareHandler,
+  ExpressRequestHandler,
+} from "@/core/express";
 import { Endpoint, EndpointAdapter, EndpointGroup, EndpointGroupAdapter } from "@/endpoints";
-import { HttpContextResolver } from "@/core";
-import { ResponseAdapter } from "@/responses";
-import { MiddlewareFactory } from "@/middleware/MiddlewareFactory";
-import { ExpressRequestHandler } from "@/core/express";
+import {
+  ErrorMiddleware,
+  ErrorMiddlewareAdapter,
+  ErrorMiddlewareHandler,
+  Middleware,
+  MiddlewareAdapter,
+  MiddlewareFactory,
+  MiddlewareHandler,
+} from "@/middleware";
+import { isErrorMiddlewareHandler } from "@/middleware/ErrorMiddlewareHandler";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -59,81 +56,22 @@ export class AppBuilder {
 
   /* #region Middleware */
 
-  useMiddleware<TMiddleware extends Middleware | ErrorMiddleware>(
-    middleware: TMiddleware | constructor<TMiddleware>
-  ): AppBuilder {
-    if (middleware instanceof Middleware || middleware instanceof ErrorMiddleware) {
-      this.registerMiddleware(middleware);
-    } else {
-      container.register(middleware.name, middleware);
-      const middlewareInstance = container.resolve(middleware);
-      this.registerMiddleware(middlewareInstance);
-    }
-
-    return this;
-  }
-
-  private registerMiddleware(middleware: Middleware | ErrorMiddleware) {
-    if (middleware instanceof Middleware) {
-      this.app.use(
-        async (req: Request, res: Response, next: NextFunction) =>
-          await middleware.handle(req, res, next)
-      );
-    } else if (middleware instanceof ErrorMiddleware) {
-      this.app.use((err: any, req: Request, res: Response, next: NextFunction) =>
-        middleware.handle(err, req, res, next)
-      );
-    } else {
-      throw new Error(`Unknown middleware: "${middleware}"`);
-    }
-  }
-
-  private useMiddlewareRouter<TMiddleware extends Middleware | ErrorMiddleware>(
-    router: Router,
-    middleware: TMiddleware | constructor<TMiddleware>
-  ): AppBuilder {
-    if (middleware instanceof Middleware || middleware instanceof ErrorMiddleware) {
-      this.registerMiddlewareRouter(router, middleware);
-    } else {
-      container.register(middleware.name, middleware);
-      const middlewareInstance = container.resolve(middleware);
-      this.registerMiddlewareRouter(router, middlewareInstance);
-    }
-
-    return this;
-  }
-
-  private registerMiddlewareRouter(router: Router, middleware: Middleware | ErrorMiddleware) {
-    if (middleware instanceof Middleware) {
-      router.use(
-        async (req: Request, res: Response, next: NextFunction) =>
-          await middleware.handle(req, res, next)
-      );
-    } else if (middleware instanceof ErrorMiddleware) {
-      router.use((err: any, req: Request, res: Response, next: NextFunction) =>
-        middleware.handle(err, req, res, next)
-      );
-    } else {
-      throw new Error(`Unknown middleware: "${middleware}"`);
-    }
-  }
-
-  useMiddlewarex(
+  useMiddleware<TMiddleware extends Middleware = Middleware>(
     middleware:
-      | ThomasMiddlewareHandler
-      | ThomasMiddleware
-      | constructor<ThomasMiddleware>
-      | MiddlewareFactory
+      | MiddlewareHandler
+      | TMiddleware
+      | constructor<TMiddleware>
+      | MiddlewareFactory<TMiddleware>
   ): AppBuilder {
     return this.useMiddlewareFor(middleware, { app: this.app });
   }
 
-  private useMiddlewareFor(
+  private useMiddlewareFor<TMiddleware extends Middleware = Middleware>(
     middleware:
-      | ThomasMiddlewareHandler
-      | ThomasMiddleware
-      | constructor<ThomasMiddleware>
-      | MiddlewareFactory,
+      | MiddlewareHandler
+      | TMiddleware
+      | constructor<TMiddleware>
+      | MiddlewareFactory<TMiddleware>,
     source: { app?: Express; router?: Router }
   ): AppBuilder {
     const expressMiddleware =
@@ -150,16 +88,13 @@ export class AppBuilder {
   /* #region ErrorMiddleware */
 
   useErrorMiddleware(
-    middleware:
-      | ThomasErrorMiddlewareHandler
-      | ThomasErrorMiddleware
-      | constructor<ThomasErrorMiddleware>
+    middleware: ErrorMiddlewareHandler | ErrorMiddleware | constructor<ErrorMiddleware>
   ): AppBuilder {
     let expressErrorMiddleware: ExpressErrorMiddlewareHandler;
 
-    if (typeof middleware === "function") {
-      expressErrorMiddleware = ErrorMiddlewareAdapter.fromTypeToExpress(middleware as any);
-    } else if (middleware instanceof ThomasErrorMiddleware) {
+    if (isErrorMiddlewareHandler(middleware)) {
+      expressErrorMiddleware = ErrorMiddlewareAdapter.fromTypeToExpress(middleware);
+    } else if (middleware instanceof ErrorMiddleware) {
       expressErrorMiddleware = ErrorMiddlewareAdapter.fromInstanceToExpress(middleware);
     } else {
       expressErrorMiddleware = ErrorMiddlewareAdapter.fromConstructorToExpress(middleware);
@@ -213,7 +148,7 @@ export class AppBuilder {
       onBeforeMiddlewares.length > 0
     ) {
       onBeforeMiddlewares.forEach((middleware) => {
-        this.useMiddlewareRouter(router, middleware);
+        this.useMiddlewareFor(middleware, { router });
       });
     }
 
@@ -231,24 +166,26 @@ export class AppBuilder {
 
   private fromControllerActionToExpressHandler(
     action: ControllerAction
-  ): ExpressRequestHandler | MiddlewareHandler {
-    if (action instanceof Middleware) {
-      return async (req, res, next) => {
-        await action.handle(req, res, next); // TODO Will this work with DI?
-      };
-    } else if (typeof action === "function") {
-      return async (req: Request, res: Response) => {
-        const httpContext = HttpContextResolver.fromExpress(req, res);
-        const actionResponse = await (action as any)(httpContext);
-        return ResponseAdapter.fromThomasToExpress(res, actionResponse);
-      };
-    } else {
-      const middleware = action as constructor<Middleware>;
-      const middlewareInstance = container.resolve(middleware);
-      return async (req, res, next) => {
-        await middlewareInstance.handle(req, res, next); // TODO Will this work with DI?
-      };
-    }
+  ): ExpressMiddlewareHandler | ExpressRequestHandler {
+    throw new Error("Not implemented");
+
+    // if (action instanceof Middleware) {
+    //   return async (req, res, next) => {
+    //     await action.handle(req, res, next); // TODO Will this work with DI?
+    //   };
+    // } else if (typeof action === "function") {
+    //   return async (req: Request, res: Response) => {
+    //     const httpContext = HttpContextResolver.fromExpress(req, res);
+    //     const actionResponse = await (action as any)(httpContext);
+    //     return ResponseAdapter.fromThomasToExpress(res, actionResponse);
+    //   };
+    // } else {
+    //   const middleware = action as constructor<Middleware>;
+    //   const middlewareInstance = container.resolve(middleware);
+    //   return async (req, res, next) => {
+    //     await middlewareInstance.handle(req, res, next); // TODO Will this work with DI?
+    //   };
+    // }
   }
 
   /* #endregion */

@@ -6,7 +6,7 @@ import { tick } from "../utils/time";
 import { HttpContext, StatusCodes } from "../../src/core";
 import fetch from "node-fetch";
 import { AnonymousEndpoint, EndpointGroup } from "../../src/endpoints";
-import { ThomasAnonymousMiddleware } from "../../src/middleware";
+import { AnonymousMiddleware } from "../../src/middleware";
 import { OkResponse, UnauthorizedResponse } from "../../src/responses/status-codes";
 
 describe(EndpointGroup.name, () => {
@@ -78,7 +78,7 @@ describe(EndpointGroup.name, () => {
         endpoints
           .basePath(`/${basePath}`)
           .onBefore(
-            new ThomasAnonymousMiddleware((context: HttpContext, next) => {
+            new AnonymousMiddleware((context: HttpContext, next) => {
               const token = context.request.headers[headerKey];
 
               if (token !== secretKey) {

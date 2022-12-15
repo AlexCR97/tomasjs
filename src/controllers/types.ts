@@ -1,10 +1,11 @@
 import { HttpMethod } from "@/core";
 import { RequestHandler } from "@/core/handlers";
-import { Middleware, ThomasMiddleware } from "@/middleware";
-import { ThomasMiddlewareHandler } from "@/middleware/types";
+import { Middleware, MiddlewareHandler } from "@/middleware";
 import { constructor } from "tsyringe/dist/typings/types";
 
-export type ControllerMiddleware<T extends Middleware = Middleware> = Middleware | constructor<T>;
+export type ControllerMiddleware<TMiddleware extends Middleware = Middleware> =
+  | TMiddleware
+  | constructor<TMiddleware>;
 
 export type ControllerAction = ControllerMiddleware | RequestHandler<any>;
 
@@ -14,7 +15,4 @@ export interface ControllerActionMap {
   actions: ControllerAction[];
 }
 
-export type ThomasControllerMiddleware =
-  | ThomasMiddlewareHandler
-  | ThomasMiddleware
-  | constructor<ThomasMiddleware>;
+export type ThomasControllerMiddleware = MiddlewareHandler | Middleware | constructor<Middleware>;

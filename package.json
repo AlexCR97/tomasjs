@@ -22,6 +22,7 @@
     "test": "jest",
     "testw": "jest --watchAll --verbose",
     "testw-dist": "jest --testNamePattern dist-test --watchAll --verbose",
+    "testw-error-middleware": "jest --testNamePattern error-middleware --watchAll --verbose",
     "testw-sample-crud": "jest --testNamePattern crud-sample --watchAll --verbose",
     "testw-mikro-orm": "jest --testNamePattern MikroORM --watchAll --verbose --detectOpenHandles",
     "serve-sample-controllers": "ts-node -r tsconfig-paths/register ./samples/crud-with-controllers/main.ts",
