@@ -2,8 +2,8 @@ import { HttpContext, StatusCodes, UserContext } from "@/core";
 import { Middleware } from "@/middleware";
 import { StatusCodeResponse } from "@/responses";
 import { NextFunction } from "express";
-import { JwtVerifier } from "../JwtVerifier";
-import { JwtVerifyOptions } from "../JwtVerifyOptions";
+import { JwtVerifier } from "./JwtVerifier";
+import { JwtVerifyOptions } from "./JwtVerifyOptions";
 
 export class JwtMiddleware extends Middleware {
   constructor(private readonly options: JwtVerifyOptions) {

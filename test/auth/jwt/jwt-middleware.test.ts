@@ -1,19 +1,17 @@
 import "reflect-metadata";
 import "express-async-errors";
-import { afterEach, describe, it } from "@jest/globals";
-import { tryCloseServerAsync } from "../utils/server";
-import { AppBuilder } from "../../src/builder";
-import { tick } from "../utils/time";
-import { HttpContext, StatusCodes } from "../../src/core";
 import fetch from "node-fetch";
-import { AnonymousEndpoint } from "../../src/endpoints";
-import { JwtSigner } from "../../src/jwt";
-import { JwtMiddleware } from "../../src/jwt/middleware";
-import { OkResponse } from "../../src/responses/status-codes";
-import { UserContext } from "../../dist/core";
-import { JsonResponse } from "../../src/responses";
+import { afterEach, describe, it } from "@jest/globals";
+import { tryCloseServerAsync } from "../../utils/server";
+import { tick } from "../../utils/time";
+import { JwtMiddleware, JwtSigner } from "../../../src/auth/jwt";
+import { AppBuilder } from "../../../src/builder";
+import { HttpContext, StatusCodes, UserContext } from "../../../src/core";
+import { AnonymousEndpoint } from "../../../src/endpoints";
+import { JsonResponse } from "../../../src/responses";
+import { OkResponse } from "../../../src/responses/status-codes";
 
-describe("jwt-middleware", () => {
+describe("auth-jwt-middleware", () => {
   const port = 3037;
   const serverAddress = `http://localhost:${port}`;
   const serverTeardownOffsetMilliseconds = 50;
