@@ -1,4 +1,4 @@
-import { inject } from "tsyringe";
+import { inject } from "@/container";
 import { DatabaseDriver } from "./DatabaseDriver";
 import { MikroOrmInjectionTokenFactory } from "./MikroOrmInjectionTokenFactory";
 

@@ -1,3 +1,4 @@
+import { ClassConstructor } from "@/container";
 import { HttpContext, HttpMethod } from "@/core";
 import {
   Middleware,
@@ -5,7 +6,6 @@ import {
   MiddlewareFactoryHandler,
   MiddlewareHandler,
 } from "@/middleware";
-import { constructor } from "tsyringe/dist/typings/types";
 
 export abstract class Endpoint {
   /* #region HTTP Method */
@@ -35,20 +35,20 @@ export abstract class Endpoint {
   readonly onBeforeMiddlewares: (
     | MiddlewareHandler
     | Middleware
-    | constructor<Middleware>
+    | ClassConstructor<Middleware>
     | MiddlewareFactoryHandler
     | MiddlewareFactory
-    | constructor<MiddlewareFactory>
+    | ClassConstructor<MiddlewareFactory>
   )[] = []; // TODO Make private?
 
   onBefore(
     middleware:
       | MiddlewareHandler
       | Middleware
-      | constructor<Middleware>
+      | ClassConstructor<Middleware>
       | MiddlewareFactoryHandler
       | MiddlewareFactory
-      | constructor<MiddlewareFactory>
+      | ClassConstructor<MiddlewareFactory>
   ): Endpoint {
     this.onBeforeMiddlewares.push(middleware);
     return this;

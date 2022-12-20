@@ -1,4 +1,4 @@
-import { container } from "tsyringe";
+import { internalContainer } from "@/container";
 import { ContainerSetup } from "./ContainerSetup";
 import { ContainerSetupFactory } from "./ContainerSetupFactory";
 
@@ -15,7 +15,7 @@ export class ContainerBuilder {
   async buildAsync(): Promise<void> {
     for (const setup of this.setups) {
       const setupCallback = setup instanceof ContainerSetupFactory ? setup.create() : setup;
-      await setupCallback(container);
+      await setupCallback(internalContainer);
     }
   }
 }

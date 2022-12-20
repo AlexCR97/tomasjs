@@ -1,3 +1,3 @@
-import { DependencyContainer } from "tsyringe";
+import { IContainer } from "@/container";
 
-export type ContainerSetup = (container: DependencyContainer) => void | Promise<void>;
+export type ContainerSetup = (container: IContainer) => void | Promise<void>;

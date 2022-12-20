@@ -1,6 +1,5 @@
+import { ClassConstructor, internalContainer } from "@/container";
 import { isConstructorToken } from "@/core/tsyringe";
-import { container } from "tsyringe";
-import { constructor } from "tsyringe/dist/typings/types";
 import { Middleware } from "./Middleware";
 import { MiddlewareFactory } from "./MiddlewareFactory";
 import { isMiddlewareFactoryHandler, MiddlewareFactoryHandler } from "./MiddlewareFactoryHandler";
@@ -25,7 +24,7 @@ export abstract class MiddlewareFactoryAdapter {
   ): obj is
     | MiddlewareFactoryHandler<TMiddleware>
     | MiddlewareFactory<TMiddleware>
-    | constructor<MiddlewareFactory<TMiddleware>> {
+    | ClassConstructor<MiddlewareFactory<TMiddleware>> {
     return (
       isMiddlewareFactoryHandler(obj) ||
       obj instanceof MiddlewareFactory<TMiddleware> ||
@@ -37,7 +36,7 @@ export abstract class MiddlewareFactoryAdapter {
     factory:
       | MiddlewareFactoryHandler<TMiddleware>
       | MiddlewareFactory<TMiddleware>
-      | constructor<MiddlewareFactory<TMiddleware>>
+      | ClassConstructor<MiddlewareFactory<TMiddleware>>
   ) {
     if (isMiddlewareFactoryHandler(factory)) {
       return this.fromType(factory);
@@ -56,14 +55,14 @@ export abstract class MiddlewareFactoryAdapter {
 
   static fromInstance<TMiddleware extends Middleware = Middleware>(
     factory: MiddlewareFactory<TMiddleware>
-  ): MiddlewareHandler | TMiddleware | constructor<TMiddleware> {
+  ): MiddlewareHandler | TMiddleware | ClassConstructor<TMiddleware> {
     return factory.create();
   }
 
   static fromConstructor<TMiddleware extends Middleware = Middleware>(
-    factory: constructor<MiddlewareFactory<TMiddleware>>
-  ): MiddlewareHandler | TMiddleware | constructor<TMiddleware> {
-    const factoryInstance = container.resolve(factory);
+    factory: ClassConstructor<MiddlewareFactory<TMiddleware>>
+  ): MiddlewareHandler | TMiddleware | ClassConstructor<TMiddleware> {
+    const factoryInstance = internalContainer.get(factory);
     return factoryInstance.create();
   }
 }

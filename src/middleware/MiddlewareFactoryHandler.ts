@@ -1,11 +1,11 @@
-import { constructor } from "tsyringe/dist/typings/types";
+import { ClassConstructor } from "@/container";
 import { Middleware } from "./Middleware";
 import { MiddlewareHandler } from "./MiddlewareHandler";
 
 export type MiddlewareFactoryHandler<TMiddleware extends Middleware = Middleware> = () =>
   | MiddlewareHandler
   | TMiddleware
-  | constructor<TMiddleware>;
+  | ClassConstructor<TMiddleware>;
 
 export function isMiddlewareFactoryHandler<TMiddleware extends Middleware = Middleware>(
   obj: any

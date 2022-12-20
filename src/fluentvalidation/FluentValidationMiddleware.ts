@@ -1,17 +1,17 @@
+import { ClassConstructor } from "@/container";
 import { HttpContext, StatusCodes } from "@/core";
 import { Middleware } from "@/middleware";
 import { JsonResponse } from "@/responses";
 import { BadRequestResponse } from "@/responses/status-codes";
 import { NextFunction } from "express";
 import { Validator } from "fluentvalidation-ts";
-import { constructor } from "tsyringe/dist/typings/types";
 import { ValidatorAdapter } from "./ValidatorAdapter";
 
 export class FluentValidationMiddleware<
   TModel extends object,
   TValidator extends Validator<TModel> = Validator<TModel>
 > extends Middleware {
-  constructor(private validator: TValidator | constructor<TValidator>) {
+  constructor(private validator: TValidator | ClassConstructor<TValidator>) {
     super();
   }
   handle(context: HttpContext, next: NextFunction): void | Promise<void> {

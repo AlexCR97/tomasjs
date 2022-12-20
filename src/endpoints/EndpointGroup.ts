@@ -1,10 +1,10 @@
+import { ClassConstructor } from "@/container";
 import {
   Middleware,
   MiddlewareFactory,
   MiddlewareFactoryHandler,
   MiddlewareHandler,
 } from "@/middleware";
-import { constructor } from "tsyringe/dist/typings/types";
 import { Endpoint } from "./Endpoint";
 
 export class EndpointGroup {
@@ -24,20 +24,20 @@ export class EndpointGroup {
   readonly onBeforeMiddlewares: (
     | MiddlewareHandler
     | Middleware
-    | constructor<Middleware>
+    | ClassConstructor<Middleware>
     | MiddlewareFactoryHandler
     | MiddlewareFactory
-    | constructor<MiddlewareFactory>
+    | ClassConstructor<MiddlewareFactory>
   )[] = []; // TODO Make private?
 
   onBefore(
     middleware:
       | MiddlewareHandler
       | Middleware
-      | constructor<Middleware>
+      | ClassConstructor<Middleware>
       | MiddlewareFactoryHandler
       | MiddlewareFactory
-      | constructor<MiddlewareFactory>
+      | ClassConstructor<MiddlewareFactory>
   ): EndpointGroup {
     this.onBeforeMiddlewares.push(middleware);
     return this;
@@ -47,10 +47,10 @@ export class EndpointGroup {
 
   /* #region Endpoints */
 
-  readonly endpoints: (Endpoint | constructor<Endpoint>)[] = [];
+  readonly endpoints: (Endpoint | ClassConstructor<Endpoint>)[] = [];
 
   useEndpoint<TEndpoint extends Endpoint = Endpoint>(
-    endpoint: TEndpoint | constructor<TEndpoint>
+    endpoint: TEndpoint | ClassConstructor<TEndpoint>
   ): EndpointGroup {
     this.endpoints.push(endpoint);
     return this;

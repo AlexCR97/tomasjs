@@ -1,5 +1,4 @@
 import express, { json, Express, Router, text } from "express";
-import { container } from "tsyringe";
 import { constructor } from "tsyringe/dist/typings/types";
 import { Controller } from "@/controllers";
 import { ControllerAction } from "@/controllers/types";
@@ -19,6 +18,7 @@ import {
   MiddlewareHandler,
 } from "@/middleware";
 import { isErrorMiddlewareHandler } from "@/middleware/ErrorMiddlewareHandler";
+import { internalContainer } from "@/container";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -117,8 +117,8 @@ export class AppBuilder {
       const controllerPath = this.getRoutingPath(controller);
       this.app.use(controllerPath, router);
     } else {
-      container.register(controller.name, controller);
-      const controllerInstance = container.resolve(controller);
+      internalContainer.addClass(controller);
+      const controllerInstance = internalContainer.get(controller);
       const router = this.toRouter(controllerInstance);
       const controllerPath = this.getRoutingPath(controllerInstance);
       this.app.use(controllerPath, router);
@@ -199,7 +199,7 @@ export class AppBuilder {
       return this.useEndpointInstance(endpoint);
     }
 
-    const endpointInstance = container.resolve(endpoint);
+    const endpointInstance = internalContainer.get(endpoint);
     return this.useEndpointInstance(endpointInstance);
   }
 
@@ -226,17 +226,17 @@ export class AppBuilder {
   /* #region CQRS */
 
   useCommandHandler(commandHandlerClass: any): AppBuilder {
-    container.register(commandHandlerClass.name, commandHandlerClass);
+    internalContainer.addClass(commandHandlerClass);
     return this;
   }
 
   useQueryHandler(queryHandlerClass: any): AppBuilder {
-    container.register(queryHandlerClass.name, queryHandlerClass);
+    internalContainer.addClass(queryHandlerClass);
     return this;
   }
 
   useEventHandler(eventHandlerClass: any): AppBuilder {
-    container.register(eventHandlerClass.name, eventHandlerClass);
+    internalContainer.addClass(eventHandlerClass);
     return this;
   }
 
@@ -260,11 +260,12 @@ export class AppBuilder {
   /* #region Build */
 
   // TODO Add return type
-  async buildAsync(port: number): Promise<any> {
+  async buildAsync(port: number) {
     return await this.createServerAsync(port);
   }
 
-  private async createServerAsync(port: number): Promise<any> {
+  // TODO Add return type
+  private async createServerAsync(port: number) {
     return new Promise<any>((resolve, reject) => {
       const server = this.app
         .listen(port, () => {

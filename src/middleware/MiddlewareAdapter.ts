@@ -1,8 +1,6 @@
+import { ClassConstructor, internalContainer } from "@/container";
 import { HttpContextResolver } from "@/core";
 import { ExpressMiddlewareHandler } from "@/core/express";
-import { isConstructorToken } from "@/core/tsyringe";
-import { container } from "tsyringe";
-import { constructor } from "tsyringe/dist/typings/types";
 import { Middleware } from "./Middleware";
 import { isMiddlewareHandler, MiddlewareHandler } from "./MiddlewareHandler";
 
@@ -20,13 +18,7 @@ import { isMiddlewareHandler, MiddlewareHandler } from "./MiddlewareHandler";
 export class MiddlewareAdapter {
   private constructor() {}
 
-  static isAdapter<TMiddleware extends Middleware = Middleware>(
-    obj: any
-  ): obj is MiddlewareHandler | TMiddleware | constructor<TMiddleware> {
-    return isMiddlewareHandler(obj) || obj instanceof Middleware || isConstructorToken(obj);
-  }
-
-  static from(middleware: MiddlewareHandler | Middleware | constructor<Middleware>) {
+  static from(middleware: MiddlewareHandler | Middleware | ClassConstructor<Middleware>) {
     if (isMiddlewareHandler(middleware)) {
       return MiddlewareAdapter.fromType(middleware);
     }
@@ -53,10 +45,10 @@ export class MiddlewareAdapter {
   }
 
   static fromConstructor<TMiddleware extends Middleware = Middleware>(
-    middleware: constructor<TMiddleware>
+    middleware: ClassConstructor<TMiddleware>
   ): ExpressMiddlewareHandler {
     return async (req, res, next) => {
-      const middlewareInstance = container.resolve(middleware); // Middleware needs to be resolved at runtime to support DI
+      const middlewareInstance = internalContainer.get(middleware); // Middleware needs to be resolved at runtime to support DI
       const context = HttpContextResolver.fromExpress(req, res); // HttpContext needs to be resolved at runtime to support DI
       await middlewareInstance.handle(context, next);
     };

@@ -1,8 +1,7 @@
+import { ClassConstructor, internalContainer } from "@/container";
 import { HttpMethod } from "@/core";
 import { MiddlewareAdapter, MiddlewareFactoryAdapter } from "@/middleware";
 import { Router } from "express";
-import { container } from "tsyringe";
-import { constructor } from "tsyringe/dist/typings/types";
 import { Endpoint } from "./Endpoint";
 import { EndpointAdapter } from "./EndpointAdapter";
 import { EndpointGroup } from "./EndpointGroup";
@@ -42,13 +41,15 @@ export abstract class EndpointGroupAdapter {
     };
   }
 
-  private static getEndpointMethod(endpoint: Endpoint | constructor<Endpoint>): HttpMethod {
-    const endpointInstance = endpoint instanceof Endpoint ? endpoint : container.resolve(endpoint);
+  private static getEndpointMethod(endpoint: Endpoint | ClassConstructor<Endpoint>): HttpMethod {
+    const endpointInstance =
+      endpoint instanceof Endpoint ? endpoint : internalContainer.get(endpoint);
     return endpointInstance._method;
   }
 
-  private static getEndpointPath(endpoint: Endpoint | constructor<Endpoint>): string {
-    const endpointInstance = endpoint instanceof Endpoint ? endpoint : container.resolve(endpoint);
+  private static getEndpointPath(endpoint: Endpoint | ClassConstructor<Endpoint>): string {
+    const endpointInstance =
+      endpoint instanceof Endpoint ? endpoint : internalContainer.get(endpoint);
     return endpointInstance._path;
   }
 }

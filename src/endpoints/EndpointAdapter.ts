@@ -1,5 +1,4 @@
-import { container } from "tsyringe";
-import { constructor } from "tsyringe/dist/typings/types";
+import { ClassConstructor, internalContainer } from "@/container";
 import { HttpContextResolver } from "@/core";
 import { ExpressMiddlewareHandler, ExpressRequestHandler } from "@/core/express";
 import { MiddlewareAdapter, MiddlewareFactoryAdapter } from "@/middleware";
@@ -12,7 +11,7 @@ export abstract class EndpointAdapter {
   private constructor() {}
 
   static fromThomasToExpress(
-    endpoint: EndpointHandler<any> | Endpoint | constructor<Endpoint>
+    endpoint: EndpointHandler<any> | Endpoint | ClassConstructor<Endpoint>
   ): (ExpressMiddlewareHandler | ExpressRequestHandler)[] {
     if (IsEndpointHandler<any>(endpoint)) {
       return [this.fromTypeToExpress(endpoint)];
@@ -53,9 +52,9 @@ export abstract class EndpointAdapter {
   }
 
   static fromConstructorToExpress(
-    endpoint: constructor<Endpoint>
+    endpoint: ClassConstructor<Endpoint>
   ): (ExpressMiddlewareHandler | ExpressRequestHandler)[] {
-    const endpointInstance = container.resolve(endpoint);
+    const endpointInstance = internalContainer.get(endpoint);
 
     const expressMiddlewareHandlers = endpointInstance.onBeforeMiddlewares.map((middleware) => {
       const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(middleware)

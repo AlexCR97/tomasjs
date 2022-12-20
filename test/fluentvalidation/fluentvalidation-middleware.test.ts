@@ -4,6 +4,7 @@ import { afterEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "../utils/server";
 import { AppBuilder, ContainerBuilder } from "../../src/builder";
 import { tick } from "../utils/time";
+import { injectable } from "../../src";
 import { HttpContext, StatusCodes } from "../../src/core";
 import fetch from "node-fetch";
 import { Endpoint } from "../../src/endpoints";
@@ -14,7 +15,6 @@ import {
 } from "../../src/fluentvalidation";
 import { Validator } from "fluentvalidation-ts";
 import { OkResponse } from "../../src/responses/status-codes";
-import { injectable } from "tsyringe";
 
 describe("fluentvalidation-middleware", () => {
   const port = 3039;

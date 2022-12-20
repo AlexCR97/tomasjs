@@ -22,7 +22,7 @@ export class FluentValidationSetup extends ContainerSetupFactory {
       ) {
         for (const validator of this.options.validators) {
           const token = ValidatorInjectionTokenFactory.create(validator);
-          container.register(token, { useClass: validator });
+          container.addClass(validator, token);
           FluentValidationSetup._registeredTokens.push(token);
         }
       }

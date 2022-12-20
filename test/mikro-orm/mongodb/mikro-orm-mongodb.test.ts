@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { afterEach, beforeEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "../../utils/server";
 import { tick } from "../../utils/time";
+import { injectable } from "../../../src";
 import { AppBuilder, ContainerBuilder } from "../../../src/builder";
 import { HttpContext, StatusCodes } from "../../../src/core";
 import { Endpoint } from "../../../src/endpoints";
@@ -22,7 +23,6 @@ import {
   MikroORM,
 } from "@mikro-orm/core";
 import { ObjectId } from "@mikro-orm/mongodb";
-import { injectable } from "tsyringe";
 import fetch from "node-fetch";
 
 @Entity()
