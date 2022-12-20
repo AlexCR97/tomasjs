@@ -7,6 +7,7 @@ import { ResponseAdapter } from "@/responses";
 import { Request, Response } from "express";
 import { Endpoint } from "./Endpoint";
 import { EndpointHandler, IsEndpointHandler } from "./types";
+import { IEndpoint } from "./IEndpoint";
 
 export abstract class EndpointAdapter {
   private constructor() {}
@@ -27,8 +28,11 @@ export abstract class EndpointAdapter {
 
   static fromTypeToExpress<TResponse>(endpoint: EndpointHandler<TResponse>): ExpressRequestHandler {
     return async (req, res) => {
+      console.log("express!");
       const context = HttpContextResolver.fromExpress(req, res);
+      console.log("runtime context", context);
       const result = await endpoint(context);
+      console.log("result", result);
       ResponseAdapter.fromThomasToExpress(res, result);
     };
   }
@@ -50,6 +54,24 @@ export abstract class EndpointAdapter {
     };
 
     return [...expressMiddlewareHandlers, expressRequestHandler];
+  }
+
+  static fromInstanceToExpressx<TEndpoint extends object>(
+    endpoint: TEndpoint
+  ): (ExpressMiddlewareHandler | ExpressRequestHandler)[] {
+    const expressRequestHandler = async (req: Request, res: Response) => {
+      console.log("express handler");
+
+      HttpContextResolver.fromExpress(req, res);
+      console.log("after HttpContextResolver");
+
+      const result = await (endpoint as IEndpoint).handle();
+      console.log("result", result);
+
+      ResponseAdapter.fromThomasToExpress(res, result);
+    };
+
+    return [expressRequestHandler];
   }
 
   static fromConstructorToExpress(

@@ -21,6 +21,7 @@
     "publish": "cd ./dist && npm publish",
     "test": "jest",
     "testw": "jest --watchAll --verbose",
+    "testw-endpoints-new": "jest --testNamePattern endpoints-new --watchAll --verbose",
     "testw-dist": "jest --testNamePattern dist-test --watchAll --verbose",
     "testw-error-middleware": "jest --testNamePattern error-middleware --watchAll --verbose",
     "testw-auth-jwt-middleware": "jest --testNamePattern auth-jwt-middleware --watchAll --verbose",

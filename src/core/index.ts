@@ -1,4 +1,8 @@
+export { inBody } from "./@inBody";
+export { inHttp } from "./@inHttp";
+export { inHttpContextAccessor } from "./@inHttpContextAccessor";
 export { HttpContext } from "./HttpContext";
+export { HttpContextAccessor } from "./HttpContextAccessor";
 export { HttpContextBinder } from "./HttpContextBinder";
 export { HttpContextResolver } from "./HttpContextResolver";
 export { HttpMethod } from "./HttpMethod";

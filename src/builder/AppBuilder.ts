@@ -19,11 +19,13 @@ import {
   MiddlewareHandler,
 } from "@/middleware";
 import { isErrorMiddlewareHandler } from "@/middleware/ErrorMiddlewareHandler";
+import { HttpMethod } from "@/core";
 
 export class AppBuilder {
   private readonly app: Express;
 
   constructor() {
+    // Internal setup
     this.app = express();
   }
 
@@ -209,6 +211,38 @@ export class AppBuilder {
     return this;
   }
 
+  useEndpointx<TEndpoint extends object>(endpoint: TEndpoint | constructor<TEndpoint>): AppBuilder {
+    if (typeof endpoint === "function") {
+      console.log("endpoint is constructor!");
+      const endpointInstance = container.resolve(endpoint);
+      console.log("resolved endpointInstance", endpointInstance);
+      return this.useEndpointInstancex(endpointInstance);
+    }
+
+    console.log("endpoint is instance!");
+    return this.useEndpointInstancex(endpoint);
+  }
+
+  private useEndpointInstancex<TEndpoint extends object>(endpoint: TEndpoint): AppBuilder {
+    const method: HttpMethod = (endpoint as any)._endpoint_httpMethod ?? "get";
+    console.log("method", method);
+
+    const endpointPath: string = (endpoint as any)._endpoint_path;
+    console.log("endpointPath", endpointPath);
+
+    const expressPath =
+      endpointPath !== undefined && endpointPath !== null && endpointPath.trim().length > 0
+        ? `/${endpointPath}`
+        : "/";
+    console.log("expressPath", expressPath);
+
+    const expressHandlers = EndpointAdapter.fromInstanceToExpressx(endpoint);
+    console.log("expressHandlers", expressHandlers);
+
+    this.app[method](expressPath, ...expressHandlers);
+    return this;
+  }
+
   /* #endregion */
 
   /* #region Endpoint Groups */
@@ -261,6 +295,8 @@ export class AppBuilder {
 
   // TODO Add return type
   async buildAsync(port: number): Promise<any> {
+    // Internal setup
+
     return await this.createServerAsync(port);
   }
 
