@@ -9,7 +9,7 @@ import { AnonymousEndpoint, EndpointGroup } from "../../src/endpoints";
 import { AnonymousMiddleware } from "../../src/middleware";
 import { OkResponse, UnauthorizedResponse } from "../../src/responses/status-codes";
 
-describe(EndpointGroup.name, () => {
+describe("endpoint-groups", () => {
   const port = 3034;
   const serverAddress = `http://localhost:${port}`;
   const serverTeardownOffsetMilliseconds = 50;
@@ -28,26 +28,26 @@ describe(EndpointGroup.name, () => {
   it(`An ${EndpointGroup.name} with a base path works`, async () => {
     // Arrange
     const basePath = "base-path/to/resources";
-    const resourceDefaultPath = "";
+    const resourceDefaultPath = "/";
     const resourcePath1 = "resource-1";
     const resourcePath2 = "resource-2";
 
     server = await new AppBuilder()
       .useEndpointGroup((endpoints) =>
         endpoints
-          .basePath(`/${basePath}`)
+          .basePath(basePath)
           .useEndpoint(
-            new AnonymousEndpoint("get", `/${resourceDefaultPath}`, (context: HttpContext) => {
+            new AnonymousEndpoint("get", resourceDefaultPath, (context: HttpContext) => {
               return new OkResponse();
             })
           )
           .useEndpoint(
-            new AnonymousEndpoint("get", `/${resourcePath1}`, (context: HttpContext) => {
+            new AnonymousEndpoint("get", resourcePath1, (context: HttpContext) => {
               return new OkResponse();
             })
           )
           .useEndpoint(
-            new AnonymousEndpoint("get", `/${resourcePath2}`, (context: HttpContext) => {
+            new AnonymousEndpoint("get", resourcePath2, (context: HttpContext) => {
               return new OkResponse();
             })
           )
@@ -76,7 +76,7 @@ describe(EndpointGroup.name, () => {
     server = await new AppBuilder()
       .useEndpointGroup((endpoints) =>
         endpoints
-          .basePath(`/${basePath}`)
+          .basePath(basePath)
           .onBefore(
             new AnonymousMiddleware((context: HttpContext, next) => {
               const token = context.request.headers[headerKey];
@@ -95,12 +95,12 @@ describe(EndpointGroup.name, () => {
             })
           )
           .useEndpoint(
-            new AnonymousEndpoint("post", `/${resourcePath1}`, (context: HttpContext) => {
+            new AnonymousEndpoint("post", resourcePath1, (context: HttpContext) => {
               return context.request.headers[headerKey];
             })
           )
           .useEndpoint(
-            new AnonymousEndpoint("post", `/${resourcePath2}`, (context: HttpContext) => {
+            new AnonymousEndpoint("post", resourcePath2, (context: HttpContext) => {
               return context.request.headers[headerKey];
             })
           )

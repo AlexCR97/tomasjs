@@ -5,9 +5,16 @@ import { ControllerAction } from "@/controllers/types";
 import {
   ExpressErrorMiddlewareHandler,
   ExpressMiddlewareHandler,
+  ExpressPathAdapter,
   ExpressRequestHandler,
 } from "@/core/express";
-import { Endpoint, EndpointAdapter, EndpointGroup, EndpointGroupAdapter } from "@/endpoints";
+import {
+  Endpoint,
+  EndpointAdapter,
+  EndpointGroup,
+  EndpointGroupAdapter,
+  EndpointMetadata,
+} from "@/endpoints";
 import {
   ErrorMiddleware,
   ErrorMiddlewareAdapter,
@@ -205,7 +212,10 @@ export class AppBuilder {
 
   private useEndpointInstance(endpoint: Endpoint): AppBuilder {
     const expressHandlers = EndpointAdapter.fromInstanceToExpress(endpoint);
-    this.app[endpoint._method](endpoint._path, ...expressHandlers);
+    const metadata = new EndpointMetadata(endpoint);
+    const endpointMethod = metadata.httpMethodOrDefault;
+    const endpointPath = ExpressPathAdapter.adapt(metadata.path);
+    this.app[endpointMethod](endpointPath, ...expressHandlers);
     return this;
   }
 

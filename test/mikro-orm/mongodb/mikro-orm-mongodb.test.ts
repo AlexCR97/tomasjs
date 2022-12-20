@@ -5,7 +5,7 @@ import { tick } from "../../utils/time";
 import { injectable } from "../../../src";
 import { AppBuilder, ContainerBuilder } from "../../../src/builder";
 import { HttpContext, StatusCodes } from "../../../src/core";
-import { Endpoint } from "../../../src/endpoints";
+import { endpoint, Endpoint, path } from "../../../src/endpoints";
 import {
   MikroOrmResolver,
   MikroOrmSetup,
@@ -84,10 +84,11 @@ describe("MikroORM - MongoDB", () => {
     const resourcePath = "users";
 
     @injectable()
+    @endpoint("post")
+    @path(resourcePath)
     class CreateUserEndpoint extends Endpoint {
       constructor(@inMikroOrm("mongo") private readonly orm: MikroORM) {
         super();
-        this.method("post").path(`/${resourcePath}`);
       }
       handle(context: HttpContext) {
         const message = this.orm?.em !== undefined ? successMessage : ":(";
@@ -126,10 +127,11 @@ describe("MikroORM - MongoDB", () => {
     const resourcePath = "users";
 
     @injectable()
+    @endpoint("post")
+    @path(resourcePath)
     class CreateUserEndpoint extends Endpoint {
       constructor(@inMikroOrm("mongo") private readonly orm: MikroORM) {
         super();
-        this.method("post").path(`/${resourcePath}`);
       }
       async handle(context: HttpContext) {
         const usersRepository = this.orm.em.getRepository(User);
@@ -177,10 +179,11 @@ describe("MikroORM - MongoDB", () => {
     const resourcePath = "users";
 
     @injectable()
+    @endpoint("post")
+    @path(resourcePath)
     class CreateUserEndpoint extends Endpoint {
       constructor(@inRepository(User) private readonly usersRepository: Repository<User>) {
         super();
-        this.method("post").path(`/${resourcePath}`);
       }
       async handle(context: HttpContext) {
         const createdUserId = await this.usersRepository.nativeInsert({

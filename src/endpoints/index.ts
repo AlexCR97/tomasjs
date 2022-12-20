@@ -1,5 +1,9 @@
+export { endpoint } from "./@endpoint";
+export { path } from "./@path";
 export { AnonymousEndpoint } from "./AnonymousEndpoint";
 export { Endpoint } from "./Endpoint";
 export { EndpointAdapter } from "./EndpointAdapter";
 export { EndpointGroup } from "./EndpointGroup";
 export { EndpointGroupAdapter } from "./EndpointGroupAdapter";
+export { EndpointMetadata } from "./EndpointMetadata";
+export { EndpointTokenFactory } from "./EndpointTokenFactory";

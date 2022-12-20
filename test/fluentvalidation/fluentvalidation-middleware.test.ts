@@ -7,7 +7,7 @@ import { tick } from "../utils/time";
 import { injectable } from "../../src";
 import { HttpContext, StatusCodes } from "../../src/core";
 import fetch from "node-fetch";
-import { Endpoint } from "../../src/endpoints";
+import { endpoint, Endpoint, path } from "../../src/endpoints";
 import {
   FluentValidationMiddleware,
   FluentValidationSetup,
@@ -47,10 +47,11 @@ describe("fluentvalidation-middleware", () => {
       }
     }
 
+    @endpoint("post")
+    @path("sign-up")
     class SignUpEndpoint extends Endpoint {
       constructor() {
         super();
-        this.method("post").path("/sign-up");
         this.onBefore(new FluentValidationMiddleware<SignUpRequest>(new SignUpValidator()));
       }
       handle(context: HttpContext) {
@@ -90,10 +91,11 @@ describe("fluentvalidation-middleware", () => {
       }
     }
 
+    @endpoint("post")
+    @path("sign-up")
     class SignUpEndpoint extends Endpoint {
       constructor() {
         super();
-        this.method("post").path("/sign-up");
         this.onBefore(new FluentValidationMiddleware<SignUpRequest>(new SignUpValidator()));
       }
       handle(context: HttpContext) {
@@ -135,10 +137,11 @@ describe("fluentvalidation-middleware", () => {
     }
 
     @injectable()
+    @endpoint("post")
+    @path("sign-up")
     class SignUpEndpoint extends Endpoint {
       constructor(@inValidator(SignUpValidator) private readonly validator: SignUpValidator) {
         super();
-        this.method("post").path("/sign-up");
       }
       handle(context: HttpContext) {
         this.validator.validate(context.request.body);

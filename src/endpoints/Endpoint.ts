@@ -1,5 +1,5 @@
 import { ClassConstructor } from "@/container";
-import { HttpContext, HttpMethod } from "@/core";
+import { HttpContext } from "@/core";
 import {
   Middleware,
   MiddlewareFactory,
@@ -8,28 +8,6 @@ import {
 } from "@/middleware";
 
 export abstract class Endpoint {
-  /* #region HTTP Method */
-
-  _method: HttpMethod = "get"; // TODO Make private?
-
-  method(method: HttpMethod): Endpoint {
-    this._method = method;
-    return this;
-  }
-
-  /* #endregion */
-
-  /* #region Path */
-
-  _path = "/"; // TODO Make private?
-
-  path(path: string): Endpoint {
-    this._path = path;
-    return this;
-  }
-
-  /* #endregion */
-
   /* #region On Before Middleware */
 
   readonly onBeforeMiddlewares: (

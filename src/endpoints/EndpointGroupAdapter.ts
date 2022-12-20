@@ -1,10 +1,12 @@
 import { ClassConstructor, internalContainer } from "@/container";
 import { HttpMethod } from "@/core";
+import { ExpressPathAdapter } from "@/core/express";
 import { MiddlewareAdapter, MiddlewareFactoryAdapter } from "@/middleware";
 import { Router } from "express";
 import { Endpoint } from "./Endpoint";
 import { EndpointAdapter } from "./EndpointAdapter";
 import { EndpointGroup } from "./EndpointGroup";
+import { EndpointMetadata } from "./EndpointMetadata";
 
 export abstract class EndpointGroupAdapter {
   private constructor() {}
@@ -27,6 +29,7 @@ export abstract class EndpointGroupAdapter {
       endpoints.endpoints.forEach((endpoint) => {
         const endpointMethod = this.getEndpointMethod(endpoint);
         const endpointPath = this.getEndpointPath(endpoint);
+        console.log("endpointPath", endpointPath);
         const expressHandlers = EndpointAdapter.fromThomasToExpress(endpoint);
         router[endpointMethod](endpointPath, ...expressHandlers);
       });
@@ -34,22 +37,21 @@ export abstract class EndpointGroupAdapter {
 
     return {
       router,
-      routerBasePath:
-        endpoints._basePath !== undefined && endpoints._basePath.trim().length > 0
-          ? endpoints._basePath
-          : "/",
+      routerBasePath: ExpressPathAdapter.adapt(endpoints._basePath),
     };
   }
 
   private static getEndpointMethod(endpoint: Endpoint | ClassConstructor<Endpoint>): HttpMethod {
     const endpointInstance =
       endpoint instanceof Endpoint ? endpoint : internalContainer.get(endpoint);
-    return endpointInstance._method;
+    const metadata = new EndpointMetadata(endpointInstance);
+    return metadata.httpMethodOrDefault;
   }
 
   private static getEndpointPath(endpoint: Endpoint | ClassConstructor<Endpoint>): string {
     const endpointInstance =
       endpoint instanceof Endpoint ? endpoint : internalContainer.get(endpoint);
-    return endpointInstance._path;
+    const metadata = new EndpointMetadata(endpointInstance);
+    return ExpressPathAdapter.adapt(metadata.path);
   }
 }
