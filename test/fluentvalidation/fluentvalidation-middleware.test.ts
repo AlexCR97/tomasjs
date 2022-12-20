@@ -8,7 +8,6 @@ import { HttpContext, StatusCodes } from "../../src/core";
 import fetch from "node-fetch";
 import { Endpoint } from "../../src/endpoints";
 import {
-  AutoFluentValidationMiddleware,
   FluentValidationMiddleware,
   FluentValidationSetup,
   inValidator,
@@ -170,61 +169,5 @@ describe("fluentvalidation-middleware", () => {
     });
 
     expect(response.status).toBe(StatusCodes.ok);
-  });
-
-  it(`The validators should be inferred and used automatically by using ${FluentValidationSetup.name} and ${FluentValidationMiddleware.name} together`, async () => {
-    // Arrange
-    interface SignUpRequest {
-      email: string;
-      password: string;
-    }
-
-    @injectable()
-    class SignUpValidator extends Validator<SignUpRequest> {
-      constructor() {
-        super();
-        this.ruleFor("email").emailAddress();
-        this.ruleFor("password").minLength(6);
-      }
-    }
-
-    @injectable()
-    class SignUpEndpoint extends Endpoint {
-      constructor() {
-        super();
-        this.method("post").path("/sign-up");
-      }
-      handle(context: HttpContext) {
-        return new OkResponse();
-      }
-    }
-
-    await new ContainerBuilder()
-      .setup(
-        new FluentValidationSetup({
-          validators: [SignUpValidator],
-        })
-      )
-      .buildAsync();
-
-    server = await new AppBuilder()
-      .useJson()
-      .useMiddleware(new AutoFluentValidationMiddleware())
-      .useEndpoint(SignUpEndpoint)
-      .buildAsync(port);
-
-    // Act/Assert
-    const body: SignUpRequest = {
-      email: "invalid_email_value",
-      password: "", // invalid password
-    };
-
-    const response = await fetch(`${serverAddress}/sign-up`, {
-      method: "post",
-      body: JSON.stringify(body),
-      headers: { "Content-Type": "application/json" },
-    });
-
-    expect(response.status).toBe(StatusCodes.badRequest);
   });
 });

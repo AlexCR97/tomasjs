@@ -27,7 +27,6 @@ export class FluentValidationMiddleware<
     }
 
     const results = validator.validate(body);
-    console.log("results", results);
 
     if (results === undefined || results === null || Object.keys(results).length === 0) {
       return next();

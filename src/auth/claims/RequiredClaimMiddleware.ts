@@ -12,14 +12,12 @@ export class RequiredClaimMiddleware extends Middleware {
     const claims = context.user?.claims;
 
     if (claims === undefined || claims === null) {
-      console.log("no claims!");
       return context.respond(new ForbiddenResponse());
     }
 
     const hasClaim = Object.keys(claims).some((key) => key === this.requiredClaim.type);
 
     if (!hasClaim) {
-      console.log("claim not found");
       return context.respond(new ForbiddenResponse());
     }
 
@@ -30,7 +28,6 @@ export class RequiredClaimMiddleware extends Middleware {
     const claimValue = claims[this.requiredClaim.type];
 
     if (claimValue !== this.requiredClaim.value) {
-      console.log("invalid claim");
       return context.respond(new ForbiddenResponse());
     }
 
