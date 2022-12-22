@@ -1,5 +1,4 @@
-import { ClassConstructor, internalContainer } from "@/container";
-import { isConstructorToken } from "@/core/tsyringe";
+import { ClassConstructor, internalContainer, isClassConstructor } from "@/container";
 import { Middleware } from "./Middleware";
 import { MiddlewareFactory } from "./MiddlewareFactory";
 import { isMiddlewareFactoryHandler, MiddlewareFactoryHandler } from "./MiddlewareFactoryHandler";
@@ -28,7 +27,7 @@ export abstract class MiddlewareFactoryAdapter {
     return (
       isMiddlewareFactoryHandler(obj) ||
       obj instanceof MiddlewareFactory<TMiddleware> ||
-      isConstructorToken(obj)
+      isClassConstructor(obj)
     );
   }
 

@@ -1,5 +1,4 @@
 import express, { json, Express, Router, text } from "express";
-import { constructor } from "tsyringe/dist/typings/types";
 import { Controller } from "@/controllers";
 import { ControllerAction } from "@/controllers/types";
 import {
@@ -14,6 +13,7 @@ import {
   EndpointGroup,
   EndpointGroupAdapter,
   EndpointMetadata,
+  isEndpoint,
 } from "@/endpoints";
 import {
   ErrorMiddleware,
@@ -25,7 +25,7 @@ import {
   MiddlewareHandler,
 } from "@/middleware";
 import { isErrorMiddlewareHandler } from "@/middleware/ErrorMiddlewareHandler";
-import { internalContainer } from "@/container";
+import { ClassConstructor, internalContainer } from "@/container";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -67,7 +67,7 @@ export class AppBuilder {
     middleware:
       | MiddlewareHandler
       | TMiddleware
-      | constructor<TMiddleware>
+      | ClassConstructor<TMiddleware>
       | MiddlewareFactory<TMiddleware>
   ): AppBuilder {
     return this.useMiddlewareFor(middleware, { app: this.app });
@@ -77,7 +77,7 @@ export class AppBuilder {
     middleware:
       | MiddlewareHandler
       | TMiddleware
-      | constructor<TMiddleware>
+      | ClassConstructor<TMiddleware>
       | MiddlewareFactory<TMiddleware>,
     source: { app?: Express; router?: Router }
   ): AppBuilder {
@@ -95,7 +95,7 @@ export class AppBuilder {
   /* #region ErrorMiddleware */
 
   useErrorMiddleware(
-    middleware: ErrorMiddlewareHandler | ErrorMiddleware | constructor<ErrorMiddleware>
+    middleware: ErrorMiddlewareHandler | ErrorMiddleware | ClassConstructor<ErrorMiddleware>
   ): AppBuilder {
     let expressErrorMiddleware: ExpressErrorMiddlewareHandler;
 
@@ -117,7 +117,7 @@ export class AppBuilder {
   /* #region Controllers */
 
   useController<TController extends Controller>(
-    controller: TController | constructor<TController>
+    controller: TController | ClassConstructor<TController>
   ): AppBuilder {
     if (controller instanceof Controller) {
       const router = this.toRouter(controller);
@@ -200,17 +200,22 @@ export class AppBuilder {
   /* #region Endpoints */
 
   useEndpoint<TEndpoint extends Endpoint = Endpoint>(
-    endpoint: TEndpoint | constructor<TEndpoint>
+    endpoint: TEndpoint | ClassConstructor<TEndpoint>
   ): AppBuilder {
-    if (endpoint instanceof Endpoint) {
+    if (isEndpoint(endpoint)) {
       return this.useEndpointInstance(endpoint);
     }
 
+    console.log("resolving endpoint...", endpoint);
+    const endpointName = endpoint.name;
+    console.log("endpointName", endpointName);
     const endpointInstance = internalContainer.get(endpoint);
+    console.log("endpointInstance", endpointInstance);
     return this.useEndpointInstance(endpointInstance);
   }
 
   private useEndpointInstance(endpoint: Endpoint): AppBuilder {
+    console.log("endpoint", endpoint);
     const expressHandlers = EndpointAdapter.fromInstanceToExpress(endpoint);
     const metadata = new EndpointMetadata(endpoint);
     const endpointMethod = metadata.httpMethodOrDefault;
@@ -271,6 +276,7 @@ export class AppBuilder {
 
   // TODO Add return type
   async buildAsync(port: number) {
+    internalContainer.addClass;
     return await this.createServerAsync(port);
   }
 

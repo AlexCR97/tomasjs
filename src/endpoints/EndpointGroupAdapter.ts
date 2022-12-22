@@ -7,6 +7,7 @@ import { Endpoint } from "./Endpoint";
 import { EndpointAdapter } from "./EndpointAdapter";
 import { EndpointGroup } from "./EndpointGroup";
 import { EndpointMetadata } from "./EndpointMetadata";
+import { isEndpoint } from "./isEndpoint";
 
 export abstract class EndpointGroupAdapter {
   private constructor() {}
@@ -29,7 +30,6 @@ export abstract class EndpointGroupAdapter {
       endpoints.endpoints.forEach((endpoint) => {
         const endpointMethod = this.getEndpointMethod(endpoint);
         const endpointPath = this.getEndpointPath(endpoint);
-        console.log("endpointPath", endpointPath);
         const expressHandlers = EndpointAdapter.fromThomasToExpress(endpoint);
         router[endpointMethod](endpointPath, ...expressHandlers);
       });
@@ -42,15 +42,13 @@ export abstract class EndpointGroupAdapter {
   }
 
   private static getEndpointMethod(endpoint: Endpoint | ClassConstructor<Endpoint>): HttpMethod {
-    const endpointInstance =
-      endpoint instanceof Endpoint ? endpoint : internalContainer.get(endpoint);
+    const endpointInstance = isEndpoint(endpoint) ? endpoint : internalContainer.get(endpoint);
     const metadata = new EndpointMetadata(endpointInstance);
     return metadata.httpMethodOrDefault;
   }
 
   private static getEndpointPath(endpoint: Endpoint | ClassConstructor<Endpoint>): string {
-    const endpointInstance =
-      endpoint instanceof Endpoint ? endpoint : internalContainer.get(endpoint);
+    const endpointInstance = isEndpoint(endpoint) ? endpoint : internalContainer.get(endpoint);
     const metadata = new EndpointMetadata(endpointInstance);
     return ExpressPathAdapter.adapt(metadata.path);
   }

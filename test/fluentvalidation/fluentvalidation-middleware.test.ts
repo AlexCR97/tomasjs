@@ -1,19 +1,19 @@
 import "reflect-metadata";
 import "express-async-errors";
 import { afterEach, describe, it } from "@jest/globals";
+import fetch from "node-fetch";
+import { Validator } from "fluentvalidation-ts";
 import { tryCloseServerAsync } from "../utils/server";
-import { AppBuilder, ContainerBuilder } from "../../src/builder";
 import { tick } from "../utils/time";
 import { injectable } from "../../src";
+import { AppBuilder, ContainerBuilder } from "../../src/builder";
 import { HttpContext, StatusCodes } from "../../src/core";
-import fetch from "node-fetch";
-import { endpoint, Endpoint, path } from "../../src/endpoints";
+import { endpoint, Endpoint, middleware, path } from "../../src/endpoints";
 import {
   FluentValidationMiddleware,
   FluentValidationSetup,
   inValidator,
 } from "../../src/fluentvalidation";
-import { Validator } from "fluentvalidation-ts";
 import { OkResponse } from "../../src/responses/status-codes";
 
 describe("fluentvalidation-middleware", () => {
@@ -49,11 +49,8 @@ describe("fluentvalidation-middleware", () => {
 
     @endpoint("post")
     @path("sign-up")
-    class SignUpEndpoint extends Endpoint {
-      constructor() {
-        super();
-        this.onBefore(new FluentValidationMiddleware<SignUpRequest>(new SignUpValidator()));
-      }
+    @middleware(new FluentValidationMiddleware<SignUpRequest>(new SignUpValidator()))
+    class SignUpEndpoint implements Endpoint {
       handle(context: HttpContext) {
         return new OkResponse();
       }
@@ -93,11 +90,8 @@ describe("fluentvalidation-middleware", () => {
 
     @endpoint("post")
     @path("sign-up")
-    class SignUpEndpoint extends Endpoint {
-      constructor() {
-        super();
-        this.onBefore(new FluentValidationMiddleware<SignUpRequest>(new SignUpValidator()));
-      }
+    @middleware(new FluentValidationMiddleware<SignUpRequest>(new SignUpValidator()))
+    class SignUpEndpoint implements Endpoint {
       handle(context: HttpContext) {
         return new OkResponse();
       }
@@ -139,10 +133,8 @@ describe("fluentvalidation-middleware", () => {
     @injectable()
     @endpoint("post")
     @path("sign-up")
-    class SignUpEndpoint extends Endpoint {
-      constructor(@inValidator(SignUpValidator) private readonly validator: SignUpValidator) {
-        super();
-      }
+    class SignUpEndpoint implements Endpoint {
+      constructor(@inValidator(SignUpValidator) private readonly validator: SignUpValidator) {}
       handle(context: HttpContext) {
         this.validator.validate(context.request.body);
         return new OkResponse();

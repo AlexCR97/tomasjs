@@ -1,5 +1,5 @@
-import { injectable as tsyringe_injectable } from "tsyringe";
+import { injectable as inversify_injectable } from "inversify";
 
 export function injectable() {
-  return tsyringe_injectable();
+  return inversify_injectable();
 }

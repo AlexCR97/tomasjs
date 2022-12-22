@@ -5,6 +5,8 @@ import { MiddlewareAdapter, MiddlewareFactoryAdapter } from "@/middleware";
 import { ResponseAdapter } from "@/responses";
 import { Request, Response } from "express";
 import { Endpoint } from "./Endpoint";
+import { EndpointMetadata } from "./EndpointMetadata";
+import { isEndpoint } from "./isEndpoint";
 import { EndpointHandler, IsEndpointHandler } from "./types";
 
 export abstract class EndpointAdapter {
@@ -17,7 +19,7 @@ export abstract class EndpointAdapter {
       return [this.fromTypeToExpress(endpoint)];
     }
 
-    if (endpoint instanceof Endpoint) {
+    if (isEndpoint(endpoint)) {
       return this.fromInstanceToExpress(endpoint);
     }
 
@@ -35,12 +37,17 @@ export abstract class EndpointAdapter {
   static fromInstanceToExpress(
     endpoint: Endpoint
   ): (ExpressMiddlewareHandler | ExpressRequestHandler)[] {
-    const expressMiddlewareHandlers = endpoint.onBeforeMiddlewares.map((middleware) => {
-      const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(middleware)
-        ? MiddlewareFactoryAdapter.from(middleware)
-        : middleware;
-      return MiddlewareAdapter.from(middlewareToAdapt);
-    });
+    const endpointMetadata = new EndpointMetadata(endpoint);
+    let expressMiddlewareHandlers: ExpressMiddlewareHandler[] = [];
+
+    if (endpointMetadata.middlewares !== undefined && endpointMetadata.middlewares.length > 0) {
+      expressMiddlewareHandlers = endpointMetadata.middlewares.map((middleware) => {
+        const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(middleware)
+          ? MiddlewareFactoryAdapter.from(middleware)
+          : middleware;
+        return MiddlewareAdapter.from(middlewareToAdapt);
+      });
+    }
 
     const expressRequestHandler = async (req: Request, res: Response) => {
       const context = HttpContextResolver.fromExpress(req, res);
@@ -55,13 +62,17 @@ export abstract class EndpointAdapter {
     endpoint: ClassConstructor<Endpoint>
   ): (ExpressMiddlewareHandler | ExpressRequestHandler)[] {
     const endpointInstance = internalContainer.get(endpoint);
+    const endpointMetadata = new EndpointMetadata(endpointInstance);
+    let expressMiddlewareHandlers: ExpressMiddlewareHandler[] = [];
 
-    const expressMiddlewareHandlers = endpointInstance.onBeforeMiddlewares.map((middleware) => {
-      const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(middleware)
-        ? MiddlewareFactoryAdapter.from(middleware)
-        : middleware;
-      return MiddlewareAdapter.from(middlewareToAdapt);
-    });
+    if (endpointMetadata.middlewares !== undefined && endpointMetadata.middlewares.length > 0) {
+      expressMiddlewareHandlers = endpointMetadata.middlewares.map((middleware) => {
+        const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(middleware)
+          ? MiddlewareFactoryAdapter.from(middleware)
+          : middleware;
+        return MiddlewareAdapter.from(middlewareToAdapt);
+      });
+    }
 
     const expressRequestHandler = async (req: Request, res: Response) => {
       const context = HttpContextResolver.fromExpress(req, res);

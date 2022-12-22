@@ -24,12 +24,16 @@
     "testw-dist": "jest --testNamePattern dist-test --watchAll --verbose",
     "testw-endpoints": "jest --testNamePattern endpoints --watchAll --verbose",
     "testw-endpoint-groups": "jest --testNamePattern endpoint-groups --watchAll --verbose",
+    "testw-endpoint-isEndpoint": "jest --testNamePattern isEndpoint --watchAll --verbose",
+    "testw-endpoint-metadata": "jest --testNamePattern EndpointMetadata --watchAll --verbose",
+    "testw-endpoint-decorator": "jest --testNamePattern endpoint-decorator --watchAll --verbose",
+    "testw-endpoint-path-decorator": "jest --testNamePattern path-decorator --watchAll --verbose",
     "testw-error-middleware": "jest --testNamePattern error-middleware --watchAll --verbose",
     "testw-auth-jwt-middleware": "jest --testNamePattern auth-jwt-middleware --watchAll --verbose",
     "testw-auth-required-claim-middleware": "jest --testNamePattern auth-required-claim-middleware --watchAll --verbose",
     "testw-fluentvalidation-middleware": "jest --testNamePattern fluentvalidation-middleware --watchAll --verbose",
     "testw-sample-crud": "jest --testNamePattern crud-sample --watchAll --verbose",
-    "testw-mikro-orm": "jest --testNamePattern MikroORM --watchAll --verbose --detectOpenHandles",
+    "testw-mikro-orm": "jest --testNamePattern mikro-orm --watchAll --verbose --detectOpenHandles",
     "serve-sample-controllers": "ts-node -r tsconfig-paths/register ./samples/crud-with-controllers/main.ts",
     "watch-sample-controllers": "nodemon -r tsconfig-paths/register ./samples/crud-with-controllers/main.ts",
     "serve-sample-endpoints": "ts-node -r tsconfig-paths/register ./samples/crud-with-endpoints/main.ts",
@@ -51,7 +55,7 @@
     "ts-node": "^10.9.1",
     "tsc-alias": "^1.8.2",
     "tsconfig-paths": "^4.1.0",
-    "typescript": "^4.9.3"
+    "typescript": "^4.9.4"
   },
   "dependencies": {
     "@mikro-orm/core": "^5.6.0",
@@ -60,6 +64,7 @@
     "express": "^4.18.2",
     "express-async-errors": "^3.1.1",
     "fluentvalidation-ts": "^2.3.0",
+    "inversify": "^6.0.1",
     "reflect-metadata": "^0.1.13",
     "tsyringe": "^4.7.0"
   }

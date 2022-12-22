@@ -1,6 +1,8 @@
-import { inject as tsyringe_inject } from "tsyringe";
+import { inject as inversify_inject } from "inversify";
 import { Token } from "./Token";
+import { TokenAdapter } from "./TokenAdapter";
 
 export function inject<T>(token: Token<T>) {
-  return tsyringe_inject(token);
+  const tokenStr = TokenAdapter.toString(token);
+  return inversify_inject<T>(tokenStr);
 }

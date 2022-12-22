@@ -3,7 +3,7 @@ import fetch from "node-fetch";
 import { afterEach, describe, it } from "@jest/globals";
 import { AppBuilder } from "../../src/builder";
 import { HttpContext, StatusCodes } from "../../src/core";
-import { AnonymousEndpoint, endpoint, Endpoint, path } from "../../src/endpoints";
+import { AnonymousEndpoint, endpoint, Endpoint, middleware, path } from "../../src/endpoints";
 import { AnonymousMiddleware } from "../../src/middleware";
 import { JsonResponse, PlainTextResponse } from "../../src/responses";
 import { OkResponse, StatusCodeResponse } from "../../src/responses/status-codes";
@@ -26,9 +26,9 @@ describe("endpoints", () => {
     await tryCloseServerAsync(server);
   });
 
-  it(`An ${Endpoint.name} instance works`, async () => {
+  it(`An Endpoint instance works`, async () => {
     // Arrange
-    class TestEndpoint extends Endpoint {
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
         return new OkResponse();
       }
@@ -43,9 +43,9 @@ describe("endpoints", () => {
     expect(response.status).toEqual(StatusCodes.ok);
   });
 
-  it(`An ${Endpoint.name} constructor works`, async () => {
+  it(`An Endpoint constructor works`, async () => {
     // Arrange
-    class TestEndpoint extends Endpoint {
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext): OkResponse {
         return new OkResponse();
       }
@@ -79,7 +79,7 @@ describe("endpoints", () => {
 
     @endpoint()
     @path(StatusCodeEndpoint.path)
-    class StatusCodeEndpoint extends Endpoint {
+    class StatusCodeEndpoint implements Endpoint {
       static path = "status-code";
       static expectedStatusCode = StatusCodes.noContent;
       handle(context: HttpContext) {
@@ -89,7 +89,7 @@ describe("endpoints", () => {
 
     @endpoint()
     @path(PlainTextEndpoint.path)
-    class PlainTextEndpoint extends Endpoint {
+    class PlainTextEndpoint implements Endpoint {
       static path = "plain-text";
       static expectedPlainText = "plain text test";
       handle(context: HttpContext) {
@@ -99,7 +99,7 @@ describe("endpoints", () => {
 
     @endpoint()
     @path(JsonEndpoint.path)
-    class JsonEndpoint extends Endpoint {
+    class JsonEndpoint implements Endpoint {
       static path = "json";
       static expectedJson = { key: "test-key", value: "test-value" };
       handle(context: HttpContext) {
@@ -130,7 +130,7 @@ describe("endpoints", () => {
 
     @endpoint()
     @path(expectedPath)
-    class TestEndpoint extends Endpoint {
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
         return context.request.path;
       }
@@ -153,7 +153,7 @@ describe("endpoints", () => {
       value: string;
     }
 
-    class TestEndpoint extends Endpoint {
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
         return new JsonResponse(context.request.headers);
       }
@@ -191,7 +191,7 @@ describe("endpoints", () => {
 
     @endpoint()
     @path(expectedPath)
-    class TestEndpoint extends Endpoint {
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
         return new JsonResponse({
           id: Number(context.request.params.id),
@@ -224,7 +224,7 @@ describe("endpoints", () => {
 
     @endpoint()
     @path(expectedPath)
-    class TestEndpoint extends Endpoint {
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
         return new JsonResponse({
           pageIndex: Number(context.request.query.pageIndex),
@@ -252,7 +252,7 @@ describe("endpoints", () => {
     const expectedResponse = "Plain text body works!";
 
     @endpoint("post")
-    class TestEndpoint extends Endpoint {
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
         return context.request.body;
       }
@@ -280,7 +280,7 @@ describe("endpoints", () => {
     }
 
     @endpoint("post")
-    class TestEndpoint extends Endpoint {
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
         const body = context.request.getBody<TestBody>();
         return new JsonResponse(body, {
@@ -316,22 +316,19 @@ describe("endpoints", () => {
 
     @endpoint("post")
     @path(expectedPath)
-    class TestEndpoint extends Endpoint {
-      constructor() {
-        super();
-        this.onBefore(
-          new AnonymousMiddleware((context, next) => {
-            const token = context.request.headers[headerKey];
+    @middleware(
+      new AnonymousMiddleware((context, next) => {
+        const token = context.request.headers[headerKey];
 
-            if (token !== secretKey) {
-              context.response.status(StatusCodes.unauthorized).send();
-              return;
-            }
+        if (token !== secretKey) {
+          context.response.status(StatusCodes.unauthorized).send();
+          return;
+        }
 
-            next();
-          })
-        );
-      }
+        next();
+      })
+    )
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext): string {
         return context.request.headers[headerKey] as string;
       }
