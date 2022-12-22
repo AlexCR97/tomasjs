@@ -1,12 +1,13 @@
 import "reflect-metadata";
 import "express-async-errors";
+import fetch from "node-fetch";
 import { afterEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "../utils/server";
-import { AppBuilder } from "../../src/builder";
 import { tick } from "../utils/time";
+import { AppBuilder } from "../../src/builder";
+import { singleton } from "../../src/container";
 import { HttpContext, StatusCodes } from "../../src/core";
 import { StatusCodeError } from "../../src/core/errors";
-import fetch from "node-fetch";
 import { AnonymousEndpoint } from "../../src/endpoints";
 import {
   AnonymousErrorMiddleware,
@@ -14,6 +15,7 @@ import {
   ErrorMiddleware,
 } from "../../src/middleware";
 import { JsonResponse, PlainTextResponse } from "../../src/responses";
+import { NextFunction } from "express";
 
 describe("error-middleware", () => {
   const port = 3036;
@@ -75,7 +77,30 @@ describe("error-middleware", () => {
     expect(response.text()).resolves.toEqual(errorMessage);
   });
 
-  it(`An ${ErrorMiddleware.name} constructor can handle uncaught errors`, async () => {
+  it(`A custom ErrorMiddleware constructor can handle uncaught errors`, async () => {
+    @singleton()
+    class CustomErrorMiddleware implements ErrorMiddleware {
+      handle<TError = any>(
+        err: TError,
+        context: HttpContext,
+        next: NextFunction
+      ): void | Promise<void> {
+        if (err instanceof StatusCodeError) {
+          return context.respond(
+            new JsonResponse(
+              {
+                status: err.status,
+                message: err.message,
+              },
+              { status: err.status }
+            )
+          );
+        }
+
+        return next(err);
+      }
+    }
+
     // Arrange
     server = await new AppBuilder()
       .useEndpoint(
@@ -88,23 +113,7 @@ describe("error-middleware", () => {
           throw new StatusCodeError(StatusCodes.notFound);
         })
       )
-      .useErrorMiddleware(
-        new AnonymousErrorMiddleware((err, context: HttpContext, next) => {
-          if (err instanceof StatusCodeError) {
-            return context.respond(
-              new JsonResponse(
-                {
-                  status: err.status,
-                  message: err.message,
-                },
-                { status: err.status }
-              )
-            );
-          }
-
-          return next(err);
-        })
-      )
+      .useErrorMiddleware(CustomErrorMiddleware)
       .buildAsync(port);
 
     // Act/Assert

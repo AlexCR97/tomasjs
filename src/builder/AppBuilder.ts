@@ -26,6 +26,7 @@ import {
 import { isErrorMiddlewareHandler } from "@/middleware/ErrorMiddlewareHandler";
 import { ClassConstructor, internalContainer } from "@/container";
 import { EndpointMetadataStrategy } from "@/endpoints/metadata";
+import { isErrorMiddleware } from "@/middleware/isErrorMiddleware";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -101,7 +102,7 @@ export class AppBuilder {
 
     if (isErrorMiddlewareHandler(middleware)) {
       expressErrorMiddleware = ErrorMiddlewareAdapter.fromTypeToExpress(middleware);
-    } else if (middleware instanceof ErrorMiddleware) {
+    } else if (isErrorMiddleware(middleware)) {
       expressErrorMiddleware = ErrorMiddlewareAdapter.fromInstanceToExpress(middleware);
     } else {
       expressErrorMiddleware = ErrorMiddlewareAdapter.fromConstructorToExpress(middleware);

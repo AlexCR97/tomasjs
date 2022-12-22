@@ -14,7 +14,7 @@ export function isErrorMiddlewareHandler(obj: any): obj is ErrorMiddlewareHandle
 
   const func = obj as Function;
 
-  // Considering that a MiddlewareHandler must be anonymous function...
+  // Considering that an ErrorMiddlewareHandler must be an anonymous function...
   return (
     func.prototype === undefined && // The prototype must be undefined
     func.length === 3 && // It must receive 3 arguments

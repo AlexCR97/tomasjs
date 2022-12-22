@@ -3,10 +3,8 @@ import { NextFunction } from "express";
 import { ErrorMiddleware } from "./ErrorMiddleware";
 import { ErrorMiddlewareHandler } from "./ErrorMiddlewareHandler";
 
-export class AnonymousErrorMiddleware extends ErrorMiddleware {
-  constructor(private readonly handler: ErrorMiddlewareHandler) {
-    super();
-  }
+export class AnonymousErrorMiddleware implements ErrorMiddleware {
+  constructor(private readonly handler: ErrorMiddlewareHandler) {}
   handle<TError = any>(
     err: TError,
     context: HttpContext,

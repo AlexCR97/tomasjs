@@ -1,4 +1,4 @@
-import { ClassConstructor } from "@/container";
+import { ClassConstructor, singleton } from "@/container";
 import { HttpContext, StatusCodes } from "@/core";
 import { Middleware } from "@/middleware";
 import { JsonResponse } from "@/responses";
@@ -7,6 +7,7 @@ import { NextFunction } from "express";
 import { Validator } from "fluentvalidation-ts";
 import { ValidatorAdapter } from "./ValidatorAdapter";
 
+@singleton()
 export class FluentValidationMiddleware<
   TModel extends object,
   TValidator extends Validator<TModel> = Validator<TModel>

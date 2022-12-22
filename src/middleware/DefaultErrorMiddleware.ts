@@ -1,10 +1,12 @@
+import { singleton } from "@/container";
 import { HttpContext } from "@/core";
 import { StatusCodeError } from "@/core/errors";
 import { JsonResponse } from "@/responses";
 import { NextFunction } from "express";
 import { ErrorMiddleware } from "./ErrorMiddleware";
 
-export class DefaultErrorMiddleware extends ErrorMiddleware {
+@singleton()
+export class DefaultErrorMiddleware implements ErrorMiddleware {
   handle<TError = any>(
     err: TError,
     context: HttpContext,

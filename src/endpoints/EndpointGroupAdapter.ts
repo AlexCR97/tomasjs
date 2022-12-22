@@ -29,16 +29,9 @@ export abstract class EndpointGroupAdapter {
 
     for (const endpoint of endpoints) {
       const metadata = EndpointMetadataStrategy.get(endpoint);
-
       const endpointMethod = metadata.httpMethodOrDefault;
-      console.log("endpointMethod", endpointMethod);
-
       const endpointPath = ExpressPathAdapter.adapt(metadata.path);
-      console.log("endpointPath", endpointPath);
-
       const expressHandlers = EndpointAdapter.fromThomasToExpress(endpoint);
-      console.log("expressHandlers", expressHandlers);
-
       router[endpointMethod](endpointPath, ...expressHandlers);
     }
 
