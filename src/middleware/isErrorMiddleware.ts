@@ -11,7 +11,7 @@ export function isErrorMiddleware(obj: any): obj is ErrorMiddleware {
     return false;
   }
 
-  // Considering that the "handle" must be a named function...
+  // Considering that "handle" must be a named function...
   return (
     func.name.trim() === "handle" && // The name must be "handle"
     func.prototype === undefined && // The prototype must be undefined

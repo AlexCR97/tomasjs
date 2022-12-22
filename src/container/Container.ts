@@ -5,7 +5,17 @@ import { Scope } from "./Scope";
 import { Token } from "./Token";
 
 export class Container implements IContainer {
-  private readonly _container = new InversifyContainer();
+  private readonly _container = new InversifyContainer({
+    /**
+     * The following statement prevents the error "Missing required @injectable annotation in: SomeClass".
+     *
+     * This error occurs when applying a decorator to a class that extends another class (inheritance).
+     *
+     * More information at:
+     * https://github.com/inversify/InversifyJS/blob/master/wiki/inheritance.md
+     */
+    skipBaseClassChecks: true,
+  });
 
   addClass<T>(
     constructor: ClassConstructor<T>,

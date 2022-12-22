@@ -5,10 +5,8 @@ import { NextFunction } from "express";
 import { JwtVerifier } from "./JwtVerifier";
 import { JwtVerifyOptions } from "./JwtVerifyOptions";
 
-export class JwtMiddleware extends Middleware {
-  constructor(private readonly options: JwtVerifyOptions) {
-    super();
-  }
+export class JwtMiddleware implements Middleware {
+  constructor(private readonly options: JwtVerifyOptions) {}
 
   async handle(context: HttpContext, next: NextFunction): Promise<void> {
     const authHeader = context.request.headers.authorization;

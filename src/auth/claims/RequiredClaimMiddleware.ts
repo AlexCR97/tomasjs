@@ -4,10 +4,9 @@ import { ForbiddenResponse } from "@/responses/status-codes";
 import { NextFunction } from "express";
 import { RequiredClaim } from "./RequiredClaim";
 
-export class RequiredClaimMiddleware extends Middleware {
-  constructor(private readonly requiredClaim: RequiredClaim) {
-    super();
-  }
+export class RequiredClaimMiddleware implements Middleware {
+  constructor(private readonly requiredClaim: RequiredClaim) {}
+
   handle(context: HttpContext, next: NextFunction): void | Promise<void> {
     const claims = context.user?.claims;
 

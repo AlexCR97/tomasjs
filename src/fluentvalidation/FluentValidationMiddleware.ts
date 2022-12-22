@@ -11,10 +11,10 @@ import { ValidatorAdapter } from "./ValidatorAdapter";
 export class FluentValidationMiddleware<
   TModel extends object,
   TValidator extends Validator<TModel> = Validator<TModel>
-> extends Middleware {
-  constructor(private validator: TValidator | ClassConstructor<TValidator>) {
-    super();
-  }
+> implements Middleware
+{
+  constructor(private validator: TValidator | ClassConstructor<TValidator>) {}
+
   handle(context: HttpContext, next: NextFunction): void | Promise<void> {
     const validator: TValidator =
       this.validator instanceof Validator
