@@ -1,5 +1,6 @@
 export { inject } from "./@inject";
 export { injectable } from "./@injectable";
+export { singleton } from "./@singleton";
 export { ClassConstructor } from "./ClassConstructor";
 export { Container } from "./Container";
 export { IContainer } from "./IContainer";

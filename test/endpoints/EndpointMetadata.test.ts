@@ -1,10 +1,11 @@
 import "reflect-metadata";
 import { describe, it } from "@jest/globals";
 import { HttpContext } from "../../src/core";
-import { Endpoint, EndpointMetadata } from "../../src/endpoints";
+import { Endpoint } from "../../src/endpoints";
+import { EndpointMetadataKeys, EndpointPrototypeMetadata } from "../../src/endpoints/metadata";
 
 describe("EndpointMetadata", () => {
-  it(`The "path" setter of the "${EndpointMetadata.name}" class should set a path property on a class's prototype`, () => {
+  it(`The "path" setter of the "${EndpointPrototypeMetadata.name}" class should set a path property on a class's prototype`, () => {
     // Arrange
     const expectedPath = "path/to/resource";
 
@@ -15,16 +16,19 @@ describe("EndpointMetadata", () => {
     }
 
     // Act/Assert
-    const metadata = new EndpointMetadata(TestClass);
+    const metadata = new EndpointPrototypeMetadata(TestClass);
 
     metadata.path = expectedPath;
     expect(metadata.path).toEqual(expectedPath);
 
-    const pathFromPrototype = Reflect.getMetadata(EndpointMetadata.pathKey, TestClass.prototype);
+    const pathFromPrototype = Reflect.getMetadata(
+      EndpointMetadataKeys.pathKey,
+      TestClass.prototype
+    );
     expect(pathFromPrototype).toEqual(expectedPath);
   });
 
-  it(`The "path" setter of the "${EndpointMetadata.name}" class should set a path property on an instance's prototype`, () => {
+  it(`The "path" setter of the "${EndpointPrototypeMetadata.name}" class should set a path property on an instance's prototype`, () => {
     // Arrange
     const expectedPath = "path/to/resource";
 
@@ -35,16 +39,18 @@ describe("EndpointMetadata", () => {
     }
 
     const instance = new TestClass();
-    const metadata = new EndpointMetadata(instance);
+    const metadata = new EndpointPrototypeMetadata(instance);
 
     // Act/Assert
     metadata.path = expectedPath;
     expect(metadata.path).toEqual(expectedPath);
 
     const pathFromInstance = Reflect.getMetadata(
-      EndpointMetadata.pathKey,
+      EndpointMetadataKeys.pathKey,
       Object.getPrototypeOf(instance)
     );
     expect(pathFromInstance).toEqual(expectedPath);
   });
+
+  // TODO Add tests for AnonymousEndpointMetadata
 });

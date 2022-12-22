@@ -5,8 +5,8 @@ import { MiddlewareAdapter, MiddlewareFactoryAdapter } from "@/middleware";
 import { ResponseAdapter } from "@/responses";
 import { Request, Response } from "express";
 import { Endpoint } from "./Endpoint";
-import { EndpointMetadata } from "./EndpointMetadata";
 import { isEndpoint } from "./isEndpoint";
+import { EndpointMetadataStrategy } from "./metadata";
 import { EndpointHandler, IsEndpointHandler } from "./types";
 
 export abstract class EndpointAdapter {
@@ -37,7 +37,7 @@ export abstract class EndpointAdapter {
   static fromInstanceToExpress(
     endpoint: Endpoint
   ): (ExpressMiddlewareHandler | ExpressRequestHandler)[] {
-    const endpointMetadata = new EndpointMetadata(endpoint);
+    const endpointMetadata = EndpointMetadataStrategy.get(endpoint);
     let expressMiddlewareHandlers: ExpressMiddlewareHandler[] = [];
 
     if (endpointMetadata.middlewares !== undefined && endpointMetadata.middlewares.length > 0) {
@@ -50,9 +50,16 @@ export abstract class EndpointAdapter {
     }
 
     const expressRequestHandler = async (req: Request, res: Response) => {
+      // console.log("express handler!");
+
       const context = HttpContextResolver.fromExpress(req, res);
+      // console.log("context", context);
+
       const result = await endpoint.handle(context);
+      // console.log("result", result);
+
       ResponseAdapter.fromThomasToExpress(res, result);
+      // console.log("after express handler responded");
     };
 
     return [...expressMiddlewareHandlers, expressRequestHandler];
@@ -62,7 +69,7 @@ export abstract class EndpointAdapter {
     endpoint: ClassConstructor<Endpoint>
   ): (ExpressMiddlewareHandler | ExpressRequestHandler)[] {
     const endpointInstance = internalContainer.get(endpoint);
-    const endpointMetadata = new EndpointMetadata(endpointInstance);
+    const endpointMetadata = EndpointMetadataStrategy.get(endpointInstance); // TOOD Pass constructor in here?
     let expressMiddlewareHandlers: ExpressMiddlewareHandler[] = [];
 
     if (endpointMetadata.middlewares !== undefined && endpointMetadata.middlewares.length > 0) {

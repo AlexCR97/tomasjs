@@ -1,7 +1,8 @@
 import "reflect-metadata";
 import { describe, it } from "@jest/globals";
-import { Endpoint, EndpointMetadata, path } from "../../src/endpoints";
+import { Endpoint, path } from "../../src/endpoints";
 import { HttpContext } from "../../src/core";
+import { EndpointMetadataKeys, EndpointPrototypeMetadata } from "../../src/endpoints/metadata";
 
 describe("path-decorator", () => {
   it(`The "${path.name}" decorator should set should set a path property on an Endpoint class's prototype`, () => {
@@ -16,10 +17,13 @@ describe("path-decorator", () => {
     }
 
     // Act/Assert
-    const metadata = new EndpointMetadata(TestClass);
+    const metadata = new EndpointPrototypeMetadata(TestClass);
     expect(metadata.path).toEqual(expectedPath);
 
-    const pathFromPrototype = Reflect.getMetadata(EndpointMetadata.pathKey, TestClass.prototype);
+    const pathFromPrototype = Reflect.getMetadata(
+      EndpointMetadataKeys.pathKey,
+      TestClass.prototype
+    );
     expect(pathFromPrototype).toEqual(expectedPath);
   });
 
@@ -37,11 +41,11 @@ describe("path-decorator", () => {
     // Act/Assert
     const instance = new TestClass();
 
-    const metadata = new EndpointMetadata(instance);
+    const metadata = new EndpointPrototypeMetadata(instance);
     expect(metadata.path).toEqual(expectedPath);
 
     const pathFromInstance = Reflect.getMetadata(
-      EndpointMetadata.pathKey,
+      EndpointMetadataKeys.pathKey,
       Object.getPrototypeOf(instance)
     );
     expect(pathFromInstance).toEqual(expectedPath);

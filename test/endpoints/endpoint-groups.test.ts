@@ -55,13 +55,16 @@ describe("endpoint-groups", () => {
       .buildAsync(port);
 
     // Act/Assert
-    const responseDefaultPath = await fetch(`${serverAddress}/${basePath}/${resourceDefaultPath}`);
+    const defaultPath = `${serverAddress}/${basePath}`;
+    const responseDefaultPath = await fetch(defaultPath);
     expect(responseDefaultPath.status).toEqual(StatusCodes.ok);
 
-    const responseResource1 = await fetch(`${serverAddress}/${basePath}/${resourcePath1}`);
+    const resource1Path = `${serverAddress}/${basePath}/${resourcePath1}`;
+    const responseResource1 = await fetch(resource1Path);
     expect(responseResource1.status).toEqual(StatusCodes.ok);
 
-    const responseResource2 = await fetch(`${serverAddress}/${basePath}/${resourcePath2}`);
+    const resource2Path = `${serverAddress}/${basePath}/${resourcePath2}`;
+    const responseResource2 = await fetch(resource2Path);
     expect(responseResource2.status).toEqual(StatusCodes.ok);
   });
 

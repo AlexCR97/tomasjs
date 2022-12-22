@@ -1,7 +1,8 @@
 import "reflect-metadata";
 import { describe, it } from "@jest/globals";
-import { Endpoint, EndpointMetadata, endpoint } from "../../src/endpoints";
+import { Endpoint, endpoint } from "../../src/endpoints";
 import { HttpContext, HttpMethod } from "../../src/core";
+import { EndpointMetadataKeys, EndpointPrototypeMetadata } from "../../src/endpoints/metadata";
 
 describe("endpoint-decorator", () => {
   it(`The "${endpoint.name}" decorator should set a default httpMethod ("get") property on an Endpoint class's prototype`, () => {
@@ -16,11 +17,11 @@ describe("endpoint-decorator", () => {
     }
 
     // Act/Assert
-    const metadata = new EndpointMetadata(TestClass);
+    const metadata = new EndpointPrototypeMetadata(TestClass);
     expect(metadata.httpMethod).toEqual(defaultMethod);
 
     const methodFromPrototype = Reflect.getMetadata(
-      EndpointMetadata.httpMethodKey,
+      EndpointMetadataKeys.httpMethodKey,
       TestClass.prototype
     );
     expect(methodFromPrototype).toEqual(defaultMethod);
@@ -38,11 +39,11 @@ describe("endpoint-decorator", () => {
     }
 
     // Act/Assert
-    const metadata = new EndpointMetadata(TestClass);
+    const metadata = new EndpointPrototypeMetadata(TestClass);
     expect(metadata.httpMethod).toEqual(expectedMethod);
 
     const methodFromPrototype = Reflect.getMetadata(
-      EndpointMetadata.httpMethodKey,
+      EndpointMetadataKeys.httpMethodKey,
       TestClass.prototype
     );
     expect(methodFromPrototype).toEqual(expectedMethod);
@@ -62,11 +63,11 @@ describe("endpoint-decorator", () => {
     // Act/Assert
     const instance = new TestClass();
 
-    const metadata = new EndpointMetadata(instance);
+    const metadata = new EndpointPrototypeMetadata(instance);
     expect(metadata.httpMethod).toEqual(expectedMethod);
 
     const methodFromInstance = Reflect.getMetadata(
-      EndpointMetadata.httpMethodKey,
+      EndpointMetadataKeys.httpMethodKey,
       Object.getPrototypeOf(instance)
     );
     expect(methodFromInstance).toEqual(expectedMethod);

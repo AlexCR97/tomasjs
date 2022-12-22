@@ -16,7 +16,7 @@ export class FluentValidationSetup extends ContainerSetupFactory {
       ) {
         for (const validator of this.options.validators) {
           const token = ValidatorInjectionTokenFactory.create(validator);
-          container.addClass(validator, token);
+          container.addClass(validator, { token });
         }
       }
     };

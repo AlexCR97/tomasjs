@@ -4,9 +4,22 @@ import { HttpContext } from "./HttpContext";
 import { HttpContextBinder } from "./HttpContextBinder";
 
 export abstract class HttpContextResolver {
+  private constructor() {}
+
   static fromExpress(req: Request, res: Response): HttpContext {
-    const context = internalContainer.get(HttpContext);
-    HttpContextBinder.fromExpress(context, req, res);
-    return context;
+    // console.log("fromExpress");
+
+    try {
+      const context = internalContainer.get(HttpContext);
+      // console.log("after resolving context");
+
+      HttpContextBinder.fromExpress(context, req, res);
+      // console.log("after HttpContextBinder");
+
+      return context;
+    } catch (err) {
+      // console.log("err", err);
+      throw err;
+    }
   }
 }

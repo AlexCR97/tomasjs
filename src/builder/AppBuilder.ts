@@ -12,7 +12,6 @@ import {
   EndpointAdapter,
   EndpointGroup,
   EndpointGroupAdapter,
-  EndpointMetadata,
   isEndpoint,
 } from "@/endpoints";
 import {
@@ -26,6 +25,7 @@ import {
 } from "@/middleware";
 import { isErrorMiddlewareHandler } from "@/middleware/ErrorMiddlewareHandler";
 import { ClassConstructor, internalContainer } from "@/container";
+import { EndpointMetadataStrategy } from "@/endpoints/metadata";
 
 export class AppBuilder {
   private readonly app: Express;
@@ -206,21 +206,28 @@ export class AppBuilder {
       return this.useEndpointInstance(endpoint);
     }
 
-    console.log("resolving endpoint...", endpoint);
-    const endpointName = endpoint.name;
-    console.log("endpointName", endpointName);
+    // console.log("resolving endpoint...", endpoint);
     const endpointInstance = internalContainer.get(endpoint);
-    console.log("endpointInstance", endpointInstance);
+    // console.log("endpointInstance", endpointInstance);
     return this.useEndpointInstance(endpointInstance);
   }
 
   private useEndpointInstance(endpoint: Endpoint): AppBuilder {
-    console.log("endpoint", endpoint);
     const expressHandlers = EndpointAdapter.fromInstanceToExpress(endpoint);
-    const metadata = new EndpointMetadata(endpoint);
+    // console.log("expressHandlers", expressHandlers);
+
+    const metadata = EndpointMetadataStrategy.get(endpoint);
+    // console.log("metadata", metadata);
+
     const endpointMethod = metadata.httpMethodOrDefault;
+    // console.log("endpointMethod", endpointMethod);
+
     const endpointPath = ExpressPathAdapter.adapt(metadata.path);
+    // console.log("endpointPath", endpointPath);
+
     this.app[endpointMethod](endpointPath, ...expressHandlers);
+    // console.log("after express app");
+
     return this;
   }
 
@@ -276,7 +283,6 @@ export class AppBuilder {
 
   // TODO Add return type
   async buildAsync(port: number) {
-    internalContainer.addClass;
     return await this.createServerAsync(port);
   }
 

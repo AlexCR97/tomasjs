@@ -1,14 +1,10 @@
-import { EndpointMetadata } from "./EndpointMetadata";
+import { EndpointPrototypeMetadata } from "./metadata";
 import { MiddlewareParam } from "./MiddlewareParam";
 
 export function middleware(middleware: MiddlewareParam) {
-  return function <T extends { new (...args: any[]): {} }>(constructor: T) {
-    return class extends constructor {
-      constructor(...args: any[]) {
-        super();
-        const metadata = new EndpointMetadata<any>(this);
-        metadata.addMiddleware(middleware);
-      }
-    };
+  return function <T extends new (...args: any[]) => any>(constructor: T) {
+    const metadata = new EndpointPrototypeMetadata(constructor);
+    metadata.addMiddleware(middleware);
+    return constructor;
   };
 }

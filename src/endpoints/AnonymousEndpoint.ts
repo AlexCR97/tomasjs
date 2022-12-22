@@ -1,7 +1,7 @@
 import { HttpContext, HttpMethod } from "@/core";
 import { RequestHandler } from "@/core/handlers";
 import { Endpoint } from "./Endpoint";
-import { EndpointMetadata } from "./EndpointMetadata";
+import { AnonymousEndpointMetadata } from "./metadata";
 
 export class AnonymousEndpoint<TResponse = any> implements Endpoint {
   constructor(
@@ -9,7 +9,7 @@ export class AnonymousEndpoint<TResponse = any> implements Endpoint {
     readonly path: string,
     private readonly handler: RequestHandler<TResponse>
   ) {
-    const metadata = new EndpointMetadata(this);
+    const metadata = new AnonymousEndpointMetadata(this);
     metadata.httpMethod = method;
     metadata.path = path;
   }

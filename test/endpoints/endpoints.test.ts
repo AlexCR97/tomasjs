@@ -28,6 +28,8 @@ describe("endpoints", () => {
 
   it(`An Endpoint instance works`, async () => {
     // Arrange
+
+    @endpoint()
     class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
         return new OkResponse();
@@ -45,6 +47,8 @@ describe("endpoints", () => {
 
   it(`An Endpoint constructor works`, async () => {
     // Arrange
+
+    @endpoint()
     class TestEndpoint implements Endpoint {
       handle(context: HttpContext): OkResponse {
         return new OkResponse();
@@ -153,6 +157,7 @@ describe("endpoints", () => {
       value: string;
     }
 
+    @endpoint()
     class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
         return new JsonResponse(context.request.headers);
