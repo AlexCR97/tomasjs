@@ -52,8 +52,9 @@ export abstract class EndpointAdapter {
     const expressRequestHandler = async (req: Request, res: Response) => {
       // console.log("express handler!");
 
+      // console.log("resolving context...");
       const context = HttpContextResolver.fromExpress(req, res);
-      // console.log("context", context);
+      // console.log("context resolved");
 
       const result = await endpoint.handle(context);
       // console.log("result", result);

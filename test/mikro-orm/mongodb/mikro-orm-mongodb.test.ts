@@ -2,8 +2,8 @@ import "reflect-metadata";
 import { afterEach, beforeEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "../../utils/server";
 import { tick } from "../../utils/time";
-import { injectable } from "../../../src";
 import { AppBuilder, ContainerBuilder } from "../../../src/builder";
+import { internalContainer } from "../../../src/container";
 import { HttpContext, StatusCodes } from "../../../src/core";
 import { endpoint, Endpoint, path } from "../../../src/endpoints";
 import {
@@ -11,6 +11,7 @@ import {
   MikroOrmSetup,
   RepositorySetup,
   inMikroOrm,
+  MikroOrmTeardown,
 } from "../../../src/mikro-orm";
 import { inRepository, Repository } from "../../../src/mikro-orm/mongodb";
 import { PlainTextResponse } from "../../../src/responses";
@@ -58,10 +59,16 @@ describe("mikro-orm", () => {
   afterEach(async () => {
     await tick(serverTeardownOffsetMilliseconds);
     await clearCollectionAsync(User);
+
+    // TODO Move this to an API
+    // This is only necessary after the tests
+    const teardownFunction = new MikroOrmTeardown("mongo").create();
+    await teardownFunction(internalContainer);
+
     await tryCloseServerAsync(server);
   });
 
-  it.skip(`Can connect via ${MikroOrmSetup.name}`, async () => {
+  it(`Can connect via ${MikroOrmSetup.name}`, async () => {
     // Arrange
     await new ContainerBuilder()
       .setup(
@@ -78,13 +85,11 @@ describe("mikro-orm", () => {
     server = await new AppBuilder().buildAsync(port);
   });
 
-  it.skip(`Can inject ${MikroORM.name}`, async () => {
-    console.log("test start");
+  it(`Can inject ${MikroORM.name}`, async () => {
     // Arrange
-    const successMessage = "MongoOrm works!";
+    const successMessage = "MikroORM works!";
     const resourcePath = "users";
 
-    @injectable()
     @endpoint("post")
     @path(resourcePath)
     class CreateUserEndpoint implements Endpoint {
@@ -108,7 +113,7 @@ describe("mikro-orm", () => {
       .buildAsync();
 
     server = await new AppBuilder().useEndpoint(CreateUserEndpoint).buildAsync(port);
-    console.log("after server");
+
     // Act
     const response = await fetch(`${serverAddress}/${resourcePath}`, {
       method: "post",
@@ -121,11 +126,10 @@ describe("mikro-orm", () => {
     expect(response.text()).resolves.toEqual(successMessage);
   });
 
-  it.skip(`Can use ${MikroORM.name} to create a document`, async () => {
+  it(`Can use ${MikroORM.name} to create a document`, async () => {
     // Arrange
     const resourcePath = "users";
 
-    @injectable()
     @endpoint("post")
     @path(resourcePath)
     class CreateUserEndpoint implements Endpoint {
@@ -172,11 +176,10 @@ describe("mikro-orm", () => {
     expect(ObjectId.isValid(createdUserId)).toBeTruthy();
   });
 
-  it.skip(`Can inject a Repository to create a document`, async () => {
+  it(`Can inject a Repository to create a document`, async () => {
     // Arrange
     const resourcePath = "users";
 
-    @injectable()
     @endpoint("post")
     @path(resourcePath)
     class CreateUserEndpoint implements Endpoint {

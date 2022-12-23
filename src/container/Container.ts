@@ -5,7 +5,7 @@ import { Scope } from "./Scope";
 import { Token } from "./Token";
 
 export class Container implements IContainer {
-  private readonly _container = new InversifyContainer({
+  private _container = new InversifyContainer({
     /**
      * The following statement prevents the error "Missing required @injectable annotation in: SomeClass".
      *
@@ -48,5 +48,10 @@ export class Container implements IContainer {
   isClassConstructor<T>(token: Token<T>): token is ClassConstructor<T> {
     // TODO Improve type check?
     return typeof token === "function";
+  }
+
+  remove<T>(token: Token<T>): IContainer {
+    this._container.unbind(token);
+    return this;
   }
 }

@@ -15,7 +15,6 @@ export class MikroOrmSetup<
     return async (container) => {
       const databaseType = (this.options as any).type; // TODO Is this the correct way to get the database type?
       const injectionToken = MikroOrmInjectionTokenFactory.create(databaseType);
-      console.log("setup token", injectionToken);
       const orm = await MikroORM.init(this.options, this.connect);
       container.addInstance(orm, injectionToken);
     };

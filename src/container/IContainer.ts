@@ -10,4 +10,5 @@ export interface IContainer {
   addInstance<T>(instance: T, token: Token<T>): IContainer;
   get<T>(token: Token<T>): T;
   isClassConstructor<T>(token: Token<T>): token is ClassConstructor<T>;
+  remove<T>(token: Token<T>): IContainer;
 }
