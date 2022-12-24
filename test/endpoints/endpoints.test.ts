@@ -287,7 +287,7 @@ describe("endpoints", () => {
     @endpoint("post")
     class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
-        const body = context.request.getBody<TestBody>();
+        const body: TestBody = context.request.body;
         return new JsonResponse(body, {
           status: StatusCodes.created,
         });
