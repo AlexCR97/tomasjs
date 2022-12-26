@@ -32,6 +32,7 @@
     "testw-auth-jwt-middleware": "jest --testNamePattern auth-jwt-middleware --watchAll --verbose",
     "testw-auth-required-claim-middleware": "jest --testNamePattern auth-required-claim-middleware --watchAll --verbose",
     "testw-fluentvalidation-middleware": "jest --testNamePattern fluentvalidation-middleware --watchAll --verbose",
+    "testw-guards": "jest --testNamePattern guards --watchAll --verbose",
     "testw-sample-crud": "jest --testNamePattern crud-sample --watchAll --verbose",
     "testw-mikro-orm": "jest --testNamePattern mikro-orm --watchAll --verbose --detectOpenHandles",
     "testw-pipes-bodyPipe-decorator": "jest --testNamePattern bodyPipe-decorator --watchAll --verbose --detectOpenHandles",

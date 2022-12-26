@@ -1,3 +1,4 @@
+export { guard } from "./@guard";
 export { Guard } from "./Guard";
 export { GuardAdapter } from "./GuardAdapter";
 export { GuardBridge } from "./GuardBridge";
