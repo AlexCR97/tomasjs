@@ -7,4 +7,5 @@ export { EndpointAdapter } from "./EndpointAdapter";
 export { EndpointGroup } from "./EndpointGroup";
 export { EndpointGroupAdapter } from "./EndpointGroupAdapter";
 export { EndpointTokenFactory } from "./EndpointTokenFactory";
+export { EndpointType } from "./EndpointType";
 export { isEndpoint } from "./isEndpoint";

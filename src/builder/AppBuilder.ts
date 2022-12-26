@@ -15,25 +15,27 @@ import {
   isEndpoint,
 } from "@/endpoints";
 import {
-  ErrorMiddleware,
   ErrorMiddlewareAdapter,
-  ErrorMiddlewareHandler,
+  ErrorMiddlewareType,
   Middleware,
   MiddlewareAdapter,
   MiddlewareFactory,
   MiddlewareHandler,
+  MiddlewareType,
 } from "@/middleware";
 import { isErrorMiddlewareHandler } from "@/middleware/ErrorMiddlewareHandler";
 import { ClassConstructor, internalContainer } from "@/container";
 import { EndpointMetadataStrategy } from "@/endpoints/metadata";
 import { isErrorMiddleware } from "@/middleware/isErrorMiddleware";
+import { GuardAdapter, GuardType } from "@/guards";
 
 export class AppBuilder {
-  private readonly app: Express;
-
-  constructor() {
-    this.app = express();
-  }
+  private readonly app = express();
+  private readonly middlewares: MiddlewareType[] = [];
+  private readonly guards: GuardType[] = [];
+  private readonly endpointGroups: ((endpoints: EndpointGroup) => void)[] = [];
+  private readonly endpoints: (Endpoint | ClassConstructor<Endpoint>)[] = [];
+  private errorMiddleware?: ErrorMiddlewareType;
 
   /* #region Standard Setup */
 
@@ -71,10 +73,11 @@ export class AppBuilder {
       | ClassConstructor<TMiddleware>
       | MiddlewareFactory<TMiddleware>
   ): AppBuilder {
-    return this.useMiddlewareFor(middleware, { app: this.app });
+    this.middlewares.push(middleware);
+    return this;
   }
 
-  private useMiddlewareFor<TMiddleware extends Middleware = Middleware>(
+  private bindMiddleware<TMiddleware extends Middleware = Middleware>(
     middleware:
       | MiddlewareHandler
       | TMiddleware
@@ -91,26 +94,56 @@ export class AppBuilder {
     return this;
   }
 
+  private tryBindMiddlewares(): AppBuilder {
+    if (
+      this.middlewares === undefined ||
+      this.middlewares === null ||
+      this.middlewares.length === 0
+    ) {
+      return this;
+    }
+
+    for (const middleware of this.middlewares) {
+      this.bindMiddleware(middleware, { app: this.app });
+    }
+
+    return this;
+  }
+
   /* #endregion */
 
   /* #region ErrorMiddleware */
 
-  useErrorMiddleware(
-    middleware: ErrorMiddlewareHandler | ErrorMiddleware | ClassConstructor<ErrorMiddleware>
-  ): AppBuilder {
+  useErrorMiddleware(middleware: ErrorMiddlewareType): AppBuilder {
+    this.errorMiddleware = middleware;
+    return this;
+  }
+
+  private bindErrorMiddleware(middleware: ErrorMiddlewareType): AppBuilder {
     let expressErrorMiddleware: ExpressErrorMiddlewareHandler;
 
     if (isErrorMiddlewareHandler(middleware)) {
-      expressErrorMiddleware = ErrorMiddlewareAdapter.fromTypeToExpress(middleware);
+      expressErrorMiddleware =
+        ErrorMiddlewareAdapter.fromTypeToExpress(middleware);
     } else if (isErrorMiddleware(middleware)) {
-      expressErrorMiddleware = ErrorMiddlewareAdapter.fromInstanceToExpress(middleware);
+      expressErrorMiddleware =
+        ErrorMiddlewareAdapter.fromInstanceToExpress(middleware);
     } else {
-      expressErrorMiddleware = ErrorMiddlewareAdapter.fromConstructorToExpress(middleware);
+      expressErrorMiddleware =
+        ErrorMiddlewareAdapter.fromConstructorToExpress(middleware);
     }
 
     this.app.use(expressErrorMiddleware);
 
     return this;
+  }
+
+  private tryBindErrorMiddleware() {
+    if (this.errorMiddleware === undefined || this.errorMiddleware === null) {
+      return this;
+    }
+
+    return this.bindErrorMiddleware(this.errorMiddleware);
   }
 
   /* #endregion */
@@ -156,7 +189,7 @@ export class AppBuilder {
       onBeforeMiddlewares.length > 0
     ) {
       onBeforeMiddlewares.forEach((middleware) => {
-        this.useMiddlewareFor(middleware, { router });
+        this.bindMiddleware(middleware, { router });
       });
     }
 
@@ -164,7 +197,9 @@ export class AppBuilder {
       for (const action of actions) {
         router[action.method](
           action.path,
-          ...action.actions.map((action) => this.fromControllerActionToExpressHandler(action))
+          ...action.actions.map((action) =>
+            this.fromControllerActionToExpressHandler(action)
+          )
         );
       }
     }
@@ -198,22 +233,60 @@ export class AppBuilder {
 
   /* #endregion */
 
+  /* #region Guards */
+
+  useGuard(guard: GuardType): AppBuilder {
+    this.guards.push(guard);
+    return this;
+  }
+
+  private bindGuard(guard: GuardType): AppBuilder {
+    const expressMiddlewareFunction = GuardAdapter.toExpress(guard);
+    this.app.use(expressMiddlewareFunction);
+    return this;
+  }
+
+  private tryBindGuards(): AppBuilder {
+    if (
+      this.guards === undefined ||
+      this.guards === null ||
+      this.guards.length === 0
+    ) {
+      return this;
+    }
+
+    for (const guard of this.guards) {
+      this.bindGuard(guard);
+    }
+
+    return this;
+  }
+
+  /* #endregion */
+
   /* #region Endpoints */
 
   useEndpoint<TEndpoint extends Endpoint = Endpoint>(
     endpoint: TEndpoint | ClassConstructor<TEndpoint>
   ): AppBuilder {
+    this.endpoints.push(endpoint);
+    return this;
+  }
+
+  private bindEndpoint<TEndpoint extends Endpoint = Endpoint>(
+    endpoint: TEndpoint | ClassConstructor<TEndpoint>
+  ) {
     if (isEndpoint(endpoint)) {
-      return this.useEndpointInstance(endpoint);
+      return this.bindEndpointInstance(endpoint);
     }
 
     // console.log("resolving endpoint...", endpoint);
     const endpointInstance = internalContainer.get(endpoint);
     // console.log("endpointInstance", endpointInstance);
-    return this.useEndpointInstance(endpointInstance);
+    return this.bindEndpointInstance(endpointInstance);
   }
 
-  private useEndpointInstance(endpoint: Endpoint): AppBuilder {
+  private bindEndpointInstance(endpoint: Endpoint): AppBuilder {
     const expressHandlers = EndpointAdapter.fromInstanceToExpress(endpoint);
     // console.log("expressHandlers", expressHandlers);
 
@@ -232,15 +305,55 @@ export class AppBuilder {
     return this;
   }
 
+  private tryBindEndpoints(): AppBuilder {
+    if (
+      this.endpoints === undefined ||
+      this.endpoints === null ||
+      this.endpoints.length === 0
+    ) {
+      return this;
+    }
+
+    for (const endpoint of this.endpoints) {
+      this.bindEndpoint(endpoint);
+    }
+
+    return this;
+  }
+
   /* #endregion */
 
   /* #region Endpoint Groups */
 
   useEndpointGroup(endpoints: (endpoints: EndpointGroup) => void): AppBuilder {
+    this.endpointGroups.push(endpoints);
+    return this;
+  }
+
+  private bindEndpointGroup(
+    endpoints: (endpoints: EndpointGroup) => void
+  ): AppBuilder {
     const endpointGroup = new EndpointGroup();
     endpoints(endpointGroup);
-    const { routerBasePath, router } = EndpointGroupAdapter.toExpressRouter(endpointGroup);
+    const { routerBasePath, router } =
+      EndpointGroupAdapter.toExpressRouter(endpointGroup);
     this.app.use(routerBasePath, router);
+    return this;
+  }
+
+  private tryBindEndpointGroups(): AppBuilder {
+    if (
+      this.endpointGroups === undefined ||
+      this.endpointGroups === null ||
+      this.endpointGroups.length === 0
+    ) {
+      return this;
+    }
+
+    for (const endpointGroup of this.endpointGroups) {
+      this.bindEndpointGroup(endpointGroup);
+    }
+
     return this;
   }
 
@@ -284,7 +397,12 @@ export class AppBuilder {
 
   // TODO Add return type
   async buildAsync(port: number) {
-    return await this.createServerAsync(port);
+    return await this.tryBindMiddlewares()
+      .tryBindGuards()
+      .tryBindEndpointGroups()
+      .tryBindEndpoints()
+      .tryBindErrorMiddleware()
+      .createServerAsync(port);
   }
 
   // TODO Add return type
