@@ -3,9 +3,9 @@ import {
   internalContainer,
   isClassConstructor,
 } from "@/container";
-import { HttpContext } from "@/core";
 import { TomasError } from "@/core/errors";
 import { Guard } from "./Guard";
+import { GuardContext } from "./GuardContext";
 import { GuardFactory } from "./GuardFactory";
 import { GuardFunction } from "./GuardFunction";
 import { GuardType } from "./GuardType";
@@ -13,7 +13,7 @@ import { GuardType } from "./GuardType";
 export class GuardBridge {
   constructor(private readonly guard: GuardType) {}
 
-  isAllowed(context: HttpContext): boolean | Promise<boolean> {
+  isAllowed(context: GuardContext): boolean | Promise<boolean> {
     if (this.isFunction(this.guard)) {
       return this.guard(context);
     }

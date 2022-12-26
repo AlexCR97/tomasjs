@@ -1,5 +1,5 @@
-import { HttpContext } from "@/core";
+import { GuardContext } from "./GuardContext";
 
 export type GuardFunction = (
-  context: HttpContext
+  context: GuardContext
 ) => boolean | Promise<boolean>;

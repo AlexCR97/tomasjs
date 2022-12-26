@@ -1,7 +1,7 @@
-import { HttpContext } from "@/core";
+import { GuardContext } from "./GuardContext";
 
 export interface Guard {
-  isAllowed(context: HttpContext): boolean | Promise<boolean>;
+  isAllowed(context: GuardContext): boolean | Promise<boolean>;
 }
 
 // TODO Add these comments to a readme

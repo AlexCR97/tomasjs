@@ -3,8 +3,14 @@ import fetch from "node-fetch";
 import { afterEach, beforeEach, describe, it } from "@jest/globals";
 import { AppBuilder } from "../../src/builder";
 import { HttpContext, StatusCodes } from "../../src/core";
-import { AnonymousEndpoint, endpoint, Endpoint } from "../../src/endpoints";
-import { guard, Guard } from "../../src/guards";
+import {
+  AnonymousEndpoint,
+  endpoint,
+  Endpoint,
+  path,
+  useGuard,
+} from "../../src/endpoints";
+import { guard, Guard, GuardContext } from "../../src/guards";
 import { OkResponse } from "../../src/responses/status-codes";
 import { tryCloseServerAsync } from "../utils/server";
 import { tick } from "../utils/time";
@@ -30,7 +36,7 @@ describe("guards", () => {
 
     @guard()
     class TestGuard implements Guard {
-      isAllowed(context: HttpContext): boolean {
+      isAllowed(context: GuardContext): boolean {
         return true;
       }
     }
@@ -59,7 +65,7 @@ describe("guards", () => {
 
     @guard()
     class TestGuard implements Guard {
-      isAllowed(context: HttpContext): boolean {
+      isAllowed(context: GuardContext): boolean {
         return false;
       }
     }
@@ -83,14 +89,14 @@ describe("guards", () => {
     expect(response.status).toEqual(StatusCodes.unauthorized);
   });
 
-  it(`A global Guard should be applied to all of the endpoints`, async () => {
+  it(`A global-level Guard should be applied to all of the endpoints`, async () => {
     // Arrange
     const resource1Path = "resource-1";
     const resource2Path = "resource-2";
 
     @guard()
     class TestGuard implements Guard {
-      isAllowed(context: HttpContext): boolean {
+      isAllowed(context: GuardContext): boolean {
         return false;
       }
     }
@@ -115,5 +121,47 @@ describe("guards", () => {
 
     const response2 = await fetch(`${serverAddress}/${resource2Path}`);
     expect(response2.status).toEqual(StatusCodes.unauthorized);
+  });
+
+  it(`A local-level Guard should be applied to only the decorated endpoint`, async () => {
+    // Arrange
+    const resource1Path = "resource-1";
+    const resource2Path = "resource-2";
+
+    @guard()
+    class TestGuard implements Guard {
+      isAllowed(context: GuardContext): boolean {
+        return false;
+      }
+    }
+
+    @endpoint()
+    @path(resource1Path)
+    @useGuard(TestGuard)
+    class TestEndpoint1 implements Endpoint {
+      handle(context: HttpContext) {
+        return new OkResponse();
+      }
+    }
+
+    @endpoint()
+    @path(resource2Path)
+    class TestEndpoint2 implements Endpoint {
+      handle(context: HttpContext) {
+        return new OkResponse();
+      }
+    }
+
+    server = await new AppBuilder()
+      .useEndpoint(TestEndpoint1)
+      .useEndpoint(TestEndpoint2)
+      .buildAsync(port);
+
+    // Act/Assert
+    const response1 = await fetch(`${serverAddress}/${resource1Path}`);
+    expect(response1.status).toEqual(StatusCodes.unauthorized);
+
+    const response2 = await fetch(`${serverAddress}/${resource2Path}`);
+    expect(response2.status).toEqual(StatusCodes.ok);
   });
 });

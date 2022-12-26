@@ -2,6 +2,7 @@ import { HttpContextResolver } from "@/core";
 import { ExpressMiddlewareHandler } from "@/core/express";
 import { UnauthorizedResponse } from "@/responses/status-codes";
 import { GuardBridge } from "./GuardBridge";
+import { GuardContextFactory } from "./GuardContextFactory";
 import { GuardType } from "./GuardType";
 
 export abstract class GuardAdapter {
@@ -9,16 +10,17 @@ export abstract class GuardAdapter {
 
   static toExpress(guard: GuardType): ExpressMiddlewareHandler {
     return async (req, res, next) => {
-      const context = HttpContextResolver.fromExpress(req, res);
+      const httpContext = HttpContextResolver.fromExpress(req, res);
+      const guardContext = GuardContextFactory.fromHttpContext(httpContext);
       const guardBridge = new GuardBridge(guard);
-      const isAllowed = await guardBridge.isAllowed(context);
+      const isAllowed = await guardBridge.isAllowed(guardContext);
 
       if (isAllowed) {
         return next();
       }
 
       // TODO Add options for this. Use decorators?
-      return context.respond(new UnauthorizedResponse());
+      return httpContext.respond(new UnauthorizedResponse());
     };
   }
 }

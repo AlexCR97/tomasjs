@@ -1,4 +1,5 @@
 import { HttpMethod } from "@/core";
+import { GuardType } from "@/guards";
 import { MiddlewareParam } from "../MiddlewareParam";
 import { EndpointMetadataKeys } from "./EndpointMetadataKeys";
 import { IEndpointMetadata } from "./IEndpointMetadata";
@@ -13,7 +14,9 @@ export abstract class EndpointMetadata implements IEndpointMetadata {
   /* #region HTTP Method */
 
   get httpMethod(): HttpMethod | undefined {
-    return this.getMetadata<HttpMethod | undefined>(EndpointMetadataKeys.httpMethodKey);
+    return this.getMetadata<HttpMethod | undefined>(
+      EndpointMetadataKeys.httpMethodKey
+    );
   }
 
   set httpMethod(value: HttpMethod | undefined) {
@@ -21,7 +24,11 @@ export abstract class EndpointMetadata implements IEndpointMetadata {
   }
 
   get httpMethodOrDefault(): HttpMethod {
-    return this.getMetadata<HttpMethod | undefined>(EndpointMetadataKeys.httpMethodKey) ?? "get";
+    return (
+      this.getMetadata<HttpMethod | undefined>(
+        EndpointMetadataKeys.httpMethodKey
+      ) ?? "get"
+    );
   }
 
   /* #endregion */
@@ -41,7 +48,9 @@ export abstract class EndpointMetadata implements IEndpointMetadata {
   /* #region Middlewares */
 
   get middlewares(): MiddlewareParam[] | undefined {
-    return this.getMetadata<MiddlewareParam[] | undefined>(EndpointMetadataKeys.middlewaresKey);
+    return this.getMetadata<MiddlewareParam[] | undefined>(
+      EndpointMetadataKeys.middlewaresKey
+    );
   }
 
   set middlewares(value: MiddlewareParam[] | undefined) {
@@ -54,6 +63,28 @@ export abstract class EndpointMetadata implements IEndpointMetadata {
     }
 
     this.middlewares.push(value);
+  }
+
+  /* #endregion */
+
+  /* #region Guards */
+
+  get guards(): GuardType[] | undefined {
+    return this.getMetadata<GuardType[] | undefined>(
+      EndpointMetadataKeys.guardsKey
+    );
+  }
+
+  set guards(value: GuardType[] | undefined) {
+    this.setMetadata(EndpointMetadataKeys.guardsKey, value);
+  }
+
+  addGuard(value: GuardType): void {
+    if (this.guards === undefined) {
+      this.guards = [];
+    }
+
+    this.guards.push(value);
   }
 
   /* #endregion */
