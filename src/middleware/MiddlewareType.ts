@@ -3,8 +3,8 @@ import { Middleware } from "./Middleware";
 import { MiddlewareFactory } from "./MiddlewareFactory";
 import { MiddlewareHandler } from "./MiddlewareHandler";
 
-export type MiddlewareType =
+export type MiddlewareType<TMiddleware extends Middleware = Middleware> =
   | MiddlewareHandler
-  | Middleware
-  | ClassConstructor<Middleware>
-  | MiddlewareFactory;
+  | TMiddleware
+  | ClassConstructor<TMiddleware>
+  | MiddlewareFactory<TMiddleware>;

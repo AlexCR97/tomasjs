@@ -3,8 +3,8 @@ import { Guard } from "./Guard";
 import { GuardFactory } from "./GuardFactory";
 import { GuardFunction } from "./GuardFunction";
 
-export type GuardType =
+export type GuardType<TGuard extends Guard = Guard> =
   | GuardFunction
-  | Guard
-  | ClassConstructor<Guard>
+  | TGuard
+  | ClassConstructor<TGuard>
   | GuardFactory;

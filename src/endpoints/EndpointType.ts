@@ -2,7 +2,7 @@ import { ClassConstructor } from "@/container";
 import { Endpoint } from "./Endpoint";
 import { EndpointHandler } from "./types";
 
-export type EndpointType =
+export type EndpointType<TEndpoint extends Endpoint = Endpoint> =
   | EndpointHandler<any>
-  | Endpoint
-  | ClassConstructor<Endpoint>;
+  | TEndpoint
+  | ClassConstructor<TEndpoint>;

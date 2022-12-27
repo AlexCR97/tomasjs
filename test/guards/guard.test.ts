@@ -7,6 +7,7 @@ import {
   AnonymousEndpoint,
   endpoint,
   Endpoint,
+  EndpointGroup,
   path,
   useGuard,
 } from "../../src/endpoints";
@@ -163,5 +164,63 @@ describe("guards", () => {
 
     const response2 = await fetch(`${serverAddress}/${resource2Path}`);
     expect(response2.status).toEqual(StatusCodes.ok);
+  });
+
+  it(`An EndpointGroup-level Guard should be applied to only the endpoints defined inside the EndpointGroup`, async () => {
+    // Arrange
+    const resource1Path = "resource-1";
+    const resource2Path = "resource-2";
+    const resource3Path = "resource-3";
+
+    @guard()
+    class TestGuard implements Guard {
+      isAllowed(context: GuardContext): boolean {
+        return false;
+      }
+    }
+
+    @endpoint()
+    @path(resource1Path)
+    class TestEndpoint1 implements Endpoint {
+      handle(context: HttpContext) {
+        return new OkResponse();
+      }
+    }
+
+    @endpoint()
+    @path(resource2Path)
+    class TestEndpoint2 implements Endpoint {
+      handle(context: HttpContext) {
+        return new OkResponse();
+      }
+    }
+
+    @endpoint()
+    @path(resource3Path)
+    class TestEndpoint3 implements Endpoint {
+      handle(context: HttpContext) {
+        return new OkResponse();
+      }
+    }
+
+    server = await new AppBuilder()
+      .useEndpointGroup((endpoints: EndpointGroup) =>
+        endpoints
+          .useGuard(TestGuard)
+          .useEndpoint(TestEndpoint1)
+          .useEndpoint(TestEndpoint2)
+      )
+      .useEndpoint(TestEndpoint3)
+      .buildAsync(port);
+
+    // Act/Assert
+    const response1 = await fetch(`${serverAddress}/${resource1Path}`);
+    expect(response1.status).toEqual(StatusCodes.unauthorized);
+
+    const response2 = await fetch(`${serverAddress}/${resource2Path}`);
+    expect(response2.status).toEqual(StatusCodes.unauthorized);
+
+    const response3 = await fetch(`${serverAddress}/${resource3Path}`);
+    expect(response3.status).toEqual(StatusCodes.ok);
   });
 });
