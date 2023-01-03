@@ -1,14 +1,11 @@
-import {
-  ExpressErrorMiddlewareHandler,
-  ExpressPathAdapter,
-} from "@/core/express";
+import express, { Express } from "express";
+import { ExpressErrorMiddlewareHandler, ExpressPathAdapter } from "../core/express";
 import {
   ErrorMiddlewareAdapter,
   ErrorMiddlewareType,
   isErrorMiddleware,
   isErrorMiddlewareHandler,
-} from "@/middleware";
-import express from "express";
+} from "../middleware";
 import { AbstractApiBuilder } from "./AbstractApiBuilder";
 import { ApiBuilder } from "./ApiBuilder";
 import { EndpointGroupBuilder } from "./EndpointGroupBuilder";
@@ -16,17 +13,20 @@ import { EndpointGroupBuilderFunction } from "./EndpointGroupBuilderFunction";
 
 // TODO Move this interface somewhere else?
 interface ITomasAppBuilder extends ApiBuilder {
+  use(appSetup: (app: Express) => void): ITomasAppBuilder;
   // TODO Add return type for server
   buildAsync(port: number): Promise<any>;
 }
 
-export class TomasAppBuilder
-  extends AbstractApiBuilder
-  implements ITomasAppBuilder
-{
+export class TomasAppBuilder extends AbstractApiBuilder implements ITomasAppBuilder {
   protected override root = express();
   private readonly endpointGroups: EndpointGroupBuilderFunction[] = [];
   private errorMiddleware?: ErrorMiddlewareType;
+
+  use(appSetup: (app: Express) => void): TomasAppBuilder {
+    appSetup(this.root);
+    return this;
+  }
 
   /* #region Endpoint Groups */
 
@@ -43,9 +43,7 @@ export class TomasAppBuilder
 
     const expressRouter = endpointGroupBuilder.build();
 
-    const routerBasePath = ExpressPathAdapter.adapt(
-      endpointGroupBuilder._basePath
-    );
+    const routerBasePath = ExpressPathAdapter.adapt(endpointGroupBuilder._basePath);
 
     this.root.use(routerBasePath, expressRouter);
 
@@ -73,20 +71,15 @@ export class TomasAppBuilder
     return this;
   }
 
-  private bindErrorMiddleware(
-    middleware: ErrorMiddlewareType
-  ): TomasAppBuilder {
+  private bindErrorMiddleware(middleware: ErrorMiddlewareType): TomasAppBuilder {
     let expressErrorMiddleware: ExpressErrorMiddlewareHandler;
 
     if (isErrorMiddlewareHandler(middleware)) {
-      expressErrorMiddleware =
-        ErrorMiddlewareAdapter.fromTypeToExpress(middleware);
+      expressErrorMiddleware = ErrorMiddlewareAdapter.fromTypeToExpress(middleware);
     } else if (isErrorMiddleware(middleware)) {
-      expressErrorMiddleware =
-        ErrorMiddlewareAdapter.fromInstanceToExpress(middleware);
+      expressErrorMiddleware = ErrorMiddlewareAdapter.fromInstanceToExpress(middleware);
     } else {
-      expressErrorMiddleware =
-        ErrorMiddlewareAdapter.fromConstructorToExpress(middleware);
+      expressErrorMiddleware = ErrorMiddlewareAdapter.fromConstructorToExpress(middleware);
     }
 
     this.root.use(expressErrorMiddleware);

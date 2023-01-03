@@ -123,14 +123,11 @@ export class AppBuilder {
     let expressErrorMiddleware: ExpressErrorMiddlewareHandler;
 
     if (isErrorMiddlewareHandler(middleware)) {
-      expressErrorMiddleware =
-        ErrorMiddlewareAdapter.fromTypeToExpress(middleware);
+      expressErrorMiddleware = ErrorMiddlewareAdapter.fromTypeToExpress(middleware);
     } else if (isErrorMiddleware(middleware)) {
-      expressErrorMiddleware =
-        ErrorMiddlewareAdapter.fromInstanceToExpress(middleware);
+      expressErrorMiddleware = ErrorMiddlewareAdapter.fromInstanceToExpress(middleware);
     } else {
-      expressErrorMiddleware =
-        ErrorMiddlewareAdapter.fromConstructorToExpress(middleware);
+      expressErrorMiddleware = ErrorMiddlewareAdapter.fromConstructorToExpress(middleware);
     }
 
     this.app.use(expressErrorMiddleware);
@@ -197,9 +194,7 @@ export class AppBuilder {
       for (const action of actions) {
         router[action.method](
           action.path,
-          ...action.actions.map((action) =>
-            this.fromControllerActionToExpressHandler(action)
-          )
+          ...action.actions.map((action) => this.fromControllerActionToExpressHandler(action))
         );
       }
     }
@@ -247,11 +242,7 @@ export class AppBuilder {
   }
 
   private tryBindGuards(): AppBuilder {
-    if (
-      this.guards === undefined ||
-      this.guards === null ||
-      this.guards.length === 0
-    ) {
+    if (this.guards === undefined || this.guards === null || this.guards.length === 0) {
       return this;
     }
 
@@ -306,11 +297,7 @@ export class AppBuilder {
   }
 
   private tryBindEndpoints(): AppBuilder {
-    if (
-      this.endpoints === undefined ||
-      this.endpoints === null ||
-      this.endpoints.length === 0
-    ) {
+    if (this.endpoints === undefined || this.endpoints === null || this.endpoints.length === 0) {
       return this;
     }
 
@@ -330,13 +317,10 @@ export class AppBuilder {
     return this;
   }
 
-  private bindEndpointGroup(
-    endpoints: (endpoints: EndpointGroup) => void
-  ): AppBuilder {
+  private bindEndpointGroup(endpoints: (endpoints: EndpointGroup) => void): AppBuilder {
     const endpointGroup = new EndpointGroup();
     endpoints(endpointGroup);
-    const { routerBasePath, router } =
-      EndpointGroupAdapter.toExpressRouter(endpointGroup);
+    const { routerBasePath, router } = EndpointGroupAdapter.toExpressRouter(endpointGroup);
     this.app.use(routerBasePath, router);
     return this;
   }

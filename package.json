@@ -21,7 +21,7 @@
     "publish": "cd ./dist && npm publish",
     "test": "jest",
     "testw": "jest --watchAll --verbose",
-    "testw-dist": "jest --testNamePattern dist-test --watchAll --verbose",
+    "testw-builder": "jest --testNamePattern builder --watchAll --verbose",
     "testw-endpoints": "jest --testNamePattern endpoints --watchAll --verbose",
     "testw-endpoint-groups": "jest --testNamePattern endpoint-groups --watchAll --verbose",
     "testw-endpoint-isEndpoint": "jest --testNamePattern isEndpoint --watchAll --verbose",

@@ -49,10 +49,7 @@ describe("guards", () => {
       }
     }
 
-    server = await new AppBuilder()
-      .useGuard(TestGuard)
-      .useEndpoint(TestEndpoint)
-      .buildAsync(port);
+    server = await new AppBuilder().useGuard(TestGuard).useEndpoint(TestEndpoint).buildAsync(port);
 
     // Act
     const response = await fetch(serverAddress);
@@ -78,10 +75,7 @@ describe("guards", () => {
       }
     }
 
-    server = await new AppBuilder()
-      .useGuard(TestGuard)
-      .useEndpoint(TestEndpoint)
-      .buildAsync(port);
+    server = await new AppBuilder().useGuard(TestGuard).useEndpoint(TestEndpoint).buildAsync(port);
 
     // Act
     const response = await fetch(serverAddress);
@@ -205,10 +199,7 @@ describe("guards", () => {
 
     server = await new AppBuilder()
       .useEndpointGroup((endpoints: EndpointGroup) =>
-        endpoints
-          .useGuard(TestGuard)
-          .useEndpoint(TestEndpoint1)
-          .useEndpoint(TestEndpoint2)
+        endpoints.useGuard(TestGuard).useEndpoint(TestEndpoint1).useEndpoint(TestEndpoint2)
       )
       .useEndpoint(TestEndpoint3)
       .buildAsync(port);
