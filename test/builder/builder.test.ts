@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import fetch from "node-fetch";
 import { afterEach, describe, expect, it } from "@jest/globals";
-import { TomasAppBuilder } from "../../src/builder";
+import { AppBuilder } from "../../src/builder";
 import { environment } from "../environment";
 import { tryCloseServerAsync } from "../utils/server";
 
@@ -17,19 +17,19 @@ describe("builder", () => {
   });
 
   it("AppBuilder works", () => {
-    const app = new TomasAppBuilder();
+    const app = new AppBuilder();
     expect(app).toBeTruthy();
   });
 
   it("App can be built asynchronously", async () => {
-    server = await new TomasAppBuilder().buildAsync(environment.api.port);
+    server = await new AppBuilder().buildAsync(environment.api.port);
     expect(server).toBeTruthy();
   });
 
   it("App can be reached", async () => {
     const expectedResponse = "Api reached!";
 
-    server = await new TomasAppBuilder()
+    server = await new AppBuilder()
       .use((app) =>
         app.get("/", (req, res) => {
           res.send(expectedResponse);

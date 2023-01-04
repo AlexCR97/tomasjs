@@ -6,7 +6,7 @@ import { tryCloseServerAsync } from "../../utils/server";
 import { tick } from "../../utils/time";
 import { RequiredClaimMiddleware } from "../../../src/auth/claims";
 import { JwtMiddleware, JwtSigner } from "../../../src/auth/jwt";
-import { TomasAppBuilder } from "../../../src/builder";
+import { AppBuilder } from "../../../src/builder";
 import { HttpContext, StatusCodes } from "../../../src/core";
 import { AnonymousEndpoint } from "../../../src/endpoints";
 import { OkResponse } from "../../../src/responses/status-codes";
@@ -31,7 +31,7 @@ describe("auth-required-claim-middleware", () => {
     // Arrange
     const claimType = "role";
 
-    server = await new TomasAppBuilder()
+    server = await new AppBuilder()
       .useMiddleware(
         new RequiredClaimMiddleware({
           type: claimType,
@@ -55,7 +55,7 @@ describe("auth-required-claim-middleware", () => {
     const claims: any = {};
     const secret = "SuperSecureSecretKey";
 
-    server = await new TomasAppBuilder()
+    server = await new AppBuilder()
       .useMiddleware(
         new JwtMiddleware({
           secret,
@@ -94,7 +94,7 @@ describe("auth-required-claim-middleware", () => {
 
     const secret = "SuperSecureSecretKey";
 
-    server = await new TomasAppBuilder()
+    server = await new AppBuilder()
       .useMiddleware(
         new JwtMiddleware({
           secret,
@@ -134,7 +134,7 @@ describe("auth-required-claim-middleware", () => {
 
     const secret = "SuperSecureSecretKey";
 
-    server = await new TomasAppBuilder()
+    server = await new AppBuilder()
       .useMiddleware(
         new JwtMiddleware({
           secret,
@@ -175,7 +175,7 @@ describe("auth-required-claim-middleware", () => {
 
     const secret = "SuperSecureSecretKey";
 
-    server = await new TomasAppBuilder()
+    server = await new AppBuilder()
       .useMiddleware(
         new JwtMiddleware({
           secret,
@@ -221,7 +221,7 @@ describe("auth-required-claim-middleware", () => {
     studentClaims[claimType] = studentRole;
     const studentAccessToken = JwtSigner.sign(studentClaims, secret);
 
-    server = await new TomasAppBuilder()
+    server = await new AppBuilder()
       .useEndpointGroup((endpoints) =>
         endpoints
           .useBasePath("teachers")

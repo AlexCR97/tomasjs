@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import fetch from "node-fetch";
 import { afterEach, beforeEach, describe, it } from "@jest/globals";
-import { TomasAppBuilder } from "../../src/builder";
+import { AppBuilder } from "../../src/builder";
 import { HttpContext, StatusCodes } from "../../src/core";
 import { AnonymousEndpoint, endpoint, Endpoint, path, useGuard } from "../../src/endpoints";
 import { guard, Guard, GuardContext } from "../../src/guards";
@@ -42,7 +42,7 @@ describe("guards", () => {
       }
     }
 
-    server = await new TomasAppBuilder()
+    server = await new AppBuilder()
       .useGuard(TestGuard)
       .useEndpoint(TestEndpoint)
       .buildAsync(port);
@@ -71,7 +71,7 @@ describe("guards", () => {
       }
     }
 
-    server = await new TomasAppBuilder()
+    server = await new AppBuilder()
       .useGuard(TestGuard)
       .useEndpoint(TestEndpoint)
       .buildAsync(port);
@@ -95,7 +95,7 @@ describe("guards", () => {
       }
     }
 
-    server = await new TomasAppBuilder()
+    server = await new AppBuilder()
       .useGuard(TestGuard)
       .useEndpoint(
         new AnonymousEndpoint("get", resource1Path, (context: HttpContext) => {
@@ -146,7 +146,7 @@ describe("guards", () => {
       }
     }
 
-    server = await new TomasAppBuilder()
+    server = await new AppBuilder()
       .useEndpoint(TestEndpoint1)
       .useEndpoint(TestEndpoint2)
       .buildAsync(port);
@@ -196,7 +196,7 @@ describe("guards", () => {
       }
     }
 
-    server = await new TomasAppBuilder()
+    server = await new AppBuilder()
       .useEndpointGroup((endpoints) =>
         endpoints.useGuard(TestGuard).useEndpoint(TestEndpoint1).useEndpoint(TestEndpoint2)
       )

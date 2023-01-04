@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { afterEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "../utils/server";
-import { TomasAppBuilder } from "../../src/builder";
+import { AppBuilder } from "../../src/builder";
 import { tick } from "../utils/time";
 import { HttpContext, StatusCodes } from "../../src/core";
 import fetch from "node-fetch";
@@ -31,7 +31,7 @@ describe("endpoint-groups", () => {
     const resourcePath1 = "resource-1";
     const resourcePath2 = "resource-2";
 
-    server = await new TomasAppBuilder()
+    server = await new AppBuilder()
       .useEndpointGroup((endpoints) =>
         endpoints
           .useBasePath(basePath)
@@ -75,7 +75,7 @@ describe("endpoint-groups", () => {
     const headerKey = "authorization";
     const secretKey = "superSecretKey";
 
-    server = await new TomasAppBuilder()
+    server = await new AppBuilder()
       .useEndpointGroup((endpoints) =>
         endpoints
           .useBasePath(basePath)

@@ -1,39 +1,36 @@
 import express, { Express } from "express";
-import { ExpressErrorMiddlewareHandler, ExpressPathAdapter } from "../core/express";
+import { ExpressErrorMiddlewareHandler, ExpressPathAdapter } from "../../core/express";
 import {
   ErrorMiddlewareAdapter,
   ErrorMiddlewareType,
   isErrorMiddleware,
   isErrorMiddlewareHandler,
-} from "../middleware";
+} from "../../middleware";
 import { AbstractApiBuilder } from "./AbstractApiBuilder";
 import { EndpointGroupBuilder } from "./EndpointGroupBuilder";
 import { EndpointGroupBuilderFunction } from "./EndpointGroupBuilderFunction";
 
 // TODO Move this interface somewhere else?
-interface ITomasAppBuilder extends AbstractApiBuilder<ITomasAppBuilder> {
-  use(appSetup: (app: Express) => void): ITomasAppBuilder;
+interface IAppBuilder extends AbstractApiBuilder<IAppBuilder> {
+  use(appSetup: (app: Express) => void): IAppBuilder;
 
   /* #region Formatters */
-  useText(options?: any): ITomasAppBuilder; // TODO Figure out how to pass type parameter
-  useJson(options?: any): ITomasAppBuilder; // TODO Figure out how to pass type parameter
+  useText(options?: any): IAppBuilder; // TODO Figure out how to pass type parameter
+  useJson(options?: any): IAppBuilder; // TODO Figure out how to pass type parameter
   /* #endregion */
 
-  useEndpointGroup(endpoints: EndpointGroupBuilderFunction): ITomasAppBuilder;
+  useEndpointGroup(endpoints: EndpointGroupBuilderFunction): IAppBuilder;
 
-  useErrorMiddleware(middleware: ErrorMiddlewareType): ITomasAppBuilder;
+  useErrorMiddleware(middleware: ErrorMiddlewareType): IAppBuilder;
 
   // TODO Add return type for server
   buildAsync(port: number): Promise<any>;
 }
 
-export class TomasAppBuilder
-  extends AbstractApiBuilder<ITomasAppBuilder>
-  implements ITomasAppBuilder
-{
+export class AppBuilder extends AbstractApiBuilder<IAppBuilder> implements IAppBuilder {
   protected override root = express();
 
-  use(appSetup: (app: Express) => void): ITomasAppBuilder {
+  use(appSetup: (app: Express) => void): IAppBuilder {
     appSetup(this.root);
     return this;
   }
@@ -41,13 +38,13 @@ export class TomasAppBuilder
   /* #region Formatters */
 
   // TODO Figure out how to pass type parameter
-  useText(options?: any): ITomasAppBuilder {
+  useText(options?: any): IAppBuilder {
     this.root.use(express.text(options));
     return this;
   }
 
   // TODO Figure out how to pass type parameter
-  useJson(options?: any): ITomasAppBuilder {
+  useJson(options?: any): IAppBuilder {
     this.root.use(express.json(options));
     return this;
   }
@@ -58,7 +55,7 @@ export class TomasAppBuilder
 
   private readonly endpointGroups: EndpointGroupBuilderFunction[] = [];
 
-  useEndpointGroup(endpoints: EndpointGroupBuilderFunction): ITomasAppBuilder {
+  useEndpointGroup(endpoints: EndpointGroupBuilderFunction): IAppBuilder {
     this.endpointGroups.push(endpoints);
     return this;
   }
@@ -94,7 +91,7 @@ export class TomasAppBuilder
 
   private errorMiddleware?: ErrorMiddlewareType;
 
-  useErrorMiddleware(middleware: ErrorMiddlewareType): ITomasAppBuilder {
+  useErrorMiddleware(middleware: ErrorMiddlewareType): IAppBuilder {
     this.errorMiddleware = middleware;
     return this;
   }

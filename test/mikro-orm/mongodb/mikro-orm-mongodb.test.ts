@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { afterEach, beforeEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "../../utils/server";
 import { tick } from "../../utils/time";
-import { TomasAppBuilder, ContainerBuilder } from "../../../src/builder";
+import { AppBuilder, ContainerBuilder } from "../../../src/builder";
 import { internalContainer } from "../../../src/container";
 import { HttpContext, StatusCodes } from "../../../src/core";
 import { endpoint, Endpoint, path } from "../../../src/endpoints";
@@ -82,7 +82,7 @@ describe("mikro-orm", () => {
       )
       .buildAsync();
 
-    server = await new TomasAppBuilder().buildAsync(port);
+    server = await new AppBuilder().buildAsync(port);
   });
 
   it(`Can inject ${MikroORM.name}`, async () => {
@@ -112,7 +112,7 @@ describe("mikro-orm", () => {
       )
       .buildAsync();
 
-    server = await new TomasAppBuilder().useEndpoint(CreateUserEndpoint).buildAsync(port);
+    server = await new AppBuilder().useEndpoint(CreateUserEndpoint).buildAsync(port);
 
     // Act
     const response = await fetch(`${serverAddress}/${resourcePath}`, {
@@ -157,7 +157,7 @@ describe("mikro-orm", () => {
       )
       .buildAsync();
 
-    server = await new TomasAppBuilder().useJson().useEndpoint(CreateUserEndpoint).buildAsync(port);
+    server = await new AppBuilder().useJson().useEndpoint(CreateUserEndpoint).buildAsync(port);
 
     // Act
     const response = await fetch(`${serverAddress}/${resourcePath}`, {
@@ -206,7 +206,7 @@ describe("mikro-orm", () => {
       .setup(new RepositorySetup("mongo", User))
       .buildAsync();
 
-    server = await new TomasAppBuilder().useJson().useEndpoint(CreateUserEndpoint).buildAsync(port);
+    server = await new AppBuilder().useJson().useEndpoint(CreateUserEndpoint).buildAsync(port);
 
     // Act
     const response = await fetch(`${serverAddress}/${resourcePath}`, {
