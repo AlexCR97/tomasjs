@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { afterEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "../utils/server";
-import { AppBuilder } from "../../src/builder";
+import { TomasAppBuilder } from "../../src/builder";
 import { tick } from "../utils/time";
 import { HttpContext, StatusCodes } from "../../src/core";
 import fetch from "node-fetch";
@@ -12,7 +12,7 @@ import { OkResponse, UnauthorizedResponse } from "../../src/responses/status-cod
 describe("endpoint-groups", () => {
   const port = 3034;
   const serverAddress = `http://localhost:${port}`;
-  const serverTeardownOffsetMilliseconds = 50;
+  const serverTeardownOffsetMilliseconds = 0;
   let server: any; // TODO Set http.Server type
 
   beforeEach(async () => {
@@ -28,16 +28,15 @@ describe("endpoint-groups", () => {
   it(`An ${EndpointGroup.name} with a base path works`, async () => {
     // Arrange
     const basePath = "base-path/to/resources";
-    const resourceDefaultPath = "/";
     const resourcePath1 = "resource-1";
     const resourcePath2 = "resource-2";
 
-    server = await new AppBuilder()
+    server = await new TomasAppBuilder()
       .useEndpointGroup((endpoints) =>
         endpoints
-          .basePath(basePath)
+          .useBasePath(basePath)
           .useEndpoint(
-            new AnonymousEndpoint("get", resourceDefaultPath, (context: HttpContext) => {
+            new AnonymousEndpoint("get", "/", (context: HttpContext) => {
               return new OkResponse();
             })
           )
@@ -68,7 +67,7 @@ describe("endpoint-groups", () => {
     expect(responseResource2.status).toEqual(StatusCodes.ok);
   });
 
-  it(`The OnBefore Middlewares work`, async () => {
+  it(`An ${EndpointGroup.name} can use a Middleware`, async () => {
     // Arrange
     const basePath = "base-path";
     const resourcePath1 = "resource-1";
@@ -76,11 +75,11 @@ describe("endpoint-groups", () => {
     const headerKey = "authorization";
     const secretKey = "superSecretKey";
 
-    server = await new AppBuilder()
+    server = await new TomasAppBuilder()
       .useEndpointGroup((endpoints) =>
         endpoints
-          .basePath(basePath)
-          .onBefore(
+          .useBasePath(basePath)
+          .useMiddleware(
             new AnonymousMiddleware((context: HttpContext, next) => {
               const token = context.request.headers[headerKey];
 

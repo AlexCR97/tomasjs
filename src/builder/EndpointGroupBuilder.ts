@@ -1,24 +1,29 @@
 import { Router } from "express";
 import { AbstractApiBuilder } from "./AbstractApiBuilder";
 
-export class EndpointGroupBuilder extends AbstractApiBuilder {
+export interface IEndpointGroupBuilder extends AbstractApiBuilder<IEndpointGroupBuilder> {
+  useBasePath(path: string): IEndpointGroupBuilder;
+  build(): Router;
+}
+
+export class EndpointGroupBuilder
+  extends AbstractApiBuilder<IEndpointGroupBuilder>
+  implements IEndpointGroupBuilder
+{
   protected override root = Router();
 
   /* #region Base Path */
 
   _basePath?: string; // TODO Mark as private?
 
-  useBasePath(path: string): EndpointGroupBuilder {
+  useBasePath(path: string): IEndpointGroupBuilder {
     this._basePath = path;
     return this;
   }
 
   /* #endregion */
 
-  build() {
-    this.tryBindMiddlewares();
-    this.tryBindGuards();
-    this.tryBindEndpoints();
-    return this.root;
+  build(): Router {
+    return this.tryBindMiddlewares().tryBindGuards().tryBindEndpoints().root;
   }
 }

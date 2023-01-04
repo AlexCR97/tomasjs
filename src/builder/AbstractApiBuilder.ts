@@ -1,23 +1,15 @@
 import { Express, Router } from "express";
 import { ClassConstructor, internalContainer } from "@/container";
 import { ExpressPathAdapter } from "@/core/express";
-import {
-  Endpoint,
-  EndpointAdapter,
-  EndpointType,
-  isEndpoint,
-} from "@/endpoints";
+import { Endpoint, EndpointAdapter, EndpointType, isEndpoint } from "@/endpoints";
 import { EndpointMetadataStrategy } from "@/endpoints/metadata";
 import { Guard, GuardAdapter, GuardType } from "@/guards";
-import {
-  Middleware,
-  MiddlewareAdapter,
-  MiddlewareFactory,
-  MiddlewareType,
-} from "@/middleware";
+import { Middleware, MiddlewareAdapter, MiddlewareFactory, MiddlewareType } from "@/middleware";
 import { ApiBuilder } from "./ApiBuilder";
 
-export abstract class AbstractApiBuilder implements ApiBuilder {
+export abstract class AbstractApiBuilder<TBuilder extends AbstractApiBuilder<any>>
+  implements ApiBuilder<TBuilder>
+{
   protected abstract readonly root: Express | Router;
   protected readonly middlewares: MiddlewareType[] = [];
   protected readonly guards: GuardType[] = [];
@@ -27,14 +19,14 @@ export abstract class AbstractApiBuilder implements ApiBuilder {
 
   useMiddleware<TMiddleware extends Middleware = Middleware>(
     middleware: MiddlewareType<TMiddleware>
-  ): ApiBuilder {
+  ): TBuilder {
     this.middlewares.push(middleware);
-    return this;
+    return this as any; // TODO Figure out how to satisfy generic
   }
 
   private bindMiddleware<TMiddleware extends Middleware = Middleware>(
     middleware: MiddlewareType<TMiddleware>
-  ): AbstractApiBuilder {
+  ) {
     const expressMiddleware =
       middleware instanceof MiddlewareFactory
         ? MiddlewareAdapter.from(middleware.create())
@@ -43,7 +35,7 @@ export abstract class AbstractApiBuilder implements ApiBuilder {
     return this;
   }
 
-  protected tryBindMiddlewares(): AbstractApiBuilder {
+  protected tryBindMiddlewares() {
     if (this.middlewares.length === 0) {
       return this;
     }
@@ -59,18 +51,18 @@ export abstract class AbstractApiBuilder implements ApiBuilder {
 
   /* #region Guards */
 
-  useGuard<TGuard extends Guard = Guard>(guard: GuardType<TGuard>): ApiBuilder {
+  useGuard<TGuard extends Guard = Guard>(guard: GuardType<TGuard>): TBuilder {
     this.guards.push(guard);
-    return this;
+    return this as any; // TODO Figure out how to satisfy generic
   }
 
-  private bindGuard(guard: GuardType): AbstractApiBuilder {
+  private bindGuard(guard: GuardType) {
     const expressMiddlewareFunction = GuardAdapter.toExpress(guard);
     this.root.use(expressMiddlewareFunction);
     return this;
   }
 
-  protected tryBindGuards(): AbstractApiBuilder {
+  protected tryBindGuards() {
     if (this.guards.length === 0) {
       return this;
     }
@@ -86,16 +78,14 @@ export abstract class AbstractApiBuilder implements ApiBuilder {
 
   /* #region Endpoints */
 
-  useEndpoint<TEndpoint extends Endpoint = Endpoint>(
-    endpoint: EndpointType<TEndpoint>
-  ): ApiBuilder {
+  useEndpoint<TEndpoint extends Endpoint = Endpoint>(endpoint: EndpointType<TEndpoint>): TBuilder {
     this.endpoints.push(endpoint);
-    return this;
+    return this as any; // TODO Figure out how to satisfy generic
   }
 
   private bindEndpoint<TEndpoint extends Endpoint = Endpoint>(
     endpoint: TEndpoint | ClassConstructor<TEndpoint>
-  ): AbstractApiBuilder {
+  ) {
     if (isEndpoint(endpoint)) {
       return this.bindEndpointInstance(endpoint);
     }
@@ -106,7 +96,7 @@ export abstract class AbstractApiBuilder implements ApiBuilder {
     return this.bindEndpointInstance(endpointInstance);
   }
 
-  private bindEndpointInstance(endpoint: Endpoint): AbstractApiBuilder {
+  private bindEndpointInstance(endpoint: Endpoint) {
     const expressHandlers = EndpointAdapter.fromInstanceToExpress(endpoint);
     // console.log("expressHandlers", expressHandlers);
 
@@ -126,7 +116,7 @@ export abstract class AbstractApiBuilder implements ApiBuilder {
     return this;
   }
 
-  protected tryBindEndpoints(): AbstractApiBuilder {
+  protected tryBindEndpoints() {
     if (this.endpoints.length === 0) {
       return this;
     }

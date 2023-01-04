@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 import { afterEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "../utils/server";
 import { tick } from "../utils/time";
-import { AppBuilder } from "../../src/builder";
+import { TomasAppBuilder } from "../../src/builder";
 import { singleton } from "../../src/container";
 import { HttpContext, StatusCodes } from "../../src/core";
 import { StatusCodeError } from "../../src/core/errors";
@@ -20,7 +20,7 @@ import { NextFunction } from "express";
 describe("error-middleware", () => {
   const port = 3036;
   const serverAddress = `http://localhost:${port}`;
-  const serverTeardownOffsetMilliseconds = 50;
+  const serverTeardownOffsetMilliseconds = 0;
   let server: any; // TODO Set http.Server type
 
   beforeEach(async () => {
@@ -35,7 +35,7 @@ describe("error-middleware", () => {
 
   it(`An ${AnonymousErrorMiddleware.name} can handle uncaught errors with the default express handler when passing the error to the "next" function`, async () => {
     // Arrange
-    server = await new AppBuilder()
+    server = await new TomasAppBuilder()
       .useEndpoint(
         new AnonymousEndpoint("get", "/", (context: HttpContext) => {
           throw new Error("Unhandled error!");
@@ -58,7 +58,7 @@ describe("error-middleware", () => {
     const errorMessage = "Error caught with custom handler!";
     const errorStatusCode = StatusCodes.badRequest;
 
-    server = await new AppBuilder()
+    server = await new TomasAppBuilder()
       .useEndpoint(
         new AnonymousEndpoint("get", "/", (context: HttpContext) => {
           throw new Error("Unhandled error!");
@@ -102,7 +102,7 @@ describe("error-middleware", () => {
     }
 
     // Arrange
-    server = await new AppBuilder()
+    server = await new TomasAppBuilder()
       .useEndpoint(
         new AnonymousEndpoint("get", "/bad-request", (context: HttpContext) => {
           throw new StatusCodeError(StatusCodes.badRequest);
@@ -126,7 +126,7 @@ describe("error-middleware", () => {
 
   it(`The ${DefaultErrorMiddleware.name} can handle uncaught errors with default behavior`, async () => {
     // Arrange
-    server = await new AppBuilder()
+    server = await new TomasAppBuilder()
       .useEndpoint(
         new AnonymousEndpoint("get", "/bad-request", (context: HttpContext) => {
           throw new StatusCodeError(StatusCodes.badRequest);

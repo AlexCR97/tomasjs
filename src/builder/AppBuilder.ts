@@ -29,6 +29,7 @@ import { EndpointMetadataStrategy } from "@/endpoints/metadata";
 import { isErrorMiddleware } from "@/middleware/isErrorMiddleware";
 import { GuardAdapter, GuardType } from "@/guards";
 
+// TODO Deprecate this
 export class AppBuilder {
   private readonly app = express();
   private readonly middlewares: MiddlewareType[] = [];

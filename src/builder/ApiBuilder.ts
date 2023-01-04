@@ -2,14 +2,12 @@ import { Endpoint, EndpointType } from "@/endpoints";
 import { Guard, GuardType } from "@/guards";
 import { Middleware, MiddlewareType } from "@/middleware";
 
-export interface ApiBuilder {
+export interface ApiBuilder<TBuilder extends ApiBuilder<any>> {
   useMiddleware<TMiddleware extends Middleware = Middleware>(
     middleware: MiddlewareType<TMiddleware>
-  ): ApiBuilder;
+  ): TBuilder;
 
-  useGuard<TGuard extends Guard = Guard>(guard: GuardType<TGuard>): ApiBuilder;
+  useGuard<TGuard extends Guard = Guard>(guard: GuardType<TGuard>): TBuilder;
 
-  useEndpoint<TEndpoint extends Endpoint = Endpoint>(
-    endpoint: EndpointType<TEndpoint>
-  ): ApiBuilder;
+  useEndpoint<TEndpoint extends Endpoint = Endpoint>(endpoint: EndpointType<TEndpoint>): TBuilder;
 }

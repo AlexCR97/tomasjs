@@ -5,7 +5,7 @@ import { afterEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "../../utils/server";
 import { tick } from "../../utils/time";
 import { JwtMiddleware, JwtSigner } from "../../../src/auth/jwt";
-import { AppBuilder } from "../../../src/builder";
+import { TomasAppBuilder } from "../../../src/builder";
 import { HttpContext, StatusCodes, UserContext } from "../../../src/core";
 import { AnonymousEndpoint } from "../../../src/endpoints";
 import { JsonResponse } from "../../../src/responses";
@@ -14,7 +14,7 @@ import { OkResponse } from "../../../src/responses/status-codes";
 describe("auth-jwt-middleware", () => {
   const port = 3037;
   const serverAddress = `http://localhost:${port}`;
-  const serverTeardownOffsetMilliseconds = 50;
+  const serverTeardownOffsetMilliseconds = 0;
   let server: any; // TODO Set http.Server type
 
   beforeEach(async () => {
@@ -31,7 +31,7 @@ describe("auth-jwt-middleware", () => {
     // Arrange
     const secret = "SuperSecureSecretKey";
 
-    server = await new AppBuilder()
+    server = await new TomasAppBuilder()
       .useMiddleware(
         new JwtMiddleware({
           secret: secret,
@@ -53,7 +53,7 @@ describe("auth-jwt-middleware", () => {
     // Arrange
     const secret = "SuperSecureSecretKey";
 
-    server = await new AppBuilder()
+    server = await new TomasAppBuilder()
       .useMiddleware(
         new JwtMiddleware({
           secret: secret,
@@ -79,7 +79,7 @@ describe("auth-jwt-middleware", () => {
     // Arrange
     const secret = "SuperSecureSecretKey";
 
-    server = await new AppBuilder()
+    server = await new TomasAppBuilder()
       .useMiddleware(
         new JwtMiddleware({
           secret: secret,
@@ -109,7 +109,7 @@ describe("auth-jwt-middleware", () => {
     };
     const secret = "SuperSecureSecretKey";
 
-    server = await new AppBuilder()
+    server = await new TomasAppBuilder()
       .useMiddleware(
         new JwtMiddleware({
           secret: secret,
@@ -138,7 +138,7 @@ describe("auth-jwt-middleware", () => {
     const claims = { userId: 1 };
     const secret = "SuperSecureSecretKey";
 
-    server = await new AppBuilder()
+    server = await new TomasAppBuilder()
       .useMiddleware(
         new JwtMiddleware({
           secret: secret,
@@ -176,7 +176,7 @@ describe("auth-jwt-middleware", () => {
 
     const secret = "SuperSecureSecretKey";
 
-    server = await new AppBuilder()
+    server = await new TomasAppBuilder()
       .useMiddleware(
         new JwtMiddleware({
           secret: secret,

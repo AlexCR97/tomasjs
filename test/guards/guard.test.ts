@@ -1,16 +1,9 @@
 import "reflect-metadata";
 import fetch from "node-fetch";
 import { afterEach, beforeEach, describe, it } from "@jest/globals";
-import { AppBuilder } from "../../src/builder";
+import { TomasAppBuilder } from "../../src/builder";
 import { HttpContext, StatusCodes } from "../../src/core";
-import {
-  AnonymousEndpoint,
-  endpoint,
-  Endpoint,
-  EndpointGroup,
-  path,
-  useGuard,
-} from "../../src/endpoints";
+import { AnonymousEndpoint, endpoint, Endpoint, path, useGuard } from "../../src/endpoints";
 import { guard, Guard, GuardContext } from "../../src/guards";
 import { OkResponse } from "../../src/responses/status-codes";
 import { tryCloseServerAsync } from "../utils/server";
@@ -19,7 +12,7 @@ import { tick } from "../utils/time";
 describe("guards", () => {
   const port = 3040;
   const serverAddress = `http://localhost:${port}`;
-  const serverTeardownOffsetMilliseconds = 50;
+  const serverTeardownOffsetMilliseconds = 0;
   let server: any; // TODO Set http.Server type
 
   beforeEach(async () => {
@@ -49,7 +42,10 @@ describe("guards", () => {
       }
     }
 
-    server = await new AppBuilder().useGuard(TestGuard).useEndpoint(TestEndpoint).buildAsync(port);
+    server = await new TomasAppBuilder()
+      .useGuard(TestGuard)
+      .useEndpoint(TestEndpoint)
+      .buildAsync(port);
 
     // Act
     const response = await fetch(serverAddress);
@@ -75,7 +71,10 @@ describe("guards", () => {
       }
     }
 
-    server = await new AppBuilder().useGuard(TestGuard).useEndpoint(TestEndpoint).buildAsync(port);
+    server = await new TomasAppBuilder()
+      .useGuard(TestGuard)
+      .useEndpoint(TestEndpoint)
+      .buildAsync(port);
 
     // Act
     const response = await fetch(serverAddress);
@@ -96,7 +95,7 @@ describe("guards", () => {
       }
     }
 
-    server = await new AppBuilder()
+    server = await new TomasAppBuilder()
       .useGuard(TestGuard)
       .useEndpoint(
         new AnonymousEndpoint("get", resource1Path, (context: HttpContext) => {
@@ -147,7 +146,7 @@ describe("guards", () => {
       }
     }
 
-    server = await new AppBuilder()
+    server = await new TomasAppBuilder()
       .useEndpoint(TestEndpoint1)
       .useEndpoint(TestEndpoint2)
       .buildAsync(port);
@@ -197,8 +196,8 @@ describe("guards", () => {
       }
     }
 
-    server = await new AppBuilder()
-      .useEndpointGroup((endpoints: EndpointGroup) =>
+    server = await new TomasAppBuilder()
+      .useEndpointGroup((endpoints) =>
         endpoints.useGuard(TestGuard).useEndpoint(TestEndpoint1).useEndpoint(TestEndpoint2)
       )
       .useEndpoint(TestEndpoint3)

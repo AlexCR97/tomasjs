@@ -7,50 +7,76 @@ import {
   isErrorMiddlewareHandler,
 } from "../middleware";
 import { AbstractApiBuilder } from "./AbstractApiBuilder";
-import { ApiBuilder } from "./ApiBuilder";
 import { EndpointGroupBuilder } from "./EndpointGroupBuilder";
 import { EndpointGroupBuilderFunction } from "./EndpointGroupBuilderFunction";
 
 // TODO Move this interface somewhere else?
-interface ITomasAppBuilder extends ApiBuilder {
+interface ITomasAppBuilder extends AbstractApiBuilder<ITomasAppBuilder> {
   use(appSetup: (app: Express) => void): ITomasAppBuilder;
+
+  /* #region Formatters */
+  useText(options?: any): ITomasAppBuilder; // TODO Figure out how to pass type parameter
+  useJson(options?: any): ITomasAppBuilder; // TODO Figure out how to pass type parameter
+  /* #endregion */
+
+  useEndpointGroup(endpoints: EndpointGroupBuilderFunction): ITomasAppBuilder;
+
+  useErrorMiddleware(middleware: ErrorMiddlewareType): ITomasAppBuilder;
+
   // TODO Add return type for server
   buildAsync(port: number): Promise<any>;
 }
 
-export class TomasAppBuilder extends AbstractApiBuilder implements ITomasAppBuilder {
+export class TomasAppBuilder
+  extends AbstractApiBuilder<ITomasAppBuilder>
+  implements ITomasAppBuilder
+{
   protected override root = express();
-  private readonly endpointGroups: EndpointGroupBuilderFunction[] = [];
-  private errorMiddleware?: ErrorMiddlewareType;
 
-  use(appSetup: (app: Express) => void): TomasAppBuilder {
+  use(appSetup: (app: Express) => void): ITomasAppBuilder {
     appSetup(this.root);
     return this;
   }
 
+  /* #region Formatters */
+
+  // TODO Figure out how to pass type parameter
+  useText(options?: any): ITomasAppBuilder {
+    this.root.use(express.text(options));
+    return this;
+  }
+
+  // TODO Figure out how to pass type parameter
+  useJson(options?: any): ITomasAppBuilder {
+    this.root.use(express.json(options));
+    return this;
+  }
+
+  /* #endregion */
+
   /* #region Endpoint Groups */
 
-  useEndpointGroup(endpoints: EndpointGroupBuilderFunction): TomasAppBuilder {
+  private readonly endpointGroups: EndpointGroupBuilderFunction[] = [];
+
+  useEndpointGroup(endpoints: EndpointGroupBuilderFunction): ITomasAppBuilder {
     this.endpointGroups.push(endpoints);
     return this;
   }
 
-  private bindEndpointGroup(
-    endpointsBuilderFunction: EndpointGroupBuilderFunction
-  ): AbstractApiBuilder {
+  private bindEndpointGroup(endpointsBuilderFunction: EndpointGroupBuilderFunction) {
     const endpointGroupBuilder = new EndpointGroupBuilder();
     endpointsBuilderFunction(endpointGroupBuilder);
 
-    const expressRouter = endpointGroupBuilder.build();
-
     const routerBasePath = ExpressPathAdapter.adapt(endpointGroupBuilder._basePath);
+
+    const expressRouter = endpointGroupBuilder.build();
 
     this.root.use(routerBasePath, expressRouter);
 
     return this;
   }
 
-  protected tryBindEndpointGroups(): AbstractApiBuilder {
+  protected tryBindEndpointGroups() {
     if (this.endpointGroups.length === 0) {
       return this;
     }
@@ -66,12 +92,14 @@ export class TomasAppBuilder extends AbstractApiBuilder implements ITomasAppBuil
 
   /* #region ErrorMiddleware */
 
-  useErrorMiddleware(middleware: ErrorMiddlewareType): TomasAppBuilder {
+  private errorMiddleware?: ErrorMiddlewareType;
+
+  useErrorMiddleware(middleware: ErrorMiddlewareType): ITomasAppBuilder {
     this.errorMiddleware = middleware;
     return this;
   }
 
-  private bindErrorMiddleware(middleware: ErrorMiddlewareType): TomasAppBuilder {
+  private bindErrorMiddleware(middleware: ErrorMiddlewareType) {
     let expressErrorMiddleware: ExpressErrorMiddlewareHandler;
 
     if (isErrorMiddlewareHandler(middleware)) {
@@ -87,7 +115,7 @@ export class TomasAppBuilder extends AbstractApiBuilder implements ITomasAppBuil
     return this;
   }
 
-  private tryBindErrorMiddleware(): TomasAppBuilder {
+  private tryBindErrorMiddleware() {
     if (this.errorMiddleware === undefined || this.errorMiddleware === null) {
       return this;
     }
@@ -99,11 +127,12 @@ export class TomasAppBuilder extends AbstractApiBuilder implements ITomasAppBuil
 
   // TODO Add return type
   async buildAsync(port: number): Promise<any> {
-    this.tryBindMiddlewares();
-    this.tryBindEndpoints();
-    this.tryBindEndpointGroups();
-    this.tryBindErrorMiddleware();
-    return await this.createServerAsync(port);
+    return await this.tryBindMiddlewares()
+      .tryBindGuards()
+      .tryBindEndpoints()
+      .tryBindEndpointGroups()
+      .tryBindErrorMiddleware()
+      .createServerAsync(port);
   }
 
   // TODO Add return type

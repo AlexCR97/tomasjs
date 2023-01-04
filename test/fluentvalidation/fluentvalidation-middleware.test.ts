@@ -5,7 +5,7 @@ import fetch from "node-fetch";
 import { tryCloseServerAsync } from "../utils/server";
 import { tick } from "../utils/time";
 import { injectable } from "../../src";
-import { AppBuilder, ContainerBuilder } from "../../src/builder";
+import { TomasAppBuilder, ContainerBuilder } from "../../src/builder";
 import { HttpContext, StatusCodes } from "../../src/core";
 import { endpoint, Endpoint, middleware, path } from "../../src/endpoints";
 import {
@@ -19,7 +19,7 @@ import { Validator } from "fluentvalidation-ts";
 describe("fluentvalidation-middleware", () => {
   const port = 3039;
   const serverAddress = `http://localhost:${port}`;
-  const serverTeardownOffsetMilliseconds = 50;
+  const serverTeardownOffsetMilliseconds = 0;
   let server: any; // TODO Set http.Server type
 
   beforeEach(async () => {
@@ -56,7 +56,7 @@ describe("fluentvalidation-middleware", () => {
       }
     }
 
-    server = await new AppBuilder().useJson().useEndpoint(SignUpEndpoint).buildAsync(port);
+    server = await new TomasAppBuilder().useJson().useEndpoint(SignUpEndpoint).buildAsync(port);
 
     // Act/Assert
     const body: SignUpRequest = {
@@ -98,7 +98,7 @@ describe("fluentvalidation-middleware", () => {
       }
     }
 
-    server = await new AppBuilder().useJson().useEndpoint(SignUpEndpoint).buildAsync(port);
+    server = await new TomasAppBuilder().useJson().useEndpoint(SignUpEndpoint).buildAsync(port);
 
     // Act/Assert
     const body: SignUpRequest = {
@@ -149,7 +149,7 @@ describe("fluentvalidation-middleware", () => {
       )
       .buildAsync();
 
-    server = await new AppBuilder().useJson().useEndpoint(SignUpEndpoint).buildAsync(port);
+    server = await new TomasAppBuilder().useJson().useEndpoint(SignUpEndpoint).buildAsync(port);
 
     // Act/Assert
     const body: SignUpRequest = {

@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import fetch from "node-fetch";
 import { afterEach, describe, it } from "@jest/globals";
-import { AppBuilder } from "../../src/builder";
+import { TomasAppBuilder } from "../../src/builder";
 import { HttpContext, StatusCodes } from "../../src/core";
 import { AnonymousEndpoint, endpoint, Endpoint, middleware, path } from "../../src/endpoints";
 import { AnonymousMiddleware } from "../../src/middleware";
@@ -13,7 +13,7 @@ import { tick } from "../utils/time";
 describe("endpoints", () => {
   const port = 3033;
   const serverAddress = `http://localhost:${port}`;
-  const serverTeardownOffsetMilliseconds = 50;
+  const serverTeardownOffsetMilliseconds = 0;
   let server: any; // TODO Set http.Server type
 
   beforeEach(async () => {
@@ -36,7 +36,7 @@ describe("endpoints", () => {
       }
     }
 
-    server = await new AppBuilder().useEndpoint(new TestEndpoint()).buildAsync(port);
+    server = await new TomasAppBuilder().useEndpoint(new TestEndpoint()).buildAsync(port);
 
     // Act
     const response = await fetch(serverAddress);
@@ -55,7 +55,7 @@ describe("endpoints", () => {
       }
     }
 
-    server = await new AppBuilder().useEndpoint(TestEndpoint).buildAsync(port);
+    server = await new TomasAppBuilder().useEndpoint(TestEndpoint).buildAsync(port);
 
     // Act
     const response = await fetch(serverAddress);
@@ -67,7 +67,7 @@ describe("endpoints", () => {
   it(`An ${AnonymousEndpoint.name} instance works`, async () => {
     // Arrange
 
-    server = await new AppBuilder()
+    server = await new TomasAppBuilder()
       .useEndpoint(new AnonymousEndpoint("get", "/", () => new OkResponse()))
       .buildAsync(port);
 
@@ -111,7 +111,7 @@ describe("endpoints", () => {
       }
     }
 
-    server = await new AppBuilder()
+    server = await new TomasAppBuilder()
       .useEndpoint(StatusCodeEndpoint)
       .useEndpoint(PlainTextEndpoint)
       .useEndpoint(JsonEndpoint)
@@ -140,7 +140,7 @@ describe("endpoints", () => {
       }
     }
 
-    server = await new AppBuilder().useEndpoint(TestEndpoint).buildAsync(port);
+    server = await new TomasAppBuilder().useEndpoint(TestEndpoint).buildAsync(port);
 
     // Act
     const response = await fetch(`${serverAddress}/${expectedPath}`);
@@ -169,7 +169,7 @@ describe("endpoints", () => {
       value: "test-header-value",
     };
 
-    server = await new AppBuilder().useJson().useEndpoint(TestEndpoint).buildAsync(port);
+    server = await new TomasAppBuilder().useJson().useEndpoint(TestEndpoint).buildAsync(port);
 
     // Act
     const customHeaders: any = {};
@@ -205,7 +205,7 @@ describe("endpoints", () => {
       }
     }
 
-    server = await new AppBuilder().useEndpoint(TestEndpoint).buildAsync(port);
+    server = await new TomasAppBuilder().useEndpoint(TestEndpoint).buildAsync(port);
 
     // Act
     const response = await fetch(
@@ -238,7 +238,7 @@ describe("endpoints", () => {
       }
     }
 
-    server = await new AppBuilder().useEndpoint(TestEndpoint).buildAsync(port);
+    server = await new TomasAppBuilder().useEndpoint(TestEndpoint).buildAsync(port);
 
     // Act
     const queryParams = new URLSearchParams();
@@ -263,7 +263,7 @@ describe("endpoints", () => {
       }
     }
 
-    server = await new AppBuilder().useText().useEndpoint(TestEndpoint).buildAsync(port);
+    server = await new TomasAppBuilder().useText().useEndpoint(TestEndpoint).buildAsync(port);
 
     // Act
     const response = await fetch(serverAddress, {
@@ -299,7 +299,7 @@ describe("endpoints", () => {
       password: "123456",
     };
 
-    server = await new AppBuilder().useJson().useEndpoint(TestEndpoint).buildAsync(port);
+    server = await new TomasAppBuilder().useJson().useEndpoint(TestEndpoint).buildAsync(port);
 
     // Act
     const response = await fetch(serverAddress, {
@@ -339,7 +339,7 @@ describe("endpoints", () => {
       }
     }
 
-    server = await new AppBuilder().useJson().useEndpoint(TestEndpoint).buildAsync(port);
+    server = await new TomasAppBuilder().useJson().useEndpoint(TestEndpoint).buildAsync(port);
 
     // Act
     const unauthorizedResponse = await fetch(`${serverAddress}/${expectedPath}`, {
