@@ -15,7 +15,7 @@ export abstract class GuardContextFactory {
   static fromHttpContext(httpContext: HttpContext): GuardContext {
     const context = new GuardContext();
     Reflect.set(context, "request", httpContext.request);
-    Reflect.set(context, "response", httpContext.respond);
+    Reflect.set(context, "response", httpContext.response);
     Reflect.set(context, "user", httpContext.user);
     return context;
   }

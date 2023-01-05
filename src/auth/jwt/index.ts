@@ -1,4 +1,4 @@
-export { JwtMiddleware } from "./JwtMiddleware";
+export { JwtGuard } from "./JwtGuard";
 export { JwtSignOptions } from "./JwtSignOptions";
 export { JwtSigner } from "./JwtSigner";
 export { JwtVerifier } from "./JwtVerifier";

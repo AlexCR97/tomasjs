@@ -2,6 +2,7 @@ import { internalContainer } from "@/container";
 import { Request, Response } from "express";
 import { HttpContext } from "./HttpContext";
 import { HttpContextBinder } from "./HttpContextBinder";
+import { UserContext } from "./UserContext";
 
 export abstract class HttpContextResolver {
   private constructor() {}
@@ -15,6 +16,8 @@ export abstract class HttpContextResolver {
 
       HttpContextBinder.fromExpress(context, req, res);
       // console.log("after HttpContextBinder");
+
+      context.user = internalContainer.get(UserContext);
 
       return context;
     } catch (err) {

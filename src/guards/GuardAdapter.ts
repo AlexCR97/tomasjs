@@ -12,15 +12,17 @@ export abstract class GuardAdapter {
     return async (req, res, next) => {
       const httpContext = HttpContextResolver.fromExpress(req, res);
       const guardContext = GuardContextFactory.fromHttpContext(httpContext);
-      const guardBridge = new GuardBridge(guard);
-      const isAllowed = await guardBridge.isAllowed(guardContext);
+      const guardResult = await new GuardBridge(guard).isAllowed(guardContext);
 
-      if (isAllowed) {
+      if (guardResult === true) {
         return next();
       }
 
-      // TODO Add options for this. Use decorators?
-      return httpContext.respond(new UnauthorizedResponse());
+      if (guardResult === false) {
+        return httpContext.respond(new UnauthorizedResponse());
+      }
+
+      return httpContext.respond(guardResult);
     };
   }
 }

@@ -6,4 +6,5 @@ export { GuardContext } from "./GuardContext";
 export { GuardContextFactory } from "./GuardContextFactory";
 export { GuardFactory } from "./GuardFactory";
 export { GuardFunction } from "./GuardFunction";
+export { GuardResult } from "./GuardResult";
 export { GuardType } from "./GuardType";

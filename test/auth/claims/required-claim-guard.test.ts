@@ -4,14 +4,14 @@ import fetch from "node-fetch";
 import { afterEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "../../utils/server";
 import { tick } from "../../utils/time";
-import { RequiredClaimMiddleware } from "../../../src/auth/claims";
-import { JwtMiddleware, JwtSigner } from "../../../src/auth/jwt";
+import { RequiredClaimGuard } from "../../../src/auth/claims";
+import { JwtGuard, JwtSigner } from "../../../src/auth/jwt";
 import { AppBuilder } from "../../../src/builder";
 import { HttpContext, StatusCodes } from "../../../src/core";
 import { AnonymousEndpoint } from "../../../src/endpoints";
 import { OkResponse } from "../../../src/responses/status-codes";
 
-describe("auth-required-claim-middleware", () => {
+describe("auth-required-claim-guard", () => {
   const port = 3038;
   const serverAddress = `http://localhost:${port}`;
   const serverTeardownOffsetMilliseconds = 0;
@@ -27,13 +27,13 @@ describe("auth-required-claim-middleware", () => {
     await tryCloseServerAsync(server);
   });
 
-  it(`The ${RequiredClaimMiddleware.name} should return a "403 forbidden" response if the ${JwtMiddleware.name} was not used first`, async () => {
+  it(`The ${RequiredClaimGuard.name} should return a "403 forbidden" response if the ${JwtGuard.name} was not used first`, async () => {
     // Arrange
     const claimType = "role";
 
     server = await new AppBuilder()
-      .useMiddleware(
-        new RequiredClaimMiddleware({
+      .useGuard(
+        new RequiredClaimGuard({
           type: claimType,
         })
       )
@@ -49,23 +49,15 @@ describe("auth-required-claim-middleware", () => {
     expect(response.status).toBe(StatusCodes.forbidden);
   });
 
-  it(`The ${RequiredClaimMiddleware.name} should return a "403 forbidden" response if the user does not contain the required claim`, async () => {
+  it(`The ${RequiredClaimGuard.name} should return a "403 forbidden" response if the user does not contain the required claim`, async () => {
     // Arrange
     const claimType = "role";
     const claims: any = {};
     const secret = "SuperSecureSecretKey";
 
     server = await new AppBuilder()
-      .useMiddleware(
-        new JwtMiddleware({
-          secret,
-        })
-      )
-      .useMiddleware(
-        new RequiredClaimMiddleware({
-          type: claimType,
-        })
-      )
+      .useGuard(new JwtGuard({ secret }))
+      .useGuard(new RequiredClaimGuard({ type: claimType }))
       .useEndpoint(
         new AnonymousEndpoint("get", "/", (context: HttpContext) => {
           return new OkResponse();
@@ -85,7 +77,7 @@ describe("auth-required-claim-middleware", () => {
     expect(response.status).toBe(StatusCodes.forbidden);
   });
 
-  it(`The ${RequiredClaimMiddleware.name} should return a "200 ok" response if the user has the required claim`, async () => {
+  it(`The ${RequiredClaimGuard.name} should return a "200 ok" response if the user has the required claim`, async () => {
     // Arrange
     const claimType = "role";
 
@@ -95,16 +87,8 @@ describe("auth-required-claim-middleware", () => {
     const secret = "SuperSecureSecretKey";
 
     server = await new AppBuilder()
-      .useMiddleware(
-        new JwtMiddleware({
-          secret,
-        })
-      )
-      .useMiddleware(
-        new RequiredClaimMiddleware({
-          type: claimType,
-        })
-      )
+      .useGuard(new JwtGuard({ secret }))
+      .useGuard(new RequiredClaimGuard({ type: claimType }))
       .useEndpoint(
         new AnonymousEndpoint("get", "/", (context: HttpContext) => {
           return new OkResponse();
@@ -124,7 +108,7 @@ describe("auth-required-claim-middleware", () => {
     expect(response.status).toBe(StatusCodes.ok);
   });
 
-  it(`The ${RequiredClaimMiddleware.name} should return a "403 forbidden" response if the user has the required claim but with an invalid value`, async () => {
+  it(`The ${RequiredClaimGuard.name} should return a "403 forbidden" response if the user has the required claim but with an invalid value`, async () => {
     // Arrange
     const claimType = "role";
     const claimValue = "SomeAuthorizedRole";
@@ -135,13 +119,9 @@ describe("auth-required-claim-middleware", () => {
     const secret = "SuperSecureSecretKey";
 
     server = await new AppBuilder()
-      .useMiddleware(
-        new JwtMiddleware({
-          secret,
-        })
-      )
-      .useMiddleware(
-        new RequiredClaimMiddleware({
+      .useGuard(new JwtGuard({ secret }))
+      .useGuard(
+        new RequiredClaimGuard({
           type: claimType,
           value: claimValue,
         })
@@ -165,7 +145,7 @@ describe("auth-required-claim-middleware", () => {
     expect(response.status).toBe(StatusCodes.forbidden);
   });
 
-  it(`The ${RequiredClaimMiddleware.name} should return a "200 ok" response if the user has the required claim with a valid value`, async () => {
+  it(`The ${RequiredClaimGuard.name} should return a "200 ok" response if the user has the required claim with a valid value`, async () => {
     // Arrange
     const claimType = "role";
     const claimValue = "SomeAuthorizedRole";
@@ -176,13 +156,9 @@ describe("auth-required-claim-middleware", () => {
     const secret = "SuperSecureSecretKey";
 
     server = await new AppBuilder()
-      .useMiddleware(
-        new JwtMiddleware({
-          secret,
-        })
-      )
-      .useMiddleware(
-        new RequiredClaimMiddleware({
+      .useGuard(new JwtGuard({ secret }))
+      .useGuard(
+        new RequiredClaimGuard({
           type: claimType,
           value: claimValue,
         })
@@ -206,7 +182,7 @@ describe("auth-required-claim-middleware", () => {
     expect(response.status).toBe(StatusCodes.ok);
   });
 
-  it(`The ${RequiredClaimMiddleware.name} should protect an entire api section`, async () => {
+  it(`The ${RequiredClaimGuard.name} should protect an entire api section`, async () => {
     // Arrange
     const secret = "SuperSecureSecretKey";
     const claimType = "role";
@@ -225,13 +201,9 @@ describe("auth-required-claim-middleware", () => {
       .useEndpointGroup((endpoints) =>
         endpoints
           .useBasePath("teachers")
-          .useMiddleware(
-            new JwtMiddleware({
-              secret,
-            })
-          )
-          .useMiddleware(
-            new RequiredClaimMiddleware({
+          .useGuard(new JwtGuard({ secret }))
+          .useGuard(
+            new RequiredClaimGuard({
               type: claimType,
               value: teacherRole,
             })
@@ -250,13 +222,9 @@ describe("auth-required-claim-middleware", () => {
       .useEndpointGroup((endpoints) =>
         endpoints
           .useBasePath("/students")
-          .useMiddleware(
-            new JwtMiddleware({
-              secret,
-            })
-          )
-          .useMiddleware(
-            new RequiredClaimMiddleware({
+          .useGuard(new JwtGuard({ secret }))
+          .useGuard(
+            new RequiredClaimGuard({
               type: claimType,
               value: studentRole,
             })

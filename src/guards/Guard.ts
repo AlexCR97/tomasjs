@@ -1,7 +1,8 @@
 import { GuardContext } from "./GuardContext";
+import { GuardResult } from "./GuardResult";
 
 export interface Guard {
-  isAllowed(context: GuardContext): boolean | Promise<boolean>;
+  isAllowed(context: GuardContext): GuardResult;
 }
 
 // TODO Add these comments to a readme

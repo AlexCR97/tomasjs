@@ -1,35 +1,34 @@
-import { HttpContext } from "@/core";
-import { Middleware } from "@/middleware";
+import { Guard, guard, GuardContext } from "@/guards";
 import { ForbiddenResponse } from "@/responses/status-codes";
-import { NextFunction } from "express";
 import { RequiredClaim } from "./RequiredClaim";
 
-export class RequiredClaimMiddleware implements Middleware {
+@guard()
+export class RequiredClaimGuard implements Guard {
   constructor(private readonly requiredClaim: RequiredClaim) {}
 
-  handle(context: HttpContext, next: NextFunction): void | Promise<void> {
+  isAllowed(context: GuardContext): boolean | ForbiddenResponse {
     const claims = context.user?.claims;
 
     if (claims === undefined || claims === null) {
-      return context.respond(new ForbiddenResponse());
+      return new ForbiddenResponse();
     }
 
     const hasClaim = Object.keys(claims).some((key) => key === this.requiredClaim.type);
 
     if (!hasClaim) {
-      return context.respond(new ForbiddenResponse());
+      return new ForbiddenResponse();
     }
 
     if (this.requiredClaim.value === undefined || this.requiredClaim.value === null) {
-      return next();
+      return true;
     }
 
     const claimValue = claims[this.requiredClaim.type];
 
     if (claimValue !== this.requiredClaim.value) {
-      return context.respond(new ForbiddenResponse());
+      return new ForbiddenResponse();
     }
 
-    return next();
+    return true;
   }
 }
