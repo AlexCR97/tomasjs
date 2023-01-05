@@ -1,4 +1,5 @@
 import { HttpMethod } from "@/core";
+import { GuardType } from "@/guards";
 import { MiddlewareParam } from "../MiddlewareParam";
 
 /**
@@ -20,5 +21,11 @@ export interface IEndpointMetadata {
   get middlewares(): MiddlewareParam[] | undefined;
   set middlewares(value: MiddlewareParam[] | undefined);
   addMiddleware(value: MiddlewareParam): void;
+  /* #endregion */
+
+  /* #region Guards */
+  get guards(): GuardType[] | undefined;
+  set guards(value: GuardType[] | undefined);
+  addGuard(value: GuardType): void;
   /* #endregion */
 }

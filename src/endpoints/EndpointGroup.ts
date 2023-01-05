@@ -1,4 +1,5 @@
 import { ClassConstructor } from "@/container";
+import { GuardType } from "@/guards";
 import {
   Middleware,
   MiddlewareFactory,
@@ -40,6 +41,17 @@ export class EndpointGroup {
       | ClassConstructor<MiddlewareFactory>
   ): EndpointGroup {
     this.onBeforeMiddlewares.push(middleware);
+    return this;
+  }
+
+  /* #endregion */
+
+  /* #region Guards */
+
+  readonly guards: GuardType[] = [];
+
+  useGuard(guard: GuardType): EndpointGroup {
+    this.guards.push(guard);
     return this;
   }
 

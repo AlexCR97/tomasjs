@@ -44,7 +44,7 @@ class User {
 describe("mikro-orm", () => {
   const port = 3035;
   const serverAddress = `http://localhost:${port}`;
-  const serverTeardownOffsetMilliseconds = 50;
+  const serverTeardownOffsetMilliseconds = 0;
   let server: any; // TODO Set http.Server type
 
   const connectionString = "mongodb://127.0.0.1:27017";

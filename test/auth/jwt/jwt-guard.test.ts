@@ -4,17 +4,17 @@ import fetch from "node-fetch";
 import { afterEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "../../utils/server";
 import { tick } from "../../utils/time";
-import { JwtMiddleware, JwtSigner } from "../../../src/auth/jwt";
+import { JwtGuard, JwtSigner } from "../../../src/auth/jwt";
 import { AppBuilder } from "../../../src/builder";
 import { HttpContext, StatusCodes, UserContext } from "../../../src/core";
 import { AnonymousEndpoint } from "../../../src/endpoints";
 import { JsonResponse } from "../../../src/responses";
 import { OkResponse } from "../../../src/responses/status-codes";
 
-describe("auth-jwt-middleware", () => {
+describe("auth-jwt-guard", () => {
   const port = 3037;
   const serverAddress = `http://localhost:${port}`;
-  const serverTeardownOffsetMilliseconds = 50;
+  const serverTeardownOffsetMilliseconds = 0;
   let server: any; // TODO Set http.Server type
 
   beforeEach(async () => {
@@ -27,16 +27,12 @@ describe("auth-jwt-middleware", () => {
     await tryCloseServerAsync(server);
   });
 
-  it(`The ${JwtMiddleware.name} should return a "401 unauthorized" response if the "authorization" header is not provided`, async () => {
+  it(`The ${JwtGuard.name} should return a "401 unauthorized" response if the "authorization" header is not provided`, async () => {
     // Arrange
     const secret = "SuperSecureSecretKey";
 
     server = await new AppBuilder()
-      .useMiddleware(
-        new JwtMiddleware({
-          secret: secret,
-        })
-      )
+      .useGuard(new JwtGuard({ secret }))
       .useEndpoint(
         new AnonymousEndpoint("get", "/", (context: HttpContext) => {
           return new OkResponse();
@@ -49,16 +45,12 @@ describe("auth-jwt-middleware", () => {
     expect(response.status).toBe(StatusCodes.unauthorized);
   });
 
-  it(`The ${JwtMiddleware.name} should return a "401 unauthorized" response if the bearer token is not provided in the "authorization"`, async () => {
+  it(`The ${JwtGuard.name} should return a "401 unauthorized" response if the bearer token is not provided in the "authorization"`, async () => {
     // Arrange
     const secret = "SuperSecureSecretKey";
 
     server = await new AppBuilder()
-      .useMiddleware(
-        new JwtMiddleware({
-          secret: secret,
-        })
-      )
+      .useGuard(new JwtGuard({ secret }))
       .useEndpoint(
         new AnonymousEndpoint("get", "/", (context: HttpContext) => {
           return new OkResponse();
@@ -75,16 +67,12 @@ describe("auth-jwt-middleware", () => {
     expect(response.status).toBe(StatusCodes.unauthorized);
   });
 
-  it(`The ${JwtMiddleware.name} should return a "401 unauthorized" response if the bearer token is invalid`, async () => {
+  it(`The ${JwtGuard.name} should return a "401 unauthorized" response if the bearer token is invalid`, async () => {
     // Arrange
     const secret = "SuperSecureSecretKey";
 
     server = await new AppBuilder()
-      .useMiddleware(
-        new JwtMiddleware({
-          secret: secret,
-        })
-      )
+      .useGuard(new JwtGuard({ secret }))
       .useEndpoint(
         new AnonymousEndpoint("get", "/", (context: HttpContext) => {
           return new OkResponse();
@@ -101,7 +89,7 @@ describe("auth-jwt-middleware", () => {
     expect(response.status).toBe(StatusCodes.unauthorized);
   });
 
-  it(`The ${JwtMiddleware.name} should return a "401 unauthorized" response if the bearer token is expired`, async () => {
+  it(`The ${JwtGuard.name} should return a "401 unauthorized" response if the bearer token is expired`, async () => {
     // Arrange
     const claims = {
       userId: 1,
@@ -110,11 +98,7 @@ describe("auth-jwt-middleware", () => {
     const secret = "SuperSecureSecretKey";
 
     server = await new AppBuilder()
-      .useMiddleware(
-        new JwtMiddleware({
-          secret: secret,
-        })
-      )
+      .useGuard(new JwtGuard({ secret }))
       .useEndpoint(
         new AnonymousEndpoint("get", "/", (context: HttpContext) => {
           return new OkResponse();
@@ -133,17 +117,13 @@ describe("auth-jwt-middleware", () => {
     expect(response.status).toBe(StatusCodes.unauthorized);
   });
 
-  it(`The ${JwtMiddleware.name} should return a "200 ok" response if the bearer token is valid`, async () => {
+  it(`The ${JwtGuard.name} should return a "200 ok" response if the bearer token is valid`, async () => {
     // Arrange
     const claims = { userId: 1 };
     const secret = "SuperSecureSecretKey";
 
     server = await new AppBuilder()
-      .useMiddleware(
-        new JwtMiddleware({
-          secret: secret,
-        })
-      )
+      .useGuard(new JwtGuard({ secret }))
       .useEndpoint(
         new AnonymousEndpoint("get", "/", (context: HttpContext) => {
           return new OkResponse();
@@ -162,7 +142,7 @@ describe("auth-jwt-middleware", () => {
     expect(response.status).toBe(StatusCodes.ok);
   });
 
-  it(`The ${JwtMiddleware.name} should set the "${UserContext.name}" in the "${HttpContext.name}"`, async () => {
+  it(`The ${JwtGuard.name} should set the "${UserContext.name}" in the "${HttpContext.name}"`, async () => {
     // Arrange
     interface UserClaims {
       userId: number;
@@ -177,11 +157,7 @@ describe("auth-jwt-middleware", () => {
     const secret = "SuperSecureSecretKey";
 
     server = await new AppBuilder()
-      .useMiddleware(
-        new JwtMiddleware({
-          secret: secret,
-        })
-      )
+      .useGuard(new JwtGuard({ secret }))
       .useEndpoint(
         new AnonymousEndpoint("get", "/", (context: HttpContext) => {
           return new JsonResponse(context.user?.claims);

@@ -20,7 +20,7 @@ import { NextFunction } from "express";
 describe("error-middleware", () => {
   const port = 3036;
   const serverAddress = `http://localhost:${port}`;
-  const serverTeardownOffsetMilliseconds = 50;
+  const serverTeardownOffsetMilliseconds = 0;
   let server: any; // TODO Set http.Server type
 
   beforeEach(async () => {

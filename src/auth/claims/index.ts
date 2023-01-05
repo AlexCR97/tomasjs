@@ -1,2 +1,2 @@
 export { RequiredClaim } from "./RequiredClaim";
-export { RequiredClaimMiddleware } from "./RequiredClaimMiddleware";
+export { RequiredClaimGuard } from "./RequiredClaimGuard";

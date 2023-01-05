@@ -1,4 +1,5 @@
 import { ExpressPathAdapter } from "@/core/express";
+import { GuardAdapter } from "@/guards";
 import { MiddlewareAdapter, MiddlewareFactoryAdapter } from "@/middleware";
 import { Router } from "express";
 import { EndpointAdapter } from "./EndpointAdapter";
@@ -8,7 +9,10 @@ import { EndpointMetadataStrategy } from "./metadata";
 export abstract class EndpointGroupAdapter {
   private constructor() {}
 
-  static toExpressRouter(endpointGroup: EndpointGroup): { routerBasePath: string; router: Router } {
+  static toExpressRouter(endpointGroup: EndpointGroup): {
+    routerBasePath: string;
+    router: Router;
+  } {
     const router = Router();
 
     if (
@@ -16,13 +20,26 @@ export abstract class EndpointGroupAdapter {
       endpointGroup.onBeforeMiddlewares.length > 0
     ) {
       // TODO Encapsulate this logic into a function? The same logic is used in AppBuilder.useMiddlewarex.
-      const expressMiddlewareHandlers = endpointGroup.onBeforeMiddlewares.map((middleware) => {
-        const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(middleware)
-          ? MiddlewareFactoryAdapter.from(middleware)
-          : middleware;
-        return MiddlewareAdapter.from(middlewareToAdapt);
-      });
-      router.use(...expressMiddlewareHandlers);
+      const expressMiddlewareFunctions = endpointGroup.onBeforeMiddlewares.map(
+        (middleware) => {
+          const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(
+            middleware
+          )
+            ? MiddlewareFactoryAdapter.from(middleware)
+            : middleware;
+          return MiddlewareAdapter.from(middlewareToAdapt);
+        }
+      );
+      router.use(...expressMiddlewareFunctions);
+    }
+
+    if (endpointGroup.guards !== undefined && endpointGroup.guards.length > 0) {
+      const guardExpressMiddlewareFunctions = endpointGroup.guards.map(
+        (guard) => {
+          return GuardAdapter.toExpress(guard);
+        }
+      );
+      router.use(...guardExpressMiddlewareFunctions);
     }
 
     const endpoints = endpointGroup.endpoints ?? [];
