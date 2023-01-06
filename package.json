@@ -30,7 +30,7 @@
     "testw-endpoint-metadata": "jest --testNamePattern EndpointMetadata --watchAll --verbose",
     "testw-endpoint-decorator": "jest --testNamePattern endpoint-decorator --watchAll --verbose",
     "testw-endpoint-path-decorator": "jest --testNamePattern path-decorator --watchAll --verbose",
-    "testw-error-middleware": "jest --testNamePattern error-middleware --watchAll --verbose",
+    "testw-error-handler": "jest --testNamePattern error-handler --watchAll --verbose",
     "testw-fluentvalidation-middleware": "jest --testNamePattern fluentvalidation-middleware --watchAll --verbose",
     "testw-guards": "jest --testNamePattern guards --watchAll --verbose",
     "testw-sample-crud": "jest --testNamePattern crud-sample --watchAll --verbose",
