@@ -1,0 +1,1 @@
+export { IConfiguration } from "./IConfiguration";
