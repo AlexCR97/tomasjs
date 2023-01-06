@@ -1,9 +1,9 @@
 import "reflect-metadata";
 import { afterEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "../utils/server";
-import { DotEnvSetup } from "../../src/configuration/dotenv";
+import { DotEnvConfiguration, DotEnvSetup } from "../../src/configuration/dotenv";
 import { internalContainer } from "../../src/container";
-import { IConfiguration } from "../../src/configuration/core";
+import { ConfigurationResolver, ConfigurationToken } from "../../src/configuration/core";
 
 describe("configuration", () => {
   let server: any; // TODO Set http.Server type
@@ -16,51 +16,56 @@ describe("configuration", () => {
     await tryCloseServerAsync(server);
   });
 
-  it("Test", () => {
-    const key = "TOMASJS_FOO";
-    // const value = "tomasjs";
-    // process.env.TOMASJS_FOO = "tomasjs";
-    console.log("process.env.TOMASJS_FOO", process.env[key]);
-  });
+  it(`The ${DotEnvConfiguration.name} loads a .env file into the ${ConfigurationToken} token`, () => {
+    const expectedStringKey = "This is a string";
+    const expectedNumberKey = 99;
+    const expectedBooleanTrueKey = true;
+    const expectedBooleanFalseKey = false;
 
-  it("Test2", () => {
-    interface AppSettings {
-      string: string;
-      "string.subkey": string;
-      string_subkey: string;
-      string__subkey: string;
-      number: number;
-      boolean_true: boolean;
-      boolean_false: boolean;
+    class AppSettings {
+      readonly stringKey!: string;
+      readonly numberKey!: number;
+      readonly booleanTrueKey!: boolean;
+      readonly booleanFalseKey!: boolean;
     }
 
-    const dotEnvSetup = new DotEnvSetup<AppSettings>({
+    const dotenvSetup = new DotEnvSetup<AppSettings>({
       path: "C:\\Projects\\thomas\\test\\configuration\\.env",
+      constructor: AppSettings,
       keyConfigurations: [
         {
-          key: "number",
+          key: "numberKey",
           type: "number",
         },
         {
-          key: "boolean_true",
+          key: "booleanTrueKey",
           type: "boolean",
         },
         {
-          key: "boolean_false",
+          key: "booleanFalseKey",
           type: "boolean",
         },
       ],
     });
 
-    const containerSetup = dotEnvSetup.create();
+    const containerSetup = dotenvSetup.create();
     containerSetup(internalContainer);
 
-    const registeredConfiguration =
-      internalContainer.get<IConfiguration<AppSettings>>("IConfiguration");
-    console.log("registeredConfiguration", registeredConfiguration);
-    console.log(
-      "registeredConfiguration.root.boolean_false",
-      registeredConfiguration.root.boolean_false
-    );
+    const configuration = ConfigurationResolver.getConfiguration<AppSettings>();
+
+    expect(configuration).toBeTruthy();
+    expect(configuration.root).toBeTruthy();
+
+    expect(typeof configuration.root.stringKey).toBe("string");
+    expect(configuration.root.stringKey).toEqual(expectedStringKey);
+
+    expect(typeof configuration.root.numberKey).toBe("number");
+    expect(configuration.root.numberKey).toBe(expectedNumberKey);
+
+    expect(typeof configuration.root.booleanTrueKey).toBe("boolean");
+    expect(configuration.root.booleanTrueKey).toBe(expectedBooleanTrueKey);
+
+    expect(typeof configuration.root.booleanFalseKey).toBe("boolean");
+    expect(configuration.root.booleanFalseKey).toBe(expectedBooleanFalseKey);
   });
 });

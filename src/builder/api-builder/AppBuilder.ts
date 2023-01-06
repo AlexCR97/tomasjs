@@ -1,3 +1,4 @@
+import { Configuration, ConfigurationResolver } from "@/configuration/core";
 import {
   ErrorHandler,
   ErrorHandlerAdapter,
@@ -12,6 +13,8 @@ import { EndpointGroupBuilderFunction } from "./EndpointGroupBuilderFunction";
 
 // TODO Move this interface somewhere else?
 interface IAppBuilder extends AbstractApiBuilder<IAppBuilder> {
+  getConfiguration<TSettings extends object>(): Configuration<TSettings>;
+
   use(appSetup: (app: Express) => void): IAppBuilder;
 
   /* #region Formatters */
@@ -31,6 +34,10 @@ interface IAppBuilder extends AbstractApiBuilder<IAppBuilder> {
 
 export class AppBuilder extends AbstractApiBuilder<IAppBuilder> implements IAppBuilder {
   protected override root = express();
+
+  getConfiguration<TSettings extends object>(): Configuration<TSettings> {
+    return ConfigurationResolver.getConfiguration<TSettings>();
+  }
 
   use(appSetup: (app: Express) => void): IAppBuilder {
     appSetup(this.root);
