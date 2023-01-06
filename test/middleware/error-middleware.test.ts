@@ -5,19 +5,14 @@ import { afterEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "../utils/server";
 import { tick } from "../utils/time";
 import { AppBuilder } from "../../src/builder";
-import { singleton } from "../../src/container";
 import { HttpContext, StatusCodes } from "../../src/core";
 import { StatusCodeError } from "../../src/core/errors";
 import { AnonymousEndpoint } from "../../src/endpoints";
-import {
-  AnonymousErrorMiddleware,
-  DefaultErrorMiddleware,
-  ErrorMiddleware,
-} from "../../src/middleware";
+import { ErrorHandler, errorHandler, TomasErrorHandler } from "../../src/error-handler";
 import { JsonResponse, PlainTextResponse } from "../../src/responses";
 import { NextFunction } from "express";
 
-describe("error-middleware", () => {
+describe("error-handler", () => {
   const port = 3036;
   const serverAddress = `http://localhost:${port}`;
   const serverTeardownOffsetMilliseconds = 0;
@@ -33,7 +28,7 @@ describe("error-middleware", () => {
     await tryCloseServerAsync(server);
   });
 
-  it(`An ${AnonymousErrorMiddleware.name} can handle uncaught errors with the default express handler when passing the error to the "next" function`, async () => {
+  it(`An ErrorHandlerFunction can handle uncaught errors with the default express handler when passing the error to the "next" function`, async () => {
     // Arrange
     server = await new AppBuilder()
       .useEndpoint(
@@ -41,11 +36,9 @@ describe("error-middleware", () => {
           throw new Error("Unhandled error!");
         })
       )
-      .useErrorMiddleware(
-        new AnonymousErrorMiddleware((err, context, next) => {
-          next(err);
-        })
-      )
+      .useErrorHandler((err: any, context: HttpContext, next: NextFunction) => {
+        next(err);
+      })
       .buildAsync(port);
 
     // Act/Assert
@@ -53,7 +46,7 @@ describe("error-middleware", () => {
     expect(response.status).toBe(StatusCodes.internalServerError);
   });
 
-  it(`An ${AnonymousErrorMiddleware.name} can handle uncaught errors with a custom handler`, async () => {
+  it(`An ErrorHandlerFunction can handle uncaught errors with a custom handler`, async () => {
     // Arrange
     const errorMessage = "Error caught with custom handler!";
     const errorStatusCode = StatusCodes.badRequest;
@@ -64,11 +57,9 @@ describe("error-middleware", () => {
           throw new Error("Unhandled error!");
         })
       )
-      .useErrorMiddleware(
-        new AnonymousErrorMiddleware((err, context: HttpContext, next) => {
-          context.respond(new PlainTextResponse(errorMessage, { status: errorStatusCode }));
-        })
-      )
+      .useErrorHandler((err: any, context: HttpContext, next: NextFunction) => {
+        context.respond(new PlainTextResponse(errorMessage, { status: errorStatusCode }));
+      })
       .buildAsync(port);
 
     // Act/Assert
@@ -78,13 +69,9 @@ describe("error-middleware", () => {
   });
 
   it(`A custom ErrorMiddleware constructor can handle uncaught errors`, async () => {
-    @singleton()
-    class CustomErrorMiddleware implements ErrorMiddleware {
-      handle<TError = any>(
-        err: TError,
-        context: HttpContext,
-        next: NextFunction
-      ): void | Promise<void> {
+    @errorHandler()
+    class CustomErrorHandler implements ErrorHandler {
+      catch(err: any, context: HttpContext, next: NextFunction): void | Promise<void> {
         if (err instanceof StatusCodeError) {
           return context.respond(
             new JsonResponse(
@@ -113,7 +100,7 @@ describe("error-middleware", () => {
           throw new StatusCodeError(StatusCodes.notFound);
         })
       )
-      .useErrorMiddleware(CustomErrorMiddleware)
+      .useErrorHandler(CustomErrorHandler)
       .buildAsync(port);
 
     // Act/Assert
@@ -124,7 +111,7 @@ describe("error-middleware", () => {
     expect(notFoundResponse.status).toBe(StatusCodes.notFound);
   });
 
-  it(`The ${DefaultErrorMiddleware.name} can handle uncaught errors with default behavior`, async () => {
+  it(`The ${TomasErrorHandler.name} can handle uncaught errors with default behavior`, async () => {
     // Arrange
     server = await new AppBuilder()
       .useEndpoint(
@@ -137,7 +124,6 @@ describe("error-middleware", () => {
           throw new StatusCodeError(StatusCodes.notFound);
         })
       )
-      .useErrorMiddleware(DefaultErrorMiddleware)
       .buildAsync(port);
 
     // Act/Assert

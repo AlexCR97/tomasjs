@@ -51,7 +51,7 @@ export class GuardBridge {
       return false;
     }
 
-    // Considering that the "isAllowed" must be a named function...
+    // Considering that "isAllowed" must be a named function...
     return (
       func.name.trim() === "isAllowed" && // The name must be "isAllowed"
       func.prototype === undefined && // The prototype must be undefined

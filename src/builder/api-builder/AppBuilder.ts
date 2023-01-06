@@ -1,11 +1,11 @@
-import express, { Express } from "express";
-import { ExpressErrorMiddlewareHandler, ExpressPathAdapter } from "../../core/express";
 import {
-  ErrorMiddlewareAdapter,
-  ErrorMiddlewareType,
-  isErrorMiddleware,
-  isErrorMiddlewareHandler,
-} from "../../middleware";
+  ErrorHandler,
+  ErrorHandlerAdapter,
+  ErrorHandlerType,
+  TomasErrorHandler,
+} from "@/error-handler";
+import express, { Express } from "express";
+import { ExpressPathAdapter } from "../../core/express";
 import { AbstractApiBuilder } from "./AbstractApiBuilder";
 import { EndpointGroupBuilder } from "./EndpointGroupBuilder";
 import { EndpointGroupBuilderFunction } from "./EndpointGroupBuilderFunction";
@@ -21,7 +21,9 @@ interface IAppBuilder extends AbstractApiBuilder<IAppBuilder> {
 
   useEndpointGroup(endpoints: EndpointGroupBuilderFunction): IAppBuilder;
 
-  useErrorMiddleware(middleware: ErrorMiddlewareType): IAppBuilder;
+  useErrorHandler<THandler extends ErrorHandler = ErrorHandler>(
+    handler: ErrorHandlerType<THandler>
+  ): IAppBuilder;
 
   // TODO Add return type for server
   buildAsync(port: number): Promise<any>;
@@ -87,37 +89,27 @@ export class AppBuilder extends AbstractApiBuilder<IAppBuilder> implements IAppB
 
   /* #endregion */
 
-  /* #region ErrorMiddleware */
+  /* #region Error Handler */
 
-  private errorMiddleware?: ErrorMiddlewareType;
+  private errorHandler: ErrorHandlerType<ErrorHandler> = new TomasErrorHandler();
 
-  useErrorMiddleware(middleware: ErrorMiddlewareType): IAppBuilder {
-    this.errorMiddleware = middleware;
+  useErrorHandler<THandler extends ErrorHandler = ErrorHandler>(
+    handler: ErrorHandlerType<THandler>
+  ): IAppBuilder {
+    this.errorHandler = handler;
     return this;
   }
 
-  private bindErrorMiddleware(middleware: ErrorMiddlewareType) {
-    let expressErrorMiddleware: ExpressErrorMiddlewareHandler;
-
-    if (isErrorMiddlewareHandler(middleware)) {
-      expressErrorMiddleware = ErrorMiddlewareAdapter.fromTypeToExpress(middleware);
-    } else if (isErrorMiddleware(middleware)) {
-      expressErrorMiddleware = ErrorMiddlewareAdapter.fromInstanceToExpress(middleware);
-    } else {
-      expressErrorMiddleware = ErrorMiddlewareAdapter.fromConstructorToExpress(middleware);
-    }
-
-    this.root.use(expressErrorMiddleware);
-
+  private bindErrorHandler<THandler extends ErrorHandler = ErrorHandler>(
+    handler: ErrorHandlerType<THandler>
+  ) {
+    const expressErrorMiddlewareFunction = new ErrorHandlerAdapter(handler).adapt();
+    this.root.use(expressErrorMiddlewareFunction);
     return this;
   }
 
-  private tryBindErrorMiddleware() {
-    if (this.errorMiddleware === undefined || this.errorMiddleware === null) {
-      return this;
-    }
-
-    return this.bindErrorMiddleware(this.errorMiddleware);
+  private tryBindErrorHandler() {
+    return this.bindErrorHandler(this.errorHandler);
   }
 
   /* #endregion */
@@ -128,7 +120,7 @@ export class AppBuilder extends AbstractApiBuilder<IAppBuilder> implements IAppB
       .tryBindGuards()
       .tryBindEndpoints()
       .tryBindEndpointGroups()
-      .tryBindErrorMiddleware()
+      .tryBindErrorHandler()
       .createServerAsync(port);
   }
 
