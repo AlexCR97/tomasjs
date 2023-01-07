@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { afterEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "../utils/server";
-import { DotEnvConfiguration, DotEnvSetup } from "../../src/configuration/dotenv";
+import { DotenvConfiguration, DotenvSetup } from "../../src/configuration/dotenv";
 import { internalContainer } from "../../src/container";
 import { ConfigurationResolver, ConfigurationToken } from "../../src/configuration/core";
 
@@ -16,7 +16,7 @@ describe("configuration", () => {
     await tryCloseServerAsync(server);
   });
 
-  it(`The ${DotEnvConfiguration.name} loads a .env file into the ${ConfigurationToken} token`, () => {
+  it(`The ${DotenvConfiguration.name} loads a .env file into the ${ConfigurationToken} token`, () => {
     const expectedStringKey = "This is a string";
     const expectedNumberKey = 99;
     const expectedBooleanTrueKey = true;
@@ -29,7 +29,7 @@ describe("configuration", () => {
       readonly booleanFalseKey!: boolean;
     }
 
-    const dotenvSetup = new DotEnvSetup<AppSettings>({
+    const dotenvSetup = new DotenvSetup<AppSettings>({
       path: "C:\\Projects\\thomas\\test\\configuration\\.env",
       constructor: AppSettings,
       keyConfigurations: [

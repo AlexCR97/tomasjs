@@ -2,18 +2,18 @@ import { ContainerSetup, ContainerSetupFactory } from "@/builder";
 import { TomasError } from "@/core/errors";
 import { config, DotenvConfigOptions } from "dotenv";
 import { KeyConfiguration } from "./KeyConfiguration";
-import { DotEnvConfiguration } from "./DotEnvConfiguration";
+import { DotenvConfiguration } from "./DotenvConfiguration";
 import { Configuration } from "../core";
 import { ClassConstructor } from "@/container";
 import { ConfigurationToken } from "../core/ConfigurationToken";
 
-type DotEnvSetupOptions<TSettings extends object> = DotenvConfigOptions & {
+type DotenvSetupOptions<TSettings extends object> = DotenvConfigOptions & {
   constructor: ClassConstructor<TSettings>;
   keyConfigurations?: KeyConfiguration<TSettings>[];
 };
 
-export class DotEnvSetup<TSettings extends object> extends ContainerSetupFactory {
-  constructor(private readonly options: DotEnvSetupOptions<TSettings>) {
+export class DotenvSetup<TSettings extends object> extends ContainerSetupFactory {
+  constructor(private readonly options: DotenvSetupOptions<TSettings>) {
     super();
   }
 
@@ -27,7 +27,7 @@ export class DotEnvSetup<TSettings extends object> extends ContainerSetupFactory
         });
       }
 
-      const configuration: Configuration<TSettings> = new DotEnvConfiguration(
+      const configuration: Configuration<TSettings> = new DotenvConfiguration(
         dotenvConfigOutput.parsed!,
         this.options?.keyConfigurations
       );

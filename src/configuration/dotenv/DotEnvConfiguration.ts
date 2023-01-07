@@ -6,7 +6,7 @@ import { KeyConfiguration } from "./KeyConfiguration";
 
 type PropertyOf<T> = T[keyof T];
 
-export class DotEnvConfiguration<TSettings extends object> implements Configuration<TSettings> {
+export class DotenvConfiguration<TSettings extends object> implements Configuration<TSettings> {
   private readonly _root: TSettings;
 
   constructor(config: DotenvParseOutput, keyConfigurations?: KeyConfiguration<TSettings>[]) {
