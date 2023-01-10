@@ -5,17 +5,21 @@ import {
   ErrorHandlerType,
   TomasErrorHandler,
 } from "@/error-handler";
+import cors from "cors";
 import express, { Express } from "express";
 import { ExpressPathAdapter } from "../../core/express";
 import { AbstractApiBuilder } from "./AbstractApiBuilder";
 import { EndpointGroupBuilder } from "./EndpointGroupBuilder";
 import { EndpointGroupBuilderFunction } from "./EndpointGroupBuilderFunction";
 
-// TODO Move this interface somewhere else?
 interface IAppBuilder extends AbstractApiBuilder<IAppBuilder> {
   getConfiguration<TSettings extends object>(): Configuration<TSettings>;
 
   use(appSetup: (app: Express) => void): IAppBuilder;
+
+  useCors<T extends cors.CorsRequest = cors.CorsRequest>(
+    options?: cors.CorsOptions | cors.CorsOptionsDelegate<T>
+  ): IAppBuilder;
 
   /* #region Formatters */
   useText(options?: any): IAppBuilder; // TODO Figure out how to pass type parameter
@@ -41,6 +45,14 @@ export class AppBuilder extends AbstractApiBuilder<IAppBuilder> implements IAppB
 
   use(appSetup: (app: Express) => void): IAppBuilder {
     appSetup(this.root);
+    return this;
+  }
+
+  useCors<T extends cors.CorsRequest = cors.CorsRequest>(
+    options?: cors.CorsOptions | cors.CorsOptionsDelegate<T>
+  ): IAppBuilder {
+    const corsMiddleware = cors(options as any); // TODO Improve typing
+    this.root.use(corsMiddleware);
     return this;
   }
 
