@@ -45,6 +45,16 @@ export class Container implements IContainer {
     return this._container.get<T>(token);
   }
 
+  has<T>(token: Token<T>): boolean {
+    try {
+      this.get(token);
+      return true;
+    } catch (err) {
+      // TODO Check err for a better check?
+      return false;
+    }
+  }
+
   isClassConstructor<T>(token: Token<T>): token is ClassConstructor<T> {
     // TODO Improve type check?
     return typeof token === "function";
