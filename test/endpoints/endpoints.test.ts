@@ -1,19 +1,19 @@
 import "reflect-metadata";
-import { afterEach, describe, it } from "@jest/globals";
-import { tryCloseServerAsync } from "../utils/server";
-import { AppBuilder } from "../../src/builder";
-import { tick } from "../utils/time";
-import { HttpContext, StatusCodes } from "../../src/core";
 import fetch from "node-fetch";
-import { OkResponse, StatusCodeResponse } from "../../src/responses/status-codes";
-import { AnonymousEndpoint, Endpoint } from "../../src/endpoints";
+import { afterEach, describe, it } from "@jest/globals";
+import { AppBuilder } from "../../src/builder";
+import { HttpContext, StatusCodes } from "../../src/core";
+import { AnonymousEndpoint, endpoint, Endpoint, middleware, path } from "../../src/endpoints";
+import { AnonymousMiddleware } from "../../src/middleware";
 import { JsonResponse, PlainTextResponse } from "../../src/responses";
-import { ThomasAnonymousMiddleware } from "../../src/middleware";
+import { OkResponse, StatusCodeResponse } from "../../src/responses/status-codes";
+import { tryCloseServerAsync } from "../utils/server";
+import { tick } from "../utils/time";
 
-describe("Endpoints", () => {
+describe("endpoints", () => {
   const port = 3033;
   const serverAddress = `http://localhost:${port}`;
-  const serverTeardownOffsetMilliseconds = 50;
+  const serverTeardownOffsetMilliseconds = 0;
   let server: any; // TODO Set http.Server type
 
   beforeEach(async () => {
@@ -26,9 +26,11 @@ describe("Endpoints", () => {
     await tryCloseServerAsync(server);
   });
 
-  it(`An ${Endpoint.name} instance works`, async () => {
+  it(`An Endpoint instance works`, async () => {
     // Arrange
-    class TestEndpoint extends Endpoint {
+
+    @endpoint()
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
         return new OkResponse();
       }
@@ -43,9 +45,11 @@ describe("Endpoints", () => {
     expect(response.status).toEqual(StatusCodes.ok);
   });
 
-  it(`An ${Endpoint.name} constructor works`, async () => {
+  it(`An Endpoint constructor works`, async () => {
     // Arrange
-    class TestEndpoint extends Endpoint {
+
+    @endpoint()
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext): OkResponse {
         return new OkResponse();
       }
@@ -77,37 +81,31 @@ describe("Endpoints", () => {
   it("All content-type responses work", async () => {
     // Arrange
 
-    class StatusCodeEndpoint extends Endpoint {
+    @endpoint()
+    @path(StatusCodeEndpoint.path)
+    class StatusCodeEndpoint implements Endpoint {
       static path = "status-code";
       static expectedStatusCode = StatusCodes.noContent;
-      constructor() {
-        super();
-        this.path(`/${StatusCodeEndpoint.path}`);
-      }
       handle(context: HttpContext) {
         return new StatusCodeResponse(StatusCodeEndpoint.expectedStatusCode);
       }
     }
 
-    class PlainTextEndpoint extends Endpoint {
+    @endpoint()
+    @path(PlainTextEndpoint.path)
+    class PlainTextEndpoint implements Endpoint {
       static path = "plain-text";
       static expectedPlainText = "plain text test";
-      constructor() {
-        super();
-        this.path(`/${PlainTextEndpoint.path}`);
-      }
       handle(context: HttpContext) {
         return new PlainTextResponse(PlainTextEndpoint.expectedPlainText);
       }
     }
 
-    class JsonEndpoint extends Endpoint {
+    @endpoint()
+    @path(JsonEndpoint.path)
+    class JsonEndpoint implements Endpoint {
       static path = "json";
       static expectedJson = { key: "test-key", value: "test-value" };
-      constructor() {
-        super();
-        this.path(`/${JsonEndpoint.path}`);
-      }
       handle(context: HttpContext) {
         return new JsonResponse(JsonEndpoint.expectedJson);
       }
@@ -132,13 +130,11 @@ describe("Endpoints", () => {
 
   it(`The request path can be extracted from the HttpContext`, async () => {
     // Arrange
-    const expectedPath = "/path/to/resource";
+    const expectedPath = "path/to/resource";
 
-    class TestEndpoint extends Endpoint {
-      constructor() {
-        super();
-        this.path(expectedPath);
-      }
+    @endpoint()
+    @path(expectedPath)
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
         return context.request.path;
       }
@@ -147,11 +143,11 @@ describe("Endpoints", () => {
     server = await new AppBuilder().useEndpoint(TestEndpoint).buildAsync(port);
 
     // Act
-    const response = await fetch(`${serverAddress}${expectedPath}`);
+    const response = await fetch(`${serverAddress}/${expectedPath}`);
 
     // Assert
     expect(response.status).toBe(StatusCodes.ok);
-    expect(response.text()).resolves.toEqual(expectedPath);
+    expect(response.text()).resolves.toEqual(`/${expectedPath}`);
   });
 
   it(`The request headers can be extracted from the HttpContext`, async () => {
@@ -161,7 +157,8 @@ describe("Endpoints", () => {
       value: string;
     }
 
-    class TestEndpoint extends Endpoint {
+    @endpoint()
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
         return new JsonResponse(context.request.headers);
       }
@@ -191,17 +188,15 @@ describe("Endpoints", () => {
 
   it(`The request params can be extracted from the HttpContext`, async () => {
     // Arrange
-    const expectedPath = "/users/:id/profile/:profileId";
+    const expectedPath = "users/:id/profile/:profileId";
     const expectedPathValues = {
       id: 123,
       profileId: 246,
     };
 
-    class TestEndpoint extends Endpoint {
-      constructor() {
-        super();
-        this.path(expectedPath);
-      }
+    @endpoint()
+    @path(expectedPath)
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
         return new JsonResponse({
           id: Number(context.request.params.id),
@@ -214,7 +209,7 @@ describe("Endpoints", () => {
 
     // Act
     const response = await fetch(
-      `${serverAddress}${expectedPath
+      `${serverAddress}/${expectedPath
         .replace(":id", expectedPathValues.id.toString())
         .replace(":profileId", expectedPathValues.profileId.toString())}`
     );
@@ -226,17 +221,15 @@ describe("Endpoints", () => {
 
   it(`The request query can be extracted from the HttpContext`, async () => {
     // Arrange
-    const expectedPath = "/users";
+    const expectedPath = "users";
     const expectedQueryParams = {
       pageIndex: 3,
       pageSize: 16,
     };
 
-    class TestEndpoint extends Endpoint {
-      constructor() {
-        super();
-        this.path(expectedPath);
-      }
+    @endpoint()
+    @path(expectedPath)
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
         return new JsonResponse({
           pageIndex: Number(context.request.query.pageIndex),
@@ -251,7 +244,7 @@ describe("Endpoints", () => {
     const queryParams = new URLSearchParams();
     queryParams.set("pageIndex", "3");
     queryParams.set("pageSize", "16");
-    const requestUrl = `${serverAddress}${expectedPath}?${queryParams.toString()}`;
+    const requestUrl = `${serverAddress}/${expectedPath}?${queryParams.toString()}`;
     const response = await fetch(requestUrl);
 
     // Assert
@@ -263,11 +256,8 @@ describe("Endpoints", () => {
     // Arrange
     const expectedResponse = "Plain text body works!";
 
-    class TestEndpoint extends Endpoint {
-      constructor() {
-        super();
-        this.method("post");
-      }
+    @endpoint("post")
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
         return context.request.body;
       }
@@ -294,13 +284,10 @@ describe("Endpoints", () => {
       password: string;
     }
 
-    class TestEndpoint extends Endpoint {
-      constructor() {
-        super();
-        this.method("post");
-      }
+    @endpoint("post")
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
-        const body = context.request.getBody<TestBody>();
+        const body: TestBody = context.request.body;
         return new JsonResponse(body, {
           status: StatusCodes.created,
         });
@@ -328,28 +315,25 @@ describe("Endpoints", () => {
 
   it(`An onBefore Middleware can intercept the request headers`, async () => {
     // Arrange
-    const path = "path/to/authorized/resource";
+    const expectedPath = "path/to/authorized/resource";
     const headerKey = "authorization";
     const secretKey = "superSecretKey";
 
-    class TestEndpoint extends Endpoint {
-      constructor() {
-        super();
-        this.method("post")
-          .path(`/${path}`)
-          .onBefore(
-            new ThomasAnonymousMiddleware((context, next) => {
-              const token = context.request.headers[headerKey];
+    @endpoint("post")
+    @path(expectedPath)
+    @middleware(
+      new AnonymousMiddleware((context, next) => {
+        const token = context.request.headers[headerKey];
 
-              if (token !== secretKey) {
-                context.response.status(StatusCodes.unauthorized).send();
-                return;
-              }
+        if (token !== secretKey) {
+          context.response.status(StatusCodes.unauthorized).send();
+          return;
+        }
 
-              next();
-            })
-          );
-      }
+        next();
+      })
+    )
+    class TestEndpoint implements Endpoint {
       handle(context: HttpContext): string {
         return context.request.headers[headerKey] as string;
       }
@@ -358,13 +342,13 @@ describe("Endpoints", () => {
     server = await new AppBuilder().useJson().useEndpoint(TestEndpoint).buildAsync(port);
 
     // Act
-    const unauthorizedResponse = await fetch(`${serverAddress}/${path}`, {
+    const unauthorizedResponse = await fetch(`${serverAddress}/${expectedPath}`, {
       method: "post",
     });
 
     const customHeaders: any = {};
     customHeaders[headerKey] = secretKey;
-    const authorizedResponse = await fetch(`${serverAddress}/${path}`, {
+    const authorizedResponse = await fetch(`${serverAddress}/${expectedPath}`, {
       method: "post",
       headers: { ...customHeaders },
     });

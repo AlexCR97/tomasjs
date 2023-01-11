@@ -1,8 +1,8 @@
-import { singleton } from "tsyringe";
 import { response } from "express";
 import { RequestContext } from "./RequestContext";
 import { UserContext } from "./UserContext";
 import { ResponseAdapter } from "@/responses";
+import { singleton } from "@/container";
 
 @singleton()
 export class HttpContext {

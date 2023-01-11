@@ -1,43 +1,41 @@
-import { isConstructorToken } from "@/core/tsyringe";
-import { container } from "tsyringe";
-import { constructor } from "tsyringe/dist/typings/types";
-import { ThomasMiddleware } from "./Middleware";
+import { ClassConstructor, internalContainer, isClassConstructor } from "@/container";
+import { Middleware } from "./Middleware";
 import { MiddlewareFactory } from "./MiddlewareFactory";
 import { isMiddlewareFactoryHandler, MiddlewareFactoryHandler } from "./MiddlewareFactoryHandler";
-import { ThomasMiddlewareHandler } from "./types";
+import { MiddlewareHandler } from "./MiddlewareHandler";
 
 /**
  * Resolves a `MiddlewareFactory` into a `Middleware`.
  *
  * Considering that:
- * `TMiddleware extends ThomasMiddleware = ThomasMiddleware`
+ * `TMiddleware extends Middleware = Middleware`
  *
  * Then, a valid `MiddlewareFactory` could be:
  * - An arrow function of type `MiddlewareFactoryHandler<TMiddleware>`
  * - An instance of a `MiddlewareFactory<TMiddleware>`
  * - A constructor of a `MiddlewareFactory<TMiddleware>`
  */
-export class MiddlewareFactoryAdapter {
+export abstract class MiddlewareFactoryAdapter {
   private constructor() {}
 
-  static isFactory<TMiddleware extends ThomasMiddleware = ThomasMiddleware>(
+  static isFactory<TMiddleware extends Middleware = Middleware>(
     obj: any
   ): obj is
     | MiddlewareFactoryHandler<TMiddleware>
     | MiddlewareFactory<TMiddleware>
-    | constructor<MiddlewareFactory<TMiddleware>> {
+    | ClassConstructor<MiddlewareFactory<TMiddleware>> {
     return (
       isMiddlewareFactoryHandler(obj) ||
       obj instanceof MiddlewareFactory<TMiddleware> ||
-      isConstructorToken(obj)
+      isClassConstructor(obj)
     );
   }
 
-  static from<TMiddleware extends ThomasMiddleware = ThomasMiddleware>(
+  static from<TMiddleware extends Middleware = Middleware>(
     factory:
       | MiddlewareFactoryHandler<TMiddleware>
       | MiddlewareFactory<TMiddleware>
-      | constructor<MiddlewareFactory<TMiddleware>>
+      | ClassConstructor<MiddlewareFactory<TMiddleware>>
   ) {
     if (isMiddlewareFactoryHandler(factory)) {
       return this.fromType(factory);
@@ -48,22 +46,22 @@ export class MiddlewareFactoryAdapter {
     }
   }
 
-  static fromType<TMiddleware extends ThomasMiddleware = ThomasMiddleware>(
+  static fromType<TMiddleware extends Middleware = Middleware>(
     factory: MiddlewareFactoryHandler<TMiddleware>
   ) {
     return factory();
   }
 
-  static fromInstance<TMiddleware extends ThomasMiddleware = ThomasMiddleware>(
+  static fromInstance<TMiddleware extends Middleware = Middleware>(
     factory: MiddlewareFactory<TMiddleware>
-  ): ThomasMiddlewareHandler | TMiddleware | constructor<TMiddleware> {
+  ): MiddlewareHandler | TMiddleware | ClassConstructor<TMiddleware> {
     return factory.create();
   }
 
-  static fromConstructor<TMiddleware extends ThomasMiddleware = ThomasMiddleware>(
-    factory: constructor<MiddlewareFactory<TMiddleware>>
-  ): ThomasMiddlewareHandler | TMiddleware | constructor<TMiddleware> {
-    const factoryInstance = container.resolve(factory);
+  static fromConstructor<TMiddleware extends Middleware = Middleware>(
+    factory: ClassConstructor<MiddlewareFactory<TMiddleware>>
+  ): MiddlewareHandler | TMiddleware | ClassConstructor<TMiddleware> {
+    const factoryInstance = internalContainer.get(factory);
     return factoryInstance.create();
   }
 }

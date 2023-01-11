@@ -14,8 +14,4 @@ export class RequestContext {
     this.query = req.query;
     this.body = req.body;
   }
-
-  getBody<T>(): T {
-    return this.body as T;
-  }
 }

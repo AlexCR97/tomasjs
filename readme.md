@@ -15,13 +15,20 @@ Rapidly build highly scalable server side applications using TomasJS's built-in:
 
 1. [Getting started](#1-getting-started)
    1. [Installation](#11-installation)
-   2. [Your first tomasjs app](#12-your-first-tomasjs-app)
+   2. [Your first TomasJS app](#12-your-first-tomasjs-app)
 2. [Fundamentals](#2-fundamentals)
    1. [AppBuilder](#21-appbuilder)
    2. [Endpoints](#22-endpoints)
+      1. Endpoint class
+      2. AnonymousEndpoint class
    3. [EndpointGroups](#23-endpointgroups)
    4. [Middlewares](#24-middlewares)
-3. [Samples](#3-samples)
+      1. [Middleware class](#241-middleware-class)
+      2. [ErrorMiddleware class](#242-errormiddleware-class)
+      3. [Built-in Middlewares](#243-built-in-middlewares)
+3. [Integration with 3rd party libraries](#3-integration-with-3rd-party-libraries)
+   1. [Databases](#31-databases)
+4. [Samples](#4-samples)
 
 ## 1. Getting started
 
@@ -33,7 +40,7 @@ Create a node.js express project and run the following command:
 npm install tomasjs
 ```
 
-### 1.2 Your first tomasjs app
+### 1.2 Your first TomasJS app
 
 Create the following file:
 
@@ -87,9 +94,28 @@ Coming soon
 
 ### 2.4 Middlewares
 
+#### 2.4.1 Middleware class
+
+#### 2.4.2 ErrorMiddleware class
+
+#### 2.4.3 Built-in Middlewares
+
+TomasJS has several built-in middleware for typical use cases:
+
+- JwtMiddleware
+- RequiredClaimMiddleware
+
+###
+
 Coming soon
 
-## 3. Samples
+## 3. Integration with 3rd party libraries
+
+### 3.1 Databases
+
+- MikroORM
+
+## 4. Samples
 
 You can find sample in this same repository under the /samples directory.
 

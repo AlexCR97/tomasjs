@@ -1,12 +1,28 @@
+import { internalContainer } from "@/container";
 import { Request, Response } from "express";
-import { container } from "tsyringe";
 import { HttpContext } from "./HttpContext";
 import { HttpContextBinder } from "./HttpContextBinder";
+import { UserContext } from "./UserContext";
 
 export abstract class HttpContextResolver {
+  private constructor() {}
+
   static fromExpress(req: Request, res: Response): HttpContext {
-    const context = container.resolve(HttpContext);
-    HttpContextBinder.fromExpress(context, req, res);
-    return context;
+    // console.log("fromExpress");
+
+    try {
+      const context = internalContainer.get(HttpContext);
+      // console.log("after resolving context");
+
+      HttpContextBinder.fromExpress(context, req, res);
+      // console.log("after HttpContextBinder");
+
+      context.user = internalContainer.get(UserContext);
+
+      return context;
+    } catch (err) {
+      // console.log("err", err);
+      throw err;
+    }
   }
 }

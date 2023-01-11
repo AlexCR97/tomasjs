@@ -1,6 +1,11 @@
-import { MiddlewareFactory, MiddlewareFactoryHandler, ThomasMiddleware } from "@/middleware";
-import { ThomasMiddlewareHandler } from "@/middleware/types";
-import { constructor } from "tsyringe/dist/typings/types";
+import { ClassConstructor } from "@/container";
+import { GuardType } from "@/guards";
+import {
+  Middleware,
+  MiddlewareFactory,
+  MiddlewareFactoryHandler,
+  MiddlewareHandler,
+} from "@/middleware";
 import { Endpoint } from "./Endpoint";
 
 export class EndpointGroup {
@@ -18,22 +23,22 @@ export class EndpointGroup {
   /* #region On Before Middleware */
 
   readonly onBeforeMiddlewares: (
-    | ThomasMiddlewareHandler
-    | ThomasMiddleware
-    | constructor<ThomasMiddleware>
+    | MiddlewareHandler
+    | Middleware
+    | ClassConstructor<Middleware>
     | MiddlewareFactoryHandler
     | MiddlewareFactory
-    | constructor<MiddlewareFactory>
+    | ClassConstructor<MiddlewareFactory>
   )[] = []; // TODO Make private?
 
   onBefore(
     middleware:
-      | ThomasMiddlewareHandler
-      | ThomasMiddleware
-      | constructor<ThomasMiddleware>
+      | MiddlewareHandler
+      | Middleware
+      | ClassConstructor<Middleware>
       | MiddlewareFactoryHandler
       | MiddlewareFactory
-      | constructor<MiddlewareFactory>
+      | ClassConstructor<MiddlewareFactory>
   ): EndpointGroup {
     this.onBeforeMiddlewares.push(middleware);
     return this;
@@ -41,12 +46,23 @@ export class EndpointGroup {
 
   /* #endregion */
 
+  /* #region Guards */
+
+  readonly guards: GuardType[] = [];
+
+  useGuard(guard: GuardType): EndpointGroup {
+    this.guards.push(guard);
+    return this;
+  }
+
+  /* #endregion */
+
   /* #region Endpoints */
 
-  readonly endpoints: (Endpoint | constructor<Endpoint>)[] = [];
+  readonly endpoints: (Endpoint | ClassConstructor<Endpoint>)[] = [];
 
   useEndpoint<TEndpoint extends Endpoint = Endpoint>(
-    endpoint: TEndpoint | constructor<TEndpoint>
+    endpoint: TEndpoint | ClassConstructor<TEndpoint>
   ): EndpointGroup {
     this.endpoints.push(endpoint);
     return this;
