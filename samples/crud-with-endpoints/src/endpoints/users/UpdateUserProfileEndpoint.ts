@@ -1,13 +1,12 @@
-import { User } from "@/entities/User";
 import { HttpContext } from "tomasjs/core";
-import { Endpoint } from "tomasjs/endpoints";
+import { endpoint, Endpoint, path } from "tomasjs/endpoints";
 import { inRepository, Repository } from "tomasjs/mikro-orm/mongodb";
 import {
   BadRequestResponse,
   NoContentResponse,
   NotFoundResponse,
 } from "tomasjs/responses/status-codes";
-import { injectable } from "tsyringe";
+import { User } from "@/entities/User";
 
 interface PatchRequest {
   id: string;
@@ -15,15 +14,14 @@ interface PatchRequest {
   lastName?: string;
 }
 
-@injectable()
-export class UpdateUserProfileEndpoint extends Endpoint {
-  constructor(@inRepository(User) private readonly usersRepository: Repository<User>) {
-    super();
-    this.method("patch").path("/:id/profile");
-  }
+@endpoint("patch")
+@path(":id/profile")
+export class UpdateUserProfileEndpoint implements Endpoint {
+  constructor(@inRepository(User) private readonly usersRepository: Repository<User>) {}
+
   async handle(context: HttpContext) {
     const userId = context.request.params.id;
-    const patchRequest = context.request.getBody<PatchRequest>();
+    const patchRequest: PatchRequest = context.request.body;
 
     if (userId !== patchRequest.id) {
       return new BadRequestResponse();

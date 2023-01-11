@@ -2,14 +2,14 @@ import "reflect-metadata";
 import { AppBuilder, ContainerBuilder } from "tomasjs/builder";
 import { MikroOrmSetup, RepositorySetup } from "tomasjs/mikro-orm";
 import {
+  SeedUsersEndpoint,
+  ClearUsersEndpoint,
+  CreateUserEndpoint,
   GetAllUsersEndpoint,
   GetUserByIdEndpoint,
-  CreateUserEndpoint,
   UpdateUserEndpoint,
   UpdateUserProfileEndpoint,
   DeleteUserEndpoint,
-  SeedUsersEndpoint,
-  ClearUsersEndpoint,
 } from "./endpoints/users";
 import { User } from "./entities/User";
 
@@ -35,15 +35,15 @@ async function main() {
     .useJson()
     .useEndpointGroup((endpoints) =>
       endpoints
-        .basePath("/users")
+        .useBasePath("users")
+        .useEndpoint(SeedUsersEndpoint)
+        .useEndpoint(ClearUsersEndpoint)
+        .useEndpoint(CreateUserEndpoint)
         .useEndpoint(GetAllUsersEndpoint)
         .useEndpoint(GetUserByIdEndpoint)
-        .useEndpoint(CreateUserEndpoint)
         .useEndpoint(UpdateUserEndpoint)
         .useEndpoint(UpdateUserProfileEndpoint)
         .useEndpoint(DeleteUserEndpoint)
-        .useEndpoint(SeedUsersEndpoint)
-        .useEndpoint(ClearUsersEndpoint)
     )
     .buildAsync(PORT);
 

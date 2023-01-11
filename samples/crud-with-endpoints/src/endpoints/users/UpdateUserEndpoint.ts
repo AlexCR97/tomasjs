@@ -1,25 +1,26 @@
-import { User } from "@/entities/User";
 import { HttpContext } from "tomasjs/core";
-import { Endpoint } from "tomasjs/endpoints";
+import { endpoint, Endpoint, path } from "tomasjs/endpoints";
 import { inRepository, Repository } from "tomasjs/mikro-orm/mongodb";
+// import { bodyPipe } from "tomasjs/pipes";
 import {
   BadRequestResponse,
   NoContentResponse,
   NotFoundResponse,
 } from "tomasjs/responses/status-codes";
-import { injectable } from "tsyringe";
+import { InstanceTransform } from "tomasjs/transforms";
+import { User } from "@/entities/User";
 
-@injectable()
-export class UpdateUserEndpoint extends Endpoint {
-  constructor(
-    @inRepository(User) private readonly usersRepository: Repository<User>
-  ) {
-    super();
-    this.method("put").path("/:id");
-  }
+@endpoint("put")
+@path(":id")
+export class UpdateUserEndpoint implements Endpoint {
+  constructor(@inRepository(User) private readonly usersRepository: Repository<User>) {}
+
+  // @bodyPipe(new InstanceTransform(User)) // TODO Uncomment this once bug with @bodyPipe has been fixed
   async handle(context: HttpContext) {
     const userId = context.request.params.id;
-    const userFromBody = context.request.getBody<User>();
+
+    const instanceTransform = new InstanceTransform(User);
+    const userFromBody = await instanceTransform.transform(context.request.body);
 
     if (userId !== userFromBody.id) {
       return new BadRequestResponse();
@@ -43,7 +44,9 @@ export class UpdateUserEndpoint extends Endpoint {
     existingUser.password = userFromBody.password;
     existingUser.firstName = userFromBody.firstName;
     existingUser.lastName = userFromBody.lastName;
+
     await this.usersRepository.nativeUpdate({ id: userId }, existingUser);
+
     return new NoContentResponse();
   }
 }

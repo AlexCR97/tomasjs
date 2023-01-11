@@ -1,20 +1,15 @@
-import { User } from "@/entities/User";
 import { HttpContext } from "tomasjs/core";
-import { Endpoint } from "tomasjs/endpoints";
+import { endpoint, Endpoint, path } from "tomasjs/endpoints";
 import { inRepository, Repository } from "tomasjs/mikro-orm/mongodb";
 import { OkResponse } from "tomasjs/responses/status-codes";
-import { injectable } from "tsyringe";
+import { User } from "@/entities/User";
 
-@injectable()
-export class SeedUsersEndpoint extends Endpoint {
+@endpoint("post")
+@path("seed")
+export class SeedUsersEndpoint implements Endpoint {
   static readonly seedUsersCount = 3;
 
-  constructor(
-    @inRepository(User) private readonly usersRepository: Repository<User>
-  ) {
-    super();
-    this.method("post").path("/seed");
-  }
+  constructor(@inRepository(User) private readonly usersRepository: Repository<User>) {}
 
   async handle(context: HttpContext) {
     const arr = Array.from(Array(SeedUsersEndpoint.seedUsersCount).keys());

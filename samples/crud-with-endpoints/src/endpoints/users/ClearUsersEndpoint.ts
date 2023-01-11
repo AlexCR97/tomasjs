@@ -1,16 +1,14 @@
-import { User } from "@/entities/User";
 import { HttpContext } from "tomasjs/core";
-import { Endpoint } from "tomasjs/endpoints";
+import { endpoint, Endpoint, path } from "tomasjs/endpoints";
 import { inRepository, Repository } from "tomasjs/mikro-orm/mongodb";
 import { OkResponse } from "tomasjs/responses/status-codes";
-import { injectable } from "tsyringe";
+import { User } from "@/entities/User";
 
-@injectable()
-export class ClearUsersEndpoint extends Endpoint {
-  constructor(@inRepository(User) private readonly usersRepository: Repository<User>) {
-    super();
-    this.method("delete").path("/clear");
-  }
+@endpoint("delete")
+@path("clear")
+export class ClearUsersEndpoint implements Endpoint {
+  constructor(@inRepository(User) private readonly usersRepository: Repository<User>) {}
+
   async handle(context: HttpContext) {
     const users = await this.usersRepository.findAll();
 
