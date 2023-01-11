@@ -73,19 +73,7 @@ export abstract class MiddlewareAdapter {
     middleware: ClassConstructor<TMiddleware>
   ): ExpressMiddlewareHandler {
     return async (req, res, next) => {
-      try {
-        console.log("resolving middleware instance...");
-        internalContainer.get(middleware); // Middleware needs to be resolved at runtime to support DI
-        console.log("middleware instance resolved!");
-      } catch (err) {
-        console.log("err", err);
-        throw err;
-      }
-
-      console.log("resolving middleware instance...");
       const middlewareInstance = internalContainer.get(middleware); // Middleware needs to be resolved at runtime to support DI
-      console.log("middleware instance resolved!", middlewareInstance);
-
       const context = HttpContextResolver.fromExpress(req, res); // HttpContext needs to be resolved at runtime to support DI
       await middlewareInstance.handle(context, next);
     };

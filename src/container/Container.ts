@@ -1,3 +1,4 @@
+// import { TomasLogger } from "@/logger";
 import { Container as InversifyContainer } from "inversify";
 import { ClassConstructor } from "./ClassConstructor";
 import { IContainer } from "./IContainer";
@@ -17,6 +18,10 @@ export class Container implements IContainer {
     skipBaseClassChecks: true,
   });
 
+  // private readonly logger = new TomasLogger(Container.name, "debug");
+
+  constructor() {}
+
   addClass<T>(
     constructor: ClassConstructor<T>,
     options?: { token?: Token<T>; scope?: Scope }
@@ -24,11 +29,32 @@ export class Container implements IContainer {
     const injectionToken = options?.token ?? constructor;
 
     if (options?.scope === "request") {
-      this._container.bind<T>(injectionToken).to(constructor).inRequestScope();
+      this._container
+        .bind<T>(injectionToken)
+        .to(constructor)
+        .inRequestScope()
+        .onActivation((context, component) => {
+          console.log("onActivation", { constructor, options, component });
+          return component;
+        });
     } else if (options?.scope === "singleton") {
-      this._container.bind<T>(injectionToken).to(constructor).inSingletonScope();
+      this._container
+        .bind<T>(injectionToken)
+        .to(constructor)
+        .inSingletonScope()
+        .onActivation((context, component) => {
+          console.log("onActivation", { constructor, options, component });
+          return component;
+        });
     } else if (options?.scope === "transient" || options?.scope === undefined) {
-      this._container.bind<T>(injectionToken).to(constructor).inTransientScope();
+      this._container
+        .bind<T>(injectionToken)
+        .to(constructor)
+        .inTransientScope()
+        .onActivation((context, component) => {
+          console.log("onActivation", { constructor, options, component });
+          return component;
+        });
     } else {
       throw new Error(`Unsupported scope "${options?.scope}"`);
     }
@@ -37,7 +63,13 @@ export class Container implements IContainer {
   }
 
   addInstance<T>(instance: T, token: Token<T>): IContainer {
-    this._container.bind<T>(token).toConstantValue(instance);
+    this._container
+      .bind<T>(token)
+      .toConstantValue(instance)
+      .onActivation((context, component) => {
+        console.log("onActivation", { instance, token, component });
+        return component;
+      });
     return this;
   }
 

@@ -34,6 +34,7 @@
     "testw-error-handler": "jest --testNamePattern error-handler --watchAll --verbose",
     "testw-fluentvalidation-middleware": "jest --testNamePattern fluentvalidation-middleware --watchAll --verbose",
     "testw-guards": "jest --testNamePattern guards --watchAll --verbose",
+    "testw-lifecycle": "jest --testNamePattern lifecycle --watchAll --verbose",
     "testw-logger": "jest --testNamePattern logger --watchAll --verbose",
     "testw-sample-crud": "jest --testNamePattern crud-sample --watchAll --verbose",
     "testw-mikro-orm": "jest --testNamePattern mikro-orm --watchAll --verbose --detectOpenHandles",
