@@ -1,4 +1,5 @@
 import { ClassConstructor, isClassConstructor } from "@/container";
+import { TomasError } from "@/core/errors";
 import { AnonymousEndpoint } from "../AnonymousEndpoint";
 import { Endpoint } from "../Endpoint";
 import { isEndpoint } from "../isEndpoint";
@@ -20,6 +21,8 @@ export abstract class EndpointMetadataStrategy {
       return new EndpointPrototypeMetadata(endpoint);
     }
 
-    throw new Error(`Cannot resolve EndpointMetadata strategy for endpoint ${endpoint}`);
+    throw new TomasError(`Cannot resolve EndpointMetadata strategy for endpoint ${endpoint}`, {
+      data: endpoint,
+    });
   }
 }
