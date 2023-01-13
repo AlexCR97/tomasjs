@@ -77,9 +77,6 @@ describe("instance-transform", () => {
     const transformer = new InstanceTransform<TestClass>(TestClass);
     const output = await transformer.transform(input);
 
-    console.log("input", input);
-    console.log("output", output);
-
     // Assert
     let currentOutput: TestClass | undefined = output;
     let currentInput: any = input;

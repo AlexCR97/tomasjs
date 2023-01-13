@@ -24,7 +24,6 @@ class DotenvTransform<TObject extends object> implements Transform<DotenvParseOu
 
   transform(input: DotenvParseOutput): TObject {
     const output = JSON.parse(JSON.stringify(input)); // TODO Find a better way to do a shallow copy?
-    console.log("output", output);
 
     if (
       this.keyConfigurations === undefined ||
