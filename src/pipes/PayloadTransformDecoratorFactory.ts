@@ -23,8 +23,6 @@ export abstract class PayloadTransformDecoratorFactory<TOutput> {
       const originalFunction: Function = descriptor.value;
 
       descriptor.value = function handle(httpContext: HttpContext, ...args: any[]) {
-        // const httpContext: HttpContext = args.find((arg) => arg instanceof HttpContext);
-
         if (httpContext === undefined || httpContext === null) {
           throw new TomasError(
             `The decorated function must have an argument that is an instance of ${HttpContext.name}`
