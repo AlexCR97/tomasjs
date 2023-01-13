@@ -1,7 +1,7 @@
 import { HttpContext } from "tomasjs/core";
 import { endpoint, Endpoint, path } from "tomasjs/endpoints";
 import { inRepository, Repository } from "tomasjs/mikro-orm/mongodb";
-// import { bodyPipe } from "tomasjs/pipes";
+import { bodyPipe } from "tomasjs/pipes";
 import {
   BadRequestResponse,
   NoContentResponse,
@@ -15,12 +15,10 @@ import { User } from "@/entities/User";
 export class UpdateUserEndpoint implements Endpoint {
   constructor(@inRepository(User) private readonly usersRepository: Repository<User>) {}
 
-  // @bodyPipe(new InstanceTransform(User)) // TODO Uncomment this once bug with @bodyPipe has been fixed
+  @bodyPipe(new InstanceTransform(User))
   async handle(context: HttpContext) {
     const userId = context.request.params.id;
-
-    const instanceTransform = new InstanceTransform(User);
-    const userFromBody = await instanceTransform.transform(context.request.body);
+    const userFromBody: User = context.request.body;
 
     if (userId !== userFromBody.id) {
       return new BadRequestResponse();
