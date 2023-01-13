@@ -11,10 +11,9 @@ export function isEndpoint(obj: any): obj is Endpoint {
     return false;
   }
 
-  // Considering that the "handle" must be a named function...
+  // Considering that the "handle" property must be a named function...
   return (
     func.name.trim() === "handle" && // The name must be "handle"
-    func.prototype === undefined && // The prototype must be undefined
     func.length === 1 // It must receive 1 argument
   );
 }

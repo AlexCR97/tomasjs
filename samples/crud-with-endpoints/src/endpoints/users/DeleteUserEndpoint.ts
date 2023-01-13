@@ -1,18 +1,14 @@
-import { User } from "@/entities/User";
 import { HttpContext } from "tomasjs/core";
-import { Endpoint } from "tomasjs/endpoints";
+import { endpoint, Endpoint, path } from "tomasjs/endpoints";
 import { inRepository, Repository } from "tomasjs/mikro-orm/mongodb";
 import { NoContentResponse, NotFoundResponse } from "tomasjs/responses/status-codes";
-import { injectable } from "tsyringe";
+import { User } from "@/entities/User";
 
-@injectable()
-export class DeleteUserEndpoint extends Endpoint {
-  constructor(
-    @inRepository(User) private readonly usersRepository: Repository<User>
-  ) {
-    super();
-    this.method("delete").path("/:id");
-  }
+@endpoint("delete")
+@path(":id")
+export class DeleteUserEndpoint implements Endpoint {
+  constructor(@inRepository(User) private readonly usersRepository: Repository<User>) {}
+
   async handle(context: HttpContext) {
     const userId = context.request.params.id;
     const existingUser = await this.usersRepository.findOne({ id: userId });

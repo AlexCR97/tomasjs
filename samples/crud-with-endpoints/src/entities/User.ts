@@ -15,9 +15,9 @@ export class User {
   @Property()
   password!: string;
 
-  @Property()
+  @Property({ nullable: true })
   firstName?: string;
 
-  @Property()
+  @Property({ nullable: true })
   lastName?: string;
 }

@@ -1,18 +1,14 @@
-import { User } from "@/entities/User";
 import { HttpContext } from "tomasjs/core";
-import { Endpoint } from "tomasjs/endpoints";
+import { endpoint, Endpoint, path } from "tomasjs/endpoints";
 import { inRepository, Repository } from "tomasjs/mikro-orm/mongodb";
 import { NotFoundResponse } from "tomasjs/responses/status-codes";
-import { injectable } from "tsyringe";
+import { User } from "@/entities/User";
 
-@injectable()
-export class GetUserByIdEndpoint extends Endpoint {
-  constructor(
-    @inRepository(User) private readonly usersRepository: Repository<User>
-  ) {
-    super();
-    this.path("/:id");
-  }
+@endpoint()
+@path(":id")
+export class GetUserByIdEndpoint implements Endpoint {
+  constructor(@inRepository(User) private readonly usersRepository: Repository<User>) {}
+
   async handle(context: HttpContext) {
     const userId = context.request.params.id;
     const user = await this.usersRepository.findOne({ id: userId });
