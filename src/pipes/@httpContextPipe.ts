@@ -12,28 +12,37 @@ export function httpContextPipe<TOutput>(
   return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalFunction = descriptor.value;
 
-    descriptor.value = function (...args: any[]) {
-      const httpContext: HttpContext = args.find((arg) => arg instanceof HttpContext);
-
-      if (httpContext === undefined || httpContext === null) {
+    /**
+     * This statement must explicitly set the value of descriptor.value
+     * to be a function with the "handle" name and an HttpContext parameter.
+     *
+     * This needs to be this way so other parts of the framework can
+     * correctly infer an Endpoint instance's type.
+     */
+    descriptor.value = function handle(httpContext: HttpContext) {
+      if (
+        httpContext === undefined ||
+        httpContext === null ||
+        !(httpContext instanceof HttpContext)
+      ) {
         throw new TomasError(
           `The decorated function must have an argument that is an instance of ${HttpContext.name}`
         );
       }
 
       const transformInput = transformInputGetter(httpContext);
-      console.log("transformInput", transformInput);
+      // console.log("transformInput", transformInput);
 
       // TODO Will this support async/await?
       const transformOutput = new TransformBridge(transform).transform(transformInput);
-      console.log("transformOutput", transformOutput);
+      // console.log("transformOutput", transformOutput);
 
       const transformOutputSource = transformOutputSourceGetter(httpContext);
-      console.log("transformOutputSource", transformOutputSource);
+      // console.log("transformOutputSource", transformOutputSource);
 
       Reflect.set(transformOutputSource, transformOutputKey, transformOutput);
 
-      return originalFunction.apply(this, args);
+      return originalFunction.apply(this, httpContext);
     };
 
     return descriptor;
