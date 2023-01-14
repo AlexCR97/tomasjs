@@ -42,6 +42,7 @@
     "testw-pipes-queryPipe-decorator": "jest --testNamePattern queryPipe-decorator --watchAll --verbose --detectOpenHandles",
     "testw-transforms-number-transform": "jest --testNamePattern number-transform --watchAll --verbose --detectOpenHandles",
     "testw-transforms-instance-transform": "jest --testNamePattern instance-transform --watchAll --verbose --detectOpenHandles",
+    "watch-examples": "ts-node -r tsconfig-paths/register ./src/examples/examples.ts",
     "serve-sample-controllers": "ts-node -r tsconfig-paths/register ./samples/crud-with-controllers/main.ts",
     "watch-sample-controllers": "nodemon -r tsconfig-paths/register ./samples/crud-with-controllers/main.ts",
     "serve-sample-endpoints": "ts-node -r tsconfig-paths/register ./samples/crud-with-endpoints/main.ts",
