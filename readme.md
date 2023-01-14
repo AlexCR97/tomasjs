@@ -31,11 +31,10 @@ Rapidly build highly scalable server side applications using TomasJS's built-in:
     - [AnonymousMiddleware class](#anonymousmiddleware-class)
     - [MiddlewareFactory](#middlewarefactory)
     - [Middleware levels](#middleware-levels)
-  - Guards
-    - GuardResult
-    - GuardFunction
-    - Guard interface
-    - GuardFactory
+  - [Guards](#guards)
+    - [GuardFunction](#guardfunction)
+    - [Guard interface](#guard-interface)
+    - [GuardFactory](#guardfactory)
   - Pipes
     - PipeTransformParam
       - TransformFunction
@@ -478,7 +477,7 @@ Using a middleware at the **Endpoint level**:
 
 ```ts
 @endpoint()
-@middleware(LoggerMiddleware)
+@middleware(LoggerMiddleware) // Your middleware here
 class MyEndpoint implements Endpoint {
   handle(context: HttpContext) {
     // ...
@@ -491,7 +490,7 @@ Using a middleware at the **EndpointGroup level**:
 ```ts
 app.useEndpointGroup((eg) =>
   eg
-    .useMiddleware(LoggerMiddleware)
+    .useMiddleware(LoggerMiddleware) // Your middleware here
     .useEndpoint(Endpoint1)
     .useEndpoint(Endpoint2)
     .useEndpoint(Endpoint3)
@@ -501,7 +500,114 @@ app.useEndpointGroup((eg) =>
 Using a middleware at the **app level**:
 
 ```ts
-app.useMiddleware(LoggerMiddleware);
+app.useMiddleware(LoggerMiddleware); // Your middleware here
 ```
 
 ## Guards
+
+A Guard is a special type of Middleware that determines if the incoming request has access to the resource.
+
+Guards can have 3 different results:
+
+- **boolean**: If true, the request can continue, otherwise, an UnauthorizedResponse is responded.
+- **UnauthorizedResponse**: The server responds with a 401 status code.
+- **ForbiddenResponse**: The server responds with a 403 status code.
+
+> Know that any exception thrown in a Guard will be intercepted by the registered ErrorHandler, which is discussed in another section.
+
+Now let's look at some examples.
+
+For the following examples we will create a guard that expects the request to have the headers "clientId" and "clientSecret".
+
+### GuardFunction
+
+```ts
+const apiClientGuard: GuardFunction = ({ request }: GuardContext) => {
+  const { clientId, clientSecret } = request.headers;
+
+  if (!clientId || !clientSecret) {
+    return false; // Reject access to resource
+  }
+
+  return true; // Allow access to resource
+};
+```
+
+### Guard interface
+
+```ts
+@guard()
+class ApiClientGuard implements Guard {
+  isAllowed({ request }: GuardContext): GuardResult {
+    const { clientId, clientSecret } = request.headers;
+
+    if (!clientId || !clientSecret) {
+      return false; // Reject access to resource
+    }
+
+    return true; // Allow access to resource
+  }
+}
+```
+
+### GuardFactory
+
+```ts
+class ApiClientGuardFactory implements GuardFactory {
+  constructor(
+    private readonly clientIdHeader: string,
+    private readonly clientSecretHeader: string
+  ) {}
+
+  create(): GuardFunction {
+    return ({ request }: GuardContext) => {
+      const clientId = request.headers[this.clientIdHeader];
+      const clientSecret = request.headers[this.clientSecretHeader];
+
+      if (!clientId || !clientSecret) {
+        return false; // Reject access to resource
+      }
+
+      return true; // Allow access to resource
+    };
+  }
+}
+```
+
+### Guard levels
+
+Guards can be used at 3 different levels:
+
+- Endpoint level
+- EndpointGroup level
+- App level
+
+Using a guard at the **Endpoint level**:
+
+```ts
+@endpoint()
+@useGuard(ApiClientGuard) // Your guard here
+class MyEndpoint implements Endpoint {
+  handle(context: HttpContext) {
+    // ...
+  }
+}
+```
+
+Using a guard at the **EndpointGroup level**:
+
+```ts
+app.useEndpointGroup((eg) =>
+  eg
+    .useGuard(ApiClientGuard) // Your guard here
+    .useEndpoint(Endpoint1)
+    .useEndpoint(Endpoint2)
+    .useEndpoint(Endpoint3)
+);
+```
+
+Using a guard at the **app level**:
+
+```ts
+app.useGuard(ApiClientGuard); // Your guard here
+```

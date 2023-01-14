@@ -10,7 +10,7 @@ export function transformType<T extends object = object>(classConstructor: Class
 export class InstanceTransform<T> implements Transform<object, T> {
   constructor(private readonly classConstructor: ClassConstructor<T>) {}
 
-  transform(input: object): T | Promise<T> {
+  transform(input: object): T {
     try {
       return plainToClass(this.classConstructor, input);
     } catch (err) {
