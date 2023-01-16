@@ -31,19 +31,24 @@ Rapidly build highly scalable server side applications using TomasJS's built-in:
     - [AnonymousMiddleware class](#anonymousmiddleware-class)
     - [MiddlewareFactory](#middlewarefactory)
     - [Middleware levels](#middleware-levels)
-  - Guards
-    - GuardResult
-    - GuardFunction
-    - Guard interface
-    - GuardFactory
-  - Pipes
-    - PipeTransformParam
-      - TransformFunction
-      - Transform interface
-      - TransformFactory
-    - @bodyPipe
-    - @paramPipe
-    - @queryPipe
+  - [Guards](#guards)
+    - [GuardFunction](#guardfunction)
+    - [Guard interface](#guard-interface)
+    - [GuardFactory](#guardfactory)
+  - [Pipes](#pipes)
+    - [Transforms](#transforms)
+      - [TransformFunction](#transformfunction)
+      - [Transform interface](#transform-interface)
+      - [TransformFactory](#transformfactory)
+    - [@bodyPipe](#bodypipe)
+    - [@paramPipe](#parampipe)
+    - [@queryPipe](#querypipe)
+  - Error Handling
+    - Built-in errors
+    - TomasErrorHandler: The default error handler
+    - Custom error handlers
+      - ErrorHandlerFunction
+      - ErrorHandler interface
 - Dependency Injection
   - @injectable
   - @inject
@@ -56,12 +61,6 @@ Rapidly build highly scalable server side applications using TomasJS's built-in:
   - RequiredClaimGuard
 - API Validations
   - fluentvalidation
-- Error Handling
-  - Built-in errors
-  - TomasErrorHandler: The default error handler
-  - Custom error handlers
-    - ErrorHandlerFunction
-    - ErrorHandler interface
 - Logging
 - Configuration
   - Dotenv
@@ -478,7 +477,7 @@ Using a middleware at the **Endpoint level**:
 
 ```ts
 @endpoint()
-@middleware(LoggerMiddleware)
+@middleware(LoggerMiddleware) // Your middleware here
 class MyEndpoint implements Endpoint {
   handle(context: HttpContext) {
     // ...
@@ -491,7 +490,7 @@ Using a middleware at the **EndpointGroup level**:
 ```ts
 app.useEndpointGroup((eg) =>
   eg
-    .useMiddleware(LoggerMiddleware)
+    .useMiddleware(LoggerMiddleware) // Your middleware here
     .useEndpoint(Endpoint1)
     .useEndpoint(Endpoint2)
     .useEndpoint(Endpoint3)
@@ -501,7 +500,282 @@ app.useEndpointGroup((eg) =>
 Using a middleware at the **app level**:
 
 ```ts
-app.useMiddleware(LoggerMiddleware);
+app.useMiddleware(LoggerMiddleware); // Your middleware here
 ```
 
 ## Guards
+
+A Guard is a special type of Middleware that determines if the incoming request has access to the resource.
+
+Guards can have 3 different results:
+
+- **boolean**: If true, the request can continue, otherwise, an UnauthorizedResponse is responded.
+- **UnauthorizedResponse**: The server responds with a 401 status code.
+- **ForbiddenResponse**: The server responds with a 403 status code.
+
+> Know that any exception thrown in a Guard will be intercepted by the registered ErrorHandler, which is discussed in another section.
+
+Now let's look at some examples.
+
+For the following examples we will create a guard that expects the request to have the headers "clientId" and "clientSecret".
+
+### GuardFunction
+
+```ts
+const apiClientGuard: GuardFunction = ({ request }: GuardContext) => {
+  const { clientId, clientSecret } = request.headers;
+
+  if (!clientId || !clientSecret) {
+    return false; // Reject access to resource
+  }
+
+  return true; // Allow access to resource
+};
+```
+
+### Guard interface
+
+```ts
+@guard()
+class ApiClientGuard implements Guard {
+  isAllowed({ request }: GuardContext): GuardResult {
+    const { clientId, clientSecret } = request.headers;
+
+    if (!clientId || !clientSecret) {
+      return false; // Reject access to resource
+    }
+
+    return true; // Allow access to resource
+  }
+}
+```
+
+### GuardFactory
+
+```ts
+class ApiClientGuardFactory implements GuardFactory {
+  constructor(
+    private readonly clientIdHeader: string,
+    private readonly clientSecretHeader: string
+  ) {}
+
+  create(): GuardFunction {
+    return ({ request }: GuardContext) => {
+      const clientId = request.headers[this.clientIdHeader];
+      const clientSecret = request.headers[this.clientSecretHeader];
+
+      if (!clientId || !clientSecret) {
+        return false; // Reject access to resource
+      }
+
+      return true; // Allow access to resource
+    };
+  }
+}
+```
+
+### Guard levels
+
+Guards can be used at 3 different levels:
+
+- Endpoint level
+- EndpointGroup level
+- App level
+
+Using a guard at the **Endpoint level**:
+
+```ts
+@endpoint()
+@useGuard(ApiClientGuard) // Your guard here
+class MyEndpoint implements Endpoint {
+  handle(context: HttpContext) {
+    // ...
+  }
+}
+```
+
+Using a guard at the **EndpointGroup level**:
+
+```ts
+app.useEndpointGroup((eg) =>
+  eg
+    .useGuard(ApiClientGuard) // Your guard here
+    .useEndpoint(Endpoint1)
+    .useEndpoint(Endpoint2)
+    .useEndpoint(Endpoint3)
+);
+```
+
+Using a guard at the **app level**:
+
+```ts
+app.useGuard(ApiClientGuard); // Your guard here
+```
+
+## Pipes
+
+To understand pipes, we first have to know about `Transforms`.
+
+### Transforms
+
+Transforms are simple, they take an input, process it, and return an output. You could think of it as an array map function, where you would apply an operation of some sort to an item and convert it into something else.
+
+Let's look at an example that takes an array of strings, capitalizes each item, and converts it into a comma separated string.
+
+#### TransformFunction
+
+```ts
+const readableArray: TransformFunction<string[], string> = (input) => {
+  return input.map((str) => str.charAt(0).toUpperCase() + str.slice(1)).join(",");
+};
+```
+
+#### Transform interface
+
+```ts
+class ReadableArray implements Transform<string[], string> {
+  transform(input: string[]): string {
+    return input.map((str) => str.charAt(0).toUpperCase() + str.slice(1)).join(",");
+  }
+}
+```
+
+#### TransformFactory
+
+```ts
+class ReadableArrayFactory implements TransformFactory<string[], string> {
+  constructor(private readonly delimiter: string) {}
+
+  create(): TransformFunction<string[], string> {
+    return (input) => {
+      return input.map((str) => str.charAt(0).toUpperCase() + str.slice(1)).join(this.delimiter);
+    };
+  }
+}
+```
+
+Now that we know about transforms, lets look at pipes.
+
+### What are pipes?
+
+A pipe is a method decorator that can be applied to an endpoint class. They are useful because they can parse an incoming value from the HttpContext and transform it into something more useful.
+
+To understand why pipes are necessary, take a look at the [HttpContext Typing](#httpcontext-typing) section
+
+Let's see pipes in action.
+
+Consider the example mentioned in the [HttpContext Typing](#httpcontext-typing) section
+
+```ts
+handle({ request }: HttpContext) {
+  const pageSize: number = request.query.pageSize; // Careful here!
+}
+```
+
+This code will show an error, because any incoming value in the query object will be a string.
+
+With pipes, you can do the following:
+
+```ts
+@queryPipe("pageSize", NumberTransform) // transform the pageSize string into a number
+handle({ request }: HttpContext) {
+  const pageSize: number = request.query.pageSize as any; // pageSize should now be a number
+}
+```
+
+Let's break down the pipe used here:
+
+```ts
+@queryPipe("pageSize", NumberTransform)
+```
+
+- `@queryPipe` is the actual pipe. It's a method decorator and can only be applied to the `handle` method of an endpoint class. TomasJS comes with more built-in decorators, as seen further below.
+- `"pageSize"` is the first argument of the pipe. In this case it means we want to apply the transformation to the query parameter "pageSize".
+- `NumberTransform` is the second argument of the pipe. It's a built-in transform that converts a string into a number. In this case it means to want to apply this transformation to the query parameter "pageSize".
+
+Currently, TomasJS has the following built-in pipes:
+
+### `@bodyPipe`
+
+```ts
+@bodyPipe(new InstanceTransform(User)) // Transform the body into an instance of the User class
+handle(context: HttpContext) {
+  const user: User = context.request.body;
+  const isUserInstance = user instanceof User; // This will be true
+}
+```
+
+### `@paramPipe`
+
+```ts
+@paramPipe("id", NumberTransform) // Transform the id path param into a number
+handle({ request }: HttpContext) {
+  const id: number = request.params.id as any; // This will be a number
+}
+```
+
+### `@queryPipe`
+
+```ts
+@queryPipe("pageSize", NumberTransform) // Transform the pageSize query param into a number
+handle({ request }: HttpContext) {
+  const pageSize: number = request.query.pageSize as any; // This will be a number
+}
+```
+
+## Error Handling
+
+### TomasErrorHandler: The default error handler
+
+TomasJS comes with a built-in error handler that is active by default: the `TomasErrorHandler` class.
+
+Any unhandled error that occurs during the lifecycle of the HTTP pipeline will be intercepted by this error handler and correctly responded to the client.
+
+Let's consider the following endpoint:
+
+```ts
+@endpoint()
+class MyEndpoint implements Endpoint {
+  handle(context: HttpContext) {
+    throw new Error("Method not implemented.");
+  }
+}
+```
+
+If we try to `GET http://localhost:3000/`, the server will respond a 500 with following json:
+
+```json
+{ "status": 500, "message": "Method not implemented." }
+```
+
+> To enable the error handlers correctly, you must import the `express-async-errors` package in your `main.ts`.
+
+### Custom error handlers
+
+If you don't want to use the built-in error handler, you can always create your own.
+
+#### ErrorHandlerFunction
+
+```ts
+const myErrorHandler: ErrorHandlerFunction = (error, context, next) => {
+  // Handle the error
+  next(error); // Fallback to express's error handler
+};
+```
+
+#### ErrorHandler interface
+
+```ts
+class MyErrorHandler implements ErrorHandler {
+  catch(error: any, context: HttpContext, next: NextFunction): void | Promise<void> {
+    // Handle the error
+    next(error); // Fallback to express's error handler
+  }
+}
+```
+
+Register your error handler like this:
+
+```ts
+app.useErrorHandler(MyErrorHandler);
+```
