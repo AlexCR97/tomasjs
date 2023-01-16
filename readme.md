@@ -43,12 +43,11 @@ Rapidly build highly scalable server side applications using TomasJS's built-in:
     - [@bodyPipe](#bodypipe)
     - [@paramPipe](#parampipe)
     - [@queryPipe](#querypipe)
-  - Error Handling
-    - Built-in errors
-    - TomasErrorHandler: The default error handler
-    - Custom error handlers
-      - ErrorHandlerFunction
-      - ErrorHandler interface
+  - [Error Handling](#error-handling)
+    - [TomasErrorHandler: The default error handler](#tomaserrorhandler-the-default-error-handler)
+    - [Custom error handlers](#custom-error-handlers)
+      - [ErrorHandlerFunction](#errorhandlerfunction)
+      - [ErrorHandler interface](#errorhandler-interface)
 - Dependency Injection
   - @injectable
   - @inject
