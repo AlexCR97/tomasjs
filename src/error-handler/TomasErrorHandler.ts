@@ -1,6 +1,6 @@
 import { NextFunction } from "express";
 import { singleton } from "@/container";
-import { HttpContext } from "@/core";
+import { HttpContext, StatusCodes } from "@/core";
 import { StatusCodeError } from "@/core/errors";
 import { JsonResponse } from "@/responses";
 import { ErrorHandler } from "./ErrorHandler";
@@ -17,6 +17,20 @@ export class TomasErrorHandler implements ErrorHandler {
           },
           {
             status: error.status,
+          }
+        )
+      );
+    }
+
+    if (error instanceof Error) {
+      return context.respond(
+        new JsonResponse(
+          {
+            status: StatusCodes.internalServerError,
+            message: error.message,
+          },
+          {
+            status: StatusCodes.internalServerError,
           }
         )
       );
