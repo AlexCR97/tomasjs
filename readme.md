@@ -48,13 +48,10 @@ Rapidly build highly scalable server side applications using TomasJS's built-in:
     - [Custom error handlers](#custom-error-handlers)
       - [ErrorHandlerFunction](#errorhandlerfunction)
       - [ErrorHandler interface](#errorhandler-interface)
-- Dependency Injection
-  - @injectable
-  - @inject
-  - @singleton
-  - ContainerBuilder
-  - ContainerSetupFactory
-  - ContainerTeardownFactory
+- [Dependency Injection](#dependency-injection)
+  - [Quick Guide](#quick-guide)
+  - [ContainerBuilder](#containerbuilder)
+  - [ContainerSetupFactory](#containersetupfactory)
 - Authentication/Authorization
   - JwtGuard
   - RequiredClaimGuard
@@ -777,4 +774,214 @@ Register your error handler like this:
 
 ```ts
 app.useErrorHandler(MyErrorHandler);
+```
+
+# Dependency Injection
+
+## Quick Guide
+
+TomasJS has built-in support for Dependency Injection using [InversifyJS](https://inversify.io/) under the hood.
+
+> Always initialize your DI container before your HTTP pipeline so your components can correctly use your services.
+
+Let's look at an example that creates a GreeterService, adds it to the DI container and injects it into an Endpoint class.
+
+Create a service using the `@injectable` decorator:
+
+```ts
+@injectable() // Mark your class as a service
+class GreeterService {
+  greet(name: string): string {
+    return `Hello ${name}!`;
+  }
+}
+```
+
+Inject your service inside an endpoint class using the `@inject` decorator:
+
+```ts
+@endpoint("post")
+@path("greet")
+class GreetEndpoint implements Endpoint {
+  constructor(
+    @inject(GreeterService) private greeter: GreeterService // Inject your service
+  ) {}
+
+  handle({ request }: HttpContext) {
+    const { name } = request.body;
+    return this.greeter.greet(name); // Use your service
+  }
+}
+```
+
+Finally, initialize the DI container and add your service:
+
+```ts
+await new ContainerBuilder()
+  .setup((services) => {
+    services.addClass(GreeterService); // Add your service to the container
+  })
+  .buildAsync(); // Remember to call the buildAsync method!
+```
+
+## ContainerBuilder
+
+The ContainerBuilder class is what you'll be using to initialize the DI container.
+
+To create a ContainerBuilder simply instantiate the class:
+
+```ts
+const container = new ContainerBuilder();
+```
+
+To add services to the container use the `setup` method:
+
+```ts
+container.setup((services) => {
+  // Add your services here
+});
+```
+
+The `setup` method exposes an `IContainer` through the `services` argument. This object lets you register services with 2 methods: `addClass` and `addInstance`. Let's take a look at each one.
+
+### `addClass`
+
+The addClass method lets you register a class into the DI container.
+
+The first argument is the constructor of the class you want to register:
+
+```ts
+services.addClass(MyService);
+```
+
+By default, the service is registered with the `transient` scope. If you want to specify another scope, you can pass an options argument as the second parameter.
+
+For now TomasJS only supports the scopes `"transient"`, `"singleton"` and `"request"`. More information about these scopes can be found at [InversifyJS scopes](https://github.com/inversify/InversifyJS/blob/master/wiki/scope.md).
+
+```ts
+services.addClass(MyService, { scope: "transient" });
+```
+
+When adding a service to the DI container, each service must be identified by a unique token. When using the addClass method, the service gets registered with the class's constructor name.
+
+In our example, since the constructor name is `MyService`, the service is registered with the `"MyService"` token, so when we want to inject our service, we would do it in the following way:
+
+```ts
+constructor(@inject(MyService) service: MyService) {}
+```
+
+Notice how we are using the `@inject` decorator and passing the MyService constructor as an argument. This is telling TomasJS to inject the service after the `"MyService"` token.
+
+Sometimes we want to use a different token to register our service, to do this we can pass a `token` property into the options argument:
+
+```ts
+services.addClass(MyService, { token: "MyCustomToken" });
+```
+
+So when we inject our service, it would look like this:
+
+```ts
+constructor(@inject("MyCustomToken") service: MyService) {}
+```
+
+### `addInstance`
+
+The addInstance method lets you register a constant value into the DI container.
+
+Suppose we have the following class:
+
+```ts
+class Prefixer {
+  constructor(private readonly prefix: string) {}
+
+  prefixWord(word: string) {
+    return `${this.prefix}${word}`;
+  }
+}
+```
+
+And we create multiple instances of that class:
+
+```ts
+const fooPrefixer = new Prefixer("foo");
+const barPrefixer = new Prefixer("bar");
+```
+
+We can use the addInstance method to register each of those instances:
+
+```ts
+services.addInstance(fooPrefixer, "FooPrefixer");
+services.addInstance(barPrefixer, "BarPrefixer");
+```
+
+Now we can inject those instances in the following way:
+
+```ts
+constructor(
+  @inject("FooPrefixer") fooPrefixer: Prefixer,
+  @inject("BarPrefixer") barPrefixer: Prefixer,
+) {}
+```
+
+## ContainerSetupFactory
+
+Managing your DI container can get messy quick, fortunately, TomasJS has the `ContainerSetupFactory` class.
+
+You can use the ContainerSetupFactory class to split your service registrations. Let's look at an example that registers services used by a `/products` endpoint and services used by a `/orders` endpoint.
+
+Suppose we have the following services:
+
+```ts
+@injectable()
+class ProductRepository {
+  // ...
+}
+
+@injectable()
+class ProductService {
+  constructor(@inject(ProductRepository) private repository: ProductRepository) {}
+  // ...
+}
+
+@injectable()
+class OrderRepository {
+  // ...
+}
+
+@injectable()
+class OrderService {
+  constructor(@inject(OrderRepository) private repository: OrderRepository) {}
+  // ...
+}
+```
+
+We can create 2 setup classes for these services:
+
+```ts
+class ProductSetup extends ContainerSetupFactory {
+  create(): ContainerSetup {
+    return (services) => {
+      services.addClass(ProductRepository);
+      services.addClass(ProductService);
+    };
+  }
+}
+
+class OrderSetup extends ContainerSetupFactory {
+  create(): ContainerSetup {
+    return (services) => {
+      services.addClass(OrderRepository);
+      services.addClass(OrderService);
+    };
+  }
+}
+```
+
+And now we only have to pass these setup classes to our container builder:
+
+```ts
+await new ContainerBuilder()
+  .setup(new ProductSetup()) // Register services for /products
+  .setup(new OrderSetup()) // Register services for /orders
+  .buildAsync();
 ```
