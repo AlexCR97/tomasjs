@@ -1,30 +1,16 @@
 import { internalContainer, singleton } from "@/container";
 import { TomasError } from "@/core/errors";
+import { getConstructorOf } from "@/core/internal";
 import { ClassConstructor } from "class-transformer";
 import { CommandHandler } from "./CommandHandler";
-import { CommandHandlerMetadata } from "./metadata/CommandHandlerMetadata";
-import { CommandHandlerToken } from "./metadata/CommandHandlerToken";
+import { CommandHandlerMetadata, CommandHandlerToken } from "./metadata";
 
 @singleton()
 export class CommandDispatcher {
   async execute<TResult = void, TCommand = any>(command: TCommand): Promise<TResult> {
-    const commandConstructor = this.getConstructorOf<TCommand>(command);
+    const commandConstructor = getConstructorOf<TCommand>(command);
     const commandHandler = this.getCommandHandlerFor<TCommand, TResult>(commandConstructor);
     return await commandHandler.execute(command);
-  }
-
-  private getConstructorOf<T>(source: any): ClassConstructor<T> {
-    const sourcePrototype = Object.getPrototypeOf(source);
-
-    const sourceConstructor: ClassConstructor<T> = sourcePrototype?.constructor;
-
-    if (!sourceConstructor) {
-      throw new TomasError("The provided source does not have a constructor.", {
-        data: { source },
-      });
-    }
-
-    return sourceConstructor;
   }
 
   private getCommandHandlerFor<TCommand, TResult>(

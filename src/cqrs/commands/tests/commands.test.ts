@@ -24,7 +24,7 @@ describe("cqrs-commands", () => {
     await tryCloseServerAsync(server);
   });
 
-  it(`An Endpoint constructor works`, async () => {
+  it(`A CommandHandler works`, async () => {
     // Arrange
     const expectedUsername = "expectedUsername";
 
@@ -34,7 +34,7 @@ describe("cqrs-commands", () => {
 
     @commandHandler(CreateUserCommand)
     class CreateUserCommandHandler implements CommandHandler<CreateUserCommand, string> {
-      execute(command: CreateUserCommand): string | Promise<string> {
+      execute(command: CreateUserCommand): string {
         return command.username;
       }
     }

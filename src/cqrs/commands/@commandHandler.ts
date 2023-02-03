@@ -1,6 +1,5 @@
 import { ClassConstructor, injectable, internalContainer } from "@/container";
-import { CommandHandlerMetadata } from "./metadata/CommandHandlerMetadata";
-import { CommandHandlerToken } from "./metadata/CommandHandlerToken";
+import { CommandHandlerMetadata, CommandHandlerToken } from "./metadata";
 
 export function commandHandler<TCommand>(commandConstructor: ClassConstructor<TCommand>) {
   return function <T extends new (...args: any[]) => any>(constructor: T) {

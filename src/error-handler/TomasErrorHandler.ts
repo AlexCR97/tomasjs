@@ -27,7 +27,9 @@ export class TomasErrorHandler implements ErrorHandler {
         new JsonResponse(
           {
             status: StatusCodes.internalServerError,
+            name: error.name,
             message: error.message,
+            stack: error.stack,
           },
           {
             status: StatusCodes.internalServerError,

@@ -1,9 +1,8 @@
 import { ClassConstructor } from "@/container";
 import { CommandHandler } from "../CommandHandler";
 import { CommandHandlerMetadataKeys } from "./CommandHandlerMetadataKeys";
-import { ICommandHandlerMetadata } from "./ICommandHandlerMetadata";
 
-export class CommandHandlerMetadata<TCommand, TResult> implements ICommandHandlerMetadata {
+export class CommandHandlerMetadata<TCommand, TResult> {
   private readonly commandConstructorKey = CommandHandlerMetadataKeys.commandConstructor;
 
   constructor(
