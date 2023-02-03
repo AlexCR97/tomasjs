@@ -1,5 +1,3 @@
-import { Event } from "./Event";
-
-export abstract class EventHandler<TEvent extends Event> {
-  abstract handle(event: TEvent): void | Promise<void>;
+export interface EventHandler<TEvent> {
+  handle(event: TEvent): void | Promise<void>;
 }

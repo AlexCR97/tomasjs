@@ -25,6 +25,7 @@
     "testw-auth-required-claim-guard": "jest --testNamePattern auth-required-claim-guard --watchAll --verbose",
     "testw-builder": "jest --testNamePattern builder --watchAll --verbose",
     "testw-configuration": "jest --testNamePattern configuration --watchAll --verbose",
+    "testw-cqrs-commands": "jest --testNamePattern cqrs-commands --watchAll --verbose",
     "testw-endpoints": "jest --testNamePattern endpoints --watchAll --verbose",
     "testw-endpoint-groups": "jest --testNamePattern endpoint-groups --watchAll --verbose",
     "testw-endpoint-isEndpoint": "jest --testNamePattern isEndpoint --watchAll --verbose",

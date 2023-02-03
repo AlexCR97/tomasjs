@@ -1,5 +1,3 @@
-import { Command } from "./Command";
-
-export abstract class CommandHandler<TCommand extends Command> {
-  abstract handle(command: TCommand): void;
+export interface CommandHandler<TCommand, TResult = void> {
+  execute(command: TCommand): TResult | Promise<TResult>;
 }

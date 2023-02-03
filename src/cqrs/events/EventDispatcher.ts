@@ -1,12 +1,19 @@
-import { container, injectable } from "tsyringe";
-import { Event } from "./Event";
+import { internalContainer, singleton } from "@/container";
+import { TomasError } from "@/core/errors";
 import { EventHandler } from "./EventHandler";
 
-@injectable()
+@singleton()
 export class EventDispatcher {
-  dispatch<TEvent extends Event>(event: TEvent) {
-    const eventHandlerClassName = `${event.constructor.name}Handler`;
-    const eventHandler = container.resolve(eventHandlerClassName) as EventHandler<TEvent>;
-    eventHandler.handle(event);
+  emit<TEvent>(event: TEvent): void {
+    const eventConstructorName = (event as any)?.constructor?.name;
+
+    if (!eventConstructorName)
+      throw new TomasError("The emitted event is not a class instance", { data: { event } });
+
+    const eventHandlerToken = `${eventConstructorName}Handler`;
+
+    const eventHandler = internalContainer.get<EventHandler<TEvent>>(eventHandlerToken);
+
+    eventHandler.handle(event); // Event handlers should not be awaited
   }
 }

@@ -1,24 +1,19 @@
-import { container, injectable } from "tsyringe";
-import { AsyncQueryHandler } from "./AsyncQueryHandler";
-import { Query } from "./Query";
+import { internalContainer, singleton } from "@/container";
+import { TomasError } from "@/core/errors";
 import { QueryHandler } from "./QueryHandler";
 
-@injectable()
+@singleton()
 export class QueryDispatcher {
-  dispatch<TQuery extends Query<TResult>, TResult>(query: TQuery): TResult {
-    const queryHandlerClassName = `${query.constructor.name}Handler`;
-    const queryHandler = container.resolve(queryHandlerClassName) as QueryHandler<TQuery, TResult>;
-    return queryHandler.handle(query);
-  }
+  async fetch<TResult, TQuery = any>(query: TQuery): Promise<TResult> {
+    const queryConstructorName = (query as any)?.constructor?.name;
 
-  dispatchAsync<TResult, TQuery extends Query<TResult> = Query<TResult>>(
-    query: TQuery
-  ): Promise<TResult> {
-    const queryHandlerClassName = `${query.constructor.name}Handler`;
-    const queryHandler = container.resolve(queryHandlerClassName) as AsyncQueryHandler<
-      TResult,
-      TQuery
-    >;
-    return queryHandler.handleAsync(query);
+    if (!queryConstructorName)
+      throw new TomasError("The dispatched query is not a class instance", { data: { query } });
+
+    const queryHandlerToken = `${queryConstructorName}Handler`;
+
+    const queryHandler = internalContainer.get<QueryHandler<TQuery, TResult>>(queryHandlerToken);
+
+    return await queryHandler.fetch(query);
   }
 }
