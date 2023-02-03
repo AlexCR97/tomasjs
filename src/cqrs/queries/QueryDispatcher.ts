@@ -18,8 +18,8 @@ export class QueryDispatcher {
     const queryHandlers =
       internalContainer.getAll<QueryHandler<TQuery, TResult>>(QueryHandlerToken);
 
-    const matchingQueryHandler = queryHandlers.find((ch) => {
-      const metadata = new QueryHandlerMetadata(ch);
+    const matchingQueryHandler = queryHandlers.find((qh) => {
+      const metadata = new QueryHandlerMetadata(qh);
       return metadata.queryConstructor === queryConstructor;
     });
 

@@ -1,4 +1,4 @@
-const prefix = `tomasjs:queryHandler`;
+const prefix = "tomasjs:queryHandler";
 
 export const QueryHandlerMetadataKeys = {
   queryConstructor: `${prefix}:queryConstructor`,

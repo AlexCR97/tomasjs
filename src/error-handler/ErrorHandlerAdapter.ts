@@ -1,8 +1,7 @@
-import { internalContainer, isClassConstructor } from "@/container";
+import { ClassConstructor, internalContainer, isClassConstructor } from "@/container";
 import { HttpContextResolver } from "@/core";
 import { TomasError } from "@/core/errors";
 import { ExpressErrorMiddlewareHandler } from "@/core/express";
-import { ClassConstructor } from "class-transformer";
 import { ErrorHandler } from "./ErrorHandler";
 import { ErrorHandlerFunction } from "./ErrorHandlerFunction";
 import { ErrorHandlerType } from "./ErrorHandlerType";

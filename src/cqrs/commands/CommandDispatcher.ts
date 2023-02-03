@@ -1,7 +1,6 @@
-import { internalContainer, singleton } from "@/container";
+import { ClassConstructor, internalContainer, singleton } from "@/container";
 import { TomasError } from "@/core/errors";
 import { getConstructorOf } from "@/core/internal";
-import { ClassConstructor } from "class-transformer";
 import { CommandHandler } from "./CommandHandler";
 import { CommandHandlerMetadata, CommandHandlerToken } from "./metadata";
 
