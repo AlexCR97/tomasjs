@@ -24,6 +24,6 @@ export class EndpointGroupBuilder
   /* #endregion */
 
   build(): Router {
-    return this.tryBindMiddlewares().tryBindGuards().tryBindEndpoints().root;
+    return this.tryBindMiddlewares().tryBindGuards().tryBindEndpoints().tryBindControllers().root;
   }
 }

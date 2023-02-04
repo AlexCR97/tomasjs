@@ -139,6 +139,7 @@ export class AppBuilder extends AbstractApiBuilder<IAppBuilder> implements IAppB
       .tryBindGuards()
       .tryBindEndpoints()
       .tryBindEndpointGroups()
+      .tryBindControllers()
       .tryBindErrorHandler()
       .createServerAsync(port);
   }
