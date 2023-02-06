@@ -11,6 +11,7 @@ import { HttpMethod, StatusCodes } from "@/core";
 import { AppBuilder } from "@/builder";
 import { body } from "../@body";
 import { param } from "../@param";
+import { query } from "../@query";
 
 describe("controllers", () => {
   const port = 3045;
@@ -175,6 +176,91 @@ describe("controllers", () => {
 
     const responseText = await response.text();
     expect(responseText).toEqual(expectedParam);
+  });
+
+  it("A controller method can inject a single query param with the @query decorator", async () => {
+    // Arrange
+
+    const expectedQuery = "10";
+
+    @controller("test")
+    class TestController {
+      @get()
+      find(@query("pageIndex") pageIndex: string) {
+        return pageIndex;
+      }
+    }
+
+    server = await new AppBuilder().useJson().useController(TestController).buildAsync(port);
+
+    // Act
+    const response = await fetch(`${serverAddress}/test?pageIndex=${expectedQuery}`);
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+
+    const responseText = await response.text();
+    expect(responseText).toEqual(expectedQuery);
+  });
+
+  it("A controller method can inject a the entire query object with the @query decorator", async () => {
+    // Arrange
+
+    const expectedQuery = {
+      pageIndex: "10",
+      pageSize: "40",
+    };
+
+    @controller("test")
+    class TestController {
+      @get()
+      find(@query() query: any) {
+        return query;
+      }
+    }
+
+    server = await new AppBuilder().useJson().useController(TestController).buildAsync(port);
+
+    // Act
+    const response = await fetch(
+      `${serverAddress}/test?pageIndex=${expectedQuery.pageIndex}&pageSize=${expectedQuery.pageSize}`
+    );
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+
+    const responseJson = await response.json();
+    expect(responseJson).toEqual(expectedQuery);
+  });
+
+  it("A controller method can inject multiple query params with the @query decorator", async () => {
+    // Arrange
+
+    const expectedQuery = {
+      pageIndex: "10",
+      pageSize: "40",
+    };
+
+    @controller("test")
+    class TestController {
+      @get()
+      find(@query("pageIndex") pageIndex: string, @query("pageSize") pageSize: string) {
+        return { pageIndex, pageSize };
+      }
+    }
+
+    server = await new AppBuilder().useJson().useController(TestController).buildAsync(port);
+
+    // Act
+    const response = await fetch(
+      `${serverAddress}/test?pageIndex=${expectedQuery.pageIndex}&pageSize=${expectedQuery.pageSize}`
+    );
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+
+    const responseJson = await response.json();
+    expect(responseJson).toEqual(expectedQuery);
   });
 });
 

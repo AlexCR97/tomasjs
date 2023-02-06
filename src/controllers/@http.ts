@@ -3,6 +3,7 @@ import { RequiredArgumentError } from "@/core/errors";
 import { Request, Response } from "express";
 import { BodyMetadataKey } from "./@body";
 import { ParamMetadata, ParamMetadataKey } from "./@param";
+import { QueryMetadata, QueryMetadataKey } from "./@query";
 import { HttpMethodMetadata } from "./metadata";
 
 // The following snippet was extracted from: https://stackoverflow.com/questions/68919313/add-metadata-to-method-in-typescript
@@ -56,6 +57,22 @@ export function http(method: HttpMethod, path?: string) {
         controllerMethodArgs[paramMetadata.parameterIndex] = req.params[paramMetadata.paramKey];
       }
 
+      // Try inject query param
+      const queryMetadatas: QueryMetadata[] = Reflect.getOwnMetadata(
+        QueryMetadataKey,
+        target,
+        propertyKey
+      );
+
+      if (queryMetadatas && queryMetadatas.length > 0) {
+        for (const queryMetadata of queryMetadatas) {
+          if (queryMetadata.key) {
+            controllerMethodArgs[queryMetadata.parameterIndex] = req.query[queryMetadata.key];
+          } else {
+            controllerMethodArgs[queryMetadata.parameterIndex] = req.query;
+          }
+        }
+      }
       // console.log("controllerMethodArgs", controllerMethodArgs);
 
       return originalFunction.apply(this, controllerMethodArgs);
