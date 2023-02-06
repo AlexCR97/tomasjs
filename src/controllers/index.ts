@@ -7,4 +7,6 @@ export { useGuard } from "./@useGuard";
 export { useInterceptor } from "./@useInterceptor";
 export { useMiddleware } from "./@useMiddleware";
 export { Controller } from "./Controller";
+export { ControllerAdapter } from "./ControllerAdapter";
 export { ControllerType } from "./ControllerType";
+export { isController } from "./isController";

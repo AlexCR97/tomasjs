@@ -1,4 +1,7 @@
 import { Configuration, ConfigurationResolver } from "@/configuration/core";
+import { internalContainer } from "@/container";
+import { Controller, ControllerAdapter, ControllerType, isController } from "@/controllers";
+import { ControllerMetadata } from "@/controllers/metadata";
 import {
   ErrorHandler,
   ErrorHandlerAdapter,
@@ -30,6 +33,10 @@ interface IAppBuilder extends AbstractApiBuilder<IAppBuilder> {
 
   useErrorHandler<THandler extends ErrorHandler = ErrorHandler>(
     handler: ErrorHandlerType<THandler>
+  ): IAppBuilder;
+
+  useController<TController extends object = object>(
+    controller: ControllerType<TController>
   ): IAppBuilder;
 
   // TODO Add return type for server
@@ -101,6 +108,50 @@ export class AppBuilder extends AbstractApiBuilder<IAppBuilder> implements IAppB
 
     for (const endpointGroup of this.endpointGroups) {
       this.bindEndpointGroup(endpointGroup);
+    }
+
+    return this;
+  }
+
+  /* #endregion */
+
+  /* #region Controllers */
+
+  private readonly controllers: ControllerType[] = [];
+
+  useController<TController extends Controller = Controller>(
+    controller: ControllerType<TController>
+  ): IAppBuilder {
+    this.controllers.push(controller);
+    return this as any; // TODO Figure out how to satisfy generic
+  }
+
+  private bindController<TController extends Controller = Controller>(
+    controller: ControllerType<TController>
+  ) {
+    if (isController<TController>(controller)) {
+      return this.bindControllerInstance(controller);
+    }
+
+    const controllerInstance = internalContainer.get<TController>(controller);
+    return this.bindControllerInstance(controllerInstance);
+  }
+
+  private bindControllerInstance(controller: Controller) {
+    const controllerMetadata = new ControllerMetadata(controller);
+    const expressRouterPath = ExpressPathAdapter.adapt(controllerMetadata.path);
+    const expressRouter = new ControllerAdapter(controller).adapt();
+    this.root.use(expressRouterPath, expressRouter);
+    return this;
+  }
+
+  protected tryBindControllers() {
+    if (this.controllers.length === 0) {
+      return this;
+    }
+
+    for (const controller of this.controllers) {
+      this.bindController(controller);
     }
 
     return this;

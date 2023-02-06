@@ -8,6 +8,20 @@ export class HttpMethodMetadata {
     this.metadata = new ClassMethodMetadata(target, propertyKey);
   }
 
+  /* #region instance method */
+
+  private readonly instanceMethodKey = "tomasjs:controller:method:instanceMethod";
+
+  get instanceMethod(): string {
+    return this.metadata.get(this.instanceMethodKey);
+  }
+
+  set instanceMethod(value: string) {
+    this.metadata.set(this.instanceMethodKey, value);
+  }
+
+  /* #endregion */
+
   /* #region http method */
 
   private readonly httpMethodKey = "tomasjs:controller:method:httpMethod";

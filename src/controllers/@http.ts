@@ -24,6 +24,7 @@ import { HttpMethodMetadata } from "./metadata";
 export function http(method: HttpMethod, path?: string) {
   return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     const metadata = new HttpMethodMetadata(target, propertyKey);
+    metadata.instanceMethod = propertyKey;
     metadata.httpMethod = method;
     metadata.path = path;
     return descriptor;

@@ -1,8 +1,10 @@
+import { TomasError } from "@/core/errors";
 import { MiddlewareParam } from "@/endpoints";
 import { GuardType } from "@/guards";
 import { Controller } from "../Controller";
 import { ControllerType } from "../ControllerType";
 import { isController } from "../isController";
+import { HttpMethodMetadata } from "./HttpMethodMetadata";
 
 export class ControllerMetadata<TController extends Controller> {
   constructor(private readonly controller: ControllerType<TController>) {}
@@ -65,12 +67,44 @@ export class ControllerMetadata<TController extends Controller> {
 
   /* #endregion */
 
+  /* #region HTTP Methods */
+
+  get httpMethods(): HttpMethodMetadata[] {
+    if (!isController<TController>(this.controller)) {
+      throw new TomasError(
+        'The get accessor "httpMethods" is only supported for Controller instances.'
+      );
+    }
+
+    // Get the decorated properties
+    const result1 = Reflect.getMetadataKeys(this.controller);
+    console.log("result1", result1);
+
+    // Filter out invalid properties
+    const result2 = result1.filter(
+      (key) => key !== this.pathKey && key !== this.middlewaresKey && key !== this.guardsKey
+    );
+    console.log("result2", result2);
+
+    // Convert the decorated properties into a strongly typed HttpMethodMetadata facade
+    const result3 = result2.map((key) => new HttpMethodMetadata(this.controller, key));
+    console.log("result3", result3);
+
+    // Filter out the invalid instances of HttpMethodMetadata
+    // const result4 = result3.filter((metadata) => !metadata.instanceMethod || !metadata.httpMethod);
+    // console.log("result4", result4);
+
+    return result3;
+  }
+
+  /* #endregion */
+
   /* #region private */
 
   private get controllerPrototype() {
-    return isController(this.controller)
+    return isController<TController>(this.controller)
       ? Object.getPrototypeOf(this.controller)
-      : (this.controller as any).prototype; // TODO Resolve any?
+      : this.controller.prototype;
   }
 
   private setMetadata(key: string, value: any): void {

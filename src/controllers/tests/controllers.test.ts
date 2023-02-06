@@ -1,16 +1,18 @@
 import "express-async-errors";
 import "reflect-metadata";
+import fetch from "node-fetch";
 import { afterEach, beforeEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "@/tests/utils";
 import { internalContainer } from "@/container";
 import { controller } from "../@controller";
 import { ControllerMetadata, HttpMethodMetadata } from "../metadata";
-import { http, post } from "../@http";
-import { HttpMethod } from "@/core";
+import { get, http, post } from "../@http";
+import { HttpMethod, StatusCodes } from "@/core";
+import { AppBuilder } from "@/builder";
 
 describe("controllers", () => {
-  // const port = 3045;
-  // const serverAddress = `http://localhost:${port}`;
+  const port = 3045;
+  const serverAddress = `http://localhost:${port}`;
   let server: any; // TODO Set http.Server type
 
   beforeEach(async () => {
@@ -85,6 +87,38 @@ describe("controllers", () => {
     const postMethodMetadata = new HttpMethodMetadata(registeredController, postMethodKey);
     expect(postMethodMetadata.httpMethod).toBe(expectedPostMethod.method);
     expect(postMethodMetadata.path).toBe(expectedPostMethod.path);
+  });
+
+  it("A controller can be registered in the http pipeline", async () => {
+    // Arrange
+
+    interface User {
+      email: string;
+      password: string;
+    }
+
+    const expectedFetchedUser: User = {
+      email: "example@domain.com",
+      password: "123456",
+    };
+
+    @controller("users")
+    class UsersController {
+      @get("paged")
+      find(): User[] {
+        return [expectedFetchedUser];
+      }
+    }
+
+    server = await new AppBuilder().useJson().useController(UsersController).buildAsync(port);
+
+    // Act/Assert
+    const response = await fetch(`${serverAddress}/users/paged`);
+    expect(response.status).toBe(StatusCodes.ok);
+
+    const responseJson = await response.json();
+    const responseUser = responseJson[0];
+    expect(responseUser).toEqual(expectedFetchedUser);
   });
 });
 

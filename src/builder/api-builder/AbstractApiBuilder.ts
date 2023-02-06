@@ -6,8 +6,6 @@ import { EndpointMetadataStrategy } from "@/endpoints/metadata";
 import { Guard, GuardAdapter, GuardType } from "@/guards";
 import { Middleware, MiddlewareAdapter, MiddlewareFactory, MiddlewareType } from "@/middleware";
 import { ApiBuilder } from "./ApiBuilder";
-import { Controller, ControllerType } from "@/controllers";
-import { NotImplementedError } from "@/core/errors";
 
 export abstract class AbstractApiBuilder<TBuilder extends AbstractApiBuilder<any>>
   implements ApiBuilder<TBuilder>
@@ -16,7 +14,6 @@ export abstract class AbstractApiBuilder<TBuilder extends AbstractApiBuilder<any
   protected readonly middlewares: MiddlewareType[] = [];
   protected readonly guards: GuardType[] = [];
   protected readonly endpoints: EndpointType[] = [];
-  protected readonly controllers: ControllerType[] = [];
 
   /* #region Middlewares */
 
@@ -132,47 +129,4 @@ export abstract class AbstractApiBuilder<TBuilder extends AbstractApiBuilder<any
   }
 
   /* #endregion */
-
-  /* #region Controllers */
-
-  useController<TController extends Controller = Controller>(
-    controller: ControllerType<TController>
-  ): TBuilder {
-    this.controllers.push(controller);
-    return this as any; // TODO Figure out how to satisfy generic
-  }
-
-  private bindController<TController extends Controller = Controller>(
-    controller: ControllerType<TController>
-  ) {
-    if (isController(controller)) {
-      return this.bindControllerInstance(controller);
-    }
-
-    const controllerInstance = internalContainer.get<TController>(controller);
-    return this.bindControllerInstance(controllerInstance);
-  }
-
-  private bindControllerInstance(controller: Controller) {
-    throw new NotImplementedError(this.bindControllerInstance.name);
-  }
-
-  protected tryBindControllers() {
-    if (this.controllers.length === 0) {
-      return this;
-    }
-
-    for (const controller of this.controllers) {
-      this.bindController(controller);
-    }
-
-    return this;
-  }
-
-  /* #endregion */
-}
-
-function isController<TController extends Controller>(obj: any): obj is TController {
-  // TODO Implement method isController
-  throw new NotImplementedError(isController.name);
 }
