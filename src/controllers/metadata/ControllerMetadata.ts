@@ -1,19 +1,23 @@
-import { NotImplementedError } from "@/core/errors";
-import { MiddlewareParam } from "@/endpoints/MiddlewareParam";
+import { MiddlewareParam } from "@/endpoints";
 import { GuardType } from "@/guards";
 import { Controller } from "../Controller";
 import { ControllerType } from "../ControllerType";
+import { isController } from "../isController";
 
 export class ControllerMetadata<TController extends Controller> {
   constructor(private readonly controller: ControllerType<TController>) {}
 
-  /* #region path */
+  /* #region Path */
+
+  private readonly pathKey = "tomasjs:controller:path";
 
   get path(): string {
-    return "";
+    return this.getMetadata(this.pathKey);
   }
 
-  set path(value: string) {}
+  set path(value: string) {
+    this.setMetadata(this.pathKey, value);
+  }
 
   /* #endregion */
 
@@ -61,6 +65,14 @@ export class ControllerMetadata<TController extends Controller> {
 
   /* #endregion */
 
+  /* #region private */
+
+  private get controllerPrototype() {
+    return isController(this.controller)
+      ? Object.getPrototypeOf(this.controller)
+      : (this.controller as any).prototype; // TODO Resolve any?
+  }
+
   private setMetadata(key: string, value: any): void {
     Reflect.defineMetadata(key, value, this.controllerPrototype);
   }
@@ -69,13 +81,5 @@ export class ControllerMetadata<TController extends Controller> {
     return Reflect.getMetadata(key, this.controllerPrototype);
   }
 
-  private get controllerPrototype() {
-    return isController(this.controller)
-      ? Object.getPrototypeOf(this.controller)
-      : (this.controller as any).prototype; // TODO Resolve any?
-  }
-}
-
-function isController(obj: any): obj is Controller {
-  throw new NotImplementedError(isController.name);
+  /* #endregion */
 }

@@ -9,4 +9,5 @@ export { EndpointGroup } from "./EndpointGroup";
 export { EndpointGroupAdapter } from "./EndpointGroupAdapter";
 export { EndpointTokenFactory } from "./EndpointTokenFactory";
 export { EndpointType } from "./EndpointType";
+export { MiddlewareParam } from "./MiddlewareParam";
 export { isEndpoint } from "./isEndpoint";
