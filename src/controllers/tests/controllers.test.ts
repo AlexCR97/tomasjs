@@ -10,6 +10,7 @@ import { get, http, post } from "../@http";
 import { HttpMethod, StatusCodes } from "@/core";
 import { AppBuilder } from "@/builder";
 import { body } from "../@body";
+import { param } from "../@param";
 
 describe("controllers", () => {
   const port = 3045;
@@ -149,6 +150,31 @@ describe("controllers", () => {
 
     const responseJson = await response.json();
     expect(responseJson).toEqual(expectedBody);
+  });
+
+  it("A controller method can inject a request url param with the @param decorator", async () => {
+    // Arrange
+
+    const expectedParam = "someCoolUsername";
+
+    @controller("test")
+    class TestController {
+      @get(":id")
+      find(@param("id") id: string) {
+        return id;
+      }
+    }
+
+    server = await new AppBuilder().useJson().useController(TestController).buildAsync(port);
+
+    // Act
+    const response = await fetch(`${serverAddress}/test/${expectedParam}`);
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+
+    const responseText = await response.text();
+    expect(responseText).toEqual(expectedParam);
   });
 });
 
