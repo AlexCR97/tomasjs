@@ -9,6 +9,7 @@ import { ControllerMetadata, HttpMethodMetadata } from "../metadata";
 import { get, http, post } from "../@http";
 import { HttpMethod, StatusCodes } from "@/core";
 import { AppBuilder } from "@/builder";
+import { body } from "../@body";
 
 describe("controllers", () => {
   const port = 3045;
@@ -38,7 +39,7 @@ describe("controllers", () => {
     expect(metadata.path).toEqual(expectedPath);
   });
 
-  it("A controller can define http methods", () => {
+  it("A controller can declare http methods", () => {
     // Arrange
     interface ExpectedMethod {
       method: HttpMethod;
@@ -67,11 +68,10 @@ describe("controllers", () => {
     // Act
     const registeredController = internalContainer.get<TestController>(TestController);
     const decoratedProperties = Reflect.getMetadataKeys(registeredController);
+    // console.log("decoratedProperties", decoratedProperties);
 
     // Assert (GET method)
-    const getMethodKey = decoratedProperties.find(
-      (key) => key === registeredController.getMethod.name
-    );
+    const getMethodKey = decoratedProperties.find((key) => key === "getMethod");
     expect(getMethodKey).toBeTruthy();
 
     const getMethodMetadata = new HttpMethodMetadata(registeredController, getMethodKey);
@@ -79,9 +79,7 @@ describe("controllers", () => {
     expect(getMethodMetadata.path).toBe(expectedGetMethod.path);
 
     // Assert (POST method)
-    const postMethodKey = decoratedProperties.find(
-      (key) => key === registeredController.postMethod.name
-    );
+    const postMethodKey = decoratedProperties.find((key) => key === "postMethod");
     expect(postMethodKey).toBeTruthy();
 
     const postMethodMetadata = new HttpMethodMetadata(registeredController, postMethodKey);
@@ -119,6 +117,38 @@ describe("controllers", () => {
     const responseJson = await response.json();
     const responseUser = responseJson[0];
     expect(responseUser).toEqual(expectedFetchedUser);
+  });
+
+  it("A controller method can inject the request body with the @body decorator", async () => {
+    // Arrange
+
+    const expectedBody = {
+      email: "example@domain.com",
+      password: "123456",
+    };
+
+    @controller()
+    class TestController {
+      @post()
+      find(@body() body: any) {
+        return body;
+      }
+    }
+
+    server = await new AppBuilder().useJson().useController(TestController).buildAsync(port);
+
+    // Act
+    const response = await fetch(serverAddress, {
+      method: "post",
+      body: JSON.stringify(expectedBody),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+
+    const responseJson = await response.json();
+    expect(responseJson).toEqual(expectedBody);
   });
 });
 

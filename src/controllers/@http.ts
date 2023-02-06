@@ -1,4 +1,7 @@
 import { HttpMethod } from "@/core";
+import { RequiredArgumentError } from "@/core/errors";
+import { Request, Response } from "express";
+import { BodyMetadataKey } from "./@body";
 import { HttpMethodMetadata } from "./metadata";
 
 // The following snippet was extracted from: https://stackoverflow.com/questions/68919313/add-metadata-to-method-in-typescript
@@ -27,6 +30,25 @@ export function http(method: HttpMethod, path?: string) {
     metadata.instanceMethod = propertyKey;
     metadata.httpMethod = method;
     metadata.path = path;
+
+    const originalFunction: Function = descriptor.value;
+
+    descriptor.value = async function (req: Request, res: Response) {
+      RequiredArgumentError.throw(req, "req");
+      RequiredArgumentError.throw(res, "res");
+
+      const controllerMethodArgs: any[] = [];
+
+      const bodyParamIndex = Reflect.getOwnMetadata(BodyMetadataKey, target, propertyKey);
+      if (typeof bodyParamIndex === "number") {
+        controllerMethodArgs[bodyParamIndex] = req.body;
+      }
+
+      console.log("controllerMethodArgs", controllerMethodArgs);
+
+      return originalFunction.apply(this, controllerMethodArgs);
+    };
+
     return descriptor;
   };
 }

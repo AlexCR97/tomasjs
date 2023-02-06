@@ -78,17 +78,17 @@ export class ControllerMetadata<TController extends Controller> {
 
     // Get the decorated properties
     const result1 = Reflect.getMetadataKeys(this.controller);
-    console.log("result1", result1);
+    // console.log("result1", result1);
 
     // Filter out invalid properties
     const result2 = result1.filter(
       (key) => key !== this.pathKey && key !== this.middlewaresKey && key !== this.guardsKey
     );
-    console.log("result2", result2);
+    // console.log("result2", result2);
 
     // Convert the decorated properties into a strongly typed HttpMethodMetadata facade
     const result3 = result2.map((key) => new HttpMethodMetadata(this.controller, key));
-    console.log("result3", result3);
+    // console.log("result3", result3);
 
     // Filter out the invalid instances of HttpMethodMetadata
     // const result4 = result3.filter((metadata) => !metadata.instanceMethod || !metadata.httpMethod);

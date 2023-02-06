@@ -24,20 +24,19 @@ export class ControllerAdapter<TController extends Controller> {
   private fromInstance(controller: TController): Router {
     const router = Router();
     const controllerMetadata = new ControllerMetadata(controller);
-    console.log("httpMethods.length", controllerMetadata.httpMethods.length);
 
     for (const httpMethodMetadata of controllerMetadata.httpMethods) {
       const instanceMethod = httpMethodMetadata.instanceMethod;
-      console.log("instanceMethod", instanceMethod);
+      // console.log("instanceMethod", instanceMethod);
 
       const httpMethod = httpMethodMetadata.httpMethod;
-      console.log("httpMethod", httpMethod);
+      // console.log("httpMethod", httpMethod);
 
       const path = ExpressPathAdapter.adapt(httpMethodMetadata.path);
-      console.log("path", path);
+      // console.log("path", path);
 
       router[httpMethod](path, async (req, res) => {
-        const result = await (controller as any)[instanceMethod]();
+        const result = await (controller as any)[instanceMethod](req, res);
         ResponseAdapter.fromThomasToExpress(res, result);
       });
     }
