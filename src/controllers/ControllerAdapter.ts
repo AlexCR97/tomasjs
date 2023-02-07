@@ -1,5 +1,11 @@
 import { ClassConstructor, internalContainer } from "@/container";
-import { ExpressPathAdapter } from "@/core/express";
+import {
+  ExpressMiddlewareHandler,
+  ExpressPathAdapter,
+  ExpressRequestHandler,
+} from "@/core/express";
+import { GuardAdapter } from "@/guards";
+import { MiddlewareAdapter, MiddlewareFactoryAdapter } from "@/middleware";
 import { ResponseAdapter } from "@/responses";
 import { Router } from "express";
 import { Controller } from "./Controller";
@@ -35,10 +41,31 @@ export class ControllerAdapter<TController extends Controller> {
       const path = ExpressPathAdapter.adapt(httpMethodMetadata.path);
       // console.log("path", path);
 
-      router[httpMethod](path, async (req, res) => {
+      const expressMiddlewares: ExpressMiddlewareHandler[] = (
+        controllerMetadata.middlewares ?? []
+      ).map((middleware) => {
+        const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(middleware)
+          ? MiddlewareFactoryAdapter.from(middleware)
+          : middleware;
+        return MiddlewareAdapter.from(middlewareToAdapt);
+      });
+
+      const guardExpressMiddlewares: ExpressMiddlewareHandler[] = (
+        controllerMetadata.guards ?? []
+      ).map((guard) => {
+        return GuardAdapter.toExpress(guard);
+      });
+
+      const expressRequestHandler: ExpressRequestHandler = async (req, res) => {
         const result = await (controller as any)[instanceMethod](req, res);
         ResponseAdapter.fromThomasToExpress(res, result);
-      });
+      };
+
+      router[httpMethod](path, [
+        ...expressMiddlewares,
+        ...guardExpressMiddlewares,
+        expressRequestHandler,
+      ]);
     }
 
     return router;

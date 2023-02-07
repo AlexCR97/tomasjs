@@ -344,8 +344,8 @@ describe("controllers", () => {
 
 // @controller("users")
 // @useMiddleware(undefined as any)
-// @useGuard(undefined as any)
 // @useInterceptor(undefined as any)
+// @useGuard(undefined as any)
 // export class UsersController {
 //   @post()
 //   create(@body() body: CreateUserRequest) {}
