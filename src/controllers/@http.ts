@@ -2,6 +2,8 @@ import { HttpMethod } from "@/core";
 import { RequiredArgumentError } from "@/core/errors";
 import { Request, Response } from "express";
 import { BodyMetadataKey } from "./@body";
+import { HeaderMetadata, HeaderMetadataKey } from "./@header";
+import { HeadersMetadataKey } from "./@headers";
 import { ParamMetadata, ParamMetadataKey } from "./@param";
 import { QueryMetadata, QueryMetadataKey } from "./@query";
 import { HttpMethodMetadata } from "./metadata";
@@ -41,30 +43,65 @@ export function http(method: HttpMethod, path?: string) {
 
       const controllerMethodArgs: any[] = [];
 
-      // Try inject body
-      const bodyParamIndex = Reflect.getOwnMetadata(BodyMetadataKey, target, propertyKey);
-      if (typeof bodyParamIndex === "number") {
-        controllerMethodArgs[bodyParamIndex] = req.body;
+      tryInjectHeadersArg();
+      tryInjectHeaderArgs();
+      tryInjectParamsArg();
+      tryInjectQueryArgs();
+      tryInjectBodyArg();
+
+      return originalFunction.apply(this, controllerMethodArgs);
+
+      function tryInjectHeadersArg() {
+        const paramIndex = Reflect.getOwnMetadata(HeadersMetadataKey, target, propertyKey);
+
+        if (typeof paramIndex !== "number") {
+          return;
+        }
+
+        controllerMethodArgs[paramIndex] = req.headers;
       }
 
-      // Try inject param
-      const paramMetadata: ParamMetadata = Reflect.getOwnMetadata(
-        ParamMetadataKey,
-        target,
-        propertyKey
-      );
-      if (paramMetadata) {
+      function tryInjectHeaderArgs() {
+        const headerMetadatas: HeaderMetadata[] = Reflect.getOwnMetadata(
+          HeaderMetadataKey,
+          target,
+          propertyKey
+        );
+
+        if (!headerMetadatas || headerMetadatas.length === 0) {
+          return;
+        }
+
+        for (const { parameterIndex, key } of headerMetadatas) {
+          controllerMethodArgs[parameterIndex] = req.headers[key];
+        }
+      }
+
+      function tryInjectParamsArg() {
+        const paramMetadata: ParamMetadata = Reflect.getOwnMetadata(
+          ParamMetadataKey,
+          target,
+          propertyKey
+        );
+
+        if (!paramMetadata) {
+          return;
+        }
+
         controllerMethodArgs[paramMetadata.parameterIndex] = req.params[paramMetadata.paramKey];
       }
 
-      // Try inject query param
-      const queryMetadatas: QueryMetadata[] = Reflect.getOwnMetadata(
-        QueryMetadataKey,
-        target,
-        propertyKey
-      );
+      function tryInjectQueryArgs() {
+        const queryMetadatas: QueryMetadata[] = Reflect.getOwnMetadata(
+          QueryMetadataKey,
+          target,
+          propertyKey
+        );
 
-      if (queryMetadatas && queryMetadatas.length > 0) {
+        if (!queryMetadatas || queryMetadatas.length === 0) {
+          return;
+        }
+
         for (const queryMetadata of queryMetadatas) {
           if (queryMetadata.key) {
             controllerMethodArgs[queryMetadata.parameterIndex] = req.query[queryMetadata.key];
@@ -73,9 +110,16 @@ export function http(method: HttpMethod, path?: string) {
           }
         }
       }
-      // console.log("controllerMethodArgs", controllerMethodArgs);
 
-      return originalFunction.apply(this, controllerMethodArgs);
+      function tryInjectBodyArg() {
+        const paramIndex = Reflect.getOwnMetadata(BodyMetadataKey, target, propertyKey);
+
+        if (typeof paramIndex !== "number") {
+          return;
+        }
+
+        controllerMethodArgs[paramIndex] = req.body;
+      }
     };
 
     return descriptor;

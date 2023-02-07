@@ -12,6 +12,9 @@ import { AppBuilder } from "@/builder";
 import { body } from "../@body";
 import { param } from "../@param";
 import { query } from "../@query";
+import { headers } from "../@headers";
+import { Headers } from "@/core/express";
+import { header } from "../@header";
 
 describe("controllers", () => {
   const port = 3045;
@@ -261,6 +264,73 @@ describe("controllers", () => {
 
     const responseJson = await response.json();
     expect(responseJson).toEqual(expectedQuery);
+  });
+
+  it("A controller method can inject the request headers with the @headers decorator", async () => {
+    // Arrange
+
+    const expectedHeaderValue = "Bearer someValidJwt";
+
+    @controller()
+    class TestController {
+      @post()
+      find(@headers() headers: Headers) {
+        return headers.authorization;
+      }
+    }
+
+    server = await new AppBuilder().useJson().useController(TestController).buildAsync(port);
+
+    // Act
+    const response = await fetch(serverAddress, {
+      method: "post",
+      body: JSON.stringify({}),
+      headers: { authorization: expectedHeaderValue },
+    });
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+
+    const responseText = await response.text();
+    expect(responseText).toEqual(expectedHeaderValue);
+  });
+
+  it("A controller method can inject multiple request headers with the @header decorator", async () => {
+    // Arrange
+
+    const expectedHeaders = {
+      client_id: "123",
+      client_secret: "456",
+    };
+
+    @controller("test")
+    class TestController {
+      @post("token")
+      find(@header("client_id") clientId: string, @header("client_secret") clientSecret: string) {
+        return {
+          client_id: clientId,
+          client_secret: clientSecret,
+        };
+      }
+    }
+
+    server = await new AppBuilder().useJson().useController(TestController).buildAsync(port);
+
+    // Act
+    const response = await fetch(`${serverAddress}/test/token`, {
+      method: "post",
+      body: JSON.stringify({}),
+      headers: {
+        client_id: expectedHeaders.client_id,
+        client_secret: expectedHeaders.client_secret,
+      },
+    });
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+
+    const responseJson = await response.json();
+    expect(responseJson).toEqual(expectedHeaders);
   });
 });
 
