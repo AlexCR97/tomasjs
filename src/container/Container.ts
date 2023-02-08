@@ -45,6 +45,10 @@ export class Container implements IContainer {
     return this._container.get<T>(token);
   }
 
+  getAll<T>(token: Token<T>): T[] {
+    return this._container.getAll<T>(token);
+  }
+
   has<T>(token: Token<T>): boolean {
     try {
       this.get(token);

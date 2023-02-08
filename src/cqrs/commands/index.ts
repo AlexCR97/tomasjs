@@ -1,4 +1,3 @@
-export { AsyncCommandHandler } from "./AsyncCommandHandler";
-export { Command } from "./Command";
+export { commandHandler } from "./@commandHandler";
 export { CommandDispatcher } from "./CommandDispatcher";
 export { CommandHandler } from "./CommandHandler";

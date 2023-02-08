@@ -9,6 +9,7 @@ export interface IContainer {
   ): IContainer;
   addInstance<T>(instance: T, token: Token<T>): IContainer;
   get<T>(token: Token<T>): T;
+  getAll<T>(token: Token<T>): T[];
   has<T>(token: Token<T>): boolean;
   isClassConstructor<T>(token: Token<T>): token is ClassConstructor<T>;
   remove<T>(token: Token<T>): IContainer;

@@ -1,5 +1,3 @@
-import { Query } from "./Query";
-
-export abstract class QueryHandler<TQuery extends Query<TResult>, TResult> {
-  abstract handle(query: TQuery): TResult;
+export interface QueryHandler<TQuery, TResult> {
+  fetch(query: TQuery): TResult | Promise<TResult>;
 }

@@ -1,6 +1,6 @@
 {
   "name": "tomasjs",
-  "version": "0.3.4",
+  "version": "0.4.0",
   "description": "TomasJS is the modern lightweight express framework 🔥😎.",
   "author": "viex",
   "license": "ISC",
@@ -25,6 +25,10 @@
     "testw-auth-required-claim-guard": "jest --testNamePattern auth-required-claim-guard --watchAll --verbose",
     "testw-builder": "jest --testNamePattern builder --watchAll --verbose",
     "testw-configuration": "jest --testNamePattern configuration --watchAll --verbose",
+    "testw-controllers": "jest --testNamePattern controllers --watchAll --verbose",
+    "testw-cqrs-commands": "jest --testNamePattern cqrs-commands --watchAll --verbose",
+    "testw-cqrs-events": "jest --testNamePattern cqrs-events --watchAll --verbose",
+    "testw-cqrs-queries": "jest --testNamePattern cqrs-queries --watchAll --verbose",
     "testw-endpoints": "jest --testNamePattern endpoints --watchAll --verbose",
     "testw-endpoint-groups": "jest --testNamePattern endpoint-groups --watchAll --verbose",
     "testw-endpoint-isEndpoint": "jest --testNamePattern isEndpoint --watchAll --verbose",

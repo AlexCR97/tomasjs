@@ -1,24 +1,34 @@
-import { container, injectable } from "tsyringe";
-import { AsyncQueryHandler } from "./AsyncQueryHandler";
-import { Query } from "./Query";
+import { ClassConstructor, internalContainer, singleton } from "@/container";
+import { TomasError } from "@/core/errors";
+import { getConstructorOf } from "@/core/internal";
+import { QueryHandlerMetadata, QueryHandlerToken } from "./metadata";
 import { QueryHandler } from "./QueryHandler";
 
-@injectable()
+@singleton()
 export class QueryDispatcher {
-  dispatch<TQuery extends Query<TResult>, TResult>(query: TQuery): TResult {
-    const queryHandlerClassName = `${query.constructor.name}Handler`;
-    const queryHandler = container.resolve(queryHandlerClassName) as QueryHandler<TQuery, TResult>;
-    return queryHandler.handle(query);
+  async fetch<TResult, TQuery = any>(query: TQuery): Promise<TResult> {
+    const queryConstructor = getConstructorOf<TQuery>(query);
+    const queryHandler = this.getQueryHandlerFor<TQuery, TResult>(queryConstructor);
+    return await queryHandler.fetch(query);
   }
 
-  dispatchAsync<TResult, TQuery extends Query<TResult> = Query<TResult>>(
-    query: TQuery
-  ): Promise<TResult> {
-    const queryHandlerClassName = `${query.constructor.name}Handler`;
-    const queryHandler = container.resolve(queryHandlerClassName) as AsyncQueryHandler<
-      TResult,
-      TQuery
-    >;
-    return queryHandler.handleAsync(query);
+  private getQueryHandlerFor<TQuery, TResult>(
+    queryConstructor: ClassConstructor<TQuery>
+  ): QueryHandler<TQuery, TResult> {
+    const queryHandlers =
+      internalContainer.getAll<QueryHandler<TQuery, TResult>>(QueryHandlerToken);
+
+    const matchingQueryHandler = queryHandlers.find((qh) => {
+      const metadata = new QueryHandlerMetadata(qh);
+      return metadata.queryConstructor === queryConstructor;
+    });
+
+    if (!matchingQueryHandler) {
+      throw new TomasError("Could not find a QueryHandler for the dispatched query.", {
+        data: { queryConstructor },
+      });
+    }
+
+    return matchingQueryHandler;
   }
 }

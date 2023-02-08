@@ -1,4 +1,3 @@
-export { AsyncQueryHandler } from "./AsyncQueryHandler";
-export { Query } from "./Query";
+export { queryHandler } from "./@queryHandler";
 export { QueryDispatcher } from "./QueryDispatcher";
 export { QueryHandler } from "./QueryHandler";
