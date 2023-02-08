@@ -31,6 +31,6 @@
     }
   },
   "include": ["src/", "src/**/*.ts"],
-  "exclude": ["node_modules", ".vscode"],
+  "exclude": ["node_modules", ".vscode", "src/examples", "src/tests", "src/**/*.test.ts"],
   "lib": ["es2015"]
 }
