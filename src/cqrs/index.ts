@@ -1,3 +1,3 @@
-export { CommandDispatcher, CommandHandler, commandHandler } from "./commands";
-export { EventDispatcher, EventHandler, eventHandler } from "./events";
-export { QueryDispatcher, QueryHandler, queryHandler } from "./queries";
+export { AddCommandHandlers, CommandDispatcher, CommandHandler, commandHandler } from "./commands";
+export { AddEventHandlers, EventDispatcher, EventHandler, eventHandler } from "./events";
+export { AddQueryHandlers, QueryDispatcher, QueryHandler, queryHandler } from "./queries";
