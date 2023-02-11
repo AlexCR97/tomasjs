@@ -3,18 +3,19 @@ import "reflect-metadata";
 import fetch from "node-fetch";
 import { afterEach, beforeEach, describe, it } from "@jest/globals";
 import { tryCloseServerAsync } from "@/tests/utils";
-import { internalContainer } from "@/container";
+import { internalContainer, inject } from "@/container";
 import { controller } from "../@controller";
 import { ControllerMetadata, HttpMethodMetadata } from "../metadata";
 import { get, http, post } from "../@http";
 import { HttpMethod, StatusCodes } from "@/core";
-import { AppBuilder } from "@/builder";
+import { AppBuilder, ContainerBuilder } from "@/builder";
 import { body } from "../@body";
 import { param } from "../@param";
 import { query } from "../@query";
 import { headers } from "../@headers";
 import { Headers } from "@/core/express";
 import { header } from "../@header";
+import { AddQueryHandlers, QueryDispatcher, QueryHandler, queryHandler } from "../../cqrs/";
 
 describe("controllers", () => {
   const port = 3045;
@@ -331,6 +332,94 @@ describe("controllers", () => {
 
     const responseJson = await response.json();
     expect(responseJson).toEqual(expectedHeaders);
+  });
+
+  it("A controller can inject a QueryHandler", async () => {
+    // Arrange
+    const expectedId = "123";
+
+    class TestQuery {
+      constructor(readonly id: string) {}
+    }
+
+    @queryHandler(TestQuery)
+    class TestQueryHandler implements QueryHandler<TestQuery, string> {
+      fetch(query: TestQuery): string | Promise<string> {
+        console.log("TestQueryHandler.fetch", query);
+        return query.id;
+      }
+    }
+
+    @controller("test")
+    class TestController {
+      constructor(@inject(QueryDispatcher) private readonly queries: QueryDispatcher) {}
+
+      @get(":id")
+      async find(@param("id") id: string) {
+        console.log("TestController.find:", id);
+        return await this.queries.fetch(new TestQuery(id));
+      }
+    }
+
+    await new ContainerBuilder().setup(new AddQueryHandlers([TestQueryHandler])).buildAsync();
+
+    server = await new AppBuilder().useJson().useController(TestController).buildAsync(port);
+
+    // Act
+
+    const response = await fetch(`${serverAddress}/test/${expectedId}`);
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+
+    const responseText = await response.text();
+    expect(responseText).toEqual(expectedId);
+  });
+
+  it("A controller can inject a QueryHandler with inheritance", async () => {
+    // Arrange
+    const expectedId = "123";
+
+    class GetQuery {
+      constructor(readonly id: string) {}
+    }
+
+    abstract class GetQueryHandler<TQuery extends GetQuery>
+      implements QueryHandler<TQuery, string>
+    {
+      fetch(query: TQuery): string {
+        console.log("GetQueryHandler.fetch", query);
+        return query.id;
+      }
+    }
+
+    @queryHandler(GetQuery)
+    class TestGetQueryHandler extends GetQueryHandler<GetQuery> {}
+
+    @controller("test")
+    class TestController {
+      constructor(@inject(QueryDispatcher) private readonly queries: QueryDispatcher) {}
+
+      @get(":id")
+      async find(@param("id") id: string) {
+        console.log("TestController.find:", id);
+        return await this.queries.fetch(new GetQuery(id));
+      }
+    }
+
+    await new ContainerBuilder().setup(new AddQueryHandlers([TestGetQueryHandler])).buildAsync();
+
+    server = await new AppBuilder().useJson().useController(TestController).buildAsync(port);
+
+    // Act
+
+    const response = await fetch(`${serverAddress}/test/${expectedId}`);
+
+    // Assert
+    expect(response.status).toBe(StatusCodes.ok);
+
+    const responseText = await response.text();
+    expect(responseText).toEqual(expectedId);
   });
 });
 
