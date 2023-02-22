@@ -1,6 +1,7 @@
 import { Request, request } from "express";
 
 export class RequestContext {
+  readonly method!: typeof request.method;
   readonly path!: typeof request.path;
   readonly headers!: typeof request.headers;
   readonly params!: typeof request.params;
@@ -8,6 +9,7 @@ export class RequestContext {
   readonly body?: typeof request.body;
 
   constructor(req: Request) {
+    this.method = req.method;
     this.path = req.path;
     this.headers = req.headers;
     this.params = req.params;
