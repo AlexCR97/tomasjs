@@ -11,14 +11,19 @@ import { Router } from "express";
 import { Controller } from "./Controller";
 import { ControllerType } from "./ControllerType";
 import { isController } from "./isController";
-import { ControllerMetadata } from "./metadata";
+import { ControllerMetadata, HttpMethodMetadata } from "./metadata";
 
 /**
- * Adapts a Tomas Controller into an Express Router
+ * Adapts a Controller to an Express Router.
+ * @template TController - The type of the Tomas controller.
  */
 export class ControllerAdapter<TController extends Controller> {
   constructor(private readonly controller: ControllerType<TController>) {}
 
+  /**
+   * Adapts the controller to an Express Router.
+   * @returns {Router} The adapted router.
+   */
   adapt(): Router {
     if (isController<TController>(this.controller)) {
       return this.fromInstance(this.controller);
@@ -30,6 +35,8 @@ export class ControllerAdapter<TController extends Controller> {
   private fromInstance(controller: TController): Router {
     const router = Router();
     const controllerMetadata = new ControllerMetadata(controller);
+    const controllerLevelMiddlewares = this.getControllerLevelMiddlewares(controllerMetadata);
+    const controllerLevelGuards = this.getControllerLevelGuards(controllerMetadata);
 
     for (const httpMethodMetadata of controllerMetadata.httpMethods) {
       const instanceMethod = httpMethodMetadata.instanceMethod;
@@ -41,20 +48,8 @@ export class ControllerAdapter<TController extends Controller> {
       const path = ExpressPathAdapter.adapt(httpMethodMetadata.path);
       // console.log("path", path);
 
-      const expressMiddlewares: ExpressMiddlewareHandler[] = (
-        controllerMetadata.middlewares ?? []
-      ).map((middleware) => {
-        const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(middleware)
-          ? MiddlewareFactoryAdapter.from(middleware)
-          : middleware;
-        return MiddlewareAdapter.from(middlewareToAdapt);
-      });
-
-      const guardExpressMiddlewares: ExpressMiddlewareHandler[] = (
-        controllerMetadata.guards ?? []
-      ).map((guard) => {
-        return GuardAdapter.toExpress(guard);
-      });
+      const methodLevelMiddlewares = this.getMethodLevelMiddlewares(httpMethodMetadata);
+      const methodLevelGuards = this.getMethodLevelGuards(httpMethodMetadata);
 
       const expressRequestHandler: ExpressRequestHandler = async (req, res) => {
         const result = await (controller as any)[instanceMethod](req, res);
@@ -62,8 +57,10 @@ export class ControllerAdapter<TController extends Controller> {
       };
 
       router[httpMethod](path, [
-        ...expressMiddlewares,
-        ...guardExpressMiddlewares,
+        ...controllerLevelMiddlewares,
+        ...controllerLevelGuards,
+        ...methodLevelMiddlewares,
+        ...methodLevelGuards,
         expressRequestHandler,
       ]);
     }
@@ -74,5 +71,33 @@ export class ControllerAdapter<TController extends Controller> {
   private fromConstructor(controller: ClassConstructor<TController>): Router {
     const registeredController = internalContainer.get<TController>(controller);
     return this.fromInstance(registeredController);
+  }
+
+  private getControllerLevelMiddlewares(
+    metadata: ControllerMetadata<TController>
+  ): ExpressMiddlewareHandler[] {
+    return (metadata.middlewares ?? []).map((middleware) => {
+      const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(middleware)
+        ? MiddlewareFactoryAdapter.from(middleware)
+        : middleware;
+      return MiddlewareAdapter.from(middlewareToAdapt);
+    });
+  }
+
+  private getControllerLevelGuards(
+    metadata: ControllerMetadata<TController>
+  ): ExpressMiddlewareHandler[] {
+    return (metadata.guards ?? []).map(GuardAdapter.toExpress);
+  }
+
+  private getMethodLevelMiddlewares(metadata: HttpMethodMetadata): ExpressMiddlewareHandler[] {
+    return (metadata.middlewares ?? []).map((middleware) => {
+      // TODO Add support for MiddlewareFactories
+      return MiddlewareAdapter.from(middleware as any); // TODO Improve type check
+    });
+  }
+
+  private getMethodLevelGuards(metadata: HttpMethodMetadata): ExpressMiddlewareHandler[] {
+    return (metadata.guards ?? []).map(GuardAdapter.toExpress);
   }
 }

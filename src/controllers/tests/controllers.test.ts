@@ -16,6 +16,14 @@ import { headers } from "../@headers";
 import { Headers } from "@/core/express";
 import { header } from "../@header";
 import { AddQueryHandlers, QueryDispatcher, QueryHandler, queryHandler } from "../../cqrs/";
+import { singleton } from "../../container";
+import { HttpContext } from "../../core";
+import { Guard, GuardContext, guard } from "../../guards";
+import { Middleware } from "../../middleware";
+import { StatusCodeResponse } from "../../responses";
+import { NextFunction } from "express";
+import { useMethodGuard } from "../@useMethodGuard";
+import { useMethodMiddleware } from "../@useMethodMiddleware";
 
 describe("controllers", () => {
   const port = 3045;
@@ -334,6 +342,92 @@ describe("controllers", () => {
     expect(responseJson).toEqual(expectedHeaders);
   });
 
+  it("A controller method can attach a middleware using the @middleware decorator", async () => {
+    @singleton()
+    class TestMiddleware implements Middleware {
+      handle(context: HttpContext, next: NextFunction): void | Promise<void> {
+        console.log("TestMiddleware!"!);
+        return next();
+      }
+    }
+
+    @controller()
+    class TestController {
+      @useMethodMiddleware(TestMiddleware)
+      @get()
+      getMethod() {
+        return new StatusCodeResponse(StatusCodes.ok);
+      }
+    }
+
+    const registeredController = internalContainer.get<TestController>(TestController);
+    const decoratedProperties = Reflect.getMetadataKeys(registeredController);
+    // console.log("decoratedProperties", decoratedProperties);
+
+    const getMethodKey = decoratedProperties.find((key) => key === "getMethod");
+    expect(getMethodKey).toBeTruthy();
+
+    const getMethodMetadata = new HttpMethodMetadata(registeredController, getMethodKey);
+    // console.log("getMethodMetadata", getMethodMetadata);
+    // console.log("getMethodMetadata.middlewares", getMethodMetadata.middlewares);
+    expect(getMethodMetadata.middlewares).toBeTruthy();
+    expect(getMethodMetadata.middlewares!.length).toBe(1);
+    // console.log("getMethodMetadata.middlewares![0]", getMethodMetadata.middlewares![0]);
+    expect(getMethodMetadata.middlewares![0]).toBeInstanceOf(Function);
+    expect((getMethodMetadata.middlewares![0] as Function).name).toBe(TestMiddleware.name);
+  });
+
+  it("A controller method can attach and use a middleware using the @middleware decorator", async () => {
+    let initialValue = 1;
+    const expectedValue = 2;
+
+    @singleton()
+    class TestMiddleware implements Middleware {
+      handle(context: HttpContext, next: NextFunction): void | Promise<void> {
+        initialValue = expectedValue;
+        return next();
+      }
+    }
+
+    @controller()
+    class TestController {
+      @useMethodMiddleware(TestMiddleware)
+      @get()
+      getMethod() {
+        return new StatusCodeResponse(StatusCodes.ok);
+      }
+    }
+
+    server = await new AppBuilder().useJson().useController(TestController).buildAsync(port);
+
+    const response = await fetch(`${serverAddress}`);
+    expect(response.status).toBe(StatusCodes.ok);
+    expect(initialValue).toBe(expectedValue);
+  });
+
+  it("A controller method can attach and use a guard using the @guard decorator", async () => {
+    @guard()
+    class TestGuard implements Guard {
+      isAllowed(context: GuardContext) {
+        return false;
+      }
+    }
+
+    @controller()
+    class TestController {
+      @useMethodGuard(TestGuard)
+      @get()
+      getMethod() {
+        return new StatusCodeResponse(StatusCodes.ok);
+      }
+    }
+
+    server = await new AppBuilder().useJson().useController(TestController).buildAsync(port);
+
+    const response = await fetch(`${serverAddress}`);
+    expect(response.status).toBe(StatusCodes.unauthorized);
+  });
+
   it("A controller can inject a QueryHandler", async () => {
     // Arrange
     const expectedId = "123";
@@ -345,7 +439,7 @@ describe("controllers", () => {
     @queryHandler(TestQuery)
     class TestQueryHandler implements QueryHandler<TestQuery, string> {
       fetch(query: TestQuery): string | Promise<string> {
-        console.log("TestQueryHandler.fetch", query);
+        // console.log("TestQueryHandler.fetch", query);
         return query.id;
       }
     }
@@ -356,7 +450,7 @@ describe("controllers", () => {
 
       @get(":id")
       async find(@param("id") id: string) {
-        console.log("TestController.find:", id);
+        // console.log("TestController.find:", id);
         return await this.queries.fetch(new TestQuery(id));
       }
     }
@@ -388,7 +482,7 @@ describe("controllers", () => {
       implements QueryHandler<TQuery, string>
     {
       fetch(query: TQuery): string {
-        console.log("GetQueryHandler.fetch", query);
+        // console.log("GetQueryHandler.fetch", query);
         return query.id;
       }
     }
@@ -402,7 +496,7 @@ describe("controllers", () => {
 
       @get(":id")
       async find(@param("id") id: string) {
-        console.log("TestController.find:", id);
+        // console.log("TestController.find:", id);
         return await this.queries.fetch(new GetQuery(id));
       }
     }
@@ -422,38 +516,3 @@ describe("controllers", () => {
     expect(responseText).toEqual(expectedId);
   });
 });
-
-// class CreateUserRequest {}
-
-// class FindRequest {}
-
-// class UpdateUserRequest {}
-
-// class UpdateUserProfileRequest {}
-
-// @controller("users")
-// @useMiddleware(undefined as any)
-// @useInterceptor(undefined as any)
-// @useGuard(undefined as any)
-// export class UsersController {
-//   @post()
-//   create(@body() body: CreateUserRequest) {}
-
-//   @get()
-//   find(@query() query: FindRequest) {}
-
-//   @get(":id")
-//   get(@param("id") id: string) {}
-
-//   @get(":id/profile")
-//   getProfile(@param("id") id: string) {}
-
-//   @put(":id")
-//   update(@param("id") id: string, @body() body: UpdateUserRequest) {}
-
-//   @patch(":id/profile")
-//   updateProfile(@param("id") id: string, @body() body: UpdateUserProfileRequest) {}
-
-//   @http("delete", ":id")
-//   delete(@param("id") id: string) {}
-// }

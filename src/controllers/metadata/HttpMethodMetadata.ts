@@ -1,5 +1,7 @@
 import { HttpMethod } from "@/core";
 import { ClassMethodMetadata } from "@/core/metadata";
+import { MiddlewareParam } from "@/endpoints";
+import { GuardType } from "@/guards";
 
 export class HttpMethodMetadata {
   private readonly metadata: ClassMethodMetadata;
@@ -46,6 +48,50 @@ export class HttpMethodMetadata {
 
   set path(value: string | undefined) {
     this.metadata.set(this.pathKey, value);
+  }
+
+  /* #endregion */
+
+  /* #region Middlewares */
+
+  private readonly middlewaresKey = "tomasjs:controller:method:middlewares";
+
+  get middlewares(): MiddlewareParam[] | undefined {
+    return this.metadata.get<MiddlewareParam[] | undefined>(this.middlewaresKey);
+  }
+
+  set middlewares(value: MiddlewareParam[] | undefined) {
+    this.metadata.set(this.middlewaresKey, value);
+  }
+
+  addMiddleware(value: MiddlewareParam) {
+    if (this.middlewares === undefined) {
+      this.middlewares = [];
+    }
+
+    this.middlewares.push(value);
+  }
+
+  /* #endregion */
+
+  /* #region Guards */
+
+  private readonly guardsKey = "tomasjs:controller:method:guards";
+
+  get guards(): GuardType[] | undefined {
+    return this.metadata.get<GuardType[] | undefined>(this.guardsKey);
+  }
+
+  set guards(value: GuardType[] | undefined) {
+    this.metadata.set(this.guardsKey, value);
+  }
+
+  addGuard(value: GuardType) {
+    if (this.guards === undefined) {
+      this.guards = [];
+    }
+
+    this.guards.push(value);
   }
 
   /* #endregion */

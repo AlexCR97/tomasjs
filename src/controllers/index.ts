@@ -5,6 +5,8 @@ export { param } from "./@param";
 export { query } from "./@query";
 export { useGuard } from "./@useGuard";
 export { useInterceptor } from "./@useInterceptor";
+export { useMethodGuard } from "./@useMethodGuard";
+export { useMethodMiddleware } from "./@useMethodMiddleware";
 export { useMiddleware } from "./@useMiddleware";
 export { Controller } from "./Controller";
 export { ControllerAdapter } from "./ControllerAdapter";
