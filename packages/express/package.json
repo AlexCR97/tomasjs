@@ -6,11 +6,11 @@
   "license": "ISC",
   "types": "./**/*.d.ts",
   "keywords": [
-    "express",
-    "framework",
-    "typescript",
     "tomas",
-    "viex"
+    "tomasjs",
+    "typescript",
+    "viex",
+    "express"
   ],
   "scripts": {
     "compile-clean": "del dist /s /q",
@@ -54,6 +54,23 @@
     "serve-sample-jwt-authentication": "ts-node -r tsconfig-paths/register ./samples/jwt-authentication/main.ts",
     "watch-sample-jwt-authentication": "nodemon -r tsconfig-paths/register ./samples/jwt-authentication/main.ts"
   },
+  "dependencies": {
+    "@mikro-orm/core": "^5.6.0",
+    "@mikro-orm/mongodb": "^5.6.0",
+    "@mikro-orm/reflection": "^5.6.0",
+    "amqplib": "^0.10.3",
+    "class-transformer": "^0.5.1",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-async-errors": "^3.1.1",
+    "fluentvalidation-ts": "^2.3.0",
+    "inversify": "^6.0.1",
+    "jsonwebtoken": "^9.0.0",
+    "reflect-metadata": "^0.1.13",
+    "tsyringe": "^4.7.0",
+    "winston": "^3.8.2"
+  },
   "devDependencies": {
     "@jest/globals": "^29.3.1",
     "@types/amqplib": "^0.10.1",
@@ -72,22 +89,5 @@
     "tsc-alias": "^1.8.2",
     "tsconfig-paths": "^4.1.0",
     "typescript": "^4.9.4"
-  },
-  "dependencies": {
-    "@mikro-orm/core": "^5.6.0",
-    "@mikro-orm/mongodb": "^5.6.0",
-    "@mikro-orm/reflection": "^5.6.0",
-    "amqplib": "^0.10.3",
-    "class-transformer": "^0.5.1",
-    "cors": "^2.8.5",
-    "dotenv": "^16.0.3",
-    "express": "^4.18.2",
-    "express-async-errors": "^3.1.1",
-    "fluentvalidation-ts": "^2.3.0",
-    "inversify": "^6.0.1",
-    "jsonwebtoken": "^9.0.0",
-    "reflect-metadata": "^0.1.13",
-    "tsyringe": "^4.7.0",
-    "winston": "^3.8.2"
   }
 }
