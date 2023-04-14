@@ -21,11 +21,10 @@ jobs:
         with:
           node-version: 16
 
-      - name: Go into /packages/express directory
-        run: cd ./packages/express
-
       - name: Build source code
-        run: npm run compile
+        run: |
+          cd ./packages/express
+          npm run compile
 
   publish:
     needs: build
@@ -40,10 +39,9 @@ jobs:
           node-version: 16
           registry-url: https://registry.npmjs.org/
 
-      - name: Go into /packages/express directory
-        run: cd ./packages/express
-
       - name: Publish build to NPM
-        run: npm run publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_ACCESS_TOKEN}}
+        run: |
+          cd ./packages/express
+          npm run publish
