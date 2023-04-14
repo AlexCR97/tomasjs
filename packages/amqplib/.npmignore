@@ -1,0 +1,4 @@
+*.map
+*.spec.*
+SetupPackage.*
+version.txt

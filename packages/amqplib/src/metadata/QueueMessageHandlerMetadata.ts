@@ -1,5 +1,9 @@
-import { ClassConstructor } from "@/container";
-import { QueueMessageHandler } from "../QueueMessageHandler";
+import { ClassConstructor } from "tomasjs/container";
+import {
+  QueueMessageHandler,
+  queueMessageHandlerMethodArgumentCount,
+  queueMessageHandlerMethodName,
+} from "../QueueMessageHandler";
 import { QueueMessageHandlerMetadataKeys } from "./QueueMessageHandlerMetadataKeys";
 
 export class QueueMessageHandlerMetadata {
@@ -12,9 +16,11 @@ export class QueueMessageHandlerMetadata {
   ) {}
 
   get queueName(): string {
+    // @ts-ignore | The "getMetadata" method does not exist until the "reflect-metadata" package is imported.
     return Reflect.getMetadata(this.queueNameKey, this.queueMessageHandlerPrototype);
   }
   set queueName(value: string) {
+    // @ts-ignore | The "defineMetadata" method does not exist until the "reflect-metadata" package is imported.
     Reflect.defineMetadata(this.queueNameKey, value, this.queueMessageHandlerPrototype);
   }
 
@@ -35,10 +41,9 @@ export class QueueMessageHandlerMetadata {
       return false;
     }
 
-    // Considering that the "handle" property must be a named function...
     return (
-      func.name.trim() === "handle" && // The name must be "handle"
-      func.length === 1 // It must receive 1 argument
+      func.name.trim() === queueMessageHandlerMethodName &&
+      func.length === queueMessageHandlerMethodArgumentCount
     );
   }
 }
