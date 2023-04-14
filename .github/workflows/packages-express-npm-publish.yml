@@ -5,6 +5,7 @@ on:
     branches:
       - dev
     paths:
+      - .github/workflows/packages-express-npm-publish.yml
       - packages/express/src
       - packages/express/package.json
 
