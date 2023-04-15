@@ -10,24 +10,7 @@ on:
       - packages/express/package.json
 
 jobs:
-  build:
-    runs-on: windows-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Setup node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-
-      - name: Build source code
-        run: |
-          cd ./packages/express
-          npm run compile
-
-  publish:
-    needs: build
+  build-and-publish:
     runs-on: windows-latest
     steps:
       - name: Checkout repository
@@ -38,6 +21,15 @@ jobs:
         with:
           node-version: 16
           registry-url: https://registry.npmjs.org/
+          token: ${{secrets.NPM_ACCESS_TOKEN}}
+
+      - name: Install typescript
+        run: npm install -g typescript
+
+      - name: Build source code
+        run: |
+          cd ./packages/express
+          npm run compile
 
       - name: Publish build to NPM
         env:
