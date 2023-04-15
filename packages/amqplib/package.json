@@ -14,7 +14,11 @@
     "rabbitmq"
   ],
   "scripts": {
-    "dev": "nodemon -r tsconfig-paths/register ./sample/main.ts"
+    "compile-clean": "del dist /s /q",
+    "compile-build": "tsc -b && tsc-alias",
+    "compile": "npm run compile-clean && npm run compile-build && node ./dist/SetupPackage.js",
+    "publish": "cd ./dist && npm publish",
+    "sample": "nodemon -r tsconfig-paths/register ./sample/main.ts"
   },
   "dependencies": {
     "amqplib": "^0.10.3",
