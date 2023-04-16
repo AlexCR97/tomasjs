@@ -1,0 +1,41 @@
+{
+  "name": "@tomasjs/mikro-orm",
+  "version": "1.0.0",
+  "description": "Support for mikro-orm in a TomasJS infrastructure.",
+  "author": "viex",
+  "license": "ISC",
+  "types": "./**/*.d.ts",
+  "keywords": [
+    "tomas",
+    "tomasjs",
+    "typescript",
+    "viex",
+    "mikro-orm"
+  ],
+  "scripts": {
+    "compile-clean": "del dist /s /q",
+    "compile-build": "tsc -b && tsc-alias",
+    "compile": "npm run compile-clean && npm run compile-build && node ./dist/SetupPackage.js",
+    "publish": "cd ./dist && npm publish --access public",
+    "sample": "nodemon -r tsconfig-paths/register ./sample/main.ts"
+  },
+  "dependencies": {
+    "@mikro-orm/core": "^5.6.16",
+    "@mikro-orm/mongodb": "^5.6.16",
+    "@tomasjs/express": "^1.0.0",
+    "reflect-metadata": "^0.1.13"
+  },
+  "peerDependencies": {
+    "@mikro-orm/core": "^5.6.16",
+    "@mikro-orm/mongodb": "^5.6.16",
+    "@tomasjs/express": "^1.0.0",
+    "reflect-metadata": "^0.1.13"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.22",
+    "ts-node": "^10.9.1",
+    "tsc-alias": "^1.8.5",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^4.9.4"
+  }
+}
