@@ -16,7 +16,7 @@
     "compile-clean": "del dist /s /q",
     "compile-build": "tsc -b && tsc-alias",
     "compile": "npm run compile-clean && npm run compile-build && node ./dist/SetupPackage.js",
-    "publish": "cd ./dist && npm publish",
+    "publish": "cd ./dist && npm publish --access public",
     "pack": "cd ./dist && npm pack",
     "link": "cd ./dist && npm link",
     "test": "jest",
