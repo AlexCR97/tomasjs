@@ -1,6 +1,6 @@
 {
   "name": "@tomasjs/express",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Support for express in a TomasJS infrastructure.",
   "author": "viex",
   "license": "ISC",
@@ -40,7 +40,6 @@
     "testw-guards": "jest --testNamePattern guards --watchAll --verbose",
     "testw-logger": "jest --testNamePattern logger --watchAll --verbose",
     "testw-sample-crud": "jest --testNamePattern crud-sample --watchAll --verbose",
-    "testw-mikro-orm": "jest --testNamePattern mikro-orm --watchAll --verbose --detectOpenHandles",
     "testw-pipes-bodyPipe-decorator": "jest --testNamePattern bodyPipe-decorator --watchAll --verbose --detectOpenHandles",
     "testw-pipes-paramPipe-decorator": "jest --testNamePattern paramPipe-decorator --watchAll --verbose --detectOpenHandles",
     "testw-pipes-queryPipe-decorator": "jest --testNamePattern queryPipe-decorator --watchAll --verbose --detectOpenHandles",
@@ -55,9 +54,6 @@
     "watch-sample-jwt-authentication": "nodemon -r tsconfig-paths/register ./samples/jwt-authentication/main.ts"
   },
   "dependencies": {
-    "@mikro-orm/core": "^5.6.0",
-    "@mikro-orm/mongodb": "^5.6.0",
-    "@mikro-orm/reflection": "^5.6.0",
     "class-transformer": "^0.5.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",

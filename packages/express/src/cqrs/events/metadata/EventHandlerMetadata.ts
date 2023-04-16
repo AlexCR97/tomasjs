@@ -10,9 +10,11 @@ export class EventHandlerMetadata<TEvent> {
   ) {}
 
   get eventConstructor(): ClassConstructor<any> {
+    //@ts-ignore: The package "reflect-metadata" should be imported by host
     return Reflect.getMetadata(this.eventConstructorKey, this.eventHandlerPrototype);
   }
   set eventConstructor(value: ClassConstructor<any>) {
+    //@ts-ignore: The package "reflect-metadata" should be imported by host
     Reflect.defineMetadata(this.eventConstructorKey, value, this.eventHandlerPrototype);
   }
 

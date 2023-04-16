@@ -12,6 +12,7 @@ export function param(key: string) {
       parameterIndex,
     };
 
+    //@ts-ignore: The package "reflect-metadata" should be imported by host
     Reflect.defineMetadata(ParamMetadataKey, metadata, target, propertyKey);
   };
 }

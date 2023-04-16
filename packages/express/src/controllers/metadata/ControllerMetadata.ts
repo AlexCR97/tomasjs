@@ -77,17 +77,18 @@ export class ControllerMetadata<TController extends Controller> {
     }
 
     // Get the decorated properties
+    //@ts-ignore: The package "reflect-metadata" should be imported by host
     const result1 = Reflect.getMetadataKeys(this.controller);
     // console.log("result1", result1);
 
     // Filter out invalid properties
     const result2 = result1.filter(
-      (key) => key !== this.pathKey && key !== this.middlewaresKey && key !== this.guardsKey
+      (key: any) => key !== this.pathKey && key !== this.middlewaresKey && key !== this.guardsKey
     );
     // console.log("result2", result2);
 
     // Convert the decorated properties into a strongly typed HttpMethodMetadata facade
-    const result3 = result2.map((key) => new HttpMethodMetadata(this.controller, key));
+    const result3 = result2.map((key: any) => new HttpMethodMetadata(this.controller, key));
     // console.log("result3", result3);
 
     // Filter out the invalid instances of HttpMethodMetadata
@@ -108,10 +109,12 @@ export class ControllerMetadata<TController extends Controller> {
   }
 
   private setMetadata(key: string, value: any): void {
+    //@ts-ignore: The package "reflect-metadata" should be imported by host
     Reflect.defineMetadata(key, value, this.controllerPrototype);
   }
 
   private getMetadata<T>(key: string): T {
+    //@ts-ignore: The package "reflect-metadata" should be imported by host
     return Reflect.getMetadata(key, this.controllerPrototype);
   }
 

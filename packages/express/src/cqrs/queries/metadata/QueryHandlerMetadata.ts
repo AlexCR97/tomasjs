@@ -12,9 +12,11 @@ export class QueryHandlerMetadata<TQuery, TResult> {
   ) {}
 
   get queryConstructor(): ClassConstructor<any> {
+    //@ts-ignore: The package "reflect-metadata" should be imported by host
     return Reflect.getMetadata(this.queryConstructorKey, this.queryHandlerPrototype);
   }
   set queryConstructor(value: ClassConstructor<any>) {
+    //@ts-ignore: The package "reflect-metadata" should be imported by host
     Reflect.defineMetadata(this.queryConstructorKey, value, this.queryHandlerPrototype);
   }
 
