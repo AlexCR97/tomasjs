@@ -1,4 +1,4 @@
-import { injectable, internalContainer } from "tomasjs/container";
+import { injectable, internalContainer } from "@tomasjs/express/container";
 import { QueueMessageHandlerMetadata, QueueMessageHandlerToken } from "./metadata";
 
 export function queueMessageHandler(queueName: string) {

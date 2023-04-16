@@ -1,7 +1,7 @@
 import { Channel, Options } from "amqplib";
-import { ContainerSetup, ContainerSetupFactory } from "tomasjs/builder";
-import { IContainer, internalContainer } from "tomasjs/container";
-import { Logger } from "tomasjs/logger";
+import { ContainerSetup, ContainerSetupFactory } from "@tomasjs/express/builder";
+import { IContainer, internalContainer } from "@tomasjs/express/container";
+import { Logger } from "@tomasjs/express/logger";
 import { QueueMessageHandler } from "./QueueMessageHandler";
 import { QueueMessageHandlerMetadata, QueueMessageHandlerToken } from "./metadata";
 import { ChannelToken } from "./tokens";

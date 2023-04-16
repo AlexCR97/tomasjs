@@ -1,7 +1,7 @@
 import amqp, { Channel, Connection, Options } from "amqplib";
-import { ContainerSetup, ContainerSetupFactory } from "tomasjs/builder";
+import { ContainerSetup, ContainerSetupFactory } from "@tomasjs/express/builder";
 import { ChannelToken, ConnectionToken } from "./tokens";
-import { Logger } from "tomasjs/logger";
+import { Logger } from "@tomasjs/express/logger";
 
 export class AmqplibSetup extends ContainerSetupFactory {
   constructor(

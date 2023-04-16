@@ -1,8 +1,8 @@
 import "reflect-metadata";
 import { Channel } from "amqplib";
-import { ContainerBuilder } from "tomasjs/builder";
-import { internalContainer } from "tomasjs/container";
-import { TomasLogger } from "tomasjs/logger";
+import { ContainerBuilder } from "@tomasjs/express/builder";
+import { internalContainer } from "@tomasjs/express/container";
+import { TomasLogger } from "@tomasjs/express/logger";
 import { testQueueName, url } from "./env";
 import { TestQueueMessageHandler } from "./TestQueueMessageHandler";
 import { AddQueueMessageHandlers, AmqplibSetup, ChannelToken, QueueSetup } from "../src";

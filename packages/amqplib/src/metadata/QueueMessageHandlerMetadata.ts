@@ -1,4 +1,4 @@
-import { ClassConstructor } from "tomasjs/container";
+import { ClassConstructor } from "@tomasjs/express/container";
 import {
   QueueMessageHandler,
   queueMessageHandlerMethodArgumentCount,

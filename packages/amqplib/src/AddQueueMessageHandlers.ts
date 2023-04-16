@@ -1,5 +1,5 @@
-import { ContainerSetup, ContainerSetupFactory } from "tomasjs/builder";
-import { ClassConstructor } from "tomasjs/container";
+import { ContainerSetup, ContainerSetupFactory } from "@tomasjs/express/builder";
+import { ClassConstructor } from "@tomasjs/express/container";
 import { QueueMessageHandlerToken } from "./metadata";
 
 export class AddQueueMessageHandlers extends ContainerSetupFactory {
