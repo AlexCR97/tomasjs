@@ -1,5 +1,5 @@
 {
-  "name": "tomasjs-amqplib",
+  "name": "@tomasjs/amqplib",
   "version": "1.0.0",
   "description": "Support for amqplib in a TomasJS infrastructure.",
   "author": "viex",
