@@ -1,4 +1,4 @@
-name: Publish tomasjs to NPM
+name: Publish @tomasjs/express to NPM
 
 on:
   push:

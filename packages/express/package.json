@@ -1,7 +1,7 @@
 {
-  "name": "tomasjs",
-  "version": "0.4.4",
-  "description": "TomasJS is the modern lightweight backend framework 🔥😎.",
+  "name": "@tomasjs/express",
+  "version": "1.0.0",
+  "description": "Support for express in a TomasJS infrastructure.",
   "author": "viex",
   "license": "ISC",
   "types": "./**/*.d.ts",
