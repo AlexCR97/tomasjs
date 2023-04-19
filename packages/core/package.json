@@ -23,6 +23,10 @@
     "inversify": "^6.0.1",
     "winston": "^3.8.2"
   },
+  "peerDependencies": {
+    "inversify": "^6.0.1",
+    "winston": "^3.8.2"
+  },
   "devDependencies": {
     "nodemon": "^2.0.22",
     "ts-node": "^10.9.1",
