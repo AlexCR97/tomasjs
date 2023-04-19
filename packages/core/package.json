@@ -1,7 +1,7 @@
 {
   "name": "@tomasjs/core",
   "version": "1.0.0",
-  "description": "Support for core in a TomasJS infrastructure.",
+  "description": "The core components of TomasJS.",
   "author": "viex",
   "license": "ISC",
   "types": "./**/*.d.ts",
