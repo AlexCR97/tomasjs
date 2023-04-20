@@ -1,6 +1,10 @@
-import { ClassConstructor, internalContainer, singleton } from "@/container";
-import { TomasError } from "@/core/errors";
-import { getConstructorOf } from "@/core/internal";
+import {
+  ClassConstructor,
+  TomasError,
+  getConstructorOf,
+  globalContainer,
+  singleton,
+} from "@tomasjs/core";
 import { QueryHandlerMetadata, QueryHandlerToken } from "./metadata";
 import { QueryHandler } from "./QueryHandler";
 
@@ -15,8 +19,7 @@ export class QueryDispatcher {
   private getQueryHandlerFor<TQuery, TResult>(
     queryConstructor: ClassConstructor<TQuery>
   ): QueryHandler<TQuery, TResult> {
-    const queryHandlers =
-      internalContainer.getAll<QueryHandler<TQuery, TResult>>(QueryHandlerToken);
+    const queryHandlers = globalContainer.getAll<QueryHandler<TQuery, TResult>>(QueryHandlerToken);
 
     const matchingQueryHandler = queryHandlers.find((qh) => {
       const metadata = new QueryHandlerMetadata(qh);

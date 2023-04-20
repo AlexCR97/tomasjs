@@ -1,4 +1,4 @@
-import { ClassConstructor } from "@/container";
+import { ClassConstructor } from "@tomasjs/core";
 import { EventHandler } from "../EventHandler";
 import { EventHandlerMetadataKeys } from "./EventHandlerMetadataKeys";
 

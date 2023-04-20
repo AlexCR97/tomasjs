@@ -1,8 +1,12 @@
-import { ClassConstructor, internalContainer, singleton } from "@/container";
-import { TomasError } from "@/core/errors";
-import { getConstructorOf } from "@/core/internal";
 import { CommandHandler } from "./CommandHandler";
 import { CommandHandlerMetadata, CommandHandlerToken } from "./metadata";
+import {
+  ClassConstructor,
+  TomasError,
+  getConstructorOf,
+  globalContainer,
+  singleton,
+} from "@tomasjs/core";
 
 @singleton()
 export class CommandDispatcher {
@@ -16,7 +20,7 @@ export class CommandDispatcher {
     commandConstructor: ClassConstructor<TCommand>
   ): CommandHandler<TCommand, TResult> {
     const commandHandlers =
-      internalContainer.getAll<CommandHandler<TCommand, TResult>>(CommandHandlerToken);
+      globalContainer.getAll<CommandHandler<TCommand, TResult>>(CommandHandlerToken);
 
     const matchingCommandHandler = commandHandlers.find((ch) => {
       const metadata = new CommandHandlerMetadata(ch);

@@ -1,10 +1,9 @@
-import { ClassConstructor, internalContainer, isClassConstructor } from "@/container";
 import { HttpContextResolver } from "@/core";
-import { TomasError } from "@/core/errors";
 import { ExpressErrorMiddlewareHandler } from "@/core/express";
 import { ErrorHandler } from "./ErrorHandler";
 import { ErrorHandlerFunction } from "./ErrorHandlerFunction";
 import { ErrorHandlerType } from "./ErrorHandlerType";
+import { ClassConstructor, TomasError, globalContainer, isClassConstructor } from "@tomasjs/core";
 
 export class ErrorHandlerAdapter<THandler extends ErrorHandler = ErrorHandler> {
   constructor(private readonly handler: ErrorHandlerType<THandler>) {}
@@ -82,7 +81,7 @@ export class ErrorHandlerAdapter<THandler extends ErrorHandler = ErrorHandler> {
     handler: ClassConstructor<THandler>
   ): ExpressErrorMiddlewareHandler {
     return async (err, req, res, next) => {
-      const handlerInstance = internalContainer.get(handler);
+      const handlerInstance = globalContainer.get(handler);
       const context = HttpContextResolver.fromExpress(req, res);
       await handlerInstance.catch(err, context, next);
     };

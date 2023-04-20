@@ -1,5 +1,4 @@
 import { HttpMethod } from "@/core";
-import { RequiredArgumentError } from "@/core/errors";
 import { Request, Response } from "express";
 import { BodyMetadataKey } from "./@body";
 import { HeaderMetadata, HeaderMetadataKey } from "./@header";
@@ -7,6 +6,7 @@ import { HeadersMetadataKey } from "./@headers";
 import { ParamMetadata, ParamMetadataKey } from "./@param";
 import { QueryMetadata, QueryMetadataKey } from "./@query";
 import { HttpMethodMetadata } from "./metadata";
+import { RequiredArgumentError } from "@tomasjs/core";
 
 export function http(method: HttpMethod, path?: string) {
   return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {

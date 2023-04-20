@@ -1,9 +1,5 @@
-import { ClassConstructor, internalContainer } from "@/container";
 import { HttpContextResolver } from "@/core";
-import {
-  ExpressMiddlewareHandler,
-  ExpressRequestHandler,
-} from "@/core/express";
+import { ExpressMiddlewareHandler, ExpressRequestHandler } from "@/core/express";
 import { GuardAdapter } from "@/guards";
 import { MiddlewareAdapter, MiddlewareFactoryAdapter } from "@/middleware";
 import { ResponseAdapter } from "@/responses";
@@ -12,6 +8,7 @@ import { Endpoint } from "./Endpoint";
 import { isEndpoint } from "./isEndpoint";
 import { EndpointMetadataStrategy } from "./metadata";
 import { EndpointHandler, IsEndpointHandler } from "./types";
+import { ClassConstructor, globalContainer } from "@tomasjs/core";
 
 export abstract class EndpointAdapter {
   private constructor() {}
@@ -30,9 +27,7 @@ export abstract class EndpointAdapter {
     return this.fromConstructorToExpress(endpoint);
   }
 
-  static fromTypeToExpress<TResponse>(
-    endpoint: EndpointHandler<TResponse>
-  ): ExpressRequestHandler {
+  static fromTypeToExpress<TResponse>(endpoint: EndpointHandler<TResponse>): ExpressRequestHandler {
     return async (req, res) => {
       const context = HttpContextResolver.fromExpress(req, res);
       const result = await endpoint(context);
@@ -47,26 +42,16 @@ export abstract class EndpointAdapter {
     let expressMiddlewareHandlers: ExpressMiddlewareHandler[] = [];
     let guardExpressMiddlewareHandlers: ExpressMiddlewareHandler[] = [];
 
-    if (
-      endpointMetadata.middlewares !== undefined &&
-      endpointMetadata.middlewares.length > 0
-    ) {
-      expressMiddlewareHandlers = endpointMetadata.middlewares.map(
-        (middleware) => {
-          const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(
-            middleware
-          )
-            ? MiddlewareFactoryAdapter.from(middleware)
-            : middleware;
-          return MiddlewareAdapter.from(middlewareToAdapt);
-        }
-      );
+    if (endpointMetadata.middlewares !== undefined && endpointMetadata.middlewares.length > 0) {
+      expressMiddlewareHandlers = endpointMetadata.middlewares.map((middleware) => {
+        const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(middleware)
+          ? MiddlewareFactoryAdapter.from(middleware)
+          : middleware;
+        return MiddlewareAdapter.from(middlewareToAdapt);
+      });
     }
 
-    if (
-      endpointMetadata.guards !== undefined &&
-      endpointMetadata.guards.length > 0
-    ) {
+    if (endpointMetadata.guards !== undefined && endpointMetadata.guards.length > 0) {
       guardExpressMiddlewareHandlers = endpointMetadata.guards.map((guard) => {
         return GuardAdapter.toExpress(guard);
       });
@@ -86,41 +71,27 @@ export abstract class EndpointAdapter {
       // console.log("after express handler responded");
     };
 
-    return [
-      ...expressMiddlewareHandlers,
-      ...guardExpressMiddlewareHandlers,
-      expressRequestHandler,
-    ];
+    return [...expressMiddlewareHandlers, ...guardExpressMiddlewareHandlers, expressRequestHandler];
   }
 
   static fromConstructorToExpress(
     endpoint: ClassConstructor<Endpoint>
   ): (ExpressMiddlewareHandler | ExpressRequestHandler)[] {
-    const endpointInstance = internalContainer.get(endpoint);
+    const endpointInstance = globalContainer.get(endpoint);
     const endpointMetadata = EndpointMetadataStrategy.get(endpointInstance); // TOOD Pass constructor in here?
     let expressMiddlewareHandlers: ExpressMiddlewareHandler[] = [];
     let guardExpressMiddlewareHandlers: ExpressMiddlewareHandler[] = [];
 
-    if (
-      endpointMetadata.middlewares !== undefined &&
-      endpointMetadata.middlewares.length > 0
-    ) {
-      expressMiddlewareHandlers = endpointMetadata.middlewares.map(
-        (middleware) => {
-          const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(
-            middleware
-          )
-            ? MiddlewareFactoryAdapter.from(middleware)
-            : middleware;
-          return MiddlewareAdapter.from(middlewareToAdapt);
-        }
-      );
+    if (endpointMetadata.middlewares !== undefined && endpointMetadata.middlewares.length > 0) {
+      expressMiddlewareHandlers = endpointMetadata.middlewares.map((middleware) => {
+        const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(middleware)
+          ? MiddlewareFactoryAdapter.from(middleware)
+          : middleware;
+        return MiddlewareAdapter.from(middlewareToAdapt);
+      });
     }
 
-    if (
-      endpointMetadata.guards !== undefined &&
-      endpointMetadata.guards.length > 0
-    ) {
+    if (endpointMetadata.guards !== undefined && endpointMetadata.guards.length > 0) {
       guardExpressMiddlewareHandlers = endpointMetadata.guards.map((guard) => {
         return GuardAdapter.toExpress(guard);
       });
@@ -132,10 +103,6 @@ export abstract class EndpointAdapter {
       ResponseAdapter.fromThomasToExpress(res, result);
     };
 
-    return [
-      ...expressMiddlewareHandlers,
-      ...guardExpressMiddlewareHandlers,
-      expressRequestHandler,
-    ];
+    return [...expressMiddlewareHandlers, ...guardExpressMiddlewareHandlers, expressRequestHandler];
   }
 }

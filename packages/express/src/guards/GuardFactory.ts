@@ -1,4 +1,4 @@
-import { ClassConstructor } from "@/container";
+import { ClassConstructor } from "@tomasjs/core";
 import { Guard } from "./Guard";
 import { GuardFunction } from "./GuardFunction";
 

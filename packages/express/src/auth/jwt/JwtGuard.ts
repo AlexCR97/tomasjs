@@ -1,8 +1,8 @@
-import { internalContainer } from "@/container";
 import { UserContext } from "@/core";
 import { guard, Guard, GuardContext } from "@/guards";
 import { JwtVerifier } from "./JwtVerifier";
 import { JwtVerifyOptions } from "./JwtVerifyOptions";
+import { globalContainer } from "@tomasjs/core";
 
 @guard()
 export class JwtGuard implements Guard {
@@ -27,7 +27,7 @@ export class JwtGuard implements Guard {
       return false;
     }
 
-    const userContext = internalContainer.get(UserContext);
+    const userContext = globalContainer.get(UserContext);
     userContext.claims = user;
 
     return true;

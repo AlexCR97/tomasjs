@@ -1,4 +1,4 @@
-import { ClassConstructor, injectable } from "@/container";
+import { ClassConstructor } from "@tomasjs/core";
 import { CommandHandlerMetadata } from "./metadata";
 
 export function commandHandler<TCommand>(commandConstructor: ClassConstructor<TCommand>) {

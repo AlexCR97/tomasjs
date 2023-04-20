@@ -1,4 +1,3 @@
-import { ClassConstructor, internalContainer } from "@/container";
 import {
   ExpressMiddlewareHandler,
   ExpressPathAdapter,
@@ -12,6 +11,7 @@ import { Controller } from "./Controller";
 import { ControllerType } from "./ControllerType";
 import { isController } from "./isController";
 import { ControllerMetadata, HttpMethodMetadata } from "./metadata";
+import { ClassConstructor, globalContainer } from "@tomasjs/core";
 
 /**
  * Adapts a Controller to an Express Router.
@@ -69,7 +69,7 @@ export class ControllerAdapter<TController extends Controller> {
   }
 
   private fromConstructor(controller: ClassConstructor<TController>): Router {
-    const registeredController = internalContainer.get<TController>(controller);
+    const registeredController = globalContainer.get<TController>(controller);
     return this.fromInstance(registeredController);
   }
 

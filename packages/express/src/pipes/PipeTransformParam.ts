@@ -1,4 +1,4 @@
-import { Transform, TransformFactory, TransformFunction } from "@/transforms";
+import { Transform, TransformFactory, TransformFunction } from "@tomasjs/core";
 
 // TODO Add support for constructors
 export type PipeTransformParam<TInput, TOutput> =

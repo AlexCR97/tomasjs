@@ -1,4 +1,4 @@
-import { ContainerSetup, ContainerSetupFactory } from "@/builder";
+import { ContainerSetup, ContainerSetupFactory } from "@tomasjs/core";
 import { FluentValidationSetupOptions } from "./FluentValidationSetupOptions";
 import { ValidatorInjectionTokenFactory } from "./ValidatorInjectionTokenFactory";
 

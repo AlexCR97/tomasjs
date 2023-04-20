@@ -1,4 +1,4 @@
-import { ClassConstructor } from "@/container";
+import { ClassConstructor } from "@tomasjs/core";
 import { CommandHandler } from "../CommandHandler";
 import { CommandHandlerMetadataKeys } from "./CommandHandlerMetadataKeys";
 

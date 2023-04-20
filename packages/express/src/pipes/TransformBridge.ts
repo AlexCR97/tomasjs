@@ -1,5 +1,4 @@
-import { TomasError } from "@/core/errors";
-import { Transform, TransformFactory, TransformFunction } from "@/transforms";
+import { TomasError, Transform, TransformFactory, TransformFunction } from "@tomasjs/core";
 import { PipeTransformParam } from "./PipeTransformParam";
 
 export class TransformBridge<TInput, TOutput> {

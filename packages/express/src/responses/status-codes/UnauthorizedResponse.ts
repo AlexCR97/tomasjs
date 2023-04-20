@@ -1,8 +1,8 @@
-import { StatusCodes } from "@/core";
+import { statusCodes } from "@/core";
 import { StatusCodeResponse } from "./StatusCodeResponse";
 
 export class UnauthorizedResponse extends StatusCodeResponse {
   constructor() {
-    super(StatusCodes.unauthorized);
+    super(statusCodes.unauthorized);
   }
 }

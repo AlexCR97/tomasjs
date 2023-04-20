@@ -1,4 +1,3 @@
-import { ClassConstructor } from "@/container";
 import { GuardType } from "@/guards";
 import {
   Middleware,
@@ -7,6 +6,7 @@ import {
   MiddlewareHandler,
 } from "@/middleware";
 import { Endpoint } from "./Endpoint";
+import { ClassConstructor } from "@tomasjs/core";
 
 export class EndpointGroup {
   /* #region Base Path */

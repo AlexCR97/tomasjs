@@ -1,4 +1,4 @@
-import { ClassConstructor } from "@/container";
+import { ClassConstructor } from "@tomasjs/core";
 import { Endpoint } from "./Endpoint";
 
 export abstract class EndpointTokenFactory {

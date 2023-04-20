@@ -1,10 +1,10 @@
-import { TomasError } from "@/core/errors";
 import { MiddlewareParam } from "@/endpoints";
 import { GuardType } from "@/guards";
 import { Controller } from "../Controller";
 import { ControllerType } from "../ControllerType";
 import { isController } from "../isController";
 import { HttpMethodMetadata } from "./HttpMethodMetadata";
+import { TomasError } from "@tomasjs/core";
 
 export class ControllerMetadata<TController extends Controller> {
   constructor(private readonly controller: ControllerType<TController>) {}

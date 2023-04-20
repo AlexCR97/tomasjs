@@ -1,4 +1,4 @@
-import { ClassConstructor } from "@/container";
+import { ClassConstructor } from "@tomasjs/core";
 import { QueryHandler } from "../QueryHandler";
 import { QueryHandlerMetadataKeys } from "./QueryHandlerMetadataKeys";
 

@@ -1,10 +1,10 @@
-import { ClassConstructor } from "@/container";
 import {
   Middleware,
   MiddlewareFactory,
   MiddlewareFactoryHandler,
   MiddlewareHandler,
 } from "@/middleware";
+import { ClassConstructor } from "@tomasjs/core";
 
 export type MiddlewareParam =
   | MiddlewareHandler
