@@ -20,18 +20,6 @@ export {
 export { NotImplementedError, RequiredArgumentError, TomasError } from "./errors";
 
 export {
-  LogLevel,
-  Logger,
-  LoggerFactory,
-  LoggerFactoryResolver,
-  LoggerFactorySetup,
-  LoggerFactoryToken,
-  TomasLogger,
-  TomasLoggerFactory,
-  TomasLoggerFactorySetup,
-} from "./logging";
-
-export {
   ClassConstructor,
   ClassMethodMetadata,
   getConstructorOf,
