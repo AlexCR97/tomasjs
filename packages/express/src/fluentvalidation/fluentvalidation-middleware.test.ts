@@ -2,18 +2,18 @@ import "reflect-metadata";
 import "express-async-errors";
 import { afterEach, describe, it } from "@jest/globals";
 import fetch from "node-fetch";
-import { tryCloseServerAsync } from "../utils/server";
-import { tick } from "../utils/time";
-import { injectable } from "../../src";
-import { AppBuilder, ContainerBuilder } from "../../src/builder";
-import { HttpContext, StatusCodes } from "../../src/core";
-import { endpoint, Endpoint, middleware, path } from "../../src/endpoints";
+import { tryCloseServerAsync } from "../../test/test-utils/server";
+import { tick } from "../../test/test-utils/time";
+import { injectable } from "..";
+import { AppBuilder, ContainerBuilder } from "../builder";
+import { HttpContext, StatusCodes } from "../core";
+import { endpoint, Endpoint, middleware, path } from "../endpoints";
 import {
   FluentValidationMiddleware,
   FluentValidationSetup,
   inValidator,
-} from "../../src/fluentvalidation";
-import { OkResponse } from "../../src/responses/status-codes";
+} from ".";
+import { OkResponse } from "../responses/status-codes";
 import { Validator } from "fluentvalidation-ts";
 
 describe("fluentvalidation-middleware", () => {

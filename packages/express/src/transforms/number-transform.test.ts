@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { describe, it } from "@jest/globals";
-import { NumberTransform, TransformError } from "../../src/transforms";
+import { NumberTransform, TransformError } from ".";
 
 describe("number-transform", () => {
   it(`The ${NumberTransform.name} function transforms number to number`, () => {

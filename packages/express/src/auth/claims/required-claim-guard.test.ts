@@ -1,15 +1,15 @@
 import "reflect-metadata";
 import "express-async-errors";
 import fetch from "node-fetch";
-import { afterEach, describe, it } from "@jest/globals";
-import { tryCloseServerAsync } from "../../utils/server";
-import { tick } from "../../utils/time";
-import { RequiredClaimGuard } from "../../../src/auth/claims";
-import { JwtGuard, JwtSigner } from "../../../src/auth/jwt";
-import { AppBuilder } from "../../../src/builder";
-import { HttpContext, StatusCodes } from "../../../src/core";
-import { AnonymousEndpoint } from "../../../src/endpoints";
-import { OkResponse } from "../../../src/responses/status-codes";
+import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
+import { tryCloseServerAsync } from "../../../test/test-utils/server";
+import { tick } from "../../../test/test-utils/time";
+import { RequiredClaimGuard } from ".";
+import { JwtGuard, JwtSigner } from "../jwt";
+import { AppBuilder } from "../../builder";
+import { AnonymousEndpoint } from "../../endpoints";
+import { OkResponse } from "../../responses/status-codes";
+import { HttpContext, statusCodes } from "../../core";
 
 describe("auth-required-claim-guard", () => {
   const port = 3038;
@@ -46,7 +46,7 @@ describe("auth-required-claim-guard", () => {
 
     // Act/Assert
     const response = await fetch(`${serverAddress}`);
-    expect(response.status).toBe(StatusCodes.forbidden);
+    expect(response.status).toBe(statusCodes.forbidden);
   });
 
   it(`The ${RequiredClaimGuard.name} should return a "403 forbidden" response if the user does not contain the required claim`, async () => {
@@ -74,7 +74,7 @@ describe("auth-required-claim-guard", () => {
       },
     });
 
-    expect(response.status).toBe(StatusCodes.forbidden);
+    expect(response.status).toBe(statusCodes.forbidden);
   });
 
   it(`The ${RequiredClaimGuard.name} should return a "200 ok" response if the user has the required claim`, async () => {
@@ -105,7 +105,7 @@ describe("auth-required-claim-guard", () => {
       },
     });
 
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
   });
 
   it(`The ${RequiredClaimGuard.name} should return a "403 forbidden" response if the user has the required claim but with an invalid value`, async () => {
@@ -142,7 +142,7 @@ describe("auth-required-claim-guard", () => {
       },
     });
 
-    expect(response.status).toBe(StatusCodes.forbidden);
+    expect(response.status).toBe(statusCodes.forbidden);
   });
 
   it(`The ${RequiredClaimGuard.name} should return a "200 ok" response if the user has the required claim with a valid value`, async () => {
@@ -179,7 +179,7 @@ describe("auth-required-claim-guard", () => {
       },
     });
 
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
   });
 
   it(`The ${RequiredClaimGuard.name} should protect an entire api section`, async () => {
@@ -247,13 +247,13 @@ describe("auth-required-claim-guard", () => {
     await expectRequestToReturnStatusCodeAsync(
       `${serverAddress}/teachers/classrooms`,
       teacherAccessToken,
-      StatusCodes.ok
+      statusCodes.ok
     );
 
     await expectRequestToReturnStatusCodeAsync(
       `${serverAddress}/teachers/students`,
       teacherAccessToken,
-      StatusCodes.ok
+      statusCodes.ok
     );
 
     // Act/Assert - Student API with Student role
@@ -261,13 +261,13 @@ describe("auth-required-claim-guard", () => {
     await expectRequestToReturnStatusCodeAsync(
       `${serverAddress}/students/classrooms`,
       studentAccessToken,
-      StatusCodes.ok
+      statusCodes.ok
     );
 
     await expectRequestToReturnStatusCodeAsync(
       `${serverAddress}/students/grades`,
       studentAccessToken,
-      StatusCodes.ok
+      statusCodes.ok
     );
 
     // Act/Assert - Teacher API with Student role
@@ -275,13 +275,13 @@ describe("auth-required-claim-guard", () => {
     await expectRequestToReturnStatusCodeAsync(
       `${serverAddress}/teachers/classrooms`,
       studentAccessToken,
-      StatusCodes.forbidden
+      statusCodes.forbidden
     );
 
     await expectRequestToReturnStatusCodeAsync(
       `${serverAddress}/teachers/students`,
       studentAccessToken,
-      StatusCodes.forbidden
+      statusCodes.forbidden
     );
 
     // Act/Assert - Student API with Teacher role
@@ -289,13 +289,13 @@ describe("auth-required-claim-guard", () => {
     await expectRequestToReturnStatusCodeAsync(
       `${serverAddress}/students/classrooms`,
       teacherAccessToken,
-      StatusCodes.forbidden
+      statusCodes.forbidden
     );
 
     await expectRequestToReturnStatusCodeAsync(
       `${serverAddress}/students/grades`,
       teacherAccessToken,
-      StatusCodes.forbidden
+      statusCodes.forbidden
     );
   });
 });

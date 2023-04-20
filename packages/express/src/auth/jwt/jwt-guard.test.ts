@@ -2,14 +2,14 @@ import "reflect-metadata";
 import "express-async-errors";
 import fetch from "node-fetch";
 import { afterEach, describe, it } from "@jest/globals";
-import { tryCloseServerAsync } from "../../utils/server";
-import { tick } from "../../utils/time";
-import { JwtGuard, JwtSigner } from "../../../src/auth/jwt";
-import { AppBuilder } from "../../../src/builder";
-import { HttpContext, StatusCodes, UserContext } from "../../../src/core";
-import { AnonymousEndpoint } from "../../../src/endpoints";
-import { JsonResponse } from "../../../src/responses";
-import { OkResponse } from "../../../src/responses/status-codes";
+import { tryCloseServerAsync } from "../../../test/test-utils/server";
+import { tick } from "../../../test/test-utils/time";
+import { JwtGuard, JwtSigner } from ".";
+import { AppBuilder } from "../../builder";
+import { HttpContext, StatusCodes, UserContext } from "../../core";
+import { AnonymousEndpoint } from "../../endpoints";
+import { JsonResponse } from "../../responses";
+import { OkResponse } from "../../responses/status-codes";
 
 describe("auth-jwt-guard", () => {
   const port = 3037;

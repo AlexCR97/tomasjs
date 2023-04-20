@@ -1,9 +1,9 @@
 import "reflect-metadata";
 import { describe, it } from "@jest/globals";
-import { paramPipe } from "../../src/pipes";
-import { Endpoint } from "../../src/endpoints";
-import { HttpContext } from "../../src/core";
-import { NumberTransform } from "../../src/transforms";
+import { paramPipe } from ".";
+import { Endpoint } from "../endpoints";
+import { HttpContext } from "../core";
+import { NumberTransform } from "../transforms";
 
 describe("paramPipe-decorator", () => {
   it(`The ${paramPipe.name} decorator can successfully apply the ${NumberTransform.name}`, async () => {

@@ -1,9 +1,9 @@
 import "reflect-metadata";
 import fetch from "node-fetch";
 import { afterEach, describe, expect, it } from "@jest/globals";
-import { AppBuilder } from "../../src/builder";
-import { environment } from "../environment";
-import { tryCloseServerAsync } from "../utils/server";
+import { AppBuilder } from ".";
+import { environment } from "../../test/environment";
+import { tryCloseServerAsync } from "../../test/test-utils/server";
 
 describe("builder", () => {
   let server: any; // TODO Set http.Server type

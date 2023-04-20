@@ -1,13 +1,13 @@
 import "reflect-metadata";
 import fetch from "node-fetch";
 import { afterEach, beforeEach, describe, it } from "@jest/globals";
-import { AppBuilder } from "../../src/builder";
-import { HttpContext, StatusCodes } from "../../src/core";
-import { AnonymousEndpoint, endpoint, Endpoint, path, useGuard } from "../../src/endpoints";
-import { guard, Guard, GuardContext } from "../../src/guards";
-import { OkResponse } from "../../src/responses/status-codes";
-import { tryCloseServerAsync } from "../utils/server";
-import { tick } from "../utils/time";
+import { AppBuilder } from "../builder";
+import { HttpContext, StatusCodes } from "../core";
+import { AnonymousEndpoint, endpoint, Endpoint, path, useGuard } from "../endpoints";
+import { guard, Guard, GuardContext } from ".";
+import { OkResponse } from "../responses/status-codes";
+import { tryCloseServerAsync } from "../../test/test-utils/server";
+import { tick } from "../../test/test-utils/time";
 
 describe("guards", () => {
   const port = 3040;

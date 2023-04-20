@@ -1,14 +1,14 @@
 import "reflect-metadata";
 import fetch from "node-fetch";
 import { afterEach, describe, it } from "@jest/globals";
-import { AppBuilder } from "../../src/builder";
-import { HttpContext, StatusCodes } from "../../src/core";
-import { AnonymousEndpoint, endpoint, Endpoint, middleware, path } from "../../src/endpoints";
-import { AnonymousMiddleware } from "../../src/middleware";
-import { JsonResponse, PlainTextResponse } from "../../src/responses";
-import { OkResponse, StatusCodeResponse } from "../../src/responses/status-codes";
-import { tryCloseServerAsync } from "../utils/server";
-import { tick } from "../utils/time";
+import { AppBuilder } from "../builder";
+import { HttpContext, StatusCodes } from "../core";
+import { AnonymousEndpoint, endpoint, Endpoint, middleware, path } from ".";
+import { AnonymousMiddleware } from "../middleware";
+import { JsonResponse, PlainTextResponse } from "../responses";
+import { OkResponse, StatusCodeResponse } from "../responses/status-codes";
+import { tryCloseServerAsync } from "../../test/test-utils/server";
+import { tick } from "../../test/test-utils/time";
 
 describe("endpoints", () => {
   const port = 3033;

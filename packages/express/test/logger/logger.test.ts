@@ -1,3 +1,5 @@
+// TODO Move this file to package @tomasjs/logging
+
 import "reflect-metadata";
 import { afterEach, describe, expect, it } from "@jest/globals";
 import { AppBuilder, ContainerBuilder } from "../../src/builder";
@@ -12,7 +14,7 @@ import {
   TomasLoggerFactory,
   TomasLoggerFactorySetup,
 } from "../../src/logger";
-import { tryCloseServerAsync } from "../utils/server";
+import { tryCloseServerAsync } from "../test-utils/server";
 import { endpoint, Endpoint } from "../../src/endpoints";
 import { HttpContext, StatusCodes } from "../../src/core";
 import { inject, injectable, internalContainer } from "../../src/container";

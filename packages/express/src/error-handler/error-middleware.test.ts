@@ -2,14 +2,14 @@ import "reflect-metadata";
 import "express-async-errors";
 import fetch from "node-fetch";
 import { afterEach, describe, it } from "@jest/globals";
-import { tryCloseServerAsync } from "../utils/server";
-import { tick } from "../utils/time";
-import { AppBuilder } from "../../src/builder";
-import { HttpContext, StatusCodes } from "../../src/core";
+import { tryCloseServerAsync } from "../../test/test-utils/server";
+import { tick } from "../../test/test-utils/time";
+import { AppBuilder } from "../builder";
+import { HttpContext, StatusCodes } from "../core";
 import { StatusCodeError } from "../../src/core/errors";
-import { AnonymousEndpoint } from "../../src/endpoints";
-import { ErrorHandler, errorHandler, TomasErrorHandler } from "../../src/error-handler";
-import { JsonResponse, PlainTextResponse } from "../../src/responses";
+import { AnonymousEndpoint } from "../endpoints";
+import { ErrorHandler, errorHandler, TomasErrorHandler } from ".";
+import { JsonResponse, PlainTextResponse } from "../responses";
 import { NextFunction } from "express";
 
 describe("error-handler", () => {

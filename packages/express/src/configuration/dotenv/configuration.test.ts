@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { afterEach, describe, it } from "@jest/globals";
-import { tryCloseServerAsync } from "../utils/server";
-import { DotenvConfiguration, DotenvSetup } from "../../src/configuration/dotenv";
+import { tryCloseServerAsync } from "../../test/utils/server";
+import { DotenvConfiguration, DotenvSetup } from ".
 import { internalContainer } from "../../src/container";
 import { ConfigurationResolver, ConfigurationToken } from "../../src/configuration/core";
 

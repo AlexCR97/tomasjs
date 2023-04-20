@@ -1,9 +1,9 @@
 import "reflect-metadata";
 import { describe, it } from "@jest/globals";
-import { bodyPipe } from "../../src/pipes";
-import { Endpoint } from "../../src/endpoints";
-import { HttpContext } from "../../src/core";
-import { InstanceTransform } from "../../src/transforms";
+import { bodyPipe } from ".";
+import { Endpoint } from "../endpoints";
+import { HttpContext } from "../core";
+import { InstanceTransform } from "../transforms";
 
 describe("bodyPipe-decorator", () => {
   it(`The ${bodyPipe.name} decorator can successfully apply the ${InstanceTransform.name}`, async () => {

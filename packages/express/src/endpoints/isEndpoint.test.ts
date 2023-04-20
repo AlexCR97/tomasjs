@@ -1,9 +1,9 @@
 import "reflect-metadata";
 import { describe, it } from "@jest/globals";
-import { HttpContext } from "../../src/core";
-import { Endpoint, isEndpoint } from "../../src/endpoints";
-import { bodyPipe } from "../../src/pipes";
-import { InstanceTransform } from "../../src/transforms";
+import { HttpContext } from "../core";
+import { Endpoint, isEndpoint } from ".";
+import { bodyPipe } from "../pipes";
+import { InstanceTransform } from "../transforms";
 
 describe("isEndpoint", () => {
   it(`The "${isEndpoint.name}" method should return false for an invalid instance of an Endpoint`, () => {

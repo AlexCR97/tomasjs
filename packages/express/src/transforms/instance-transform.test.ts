@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { describe, it } from "@jest/globals";
-import { InstanceTransform, transformType } from "../../src/transforms";
+import { InstanceTransform, transformType } from ".";
 
 describe("instance-transform", () => {
   it(`The ${InstanceTransform.name} transforms a simple pojo to a class instance`, async () => {

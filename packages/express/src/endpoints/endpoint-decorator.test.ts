@@ -1,8 +1,8 @@
 import "reflect-metadata";
 import { describe, it } from "@jest/globals";
-import { Endpoint, endpoint } from "../../src/endpoints";
-import { HttpContext, HttpMethod } from "../../src/core";
-import { EndpointMetadataKeys, EndpointPrototypeMetadata } from "../../src/endpoints/metadata";
+import { Endpoint, endpoint } from ".";
+import { HttpContext, HttpMethod } from "../core";
+import { EndpointMetadataKeys, EndpointPrototypeMetadata } from "./metadata";
 
 describe("endpoint-decorator", () => {
   it(`The "${endpoint.name}" decorator should set a default httpMethod ("get") property on an Endpoint class's prototype`, () => {
