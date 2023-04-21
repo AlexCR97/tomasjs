@@ -1,1 +1,0 @@
-export { ClassMethodMetadata } from "./ClassMethodMetadata";
