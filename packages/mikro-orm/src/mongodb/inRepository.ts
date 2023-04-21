@@ -1,4 +1,4 @@
-import { ClassConstructor, inject } from "@tomasjs/express/container";
+import { ClassConstructor, inject } from "@tomasjs/core";
 import { RepositoryNameFactory } from "../RepositoryNameFactory";
 
 export function inRepository<TEntity>(entityClass: ClassConstructor<TEntity>) {

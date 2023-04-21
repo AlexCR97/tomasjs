@@ -1,4 +1,4 @@
-import { inject } from "@tomasjs/express/container";
+import { inject } from "@tomasjs/core";
 import { DatabaseDriver } from "./DatabaseDriver";
 import { MikroOrmInjectionTokenFactory } from "./MikroOrmInjectionTokenFactory";
 

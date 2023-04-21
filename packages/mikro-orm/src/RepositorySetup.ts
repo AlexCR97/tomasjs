@@ -1,5 +1,4 @@
-import { ContainerSetup, ContainerSetupFactory } from "@tomasjs/express/builder";
-import { ClassConstructor } from "@tomasjs/express/container";
+import { ClassConstructor, ContainerSetup, ContainerSetupFactory } from "@tomasjs/core";
 import { DatabaseDriver } from "./DatabaseDriver";
 import { MikroOrmResolver } from "./MikroOrmResolver";
 import { RepositoryNameFactory } from "./RepositoryNameFactory";

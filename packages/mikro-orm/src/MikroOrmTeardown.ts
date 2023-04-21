@@ -1,4 +1,4 @@
-import { ContainerTeardown, ContainerTeardownFactory } from "@tomasjs/express/builder";
+import { ContainerTeardown, ContainerTeardownFactory } from "@tomasjs/core";
 import { DatabaseDriver } from "./DatabaseDriver";
 import { MikroOrmInjectionTokenFactory } from "./MikroOrmInjectionTokenFactory";
 

@@ -1,5 +1,5 @@
-import { ContainerSetup, ContainerSetupFactory } from "@tomasjs/express/builder";
-import { Logger } from "@tomasjs/express/logger";
+import { ContainerSetup, ContainerSetupFactory } from "@tomasjs/core";
+import { Logger } from "@tomasjs/logging";
 import { Configuration, IDatabaseDriver, MikroORM, Options } from "@mikro-orm/core";
 import { MikroOrmInjectionTokenFactory } from "./MikroOrmInjectionTokenFactory";
 

@@ -9,11 +9,9 @@ import {
   SerializedPrimaryKey,
 } from "@mikro-orm/core";
 import { ObjectId } from "@mikro-orm/mongodb";
-import { AppBuilder, ContainerBuilder } from "@tomasjs/express/builder";
-import { internalContainer } from "@tomasjs/express/container";
-import { HttpContext, StatusCodes } from "@tomasjs/express/core";
+import { ContainerBuilder, globalContainer } from "@tomasjs/core";
+import { AppBuilder, HttpContext, statusCodes, PlainTextResponse } from "@tomasjs/express";
 import { Endpoint, endpoint, path } from "@tomasjs/express/endpoints";
-import { PlainTextResponse } from "@tomasjs/express/responses";
 import { tryCloseServerAsync } from "./utils/server";
 import { tick } from "./utils/time";
 import { MikroOrmResolver } from "../MikroOrmResolver";
@@ -65,7 +63,7 @@ describe("mikro-orm", () => {
     // TODO Move this to an API
     // This is only necessary after the tests
     const teardownFunction = new MikroOrmTeardown("mongo").create();
-    await teardownFunction(internalContainer);
+    await teardownFunction(globalContainer);
 
     await tryCloseServerAsync(server);
   });
@@ -134,7 +132,7 @@ describe("mikro-orm", () => {
     });
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
     expect(response.text()).resolves.toEqual(successMessage);
   });
 
@@ -189,7 +187,7 @@ describe("mikro-orm", () => {
     });
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
 
     const createdUserId = await response.text();
     expect(ObjectId.isValid(createdUserId)).toBeTruthy();
@@ -245,7 +243,7 @@ describe("mikro-orm", () => {
     });
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
 
     const createdUserId = await response.text();
     expect(ObjectId.isValid(createdUserId)).toBeTruthy();
