@@ -17,6 +17,8 @@
     "compile-build": "tsc -b && tsc-alias",
     "compile": "npm run compile-clean && npm run compile-build && node ./dist/SetupPackage.js",
     "publish": "cd ./dist && npm publish --access public",
+    "test": "jest",
+    "testw": "jest --watchAll --verbose",
     "sample": "nodemon -r tsconfig-paths/register ./sample/main.ts"
   },
   "dependencies": {},
@@ -24,7 +26,9 @@
   "devDependencies": {
     "@jest/globals": "^29.3.1",
     "@types/jest": "^29.2.3",
+    "@types/node-fetch": "^2.6.2",
     "jest": "^29.3.1",
+    "node-fetch": "^2.6.7",
     "nodemon": "^2.0.22",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
