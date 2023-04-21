@@ -2,14 +2,13 @@ import "express-async-errors";
 import "reflect-metadata";
 import fetch from "node-fetch";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { queryHandler } from "../@queryHandler";
-import { QueryHandler } from "../QueryHandler";
-import { QueryDispatcher } from "../QueryDispatcher";
 import { inject } from "@tomasjs/core";
-import { AppBuilder } from "../../../builder";
-import { HttpContext, statusCodes } from "../../../core";
-import { endpoint, path, Endpoint } from "../../../endpoints";
-import { tryCloseServerAsync } from "../../../tests/utils";
+import { HttpContext, AppBuilder, statusCodes } from "@tomasjs/express";
+import { Endpoint } from "@tomasjs/express/endpoints";
+import { queryHandler } from "./@queryHandler";
+import { QueryHandler } from "./QueryHandler";
+import { QueryDispatcher } from "./QueryDispatcher";
+import { tryCloseServerAsync } from "../tests/utils";
 
 describe("cqrs-queries", () => {
   const port = 3043;

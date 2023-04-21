@@ -2,14 +2,13 @@ import "express-async-errors";
 import "reflect-metadata";
 import fetch from "node-fetch";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { eventHandler } from "../@eventHandler";
-import { EventHandler } from "../EventHandler";
-import { EventDispatcher } from "../EventDispatcher";
-import { tryCloseServerAsync } from "../../../tests/utils";
-import { Endpoint, endpoint } from "../../../endpoints";
 import { inject } from "@tomasjs/core";
-import { HttpContext, statusCodes } from "../../../core";
-import { AppBuilder } from "../../../builder";
+import { HttpContext, AppBuilder, statusCodes } from "@tomasjs/express";
+import { Endpoint } from "@tomasjs/express/endpoints";
+import { eventHandler } from "./@eventHandler";
+import { EventHandler } from "./EventHandler";
+import { EventDispatcher } from "./EventDispatcher";
+import { tryCloseServerAsync } from "../tests/utils";
 
 describe("cqrs-events", () => {
   const port = 3044;
