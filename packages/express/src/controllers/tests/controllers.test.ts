@@ -10,7 +10,7 @@ import { param } from "../@param";
 import { query } from "../@query";
 import { headers } from "../@headers";
 import { header } from "../@header";
-import { AddQueryHandlers, QueryDispatcher, QueryHandler, queryHandler } from "../../cqrs/";
+import { AddQueryHandlers, QueryDispatcher, QueryHandler, queryHandler } from "@tomasjs/cqrs";
 import { HttpContext, HttpMethod, statusCodes } from "../../core";
 import { Guard, GuardContext, guard } from "../../guards";
 import { Middleware } from "../../middleware";
