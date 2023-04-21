@@ -15,12 +15,10 @@ export class EndpointPrototypeMetadata<
   }
 
   protected override setMetadata(key: string, value: any): void {
-    //@ts-ignore: The package "reflect-metadata" should be imported by host
     Reflect.defineMetadata(key, value, this.endpointPrototype);
   }
 
   protected override getMetadata<T>(key: string): T {
-    //@ts-ignore: The package "reflect-metadata" should be imported by host
     return Reflect.getMetadata(key, this.endpointPrototype);
   }
 
