@@ -1,4 +1,4 @@
-import { globalContainer } from "..";
+import { globalContainer } from "@/container";
 import { Configuration } from "./Configuration";
 import { ConfigurationToken } from "./ConfigurationToken";
 

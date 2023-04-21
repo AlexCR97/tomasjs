@@ -2,14 +2,13 @@ import "reflect-metadata";
 import "express-async-errors";
 import fetch from "node-fetch";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { tryCloseServerAsync } from "../../../test/test-utils/server";
-import { tick } from "../../../test/test-utils/time";
-import { RequiredClaimGuard } from ".";
+import { RequiredClaimGuard } from "./RequiredClaimGuard";
 import { JwtGuard, JwtSigner } from "../jwt";
 import { AppBuilder } from "../../builder";
 import { AnonymousEndpoint } from "../../endpoints";
 import { OkResponse } from "../../responses/status-codes";
 import { HttpContext, statusCodes } from "../../core";
+import { tick, tryCloseServerAsync } from "../../tests/utils";
 
 describe("auth-required-claim-guard", () => {
   const port = 3038;

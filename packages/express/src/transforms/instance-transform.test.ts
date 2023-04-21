@@ -1,6 +1,6 @@
 import "reflect-metadata";
-import { describe, it } from "@jest/globals";
-import { InstanceTransform, transformType } from ".";
+import { describe, expect, it } from "@jest/globals";
+import { InstanceTransform, transformType } from "./InstanceTransform";
 
 describe("instance-transform", () => {
   it(`The ${InstanceTransform.name} transforms a simple pojo to a class instance`, async () => {
@@ -45,6 +45,7 @@ describe("instance-transform", () => {
       key1!: number;
       key2!: string;
 
+      //@ts-ignore: Fix decorators not working in test files
       @transformType(TestClass)
       child?: TestClass;
 

@@ -1,15 +1,15 @@
 import "reflect-metadata";
 import "express-async-errors";
 import fetch from "node-fetch";
-import { afterEach, describe, it } from "@jest/globals";
-import { tryCloseServerAsync } from "../../../test/test-utils/server";
-import { tick } from "../../../test/test-utils/time";
-import { JwtGuard, JwtSigner } from ".";
+import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
+import { JwtGuard } from "./JwtGuard";
+import { JwtSigner } from "./JwtSigner";
 import { AppBuilder } from "../../builder";
-import { HttpContext, StatusCodes, UserContext } from "../../core";
+import { HttpContext, statusCodes, UserContext } from "../../core";
 import { AnonymousEndpoint } from "../../endpoints";
 import { JsonResponse } from "../../responses";
 import { OkResponse } from "../../responses/status-codes";
+import { tick, tryCloseServerAsync } from "../../tests/utils";
 
 describe("auth-jwt-guard", () => {
   const port = 3037;
@@ -42,7 +42,7 @@ describe("auth-jwt-guard", () => {
 
     // Act/Assert
     const response = await fetch(`${serverAddress}`);
-    expect(response.status).toBe(StatusCodes.unauthorized);
+    expect(response.status).toBe(statusCodes.unauthorized);
   });
 
   it(`The ${JwtGuard.name} should return a "401 unauthorized" response if the bearer token is not provided in the "authorization"`, async () => {
@@ -64,7 +64,7 @@ describe("auth-jwt-guard", () => {
         authorization: "Bearer",
       },
     });
-    expect(response.status).toBe(StatusCodes.unauthorized);
+    expect(response.status).toBe(statusCodes.unauthorized);
   });
 
   it(`The ${JwtGuard.name} should return a "401 unauthorized" response if the bearer token is invalid`, async () => {
@@ -86,7 +86,7 @@ describe("auth-jwt-guard", () => {
         authorization: "Bearer someInvalidAccessToken",
       },
     });
-    expect(response.status).toBe(StatusCodes.unauthorized);
+    expect(response.status).toBe(statusCodes.unauthorized);
   });
 
   it(`The ${JwtGuard.name} should return a "401 unauthorized" response if the bearer token is expired`, async () => {
@@ -114,7 +114,7 @@ describe("auth-jwt-guard", () => {
         authorization: `Bearer ${accessToken}`,
       },
     });
-    expect(response.status).toBe(StatusCodes.unauthorized);
+    expect(response.status).toBe(statusCodes.unauthorized);
   });
 
   it(`The ${JwtGuard.name} should return a "200 ok" response if the bearer token is valid`, async () => {
@@ -139,7 +139,7 @@ describe("auth-jwt-guard", () => {
         authorization: `Bearer ${accessToken}`,
       },
     });
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
   });
 
   it(`The ${JwtGuard.name} should set the "${UserContext.name}" in the "${HttpContext.name}"`, async () => {
@@ -174,7 +174,7 @@ describe("auth-jwt-guard", () => {
         authorization: `Bearer ${accessToken}`,
       },
     });
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
 
     const responseJson: UserClaims = await response.json();
     expect(responseJson.userId).toBe(claims.userId);

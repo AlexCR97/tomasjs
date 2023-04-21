@@ -1,13 +1,13 @@
 import "reflect-metadata";
-import { afterEach, describe, it } from "@jest/globals";
-import { tryCloseServerAsync } from "../../test/test-utils/server";
+import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { AppBuilder } from "../builder";
-import { tick } from "../../test/test-utils/time";
-import { HttpContext, StatusCodes } from "../core";
+import { HttpContext, statusCodes } from "../core";
 import fetch from "node-fetch";
-import { AnonymousEndpoint, EndpointGroup } from ".";
+import { AnonymousEndpoint } from "./AnonymousEndpoint";
+import { EndpointGroup } from "./EndpointGroup";
 import { AnonymousMiddleware } from "../middleware";
 import { OkResponse, UnauthorizedResponse } from "../responses/status-codes";
+import { tick, tryCloseServerAsync } from "../tests/utils";
 
 describe("endpoint-groups", () => {
   const port = 3034;
@@ -56,15 +56,15 @@ describe("endpoint-groups", () => {
     // Act/Assert
     const defaultPath = `${serverAddress}/${basePath}`;
     const responseDefaultPath = await fetch(defaultPath);
-    expect(responseDefaultPath.status).toEqual(StatusCodes.ok);
+    expect(responseDefaultPath.status).toEqual(statusCodes.ok);
 
     const resource1Path = `${serverAddress}/${basePath}/${resourcePath1}`;
     const responseResource1 = await fetch(resource1Path);
-    expect(responseResource1.status).toEqual(StatusCodes.ok);
+    expect(responseResource1.status).toEqual(statusCodes.ok);
 
     const resource2Path = `${serverAddress}/${basePath}/${resourcePath2}`;
     const responseResource2 = await fetch(resource2Path);
-    expect(responseResource2.status).toEqual(StatusCodes.ok);
+    expect(responseResource2.status).toEqual(statusCodes.ok);
   });
 
   it(`An ${EndpointGroup.name} can use a Middleware`, async () => {
@@ -114,7 +114,7 @@ describe("endpoint-groups", () => {
     const unauthorizedResponse = await fetch(`${serverAddress}/${basePath}`, {
       method: "post",
     });
-    expect(unauthorizedResponse.status).toBe(StatusCodes.unauthorized);
+    expect(unauthorizedResponse.status).toBe(statusCodes.unauthorized);
 
     const customHeaders: any = {};
     customHeaders[headerKey] = secretKey;
@@ -123,14 +123,14 @@ describe("endpoint-groups", () => {
       method: "post",
       headers: { ...customHeaders },
     });
-    expect(authorizedResponse1.status).toBe(StatusCodes.ok);
+    expect(authorizedResponse1.status).toBe(statusCodes.ok);
     expect(authorizedResponse1.text()).resolves.toEqual(secretKey);
 
     const authorizedResponse2 = await fetch(`${serverAddress}/${basePath}/${resourcePath2}`, {
       method: "post",
       headers: { ...customHeaders },
     });
-    expect(authorizedResponse2.status).toBe(StatusCodes.ok);
+    expect(authorizedResponse2.status).toBe(statusCodes.ok);
     expect(authorizedResponse2.text()).resolves.toEqual(secretKey);
   });
 });

@@ -1,9 +1,10 @@
 import "reflect-metadata";
-import { describe, it } from "@jest/globals";
+import { describe, expect, it } from "@jest/globals";
 import { HttpContext } from "../core";
-import { Endpoint, isEndpoint } from ".";
 import { bodyPipe } from "../pipes";
 import { InstanceTransform } from "../transforms";
+import { isEndpoint } from "./isEndpoint";
+import { Endpoint } from "./Endpoint";
 
 describe("isEndpoint", () => {
   it(`The "${isEndpoint.name}" method should return false for an invalid instance of an Endpoint`, () => {
@@ -32,6 +33,7 @@ describe("isEndpoint", () => {
     class User {}
 
     class EndpointWithDecoratedMethod implements Endpoint {
+      //@ts-ignore: Fix decorators not working in test files
       @bodyPipe(new InstanceTransform(User))
       handle(context: HttpContext) {
         throw new Error("Method not implemented.");

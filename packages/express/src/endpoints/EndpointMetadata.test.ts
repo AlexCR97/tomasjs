@@ -1,7 +1,7 @@
 import "reflect-metadata";
-import { describe, it } from "@jest/globals";
+import { describe, expect, it } from "@jest/globals";
 import { HttpContext } from "../core";
-import { Endpoint } from ".";
+import { Endpoint } from "./Endpoint";
 import { EndpointMetadataKeys, EndpointPrototypeMetadata } from "./metadata";
 
 describe("EndpointMetadata", () => {

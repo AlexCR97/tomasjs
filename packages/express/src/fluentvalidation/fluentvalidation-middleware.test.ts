@@ -1,20 +1,17 @@
 import "reflect-metadata";
 import "express-async-errors";
-import { afterEach, describe, it } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import fetch from "node-fetch";
-import { tryCloseServerAsync } from "../../test/test-utils/server";
-import { tick } from "../../test/test-utils/time";
-import { injectable } from "..";
-import { AppBuilder, ContainerBuilder } from "../builder";
-import { HttpContext, StatusCodes } from "../core";
+import { AppBuilder } from "../builder";
+import { HttpContext, statusCodes } from "../core";
 import { endpoint, Endpoint, middleware, path } from "../endpoints";
-import {
-  FluentValidationMiddleware,
-  FluentValidationSetup,
-  inValidator,
-} from ".";
+import { FluentValidationMiddleware } from "./FluentValidationMiddleware";
+import { FluentValidationSetup } from "./FluentValidationSetup";
+import { inValidator } from "./@inValidator";
 import { OkResponse } from "../responses/status-codes";
 import { Validator } from "fluentvalidation-ts";
+import { ContainerBuilder, injectable } from "@tomasjs/core";
+import { tick, tryCloseServerAsync } from "../tests/utils";
 
 describe("fluentvalidation-middleware", () => {
   const port = 3039;
@@ -47,8 +44,11 @@ describe("fluentvalidation-middleware", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint("post")
+    //@ts-ignore: Fix decorators not working in test files
     @path("sign-up")
+    //@ts-ignore: Fix decorators not working in test files
     @middleware(new FluentValidationMiddleware<SignUpRequest>(new SignUpValidator()))
     class SignUpEndpoint implements Endpoint {
       handle(context: HttpContext) {
@@ -70,7 +70,7 @@ describe("fluentvalidation-middleware", () => {
       headers: { "Content-Type": "application/json" },
     });
 
-    expect(response.status).toBe(StatusCodes.badRequest);
+    expect(response.status).toBe(statusCodes.badRequest);
   });
 
   it(`The ${FluentValidationMiddleware.name} should return a "200 ok" response when passed a valid body`, async () => {
@@ -89,8 +89,11 @@ describe("fluentvalidation-middleware", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint("post")
+    //@ts-ignore: Fix decorators not working in test files
     @path("sign-up")
+    //@ts-ignore: Fix decorators not working in test files
     @middleware(new FluentValidationMiddleware<SignUpRequest>(new SignUpValidator()))
     class SignUpEndpoint implements Endpoint {
       handle(context: HttpContext) {
@@ -112,7 +115,7 @@ describe("fluentvalidation-middleware", () => {
       headers: { "Content-Type": "application/json" },
     });
 
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
   });
 
   it(`A custom validator should be injectable`, async () => {
@@ -122,6 +125,7 @@ describe("fluentvalidation-middleware", () => {
       password: string;
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @injectable()
     class SignUpValidator extends Validator<SignUpRequest> {
       constructor() {
@@ -131,10 +135,15 @@ describe("fluentvalidation-middleware", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint("post")
+    //@ts-ignore: Fix decorators not working in test files
     @path("sign-up")
     class SignUpEndpoint implements Endpoint {
-      constructor(@inValidator(SignUpValidator) private readonly validator: SignUpValidator) {}
+      constructor(
+        //@ts-ignore: Fix decorators not working in test files
+        @inValidator(SignUpValidator) private readonly validator: SignUpValidator
+      ) {}
       handle(context: HttpContext) {
         this.validator.validate(context.request.body);
         return new OkResponse();
@@ -163,6 +172,6 @@ describe("fluentvalidation-middleware", () => {
       headers: { "Content-Type": "application/json" },
     });
 
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
   });
 });

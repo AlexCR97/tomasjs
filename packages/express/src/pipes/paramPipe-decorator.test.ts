@@ -1,18 +1,19 @@
 import "reflect-metadata";
-import { describe, it } from "@jest/globals";
-import { paramPipe } from ".";
+import { describe, expect, it } from "@jest/globals";
+import { paramPipe } from "./@paramPipe";
 import { Endpoint } from "../endpoints";
 import { HttpContext } from "../core";
-import { NumberTransform } from "../transforms";
+import { numberTransform } from "@tomasjs/core";
 
 describe("paramPipe-decorator", () => {
-  it(`The ${paramPipe.name} decorator can successfully apply the ${NumberTransform.name}`, async () => {
+  it(`The ${paramPipe.name} decorator can successfully apply the ${numberTransform.name}`, async () => {
     // Arrange
     const param = "1";
     const expectedParam = 1;
 
     class TestEndpoint implements Endpoint {
-      @paramPipe("id", NumberTransform)
+      //@ts-ignore: Fix decorators not working in test files
+      @paramPipe("id", numberTransform)
       handle(context: HttpContext) {
         return context.request.params.id;
       }

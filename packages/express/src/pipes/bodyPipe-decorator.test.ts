@@ -1,9 +1,9 @@
 import "reflect-metadata";
-import { describe, it } from "@jest/globals";
-import { bodyPipe } from ".";
+import { describe, expect, it } from "@jest/globals";
 import { Endpoint } from "../endpoints";
 import { HttpContext } from "../core";
 import { InstanceTransform } from "../transforms";
+import { bodyPipe } from "./@bodyPipe";
 
 describe("bodyPipe-decorator", () => {
   it(`The ${bodyPipe.name} decorator can successfully apply the ${InstanceTransform.name}`, async () => {
@@ -14,6 +14,7 @@ describe("bodyPipe-decorator", () => {
     }
 
     class TestEndpoint implements Endpoint {
+      //@ts-ignore: Fix decorators not working in test files
       @bodyPipe(new InstanceTransform(TestClass))
       handle(context: HttpContext): TestClass {
         return context.request.body;

@@ -1,47 +1,47 @@
 import "reflect-metadata";
-import { describe, it } from "@jest/globals";
-import { NumberTransform, TransformError } from ".";
+import { describe, expect, it } from "@jest/globals";
+import { TransformError, numberTransform } from "@tomasjs/core";
 
 describe("number-transform", () => {
-  it(`The ${NumberTransform.name} function transforms number to number`, () => {
+  it(`The ${numberTransform.name} function transforms number to number`, () => {
     // Arrange
     const input = 10;
     const expectedOutput = 10;
 
     // Act
-    const actualOutput = NumberTransform(input);
+    const actualOutput = numberTransform(input);
 
     // Assert
     expect(actualOutput).toBe(expectedOutput);
     expect(typeof actualOutput).toBe("number");
   });
 
-  it(`The ${NumberTransform.name} function transforms string to number`, () => {
+  it(`The ${numberTransform.name} function transforms string to number`, () => {
     // Arrange
     const input = "10";
     const expectedOutput = 10;
 
     // Act
-    const actualOutput = NumberTransform(input);
+    const actualOutput = numberTransform(input);
 
     // Assert
     expect(actualOutput).toBe(expectedOutput);
     expect(typeof actualOutput).toBe("number");
   });
 
-  it(`The ${NumberTransform.name} function fails to transforms undefined to number`, () => {
+  it(`The ${numberTransform.name} function fails to transforms undefined to number`, () => {
     // Arrange
     const input = undefined;
 
     // Act/Assert
-    expect(() => NumberTransform(input)).toThrowError(TransformError);
+    expect(() => numberTransform(input)).toThrowError(TransformError);
   });
 
-  it(`The ${NumberTransform.name} function fails to transforms null to number`, () => {
+  it(`The ${numberTransform.name} function fails to transforms null to number`, () => {
     // Arrange
     const input = null;
 
     // Act/Assert
-    expect(() => NumberTransform(input)).toThrowError(TransformError);
+    expect(() => numberTransform(input)).toThrowError(TransformError);
   });
 });

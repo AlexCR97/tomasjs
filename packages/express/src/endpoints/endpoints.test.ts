@@ -1,14 +1,17 @@
 import "reflect-metadata";
 import fetch from "node-fetch";
-import { afterEach, describe, it } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { AppBuilder } from "../builder";
-import { HttpContext, StatusCodes } from "../core";
-import { AnonymousEndpoint, endpoint, Endpoint, middleware, path } from ".";
+import { HttpContext, statusCodes } from "../core";
+import { AnonymousEndpoint } from "./AnonymousEndpoint";
+import { endpoint } from "./@endpoint";
+import { Endpoint } from "./Endpoint";
+import { middleware } from "./@middleware";
+import { path } from "./@path";
 import { AnonymousMiddleware } from "../middleware";
 import { JsonResponse, PlainTextResponse } from "../responses";
 import { OkResponse, StatusCodeResponse } from "../responses/status-codes";
-import { tryCloseServerAsync } from "../../test/test-utils/server";
-import { tick } from "../../test/test-utils/time";
+import { tick, tryCloseServerAsync } from "../tests/utils";
 
 describe("endpoints", () => {
   const port = 3033;
@@ -29,6 +32,7 @@ describe("endpoints", () => {
   it(`An Endpoint instance works`, async () => {
     // Arrange
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
     class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
@@ -42,12 +46,13 @@ describe("endpoints", () => {
     const response = await fetch(serverAddress);
 
     // Assert
-    expect(response.status).toEqual(StatusCodes.ok);
+    expect(response.status).toEqual(statusCodes.ok);
   });
 
   it(`An Endpoint constructor works`, async () => {
     // Arrange
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
     class TestEndpoint implements Endpoint {
       handle(context: HttpContext): OkResponse {
@@ -61,7 +66,7 @@ describe("endpoints", () => {
     const response = await fetch(serverAddress);
 
     // Assert
-    expect(response.status).toEqual(StatusCodes.ok);
+    expect(response.status).toEqual(statusCodes.ok);
   });
 
   it(`An ${AnonymousEndpoint.name} instance works`, async () => {
@@ -75,23 +80,27 @@ describe("endpoints", () => {
     const response = await fetch(serverAddress);
 
     // Assert
-    expect(response.status).toEqual(StatusCodes.ok);
+    expect(response.status).toEqual(statusCodes.ok);
   });
 
   it("All content-type responses work", async () => {
     // Arrange
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
+    //@ts-ignore: Fix decorators not working in test files
     @path(StatusCodeEndpoint.path)
     class StatusCodeEndpoint implements Endpoint {
       static path = "status-code";
-      static expectedStatusCode = StatusCodes.noContent;
+      static expectedStatusCode = statusCodes.noContent;
       handle(context: HttpContext) {
         return new StatusCodeResponse(StatusCodeEndpoint.expectedStatusCode);
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
+    //@ts-ignore: Fix decorators not working in test files
     @path(PlainTextEndpoint.path)
     class PlainTextEndpoint implements Endpoint {
       static path = "plain-text";
@@ -101,7 +110,9 @@ describe("endpoints", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
+    //@ts-ignore: Fix decorators not working in test files
     @path(JsonEndpoint.path)
     class JsonEndpoint implements Endpoint {
       static path = "json";
@@ -132,7 +143,9 @@ describe("endpoints", () => {
     // Arrange
     const expectedPath = "path/to/resource";
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
+    //@ts-ignore: Fix decorators not working in test files
     @path(expectedPath)
     class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
@@ -146,7 +159,7 @@ describe("endpoints", () => {
     const response = await fetch(`${serverAddress}/${expectedPath}`);
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
     expect(response.text()).resolves.toEqual(`/${expectedPath}`);
   });
 
@@ -157,6 +170,7 @@ describe("endpoints", () => {
       value: string;
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
     class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
@@ -180,7 +194,7 @@ describe("endpoints", () => {
     });
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
 
     const responseJson = await response.json();
     expect(responseJson[expectedResponseHeader.key]).toEqual(expectedResponseHeader.value);
@@ -194,7 +208,9 @@ describe("endpoints", () => {
       profileId: 246,
     };
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
+    //@ts-ignore: Fix decorators not working in test files
     @path(expectedPath)
     class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
@@ -215,7 +231,7 @@ describe("endpoints", () => {
     );
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
     expect(response.json()).resolves.toEqual(expectedPathValues);
   });
 
@@ -227,7 +243,9 @@ describe("endpoints", () => {
       pageSize: 16,
     };
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
+    //@ts-ignore: Fix decorators not working in test files
     @path(expectedPath)
     class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
@@ -248,7 +266,7 @@ describe("endpoints", () => {
     const response = await fetch(requestUrl);
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
     expect(response.json()).resolves.toEqual(expectedQueryParams);
   });
 
@@ -256,6 +274,7 @@ describe("endpoints", () => {
     // Arrange
     const expectedResponse = "Plain text body works!";
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint("post")
     class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
@@ -273,7 +292,7 @@ describe("endpoints", () => {
     });
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
     expect(response.text()).resolves.toEqual(expectedResponse);
   });
 
@@ -284,12 +303,13 @@ describe("endpoints", () => {
       password: string;
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint("post")
     class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
         const body: TestBody = context.request.body;
         return new JsonResponse(body, {
-          status: StatusCodes.created,
+          status: statusCodes.created,
         });
       }
     }
@@ -309,7 +329,7 @@ describe("endpoints", () => {
     });
 
     // Assert
-    expect(response.status).toBe(StatusCodes.created);
+    expect(response.status).toBe(statusCodes.created);
     expect(response.json()).resolves.toEqual(expectedResponse);
   });
 
@@ -319,14 +339,17 @@ describe("endpoints", () => {
     const headerKey = "authorization";
     const secretKey = "superSecretKey";
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint("post")
+    //@ts-ignore: Fix decorators not working in test files
     @path(expectedPath)
+    //@ts-ignore: Fix decorators not working in test files
     @middleware(
       new AnonymousMiddleware((context, next) => {
         const token = context.request.headers[headerKey];
 
         if (token !== secretKey) {
-          context.response.status(StatusCodes.unauthorized).send();
+          context.response.status(statusCodes.unauthorized).send();
           return;
         }
 
@@ -354,8 +377,8 @@ describe("endpoints", () => {
     });
 
     // Assert
-    expect(unauthorizedResponse.status).toBe(StatusCodes.unauthorized);
-    expect(authorizedResponse.status).toBe(StatusCodes.ok);
+    expect(unauthorizedResponse.status).toBe(statusCodes.unauthorized);
+    expect(authorizedResponse.status).toBe(statusCodes.ok);
     expect(authorizedResponse.text()).resolves.toEqual(secretKey);
   });
 });

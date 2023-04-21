@@ -1,19 +1,20 @@
 import "reflect-metadata";
-import { describe, it } from "@jest/globals";
-import { queryPipe } from ".";
+import { describe, expect, it } from "@jest/globals";
+import { queryPipe } from "./@queryPipe";
 import { Endpoint } from "../endpoints";
 import { HttpContext } from "../core";
-import { NumberTransform } from "../transforms";
+import { numberTransform } from "@tomasjs/core";
 
 describe("queryPipe-decorator", () => {
-  it(`The ${queryPipe.name} decorator can successfully apply the ${NumberTransform.name}`, async () => {
+  it(`The ${queryPipe.name} decorator can successfully apply the ${numberTransform.name}`, async () => {
     // Arrange
     const query = "099";
     const queryKey = "pageSize";
     const expectedQuery = 99;
 
     class TestEndpoint implements Endpoint {
-      @queryPipe(queryKey, NumberTransform)
+      //@ts-ignore: Fix decorators not working in test files
+      @queryPipe(queryKey, numberTransform)
       handle(context: HttpContext) {
         return context.request.query[queryKey];
       }

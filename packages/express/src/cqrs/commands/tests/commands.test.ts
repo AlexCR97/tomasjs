@@ -1,15 +1,15 @@
 import "express-async-errors";
 import "reflect-metadata";
 import fetch from "node-fetch";
-import { afterEach, describe, it } from "@jest/globals";
-import { tryCloseServerAsync } from "@/tests/utils";
+import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { CommandHandler } from "../CommandHandler";
 import { commandHandler } from "../@commandHandler";
-import { Endpoint, endpoint } from "@/endpoints";
-import { HttpContext, StatusCodes } from "@/core";
-import { inject } from "@/container";
 import { CommandDispatcher } from "../CommandDispatcher";
-import { AppBuilder } from "@/builder";
+import { tryCloseServerAsync } from "../../../tests/utils";
+import { Endpoint, endpoint } from "../../../endpoints";
+import { inject } from "@tomasjs/core";
+import { HttpContext, statusCodes } from "../../../core";
+import { AppBuilder } from "../../../builder";
 
 describe("cqrs-commands", () => {
   const port = 3042;
@@ -32,6 +32,7 @@ describe("cqrs-commands", () => {
       constructor(readonly username: string) {}
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @commandHandler(CreateUserCommand)
     class CreateUserCommandHandler implements CommandHandler<CreateUserCommand, string> {
       execute(command: CreateUserCommand): string {
@@ -39,9 +40,11 @@ describe("cqrs-commands", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint("post")
     class CreateUserEndpoint implements Endpoint {
       constructor(
+        //@ts-ignore: Fix decorators not working in test files
         @inject(CommandDispatcher) private readonly commandDispatcher: CommandDispatcher
       ) {}
 
@@ -62,7 +65,7 @@ describe("cqrs-commands", () => {
       body: JSON.stringify({ username: expectedUsername }),
       headers: { "Content-Type": "application/json" },
     });
-    expect(response.status).toEqual(StatusCodes.ok);
+    expect(response.status).toEqual(statusCodes.ok);
 
     const responseText = await response.text();
     expect(responseText).toEqual(expectedUsername);

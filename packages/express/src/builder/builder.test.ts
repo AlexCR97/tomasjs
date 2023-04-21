@@ -1,12 +1,12 @@
 import "reflect-metadata";
 import fetch from "node-fetch";
-import { afterEach, describe, expect, it } from "@jest/globals";
-import { AppBuilder } from ".";
-import { environment } from "../../test/environment";
-import { tryCloseServerAsync } from "../../test/test-utils/server";
+import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
+import { AppBuilder } from "./AppBuilder";
+import { tryCloseServerAsync } from "../tests/utils";
 
 describe("builder", () => {
   let server: any; // TODO Set http.Server type
+  const port = 3031;
 
   beforeEach(async () => {
     await tryCloseServerAsync(server);
@@ -22,7 +22,7 @@ describe("builder", () => {
   });
 
   it("App can be built asynchronously", async () => {
-    server = await new AppBuilder().buildAsync(environment.api.port);
+    server = await new AppBuilder().buildAsync(port);
     expect(server).toBeTruthy();
   });
 
@@ -35,9 +35,9 @@ describe("builder", () => {
           res.send(expectedResponse);
         })
       )
-      .buildAsync(environment.api.port);
+      .buildAsync(port);
 
-    const response = await fetch(`http://localhost:${environment.api.port}`);
+    const response = await fetch(`http://localhost:${port}`);
     const responseText = await response.text();
     expect(responseText).toBe(expectedResponse);
   });

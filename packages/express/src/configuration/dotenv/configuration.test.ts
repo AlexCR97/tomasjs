@@ -1,9 +1,9 @@
 import "reflect-metadata";
-import { afterEach, describe, it } from "@jest/globals";
-import { tryCloseServerAsync } from "../../test/utils/server";
-import { DotenvConfiguration, DotenvSetup } from ".
-import { internalContainer } from "../../src/container";
-import { ConfigurationResolver, ConfigurationToken } from "../../src/configuration/core";
+import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
+import { tryCloseServerAsync } from "../../tests/utils";
+import { DotenvConfiguration } from "./DotenvConfiguration";
+import { DotenvSetup } from "./DotenvSetup";
+import { ConfigurationResolver, ConfigurationToken, globalContainer } from "@tomasjs/core";
 
 describe("configuration", () => {
   let server: any; // TODO Set http.Server type
@@ -30,7 +30,7 @@ describe("configuration", () => {
     }
 
     const dotenvSetup = new DotenvSetup<AppSettings>({
-      path: "C:\\Projects\\thomas\\test\\configuration\\.env",
+      path: "C:\\Projects\\thomas\\packages\\express\\src\\configuration\\dotenv\\.env",
       constructor: AppSettings,
       keyConfigurations: [
         {
@@ -49,9 +49,9 @@ describe("configuration", () => {
     });
 
     const containerSetup = dotenvSetup.create();
-    containerSetup(internalContainer);
+    containerSetup(globalContainer);
 
-    const configuration = ConfigurationResolver.getConfiguration<AppSettings>();
+    const configuration = new ConfigurationResolver().getConfiguration<AppSettings>();
 
     expect(configuration).toBeTruthy();
     expect(configuration.root).toBeTruthy();

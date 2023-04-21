@@ -1,14 +1,16 @@
 import "reflect-metadata";
-import { describe, it } from "@jest/globals";
-import { Endpoint, endpoint } from ".";
+import { describe, expect, it } from "@jest/globals";
 import { HttpContext, HttpMethod } from "../core";
 import { EndpointMetadataKeys, EndpointPrototypeMetadata } from "./metadata";
+import { endpoint } from "./@endpoint";
+import { Endpoint } from "./Endpoint";
 
 describe("endpoint-decorator", () => {
   it(`The "${endpoint.name}" decorator should set a default httpMethod ("get") property on an Endpoint class's prototype`, () => {
     // Arrange
     const defaultMethod: HttpMethod = "get";
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
     class TestClass implements Endpoint {
       handle(context: HttpContext) {
@@ -31,6 +33,7 @@ describe("endpoint-decorator", () => {
     // Arrange
     const expectedMethod: HttpMethod = "post";
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint(expectedMethod)
     class TestClass implements Endpoint {
       handle(context: HttpContext) {
@@ -53,6 +56,7 @@ describe("endpoint-decorator", () => {
     // Arrange
     const expectedMethod: HttpMethod = "post";
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint(expectedMethod)
     class TestClass implements Endpoint {
       handle(context: HttpContext) {
@@ -77,6 +81,7 @@ describe("endpoint-decorator", () => {
     // Arrange
     const emptyString = "";
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
     class TestClass implements Endpoint {
       handle(context: HttpContext) {

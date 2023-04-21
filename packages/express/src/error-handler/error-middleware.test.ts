@@ -1,16 +1,17 @@
 import "reflect-metadata";
 import "express-async-errors";
 import fetch from "node-fetch";
-import { afterEach, describe, it } from "@jest/globals";
-import { tryCloseServerAsync } from "../../test/test-utils/server";
-import { tick } from "../../test/test-utils/time";
+import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { AppBuilder } from "../builder";
-import { HttpContext, StatusCodes } from "../core";
-import { StatusCodeError } from "../../src/core/errors";
+import { HttpContext, statusCodes } from "../core";
 import { AnonymousEndpoint } from "../endpoints";
-import { ErrorHandler, errorHandler, TomasErrorHandler } from ".";
+import { ErrorHandler } from "./ErrorHandler";
+import { errorHandler } from "./@errorHandler";
+import { TomasErrorHandler } from "./TomasErrorHandler";
 import { JsonResponse, PlainTextResponse } from "../responses";
 import { NextFunction } from "express";
+import { tick, tryCloseServerAsync } from "../tests/utils";
+import { StatusCodeError } from "../errors";
 
 describe("error-handler", () => {
   const port = 3036;
@@ -43,13 +44,13 @@ describe("error-handler", () => {
 
     // Act/Assert
     const response = await fetch(`${serverAddress}`);
-    expect(response.status).toBe(StatusCodes.internalServerError);
+    expect(response.status).toBe(statusCodes.internalServerError);
   });
 
   it(`An ErrorHandlerFunction can handle uncaught errors with a custom handler`, async () => {
     // Arrange
     const errorMessage = "Error caught with custom handler!";
-    const errorStatusCode = StatusCodes.badRequest;
+    const errorStatusCode = statusCodes.badRequest;
 
     server = await new AppBuilder()
       .useEndpoint(
@@ -69,6 +70,7 @@ describe("error-handler", () => {
   });
 
   it(`A custom ErrorMiddleware constructor can handle uncaught errors`, async () => {
+    //@ts-ignore: Fix decorators not working in test files
     @errorHandler()
     class CustomErrorHandler implements ErrorHandler {
       catch(err: any, context: HttpContext, next: NextFunction): void | Promise<void> {
@@ -92,12 +94,12 @@ describe("error-handler", () => {
     server = await new AppBuilder()
       .useEndpoint(
         new AnonymousEndpoint("get", "/bad-request", (context: HttpContext) => {
-          throw new StatusCodeError(StatusCodes.badRequest);
+          throw new StatusCodeError(statusCodes.badRequest);
         })
       )
       .useEndpoint(
         new AnonymousEndpoint("get", "/not-found", (context: HttpContext) => {
-          throw new StatusCodeError(StatusCodes.notFound);
+          throw new StatusCodeError(statusCodes.notFound);
         })
       )
       .useErrorHandler(CustomErrorHandler)
@@ -105,10 +107,10 @@ describe("error-handler", () => {
 
     // Act/Assert
     const badRequestResponse = await fetch(`${serverAddress}/bad-request`);
-    expect(badRequestResponse.status).toBe(StatusCodes.badRequest);
+    expect(badRequestResponse.status).toBe(statusCodes.badRequest);
 
     const notFoundResponse = await fetch(`${serverAddress}/not-found`);
-    expect(notFoundResponse.status).toBe(StatusCodes.notFound);
+    expect(notFoundResponse.status).toBe(statusCodes.notFound);
   });
 
   it(`The ${TomasErrorHandler.name} can handle uncaught errors with default behavior`, async () => {
@@ -116,31 +118,31 @@ describe("error-handler", () => {
     server = await new AppBuilder()
       .useEndpoint(
         new AnonymousEndpoint("get", "/bad-request", (context: HttpContext) => {
-          throw new StatusCodeError(StatusCodes.badRequest);
+          throw new StatusCodeError(statusCodes.badRequest);
         })
       )
       .useEndpoint(
         new AnonymousEndpoint("get", "/not-found", (context: HttpContext) => {
-          throw new StatusCodeError(StatusCodes.notFound);
+          throw new StatusCodeError(statusCodes.notFound);
         })
       )
       .buildAsync(port);
 
     // Act/Assert
     const badRequestResponse = await fetch(`${serverAddress}/bad-request`);
-    expect(badRequestResponse.status).toBe(StatusCodes.badRequest);
+    expect(badRequestResponse.status).toBe(statusCodes.badRequest);
 
     const badRequestResponseJson = await badRequestResponse.json();
     expect(badRequestResponseJson?.message).toEqual(
-      `An error occurred with status code ${StatusCodes.badRequest}`
+      `An error occurred with status code ${statusCodes.badRequest}`
     );
 
     const notFoundResponse = await fetch(`${serverAddress}/not-found`);
-    expect(notFoundResponse.status).toBe(StatusCodes.notFound);
+    expect(notFoundResponse.status).toBe(statusCodes.notFound);
 
     const notFoundResponseJson = await notFoundResponse.json();
     expect(notFoundResponseJson?.message).toEqual(
-      `An error occurred with status code ${StatusCodes.notFound}`
+      `An error occurred with status code ${statusCodes.notFound}`
     );
   });
 });

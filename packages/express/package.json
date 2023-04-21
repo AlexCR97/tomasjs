@@ -54,7 +54,7 @@
     "watch-sample-jwt-authentication": "nodemon -r tsconfig-paths/register ./samples/jwt-authentication/main.ts"
   },
   "dependencies": {
-    "@tomasjs/core": "^1.0.0",
+    "@tomasjs/core": "^1.0.1",
     "@tomasjs/logging": "^1.0.0",
     "class-transformer": "^0.5.1",
     "cors": "^2.8.5",

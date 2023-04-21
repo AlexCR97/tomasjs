@@ -1,13 +1,14 @@
 import "reflect-metadata";
 import fetch from "node-fetch";
-import { afterEach, beforeEach, describe, it } from "@jest/globals";
+import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { AppBuilder } from "../builder";
-import { HttpContext, StatusCodes } from "../core";
+import { HttpContext, statusCodes } from "../core";
 import { AnonymousEndpoint, endpoint, Endpoint, path, useGuard } from "../endpoints";
-import { guard, Guard, GuardContext } from ".";
+import { guard } from "./@guard";
+import { Guard } from "./Guard";
+import { GuardContext } from "./GuardContext";
 import { OkResponse } from "../responses/status-codes";
-import { tryCloseServerAsync } from "../../test/test-utils/server";
-import { tick } from "../../test/test-utils/time";
+import { tick, tryCloseServerAsync } from "../tests/utils";
 
 describe("guards", () => {
   const port = 3040;
@@ -28,6 +29,7 @@ describe("guards", () => {
   it(`A global Guard should allow the request to be processed if returns true`, async () => {
     // Arrange
 
+    //@ts-ignore: Fix decorators not working in test files
     @guard()
     class TestGuard implements Guard {
       isAllowed(context: GuardContext): boolean {
@@ -35,6 +37,7 @@ describe("guards", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
     class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
@@ -42,21 +45,19 @@ describe("guards", () => {
       }
     }
 
-    server = await new AppBuilder()
-      .useGuard(TestGuard)
-      .useEndpoint(TestEndpoint)
-      .buildAsync(port);
+    server = await new AppBuilder().useGuard(TestGuard).useEndpoint(TestEndpoint).buildAsync(port);
 
     // Act
     const response = await fetch(serverAddress);
 
     // Assert
-    expect(response.status).toEqual(StatusCodes.ok);
+    expect(response.status).toEqual(statusCodes.ok);
   });
 
   it(`A global Guard should make the server respond with 401 if returns false`, async () => {
     // Arrange
 
+    //@ts-ignore: Fix decorators not working in test files
     @guard()
     class TestGuard implements Guard {
       isAllowed(context: GuardContext): boolean {
@@ -64,6 +65,7 @@ describe("guards", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
     class TestEndpoint implements Endpoint {
       handle(context: HttpContext) {
@@ -71,16 +73,13 @@ describe("guards", () => {
       }
     }
 
-    server = await new AppBuilder()
-      .useGuard(TestGuard)
-      .useEndpoint(TestEndpoint)
-      .buildAsync(port);
+    server = await new AppBuilder().useGuard(TestGuard).useEndpoint(TestEndpoint).buildAsync(port);
 
     // Act
     const response = await fetch(serverAddress);
 
     // Assert
-    expect(response.status).toEqual(StatusCodes.unauthorized);
+    expect(response.status).toEqual(statusCodes.unauthorized);
   });
 
   it(`A global-level Guard should be applied to all of the endpoints`, async () => {
@@ -88,6 +87,7 @@ describe("guards", () => {
     const resource1Path = "resource-1";
     const resource2Path = "resource-2";
 
+    //@ts-ignore: Fix decorators not working in test files
     @guard()
     class TestGuard implements Guard {
       isAllowed(context: GuardContext): boolean {
@@ -111,10 +111,10 @@ describe("guards", () => {
 
     // Act/Assert
     const response1 = await fetch(`${serverAddress}/${resource1Path}`);
-    expect(response1.status).toEqual(StatusCodes.unauthorized);
+    expect(response1.status).toEqual(statusCodes.unauthorized);
 
     const response2 = await fetch(`${serverAddress}/${resource2Path}`);
-    expect(response2.status).toEqual(StatusCodes.unauthorized);
+    expect(response2.status).toEqual(statusCodes.unauthorized);
   });
 
   it(`A local-level Guard should be applied to only the decorated endpoint`, async () => {
@@ -122,6 +122,7 @@ describe("guards", () => {
     const resource1Path = "resource-1";
     const resource2Path = "resource-2";
 
+    //@ts-ignore: Fix decorators not working in test files
     @guard()
     class TestGuard implements Guard {
       isAllowed(context: GuardContext): boolean {
@@ -129,8 +130,11 @@ describe("guards", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
+    //@ts-ignore: Fix decorators not working in test files
     @path(resource1Path)
+    //@ts-ignore: Fix decorators not working in test files
     @useGuard(TestGuard)
     class TestEndpoint1 implements Endpoint {
       handle(context: HttpContext) {
@@ -138,7 +142,9 @@ describe("guards", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
+    //@ts-ignore: Fix decorators not working in test files
     @path(resource2Path)
     class TestEndpoint2 implements Endpoint {
       handle(context: HttpContext) {
@@ -153,10 +159,10 @@ describe("guards", () => {
 
     // Act/Assert
     const response1 = await fetch(`${serverAddress}/${resource1Path}`);
-    expect(response1.status).toEqual(StatusCodes.unauthorized);
+    expect(response1.status).toEqual(statusCodes.unauthorized);
 
     const response2 = await fetch(`${serverAddress}/${resource2Path}`);
-    expect(response2.status).toEqual(StatusCodes.ok);
+    expect(response2.status).toEqual(statusCodes.ok);
   });
 
   it(`An EndpointGroup-level Guard should be applied to only the endpoints defined inside the EndpointGroup`, async () => {
@@ -165,6 +171,7 @@ describe("guards", () => {
     const resource2Path = "resource-2";
     const resource3Path = "resource-3";
 
+    //@ts-ignore: Fix decorators not working in test files
     @guard()
     class TestGuard implements Guard {
       isAllowed(context: GuardContext): boolean {
@@ -172,7 +179,9 @@ describe("guards", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
+    //@ts-ignore: Fix decorators not working in test files
     @path(resource1Path)
     class TestEndpoint1 implements Endpoint {
       handle(context: HttpContext) {
@@ -180,7 +189,9 @@ describe("guards", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
+    //@ts-ignore: Fix decorators not working in test files
     @path(resource2Path)
     class TestEndpoint2 implements Endpoint {
       handle(context: HttpContext) {
@@ -188,7 +199,9 @@ describe("guards", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
+    //@ts-ignore: Fix decorators not working in test files
     @path(resource3Path)
     class TestEndpoint3 implements Endpoint {
       handle(context: HttpContext) {
@@ -205,12 +218,12 @@ describe("guards", () => {
 
     // Act/Assert
     const response1 = await fetch(`${serverAddress}/${resource1Path}`);
-    expect(response1.status).toEqual(StatusCodes.unauthorized);
+    expect(response1.status).toEqual(statusCodes.unauthorized);
 
     const response2 = await fetch(`${serverAddress}/${resource2Path}`);
-    expect(response2.status).toEqual(StatusCodes.unauthorized);
+    expect(response2.status).toEqual(statusCodes.unauthorized);
 
     const response3 = await fetch(`${serverAddress}/${resource3Path}`);
-    expect(response3.status).toEqual(StatusCodes.ok);
+    expect(response3.status).toEqual(statusCodes.ok);
   });
 });

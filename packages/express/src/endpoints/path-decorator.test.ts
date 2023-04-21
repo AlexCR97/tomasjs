@@ -1,14 +1,17 @@
 import "reflect-metadata";
-import { describe, it } from "@jest/globals";
-import { Endpoint, path } from ".";
+import { describe, expect, it } from "@jest/globals";
+
 import { HttpContext } from "../core";
 import { EndpointMetadataKeys, EndpointPrototypeMetadata } from "./metadata";
+import { path } from "./@path";
+import { Endpoint } from "./Endpoint";
 
 describe("path-decorator", () => {
   it(`The "${path.name}" decorator should set should set a path property on an Endpoint class's prototype`, () => {
     // Arrange
     const expectedPath = "path/to/resource";
 
+    //@ts-ignore: Fix decorators not working in test files
     @path(expectedPath)
     class TestClass implements Endpoint {
       handle(context: HttpContext) {
@@ -31,6 +34,7 @@ describe("path-decorator", () => {
     // Arrange
     const expectedPath = "path/to/resource";
 
+    //@ts-ignore: Fix decorators not working in test files
     @path(expectedPath)
     class TestClass implements Endpoint {
       handle(context: HttpContext) {
@@ -55,6 +59,7 @@ describe("path-decorator", () => {
     // Arrange
     const emptyString = "";
 
+    //@ts-ignore: Fix decorators not working in test files
     @path("some/path/to/a/resource")
     class TestClass implements Endpoint {
       handle(context: HttpContext) {
