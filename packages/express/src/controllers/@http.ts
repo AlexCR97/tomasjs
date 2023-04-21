@@ -1,5 +1,4 @@
 import { HttpMethod } from "@/core";
-import { RequiredArgumentError } from "@/core/errors";
 import { Request, Response } from "express";
 import { BodyMetadataKey } from "./@body";
 import { HeaderMetadata, HeaderMetadataKey } from "./@header";
@@ -7,6 +6,7 @@ import { HeadersMetadataKey } from "./@headers";
 import { ParamMetadata, ParamMetadataKey } from "./@param";
 import { QueryMetadata, QueryMetadataKey } from "./@query";
 import { HttpMethodMetadata } from "./metadata";
+import { RequiredArgumentError } from "@tomasjs/core";
 
 export function http(method: HttpMethod, path?: string) {
   return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
@@ -32,7 +32,6 @@ export function http(method: HttpMethod, path?: string) {
       return originalFunction.apply(this, controllerMethodArgs);
 
       function tryInjectHeadersArg() {
-        //@ts-ignore: The package "reflect-metadata" should be imported by host
         const paramIndex = Reflect.getOwnMetadata(HeadersMetadataKey, target, propertyKey);
 
         if (typeof paramIndex !== "number") {
@@ -43,7 +42,6 @@ export function http(method: HttpMethod, path?: string) {
       }
 
       function tryInjectHeaderArgs() {
-        //@ts-ignore: The package "reflect-metadata" should be imported by host
         const headerMetadatas: HeaderMetadata[] = Reflect.getOwnMetadata(
           HeaderMetadataKey,
           target,
@@ -60,7 +58,6 @@ export function http(method: HttpMethod, path?: string) {
       }
 
       function tryInjectParamsArg() {
-        //@ts-ignore: The package "reflect-metadata" should be imported by host
         const paramMetadata: ParamMetadata = Reflect.getOwnMetadata(
           ParamMetadataKey,
           target,
@@ -75,7 +72,6 @@ export function http(method: HttpMethod, path?: string) {
       }
 
       function tryInjectQueryArgs() {
-        //@ts-ignore: The package "reflect-metadata" should be imported by host
         const queryMetadatas: QueryMetadata[] = Reflect.getOwnMetadata(
           QueryMetadataKey,
           target,
@@ -96,7 +92,6 @@ export function http(method: HttpMethod, path?: string) {
       }
 
       function tryInjectBodyArg() {
-        //@ts-ignore: The package "reflect-metadata" should be imported by host
         const paramIndex = Reflect.getOwnMetadata(BodyMetadataKey, target, propertyKey);
 
         if (typeof paramIndex !== "number") {

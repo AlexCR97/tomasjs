@@ -1,11 +1,14 @@
-import { ContainerSetup, ContainerSetupFactory } from "@/builder";
-import { TomasError } from "@/core/errors";
+import {
+  ClassConstructor,
+  Configuration,
+  ConfigurationToken,
+  ContainerSetup,
+  ContainerSetupFactory,
+  TomasError,
+} from "@tomasjs/core";
 import { config, DotenvConfigOptions } from "dotenv";
 import { KeyConfiguration } from "./KeyConfiguration";
 import { DotenvConfiguration } from "./DotenvConfiguration";
-import { Configuration } from "../core";
-import { ClassConstructor } from "@/container";
-import { ConfigurationToken } from "../core/ConfigurationToken";
 
 type DotenvSetupOptions<TSettings extends object> = DotenvConfigOptions & {
   constructor: ClassConstructor<TSettings>;

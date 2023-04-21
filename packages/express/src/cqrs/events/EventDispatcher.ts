@@ -1,6 +1,10 @@
-import { ClassConstructor, internalContainer, singleton } from "@/container";
-import { TomasError } from "@/core/errors";
-import { getConstructorOf } from "@/core/internal";
+import {
+  ClassConstructor,
+  TomasError,
+  getConstructorOf,
+  globalContainer,
+  singleton,
+} from "@tomasjs/core";
 import { EventHandler } from "./EventHandler";
 import { EventHandlerMetadata, EventHandlerToken } from "./metadata";
 
@@ -15,7 +19,7 @@ export class EventDispatcher {
   private getEventHandlerFor<TEvent>(
     eventConstructor: ClassConstructor<TEvent>
   ): EventHandler<TEvent> {
-    const eventHandlers = internalContainer.getAll<EventHandler<TEvent>>(EventHandlerToken);
+    const eventHandlers = globalContainer.getAll<EventHandler<TEvent>>(EventHandlerToken);
 
     const matchingEventHandler = eventHandlers.find((eh) => {
       const metadata = new EventHandlerMetadata(eh);

@@ -1,4 +1,4 @@
-import { ClassConstructor } from "@/container";
+import { ClassConstructor } from "@tomasjs/core";
 import { ErrorHandler } from "./ErrorHandler";
 import { ErrorHandlerFunction } from "./ErrorHandlerFunction";
 

@@ -1,5 +1,4 @@
-import { ClassConstructor, isClassConstructor } from "@/container";
-import { TomasError } from "@/core/errors";
+import { ClassConstructor, TomasError, isClassConstructor } from "@tomasjs/core";
 import { AnonymousEndpoint } from "../AnonymousEndpoint";
 import { Endpoint } from "../Endpoint";
 import { isEndpoint } from "../isEndpoint";

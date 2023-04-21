@@ -1,8 +1,8 @@
-import { ClassConstructor, internalContainer } from "@/container";
 import { HttpContextResolver } from "@/core";
 import { ExpressMiddlewareHandler } from "@/core/express";
 import { Middleware } from "./Middleware";
 import { isMiddlewareHandler, MiddlewareHandler } from "./MiddlewareHandler";
+import { ClassConstructor, globalContainer } from "@tomasjs/core";
 
 /**
  * Resolves a `Middleware` into an `ExpressMiddlewareHandler`.
@@ -75,7 +75,7 @@ export abstract class MiddlewareAdapter {
     return async (req, res, next) => {
       try {
         // console.log("resolving middleware instance...");
-        internalContainer.get(middleware); // Middleware needs to be resolved at runtime to support DI
+        globalContainer.get(middleware); // Middleware needs to be resolved at runtime to support DI
         // console.log("middleware instance resolved!");
       } catch (err) {
         // console.log("err", err);
@@ -83,7 +83,7 @@ export abstract class MiddlewareAdapter {
       }
 
       // console.log("resolving middleware instance...");
-      const middlewareInstance = internalContainer.get(middleware); // Middleware needs to be resolved at runtime to support DI
+      const middlewareInstance = globalContainer.get(middleware); // Middleware needs to be resolved at runtime to support DI
       // console.log("middleware instance resolved!", middlewareInstance);
 
       const context = HttpContextResolver.fromExpress(req, res); // HttpContext needs to be resolved at runtime to support DI

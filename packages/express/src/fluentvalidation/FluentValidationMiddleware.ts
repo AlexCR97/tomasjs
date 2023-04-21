@@ -1,11 +1,11 @@
-import { ClassConstructor, singleton } from "@/container";
-import { HttpContext, StatusCodes } from "@/core";
+import { HttpContext, statusCodes } from "@/core";
 import { Middleware } from "@/middleware";
 import { JsonResponse } from "@/responses";
 import { BadRequestResponse } from "@/responses/status-codes";
 import { NextFunction } from "express";
 import { Validator } from "fluentvalidation-ts";
 import { ValidatorAdapter } from "./ValidatorAdapter";
+import { ClassConstructor, singleton } from "@tomasjs/core";
 
 @singleton()
 export class FluentValidationMiddleware<
@@ -35,7 +35,7 @@ export class FluentValidationMiddleware<
 
     return context.respond(
       new JsonResponse(results, {
-        status: StatusCodes.badRequest,
+        status: statusCodes.badRequest,
       })
     );
   }

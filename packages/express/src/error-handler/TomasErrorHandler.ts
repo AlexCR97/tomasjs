@@ -1,9 +1,9 @@
 import { NextFunction } from "express";
-import { singleton } from "@/container";
-import { HttpContext, StatusCodes } from "@/core";
-import { StatusCodeError } from "@/core/errors";
+import { HttpContext, statusCodes } from "@/core";
 import { JsonResponse } from "@/responses";
 import { ErrorHandler } from "./ErrorHandler";
+import { singleton } from "@tomasjs/core";
+import { StatusCodeError } from "@/errors";
 
 @singleton()
 export class TomasErrorHandler implements ErrorHandler {
@@ -26,13 +26,13 @@ export class TomasErrorHandler implements ErrorHandler {
       return context.respond(
         new JsonResponse(
           {
-            status: StatusCodes.internalServerError,
+            status: statusCodes.internalServerError,
             name: error.name,
             message: error.message,
             stack: error.stack,
           },
           {
-            status: StatusCodes.internalServerError,
+            status: statusCodes.internalServerError,
           }
         )
       );

@@ -1,5 +1,4 @@
-import { ClassConstructor, internalContainer, isClassConstructor } from "@/container";
-import { TomasError } from "@/core/errors";
+import { ClassConstructor, TomasError, globalContainer, isClassConstructor } from "@tomasjs/core";
 import { Guard } from "./Guard";
 import { GuardContext } from "./GuardContext";
 import { GuardFactory } from "./GuardFactory";
@@ -20,7 +19,7 @@ export class GuardBridge {
     }
 
     if (this.isConstructor(this.guard)) {
-      const guardInstance = internalContainer.get(this.guard);
+      const guardInstance = globalContainer.get(this.guard);
       return guardInstance.isAllowed(context);
     }
 

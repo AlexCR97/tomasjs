@@ -1,10 +1,10 @@
-import { TomasError } from "@/core/errors";
 import { MiddlewareParam } from "@/endpoints";
 import { GuardType } from "@/guards";
 import { Controller } from "../Controller";
 import { ControllerType } from "../ControllerType";
 import { isController } from "../isController";
 import { HttpMethodMetadata } from "./HttpMethodMetadata";
+import { TomasError } from "@tomasjs/core";
 
 export class ControllerMetadata<TController extends Controller> {
   constructor(private readonly controller: ControllerType<TController>) {}
@@ -77,7 +77,6 @@ export class ControllerMetadata<TController extends Controller> {
     }
 
     // Get the decorated properties
-    //@ts-ignore: The package "reflect-metadata" should be imported by host
     const result1 = Reflect.getMetadataKeys(this.controller);
     // console.log("result1", result1);
 
@@ -109,12 +108,10 @@ export class ControllerMetadata<TController extends Controller> {
   }
 
   private setMetadata(key: string, value: any): void {
-    //@ts-ignore: The package "reflect-metadata" should be imported by host
     Reflect.defineMetadata(key, value, this.controllerPrototype);
   }
 
   private getMetadata<T>(key: string): T {
-    //@ts-ignore: The package "reflect-metadata" should be imported by host
     return Reflect.getMetadata(key, this.controllerPrototype);
   }
 

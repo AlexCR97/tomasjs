@@ -1,4 +1,4 @@
-import { ClassConstructor, internalContainer } from "@/container";
+import { ClassConstructor, globalContainer } from "@tomasjs/core";
 import { Validator } from "fluentvalidation-ts";
 
 export abstract class ValidatorAdapter {
@@ -11,6 +11,6 @@ export abstract class ValidatorAdapter {
       return validator;
     }
 
-    return internalContainer.get(validator);
+    return globalContainer.get(validator);
   }
 }

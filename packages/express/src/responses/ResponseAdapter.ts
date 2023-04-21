@@ -1,5 +1,5 @@
 import { Response } from "express";
-import { StatusCodes } from "@/core";
+import { statusCodes } from "@/core";
 import { BaseResponse, JsonResponse, PlainTextResponse, StatusCodeResponse } from "@/responses";
 
 export abstract class ResponseAdapter {
@@ -14,7 +14,7 @@ export abstract class ResponseAdapter {
     }
 
     if (handlerResponse instanceof BaseResponse) {
-      const defaultStatusCode = StatusCodes.ok;
+      const defaultStatusCode = statusCodes.ok;
 
       if (handlerResponse instanceof JsonResponse) {
         return expressResponse

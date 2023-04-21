@@ -1,4 +1,4 @@
-import { ClassConstructor } from "@/container";
+import { ClassConstructor } from "@tomasjs/core";
 import { Validator } from "fluentvalidation-ts";
 
 export abstract class ValidatorInjectionTokenFactory {

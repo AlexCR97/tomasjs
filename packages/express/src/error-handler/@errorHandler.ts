@@ -1,4 +1,4 @@
-import { singleton } from "@/container";
+import { singleton } from "@tomasjs/core";
 
 export function errorHandler() {
   return singleton();

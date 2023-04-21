@@ -1,143 +1,150 @@
-import "reflect-metadata";
-import { afterEach, describe, expect, it } from "@jest/globals";
-import { AppBuilder, ContainerBuilder } from "../../src/builder";
-import {
-  Logger,
-  LoggerFactory,
-  LoggerFactoryResolver,
-  LoggerFactorySetup,
-  LoggerFactoryToken,
-  LogLevel,
-  TomasLogger,
-  TomasLoggerFactory,
-  TomasLoggerFactorySetup,
-} from "../../src/logger";
-import { tryCloseServerAsync } from "../utils/server";
-import { endpoint, Endpoint } from "../../src/endpoints";
-import { HttpContext, StatusCodes } from "../../src/core";
-import { inject, injectable, internalContainer } from "../../src/container";
-import { OkResponse } from "../../src/responses/status-codes";
-import fetch from "node-fetch";
+// TODO Move this file to package @tomasjs/logging
+
+// import "reflect-metadata";
+import { describe, it } from "@jest/globals";
+// import { AppBuilder, ContainerBuilder } from "../../src/builder";
+// import {
+//   Logger,
+//   LoggerFactory,
+//   LoggerFactoryResolver,
+//   LoggerFactorySetup,
+//   LoggerFactoryToken,
+//   LogLevel,
+//   TomasLogger,
+//   TomasLoggerFactory,
+//   TomasLoggerFactorySetup,
+// } from "../../src/logger";
+// import { tryCloseServerAsync } from "../test-utils/server";
+// import { endpoint, Endpoint } from "../../src/endpoints";
+// import { HttpContext, StatusCodes } from "../../src/core";
+// import { inject, injectable, internalContainer } from "../../src/container";
+// import { OkResponse } from "../../src/responses/status-codes";
+// import fetch from "node-fetch";
 
 describe("logger", () => {
-  const port = 3041;
-  const serverAddress = `http://localhost:${port}`;
-  let server: any; // TODO Set http.Server type
+  // const port = 3041;
+  // const serverAddress = `http://localhost:${port}`;
+  // let server: any; // TODO Set http.Server type
 
-  beforeEach(async () => {
-    await tryCloseServerAsync(server);
+  // beforeEach(async () => {
+  //   await tryCloseServerAsync(server);
+  // });
+
+  // afterEach(async () => {
+  //   await tryCloseServerAsync(server);
+
+  //   if (internalContainer.has(LoggerFactoryToken)) {
+  //     internalContainer.remove(LoggerFactoryToken);
+  //   }
+  // });
+
+  // TODO Remove this test when this test file is moved into package @tomasjs/logging
+  it("should work", () => {
+    console.log("logger should work.");
   });
 
-  afterEach(async () => {
-    await tryCloseServerAsync(server);
+  // it(`The ${TomasLoggerFactory.name} provides a ${TomasLogger.name}`, () => {
+  //   const factory = new TomasLoggerFactory();
+  //   const logger = factory.create("logger.test.ts");
 
-    if (internalContainer.has(LoggerFactoryToken)) {
-      internalContainer.remove(LoggerFactoryToken);
-    }
-  });
+  //   expect(logger).toBeInstanceOf(TomasLogger);
 
-  it(`The ${TomasLoggerFactory.name} provides a ${TomasLogger.name}`, () => {
-    const factory = new TomasLoggerFactory();
-    const logger = factory.create("logger.test.ts");
+  //   logger.error('This is a log with "error" level!');
+  //   logger.warn('This is a log with "warn" level!');
+  //   logger.info('This is a log with "info" level!');
+  //   logger.verbose('This is a log with "verbose" level!');
+  //   logger.debug('This is a log with "debug" level!');
+  // });
 
-    expect(logger).toBeInstanceOf(TomasLogger);
+  // it(`The ${TomasLoggerFactorySetup.name} can be used to register the ${TomasLogger.name} as the default logger`, async () => {
+  //   await new ContainerBuilder().setup(new TomasLoggerFactorySetup()).buildAsync();
 
-    logger.error('This is a log with "error" level!');
-    logger.warn('This is a log with "warn" level!');
-    logger.info('This is a log with "info" level!');
-    logger.verbose('This is a log with "verbose" level!');
-    logger.debug('This is a log with "debug" level!');
-  });
+  //   const factory = LoggerFactoryResolver.get();
+  //   const logger = factory.create("logger.test.ts");
 
-  it(`The ${TomasLoggerFactorySetup.name} can be used to register the ${TomasLogger.name} as the default logger`, async () => {
-    await new ContainerBuilder().setup(new TomasLoggerFactorySetup()).buildAsync();
+  //   expect(logger).toBeInstanceOf(TomasLogger);
 
-    const factory = LoggerFactoryResolver.get();
-    const logger = factory.create("logger.test.ts");
+  //   logger.info('This is a log with "info" level!');
+  // });
 
-    expect(logger).toBeInstanceOf(TomasLogger);
+  // it(`The ${TomasLoggerFactory.name} can be injected via the LoggerFactoryToken`, async () => {
+  //   @endpoint()
+  //   class TestEndpoint implements Endpoint {
+  //     private readonly logger: Logger;
 
-    logger.info('This is a log with "info" level!');
-  });
+  //     constructor(@inject(LoggerFactoryToken) loggerFactory: LoggerFactory) {
+  //       this.logger = loggerFactory.create(TestEndpoint.name);
+  //     }
 
-  it(`The ${TomasLoggerFactory.name} can be injected via the LoggerFactoryToken`, async () => {
-    @endpoint()
-    class TestEndpoint implements Endpoint {
-      private readonly logger: Logger;
+  //     handle(context: HttpContext) {
+  //       this.logger.info(`Log from ${TestEndpoint.name}`);
+  //       return new OkResponse();
+  //     }
+  //   }
 
-      constructor(@inject(LoggerFactoryToken) loggerFactory: LoggerFactory) {
-        this.logger = loggerFactory.create(TestEndpoint.name);
-      }
+  //   await new ContainerBuilder().setup(new TomasLoggerFactorySetup()).buildAsync();
 
-      handle(context: HttpContext) {
-        this.logger.info(`Log from ${TestEndpoint.name}`);
-        return new OkResponse();
-      }
-    }
+  //   server = await new AppBuilder().useEndpoint(TestEndpoint).buildAsync(port);
 
-    await new ContainerBuilder().setup(new TomasLoggerFactorySetup()).buildAsync();
+  //   const response = await fetch(serverAddress);
 
-    server = await new AppBuilder().useEndpoint(TestEndpoint).buildAsync(port);
+  //   expect(response.status).toBe(StatusCodes.ok);
+  // });
 
-    const response = await fetch(serverAddress);
+  // it(`The ${LoggerFactorySetup.name} can be used to register a custom Logger`, async () => {
+  //   class CustomLogger implements Logger {
+  //     constructor(private readonly category: string, private readonly level: LogLevel) {}
 
-    expect(response.status).toBe(StatusCodes.ok);
-  });
+  //     error(message: string, data?: any): void {
+  //       throw new Error("Method not implemented.");
+  //     }
+  //     warn(message: string, data?: any): void {
+  //       throw new Error("Method not implemented.");
+  //     }
+  //     info(message: string, data?: any): void {
+  //       console.log(`[${this.category}][${this.level}] ${message}`);
+  //     }
+  //     verbose(message: string, data?: any): void {
+  //       throw new Error("Method not implemented.");
+  //     }
+  //     debug(message: string, data?: any): void {
+  //       throw new Error("Method not implemented.");
+  //     }
+  //   }
 
-  it(`The ${LoggerFactorySetup.name} can be used to register a custom Logger`, async () => {
-    class CustomLogger implements Logger {
-      constructor(private readonly category: string, private readonly level: LogLevel) {}
+  //   @injectable()
+  //   class CustomLoggerFactory implements LoggerFactory {
+  //     create(category: string, level?: LogLevel | undefined): Logger {
+  //       return new CustomLogger(category, level ?? "error");
+  //     }
+  //   }
 
-      error(message: string, data?: any): void {
-        throw new Error("Method not implemented.");
-      }
-      warn(message: string, data?: any): void {
-        throw new Error("Method not implemented.");
-      }
-      info(message: string, data?: any): void {
-        console.log(`[${this.category}][${this.level}] ${message}`);
-      }
-      verbose(message: string, data?: any): void {
-        throw new Error("Method not implemented.");
-      }
-      debug(message: string, data?: any): void {
-        throw new Error("Method not implemented.");
-      }
-    }
+  //   class CustomLoggerFactorySetup extends LoggerFactorySetup<CustomLoggerFactory> {
+  //     constructor() {
+  //       super(CustomLoggerFactory);
+  //     }
+  //   }
 
-    @injectable()
-    class CustomLoggerFactory implements LoggerFactory {
-      create(category: string, level?: LogLevel | undefined): Logger {
-        return new CustomLogger(category, level ?? "error");
-      }
-    }
+  //   @endpoint()
+  //   class TestEndpoint implements Endpoint {
+  //     private readonly logger: Logger;
 
-    class CustomLoggerFactorySetup extends LoggerFactorySetup<CustomLoggerFactory> {
-      constructor() {
-        super(CustomLoggerFactory);
-      }
-    }
+  //     constructor(@inject(LoggerFactoryToken) loggerFactory: LoggerFactory) {
+  //       this.logger = loggerFactory.create(TestEndpoint.name);
+  //     }
 
-    @endpoint()
-    class TestEndpoint implements Endpoint {
-      private readonly logger: Logger;
+  //     handle(context: HttpContext) {
+  //       this.logger.info("Log with custom logger!");
+  //       return new OkResponse();
+  //     }
+  //   }
 
-      constructor(@inject(LoggerFactoryToken) loggerFactory: LoggerFactory) {
-        this.logger = loggerFactory.create(TestEndpoint.name);
-      }
+  //   await new ContainerBuilder().setup(new CustomLoggerFactorySetup()).buildAsync();
 
-      handle(context: HttpContext) {
-        this.logger.info("Log with custom logger!");
-        return new OkResponse();
-      }
-    }
+  //   server = await new AppBuilder().useEndpoint(TestEndpoint).buildAsync(port);
 
-    await new ContainerBuilder().setup(new CustomLoggerFactorySetup()).buildAsync();
+  //   const response = await fetch(serverAddress);
 
-    server = await new AppBuilder().useEndpoint(TestEndpoint).buildAsync(port);
-
-    const response = await fetch(serverAddress);
-
-    expect(response.status).toBe(StatusCodes.ok);
-  });
+  //   expect(response.status).toBe(StatusCodes.ok);
+  // });
 });

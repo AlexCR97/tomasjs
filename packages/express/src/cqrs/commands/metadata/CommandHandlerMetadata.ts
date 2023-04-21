@@ -1,4 +1,4 @@
-import { ClassConstructor } from "@/container";
+import { ClassConstructor } from "@tomasjs/core";
 import { CommandHandler } from "../CommandHandler";
 import { CommandHandlerMetadataKeys } from "./CommandHandlerMetadataKeys";
 
@@ -12,11 +12,9 @@ export class CommandHandlerMetadata<TCommand, TResult> {
   ) {}
 
   get commandConstructor(): ClassConstructor<any> {
-    //@ts-ignore: The package "reflect-metadata" should be imported by host
     return Reflect.getMetadata(this.commandConstructorKey, this.commandHandlerPrototype);
   }
   set commandConstructor(value: ClassConstructor<any>) {
-    //@ts-ignore: The package "reflect-metadata" should be imported by host
     Reflect.defineMetadata(this.commandConstructorKey, value, this.commandHandlerPrototype);
   }
 

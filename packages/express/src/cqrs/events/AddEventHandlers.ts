@@ -1,5 +1,4 @@
-import { ContainerSetup, ContainerSetupFactory } from "@/builder";
-import { ClassConstructor } from "@/container";
+import { ClassConstructor, ContainerSetup, ContainerSetupFactory } from "@tomasjs/core";
 import { EventHandlerToken } from "./metadata";
 
 export class AddEventHandlers extends ContainerSetupFactory {

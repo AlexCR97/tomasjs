@@ -1,29 +1,27 @@
 import "express-async-errors";
 import "reflect-metadata";
 import fetch from "node-fetch";
-import { afterEach, beforeEach, describe, it } from "@jest/globals";
-import { tryCloseServerAsync } from "@/tests/utils";
-import { internalContainer, inject } from "@/container";
+import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { controller } from "../@controller";
 import { ControllerMetadata, HttpMethodMetadata } from "../metadata";
 import { get, http, post } from "../@http";
-import { HttpMethod, StatusCodes } from "@/core";
-import { AppBuilder, ContainerBuilder } from "@/builder";
 import { body } from "../@body";
 import { param } from "../@param";
 import { query } from "../@query";
 import { headers } from "../@headers";
-import { Headers } from "@/core/express";
 import { header } from "../@header";
 import { AddQueryHandlers, QueryDispatcher, QueryHandler, queryHandler } from "../../cqrs/";
-import { singleton } from "../../container";
-import { HttpContext } from "../../core";
+import { HttpContext, HttpMethod, statusCodes } from "../../core";
 import { Guard, GuardContext, guard } from "../../guards";
 import { Middleware } from "../../middleware";
 import { StatusCodeResponse } from "../../responses";
 import { NextFunction } from "express";
 import { useMethodGuard } from "../@useMethodGuard";
 import { useMethodMiddleware } from "../@useMethodMiddleware";
+import { tryCloseServerAsync } from "../../tests/utils";
+import { ContainerBuilder, globalContainer, inject, singleton } from "@tomasjs/core";
+import { AppBuilder } from "../../builder";
+import { Headers } from "../../core/express";
 
 describe("controllers", () => {
   const port = 3045;
@@ -42,11 +40,12 @@ describe("controllers", () => {
     // Arrange
     const expectedPath = "test";
 
+    //@ts-ignore: Fix decorators not working in test files
     @controller(expectedPath)
     class TestController {}
 
     // Act/Assert
-    const registeredController = internalContainer.get<TestController>(TestController);
+    const registeredController = globalContainer.get<TestController>(TestController);
     expect(registeredController).toBeTruthy();
 
     const metadata = new ControllerMetadata(registeredController);
@@ -70,17 +69,20 @@ describe("controllers", () => {
       path: "foo",
     };
 
+    //@ts-ignore: Fix decorators not working in test files
     @controller()
     class TestController {
+      //@ts-ignore: Fix decorators not working in test files
       @http(expectedGetMethod.method, expectedGetMethod.path)
       getMethod() {}
 
+      //@ts-ignore: Fix decorators not working in test files
       @post(expectedPostMethod.path)
       postMethod() {}
     }
 
     // Act
-    const registeredController = internalContainer.get<TestController>(TestController);
+    const registeredController = globalContainer.get<TestController>(TestController);
     const decoratedProperties = Reflect.getMetadataKeys(registeredController);
     // console.log("decoratedProperties", decoratedProperties);
 
@@ -114,8 +116,10 @@ describe("controllers", () => {
       password: "123456",
     };
 
+    //@ts-ignore: Fix decorators not working in test files
     @controller("users")
     class UsersController {
+      //@ts-ignore: Fix decorators not working in test files
       @get("paged")
       find(): User[] {
         return [expectedFetchedUser];
@@ -126,7 +130,7 @@ describe("controllers", () => {
 
     // Act/Assert
     const response = await fetch(`${serverAddress}/users/paged`);
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
 
     const responseJson = await response.json();
     const responseUser = responseJson[0];
@@ -141,10 +145,15 @@ describe("controllers", () => {
       password: "123456",
     };
 
+    //@ts-ignore: Fix decorators not working in test files
     @controller()
     class TestController {
+      //@ts-ignore: Fix decorators not working in test files
       @post()
-      find(@body() body: any) {
+      find(
+        //@ts-ignore: Fix decorators not working in test files
+        @body() body: any
+      ) {
         return body;
       }
     }
@@ -159,7 +168,7 @@ describe("controllers", () => {
     });
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
 
     const responseJson = await response.json();
     expect(responseJson).toEqual(expectedBody);
@@ -170,10 +179,15 @@ describe("controllers", () => {
 
     const expectedParam = "someCoolUsername";
 
+    //@ts-ignore: Fix decorators not working in test files
     @controller("test")
     class TestController {
+      //@ts-ignore: Fix decorators not working in test files
       @get(":id")
-      find(@param("id") id: string) {
+      find(
+        //@ts-ignore: Fix decorators not working in test files
+        @param("id") id: string
+      ) {
         return id;
       }
     }
@@ -184,7 +198,7 @@ describe("controllers", () => {
     const response = await fetch(`${serverAddress}/test/${expectedParam}`);
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
 
     const responseText = await response.text();
     expect(responseText).toEqual(expectedParam);
@@ -195,10 +209,15 @@ describe("controllers", () => {
 
     const expectedQuery = "10";
 
+    //@ts-ignore: Fix decorators not working in test files
     @controller("test")
     class TestController {
+      //@ts-ignore: Fix decorators not working in test files
       @get()
-      find(@query("pageIndex") pageIndex: string) {
+      find(
+        //@ts-ignore: Fix decorators not working in test files
+        @query("pageIndex") pageIndex: string
+      ) {
         return pageIndex;
       }
     }
@@ -209,7 +228,7 @@ describe("controllers", () => {
     const response = await fetch(`${serverAddress}/test?pageIndex=${expectedQuery}`);
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
 
     const responseText = await response.text();
     expect(responseText).toEqual(expectedQuery);
@@ -223,10 +242,15 @@ describe("controllers", () => {
       pageSize: "40",
     };
 
+    //@ts-ignore: Fix decorators not working in test files
     @controller("test")
     class TestController {
+      //@ts-ignore: Fix decorators not working in test files
       @get()
-      find(@query() query: any) {
+      find(
+        //@ts-ignore: Fix decorators not working in test files
+        @query() query: any
+      ) {
         return query;
       }
     }
@@ -239,7 +263,7 @@ describe("controllers", () => {
     );
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
 
     const responseJson = await response.json();
     expect(responseJson).toEqual(expectedQuery);
@@ -253,10 +277,17 @@ describe("controllers", () => {
       pageSize: "40",
     };
 
+    //@ts-ignore: Fix decorators not working in test files
     @controller("test")
     class TestController {
+      //@ts-ignore: Fix decorators not working in test files
       @get()
-      find(@query("pageIndex") pageIndex: string, @query("pageSize") pageSize: string) {
+      find(
+        //@ts-ignore: Fix decorators not working in test files
+        @query("pageIndex") pageIndex: string,
+        //@ts-ignore: Fix decorators not working in test files
+        @query("pageSize") pageSize: string
+      ) {
         return { pageIndex, pageSize };
       }
     }
@@ -269,7 +300,7 @@ describe("controllers", () => {
     );
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
 
     const responseJson = await response.json();
     expect(responseJson).toEqual(expectedQuery);
@@ -280,10 +311,15 @@ describe("controllers", () => {
 
     const expectedHeaderValue = "Bearer someValidJwt";
 
+    //@ts-ignore: Fix decorators not working in test files
     @controller()
     class TestController {
+      //@ts-ignore: Fix decorators not working in test files
       @post()
-      find(@headers() headers: Headers) {
+      find(
+        //@ts-ignore: Fix decorators not working in test files
+        @headers() headers: Headers
+      ) {
         return headers.authorization;
       }
     }
@@ -298,7 +334,7 @@ describe("controllers", () => {
     });
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
 
     const responseText = await response.text();
     expect(responseText).toEqual(expectedHeaderValue);
@@ -312,10 +348,17 @@ describe("controllers", () => {
       client_secret: "456",
     };
 
+    //@ts-ignore: Fix decorators not working in test files
     @controller("test")
     class TestController {
+      //@ts-ignore: Fix decorators not working in test files
       @post("token")
-      find(@header("client_id") clientId: string, @header("client_secret") clientSecret: string) {
+      find(
+        //@ts-ignore: Fix decorators not working in test files
+        @header("client_id") clientId: string,
+        //@ts-ignore: Fix decorators not working in test files
+        @header("client_secret") clientSecret: string
+      ) {
         return {
           client_id: clientId,
           client_secret: clientSecret,
@@ -336,13 +379,14 @@ describe("controllers", () => {
     });
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
 
     const responseJson = await response.json();
     expect(responseJson).toEqual(expectedHeaders);
   });
 
   it("A controller method can attach a middleware using the @middleware decorator", async () => {
+    //@ts-ignore: Fix decorators not working in test files
     @singleton()
     class TestMiddleware implements Middleware {
       handle(context: HttpContext, next: NextFunction): void | Promise<void> {
@@ -351,16 +395,19 @@ describe("controllers", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @controller()
     class TestController {
+      //@ts-ignore: Fix decorators not working in test files
       @useMethodMiddleware(TestMiddleware)
+      //@ts-ignore: Fix decorators not working in test files
       @get()
       getMethod() {
-        return new StatusCodeResponse(StatusCodes.ok);
+        return new StatusCodeResponse(statusCodes.ok);
       }
     }
 
-    const registeredController = internalContainer.get<TestController>(TestController);
+    const registeredController = globalContainer.get<TestController>(TestController);
     const decoratedProperties = Reflect.getMetadataKeys(registeredController);
     // console.log("decoratedProperties", decoratedProperties);
 
@@ -381,6 +428,7 @@ describe("controllers", () => {
     let initialValue = 1;
     const expectedValue = 2;
 
+    //@ts-ignore: Fix decorators not working in test files
     @singleton()
     class TestMiddleware implements Middleware {
       handle(context: HttpContext, next: NextFunction): void | Promise<void> {
@@ -389,23 +437,27 @@ describe("controllers", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @controller()
     class TestController {
+      //@ts-ignore: Fix decorators not working in test files
       @useMethodMiddleware(TestMiddleware)
+      //@ts-ignore: Fix decorators not working in test files
       @get()
       getMethod() {
-        return new StatusCodeResponse(StatusCodes.ok);
+        return new StatusCodeResponse(statusCodes.ok);
       }
     }
 
     server = await new AppBuilder().useJson().useController(TestController).buildAsync(port);
 
     const response = await fetch(`${serverAddress}`);
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
     expect(initialValue).toBe(expectedValue);
   });
 
   it("A controller method can attach and use a guard using the @guard decorator", async () => {
+    //@ts-ignore: Fix decorators not working in test files
     @guard()
     class TestGuard implements Guard {
       isAllowed(context: GuardContext) {
@@ -413,19 +465,22 @@ describe("controllers", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @controller()
     class TestController {
+      //@ts-ignore: Fix decorators not working in test files
       @useMethodGuard(TestGuard)
+      //@ts-ignore: Fix decorators not working in test files
       @get()
       getMethod() {
-        return new StatusCodeResponse(StatusCodes.ok);
+        return new StatusCodeResponse(statusCodes.ok);
       }
     }
 
     server = await new AppBuilder().useJson().useController(TestController).buildAsync(port);
 
     const response = await fetch(`${serverAddress}`);
-    expect(response.status).toBe(StatusCodes.unauthorized);
+    expect(response.status).toBe(statusCodes.unauthorized);
   });
 
   it("A controller can inject a QueryHandler", async () => {
@@ -436,6 +491,7 @@ describe("controllers", () => {
       constructor(readonly id: string) {}
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @queryHandler(TestQuery)
     class TestQueryHandler implements QueryHandler<TestQuery, string> {
       fetch(query: TestQuery): string | Promise<string> {
@@ -444,12 +500,20 @@ describe("controllers", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @controller("test")
     class TestController {
-      constructor(@inject(QueryDispatcher) private readonly queries: QueryDispatcher) {}
+      constructor(
+        //@ts-ignore: Fix decorators not working in test files
+        @inject(QueryDispatcher) private readonly queries: QueryDispatcher
+      ) {}
 
+      //@ts-ignore: Fix decorators not working in test files
       @get(":id")
-      async find(@param("id") id: string) {
+      async find(
+        //@ts-ignore: Fix decorators not working in test files
+        @param("id") id: string
+      ) {
         // console.log("TestController.find:", id);
         return await this.queries.fetch(new TestQuery(id));
       }
@@ -464,7 +528,7 @@ describe("controllers", () => {
     const response = await fetch(`${serverAddress}/test/${expectedId}`);
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
 
     const responseText = await response.text();
     expect(responseText).toEqual(expectedId);
@@ -487,15 +551,24 @@ describe("controllers", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @queryHandler(GetQuery)
     class TestGetQueryHandler extends GetQueryHandler<GetQuery> {}
 
+    //@ts-ignore: Fix decorators not working in test files
     @controller("test")
     class TestController {
-      constructor(@inject(QueryDispatcher) private readonly queries: QueryDispatcher) {}
+      constructor(
+        //@ts-ignore: Fix decorators not working in test files
+        @inject(QueryDispatcher) private readonly queries: QueryDispatcher
+      ) {}
 
+      //@ts-ignore: Fix decorators not working in test files
       @get(":id")
-      async find(@param("id") id: string) {
+      async find(
+        //@ts-ignore: Fix decorators not working in test files
+        @param("id") id: string
+      ) {
         // console.log("TestController.find:", id);
         return await this.queries.fetch(new GetQuery(id));
       }
@@ -510,7 +583,7 @@ describe("controllers", () => {
     const response = await fetch(`${serverAddress}/test/${expectedId}`);
 
     // Assert
-    expect(response.status).toBe(StatusCodes.ok);
+    expect(response.status).toBe(statusCodes.ok);
 
     const responseText = await response.text();
     expect(responseText).toEqual(expectedId);

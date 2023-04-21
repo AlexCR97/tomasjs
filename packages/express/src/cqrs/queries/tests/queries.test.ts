@@ -1,15 +1,15 @@
 import "express-async-errors";
 import "reflect-metadata";
 import fetch from "node-fetch";
-import { afterEach, describe, it } from "@jest/globals";
-import { tryCloseServerAsync } from "@/tests/utils";
-import { Endpoint, endpoint, path } from "@/endpoints";
-import { HttpContext, StatusCodes } from "@/core";
-import { inject } from "@/container";
-import { AppBuilder } from "@/builder";
+import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { queryHandler } from "../@queryHandler";
 import { QueryHandler } from "../QueryHandler";
 import { QueryDispatcher } from "../QueryDispatcher";
+import { inject } from "@tomasjs/core";
+import { AppBuilder } from "../../../builder";
+import { HttpContext, statusCodes } from "../../../core";
+import { endpoint, path, Endpoint } from "../../../endpoints";
+import { tryCloseServerAsync } from "../../../tests/utils";
 
 describe("cqrs-queries", () => {
   const port = 3043;
@@ -32,6 +32,7 @@ describe("cqrs-queries", () => {
       constructor(readonly username: string) {}
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @queryHandler(GetUserQuery)
     class GetUserQueryHandler implements QueryHandler<GetUserQuery, string> {
       fetch(query: GetUserQuery): string {
@@ -39,10 +40,15 @@ describe("cqrs-queries", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint()
+    //@ts-ignore: Fix decorators not working in test files
     @path(":username")
     class GetUserEndpoint implements Endpoint {
-      constructor(@inject(QueryDispatcher) private readonly query: QueryDispatcher) {}
+      constructor(
+        //@ts-ignore: Fix decorators not working in test files
+        @inject(QueryDispatcher) private readonly query: QueryDispatcher
+      ) {}
 
       async handle({ request }: HttpContext) {
         return await this.query.fetch<string>(new GetUserQuery(request.params.username));
@@ -55,7 +61,7 @@ describe("cqrs-queries", () => {
     new GetUserQueryHandler(); // Make ts happy
 
     const response = await fetch(`${serverAddress}/${expectedUsername}`);
-    expect(response.status).toEqual(StatusCodes.ok);
+    expect(response.status).toEqual(statusCodes.ok);
 
     const responseText = await response.text();
     expect(responseText).toEqual(expectedUsername);

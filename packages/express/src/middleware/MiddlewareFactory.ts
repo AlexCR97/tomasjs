@@ -1,4 +1,4 @@
-import { ClassConstructor } from "@/container";
+import { ClassConstructor } from "@tomasjs/core";
 import { Middleware } from "./Middleware";
 import { MiddlewareHandler } from "./MiddlewareHandler";
 

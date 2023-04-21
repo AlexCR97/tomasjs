@@ -1,10 +1,6 @@
-import { TomasError } from "@/core/errors";
-import { Transform, TransformFunction } from "@/transforms";
+import { Configuration, TomasError, Transform, TransformFunction } from "@tomasjs/core";
 import { DotenvParseOutput } from "dotenv";
-import { Configuration } from "../core";
 import { KeyConfiguration } from "./KeyConfiguration";
-
-type PropertyOf<T> = T[keyof T];
 
 export class DotenvConfiguration<TSettings extends object> implements Configuration<TSettings> {
   private readonly _root: TSettings;
@@ -44,6 +40,8 @@ class DotenvTransform<TObject extends object> implements Transform<DotenvParseOu
   }
 }
 
+type PropertyOf<T> = T[keyof T];
+
 class KeyConfigurationTransform<TObject extends object>
   implements Transform<PropertyOf<TObject>, any>
 {
@@ -59,7 +57,7 @@ class KeyConfigurationTransform<TObject extends object>
     }
 
     if (this.keyConfiguration.type === "boolean") {
-      return BooleanTransform(input as string);
+      return booleanTransform(input as string);
     }
 
     if (this.keyConfiguration.type === "object") {
@@ -70,7 +68,7 @@ class KeyConfigurationTransform<TObject extends object>
   }
 }
 
-const BooleanTransform: TransformFunction<string, boolean> = (input) => {
+const booleanTransform: TransformFunction<string, boolean> = (input) => {
   if (input === "true") {
     return true;
   }

@@ -1,7 +1,7 @@
 import { HttpContext } from "@/core";
-import { TomasError } from "@/core/errors";
 import { PipeTransformParam } from "./PipeTransformParam";
 import { TransformBridge } from "./TransformBridge";
+import { TomasError } from "@tomasjs/core";
 
 export abstract class PayloadTransformDecoratorFactory<TOutput> {
   /** The transformation to apply. */

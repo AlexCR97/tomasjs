@@ -1,8 +1,8 @@
+import { singleton } from "@tomasjs/core";
 import { response } from "express";
+import { ResponseAdapter } from "@/responses";
 import { RequestContext } from "./RequestContext";
 import { UserContext } from "./UserContext";
-import { ResponseAdapter } from "@/responses";
-import { singleton } from "@/container";
 
 @singleton()
 export class HttpContext {

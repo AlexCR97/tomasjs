@@ -1,4 +1,4 @@
-import { ClassConstructor } from "@/container";
+import { ClassConstructor } from "@tomasjs/core";
 import { QueryHandler } from "../QueryHandler";
 import { QueryHandlerMetadataKeys } from "./QueryHandlerMetadataKeys";
 
@@ -12,11 +12,9 @@ export class QueryHandlerMetadata<TQuery, TResult> {
   ) {}
 
   get queryConstructor(): ClassConstructor<any> {
-    //@ts-ignore: The package "reflect-metadata" should be imported by host
     return Reflect.getMetadata(this.queryConstructorKey, this.queryHandlerPrototype);
   }
   set queryConstructor(value: ClassConstructor<any>) {
-    //@ts-ignore: The package "reflect-metadata" should be imported by host
     Reflect.defineMetadata(this.queryConstructorKey, value, this.queryHandlerPrototype);
   }
 

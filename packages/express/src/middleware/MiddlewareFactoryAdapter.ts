@@ -1,4 +1,4 @@
-import { ClassConstructor, internalContainer, isClassConstructor } from "@/container";
+import { ClassConstructor, globalContainer, isClassConstructor } from "@tomasjs/core";
 import { Middleware } from "./Middleware";
 import { MiddlewareFactory } from "./MiddlewareFactory";
 import { isMiddlewareFactoryHandler, MiddlewareFactoryHandler } from "./MiddlewareFactoryHandler";
@@ -61,7 +61,7 @@ export abstract class MiddlewareFactoryAdapter {
   static fromConstructor<TMiddleware extends Middleware = Middleware>(
     factory: ClassConstructor<MiddlewareFactory<TMiddleware>>
   ): MiddlewareHandler | TMiddleware | ClassConstructor<TMiddleware> {
-    const factoryInstance = internalContainer.get(factory);
+    const factoryInstance = globalContainer.get(factory);
     return factoryInstance.create();
   }
 }

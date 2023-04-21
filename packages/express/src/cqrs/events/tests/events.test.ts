@@ -1,15 +1,15 @@
 import "express-async-errors";
 import "reflect-metadata";
 import fetch from "node-fetch";
-import { afterEach, describe, it } from "@jest/globals";
-import { tryCloseServerAsync } from "@/tests/utils";
-import { Endpoint, endpoint } from "@/endpoints";
-import { HttpContext, StatusCodes } from "@/core";
-import { inject } from "@/container";
-import { AppBuilder } from "@/builder";
+import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { eventHandler } from "../@eventHandler";
 import { EventHandler } from "../EventHandler";
 import { EventDispatcher } from "../EventDispatcher";
+import { tryCloseServerAsync } from "../../../tests/utils";
+import { Endpoint, endpoint } from "../../../endpoints";
+import { inject } from "@tomasjs/core";
+import { HttpContext, statusCodes } from "../../../core";
+import { AppBuilder } from "../../../builder";
 
 describe("cqrs-events", () => {
   const port = 3044;
@@ -32,6 +32,7 @@ describe("cqrs-events", () => {
       constructor(readonly username: string) {}
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @eventHandler(UserCreatedEvent)
     class UserCreatedEventHandler implements EventHandler<UserCreatedEvent> {
       handle(event: UserCreatedEvent): void | Promise<void> {
@@ -39,9 +40,13 @@ describe("cqrs-events", () => {
       }
     }
 
+    //@ts-ignore: Fix decorators not working in test files
     @endpoint("post")
     class CreateUserEndpoint implements Endpoint {
-      constructor(@inject(EventDispatcher) private readonly events: EventDispatcher) {}
+      constructor(
+        //@ts-ignore: Fix decorators not working in test files
+        @inject(EventDispatcher) private readonly events: EventDispatcher
+      ) {}
 
       async handle({ request }: HttpContext) {
         this.events.emit(new UserCreatedEvent(request.body.username));
@@ -58,6 +63,7 @@ describe("cqrs-events", () => {
       body: JSON.stringify({ username: expectedUsername }),
       headers: { "Content-Type": "application/json" },
     });
-    expect(response.status).toEqual(StatusCodes.ok);
+
+    expect(response.status).toEqual(statusCodes.ok);
   });
 });

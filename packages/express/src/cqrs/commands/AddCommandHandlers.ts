@@ -1,5 +1,4 @@
-import { ContainerSetup, ContainerSetupFactory } from "@/builder";
-import { ClassConstructor } from "@/container";
+import { ClassConstructor, ContainerSetup, ContainerSetupFactory } from "@tomasjs/core";
 import { CommandHandlerToken } from "./metadata";
 
 export class AddCommandHandlers extends ContainerSetupFactory {
