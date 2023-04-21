@@ -1,6 +1,6 @@
 {
   "name": "@tomasjs/core",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "The core components of TomasJS.",
   "author": "viex",
   "license": "ISC",
@@ -21,15 +21,14 @@
   },
   "dependencies": {
     "inversify": "^6.0.1",
-    "winston": "^3.8.2"
+    "reflect-metadata": "^0.1.13"
   },
   "peerDependencies": {
     "inversify": "^6.0.1",
-    "winston": "^3.8.2"
+    "reflect-metadata": "^0.1.13"
   },
   "devDependencies": {
     "nodemon": "^2.0.22",
-    "reflect-metadata": "^0.1.13",
     "ts-node": "^10.9.1",
     "tsc-alias": "^1.8.5",
     "tsconfig-paths": "^4.2.0",
