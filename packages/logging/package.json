@@ -1,6 +1,6 @@
 {
   "name": "@tomasjs/logging",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Support for logging in a TomasJS infrastructure.",
   "author": "viex",
   "license": "ISC",
