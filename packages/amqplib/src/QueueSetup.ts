@@ -1,7 +1,6 @@
+import { Container, ContainerSetup, ContainerSetupFactory, globalContainer } from "@tomasjs/core";
+import { Logger } from "@tomasjs/logging";
 import { Channel, Options } from "amqplib";
-import { ContainerSetup, ContainerSetupFactory } from "@tomasjs/express/builder";
-import { IContainer, internalContainer } from "@tomasjs/express/container";
-import { Logger } from "@tomasjs/express/logger";
 import { QueueMessageHandler } from "./QueueMessageHandler";
 import { QueueMessageHandlerMetadata, QueueMessageHandlerToken } from "./metadata";
 import { ChannelToken } from "./tokens";
@@ -23,7 +22,7 @@ export class QueueSetup extends ContainerSetupFactory {
   }
 
   private get channel(): Channel {
-    return this.options.channel ?? internalContainer.get<Channel>(ChannelToken);
+    return this.options.channel ?? globalContainer.get<Channel>(ChannelToken);
   }
 
   private get logger(): Logger | undefined {
@@ -35,11 +34,13 @@ export class QueueSetup extends ContainerSetupFactory {
       this.logger?.info(`Opening queue "${this.queueName}" ...`);
       await this.channel.assertQueue(this.queueName, this.options.assertQueueOptions);
       this.logger?.info(`The queue "${this.queueName}" is ready for consumption.`);
+
+      //@ts-ignore: Fix error "Argument of type 'Container' is not assignable to parameter of type 'GlobalContainer'. Property '_container' is missing in type 'Container' but required in type 'GlobalContainer'."
       this.beginChannelConsumption(container);
     };
   }
 
-  private getQueueMessageHandlers(container: IContainer): QueueMessageHandler[] {
+  private getQueueMessageHandlers(container: Container): QueueMessageHandler[] {
     try {
       return container.getAll<QueueMessageHandler>(QueueMessageHandlerToken);
     } catch (err) {
@@ -47,7 +48,7 @@ export class QueueSetup extends ContainerSetupFactory {
     }
   }
 
-  private beginChannelConsumption(container: IContainer) {
+  private beginChannelConsumption(container: Container) {
     this.channel.consume(this.queueName, (message) => {
       this.logger?.info(`Received message from queue "${this.queueName}".`);
 

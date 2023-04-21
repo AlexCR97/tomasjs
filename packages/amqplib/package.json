@@ -1,6 +1,6 @@
 {
   "name": "@tomasjs/amqplib",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Support for amqplib in a TomasJS infrastructure.",
   "author": "viex",
   "license": "ISC",
@@ -21,21 +21,22 @@
     "sample": "nodemon -r tsconfig-paths/register ./sample/main.ts"
   },
   "dependencies": {
-    "@tomasjs/express": "^1.0.0",
-    "amqplib": "^0.10.3",
-    "reflect-metadata": "^0.1.13"
+    "@tomasjs/core": "^1.0.1",
+    "@tomasjs/logging": "^1.1.0",
+    "amqplib": "^0.10.3"
+  },
+  "peerDependencies": {
+    "@tomasjs/core": "^1.0.1",
+    "@tomasjs/logging": "^1.1.0",
+    "amqplib": "^0.10.3"
   },
   "devDependencies": {
     "@types/amqplib": "^0.10.1",
     "nodemon": "^2.0.22",
+    "reflect-metadata": "^0.1.13",
     "ts-node": "^10.9.1",
     "tsc-alias": "^1.8.5",
     "tsconfig-paths": "^4.2.0",
     "typescript": "^4.9.4"
-  },
-  "peerDependencies": {
-    "@tomasjs/express": "^1.0.0",
-    "amqplib": "^0.10.3",
-    "reflect-metadata": "^0.1.13"
   }
 }
