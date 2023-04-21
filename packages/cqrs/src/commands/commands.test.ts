@@ -3,7 +3,7 @@ import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { inject } from "@tomasjs/core";
 import { AppBuilder, HttpContext, statusCodes } from "@tomasjs/express";
-import { Endpoint } from "@tomasjs/express/endpoints";
+import { Endpoint, endpoint } from "@tomasjs/express/endpoints";
 import fetch from "node-fetch";
 import { CommandHandler } from "./CommandHandler";
 import { commandHandler } from "./@commandHandler";

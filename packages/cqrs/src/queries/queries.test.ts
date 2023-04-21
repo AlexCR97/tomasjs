@@ -4,7 +4,7 @@ import fetch from "node-fetch";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { inject } from "@tomasjs/core";
 import { HttpContext, AppBuilder, statusCodes } from "@tomasjs/express";
-import { Endpoint } from "@tomasjs/express/endpoints";
+import { Endpoint, endpoint, path } from "@tomasjs/express/endpoints";
 import { queryHandler } from "./@queryHandler";
 import { QueryHandler } from "./QueryHandler";
 import { QueryDispatcher } from "./QueryDispatcher";
