@@ -6,9 +6,15 @@ import {
   bootstrapLoggerFactory,
 } from "@tomasjs/logging";
 import { Server } from "socket.io";
-import { SocketIOSetup, UseConnectionListener, UseDisconnectingListener } from "../src";
+import {
+  SocketIOSetup,
+  UseConnectionListener,
+  UseDisconnectListener,
+  UseDisconnectingListener,
+} from "../src";
 import { SocketConnectionListener } from "./server-ConnectionListener";
 import { SocketDisconnectingListener } from "./server-DisconnectingListener";
+import { SocketDisconnectListener } from "./server-DisconnectListener";
 
 const serverPort = 3030;
 const bootstrapLogger = bootstrapLoggerFactory();
@@ -27,6 +33,7 @@ async function main() {
     )
     .setup(new UseConnectionListener(SocketConnectionListener))
     .setup(new UseDisconnectingListener(SocketDisconnectingListener))
+    .setup(new UseDisconnectListener(SocketDisconnectListener))
     .buildAsync();
 
   bootstrapLogger.debug("Server started!");

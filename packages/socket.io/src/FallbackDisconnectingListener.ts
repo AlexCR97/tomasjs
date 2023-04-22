@@ -1,5 +1,5 @@
 import { Logger, LoggerFactory } from "@tomasjs/logging";
-import { Socket } from "socket.io";
+import { DisconnectReason, Socket } from "socket.io";
 import { DisconnectingListener } from "./DisconnectingListener";
 
 export class FallbackDisconnectingListener implements DisconnectingListener {
@@ -9,7 +9,11 @@ export class FallbackDisconnectingListener implements DisconnectingListener {
     this.logger = loggerFactory.create(FallbackDisconnectingListener.name);
   }
 
-  onDisconnecting(socket: Socket) {
-    this.logger.debug(`Client "${socket.id}" is disconnecting ...`);
+  onDisconnecting(
+    socket: Socket,
+    reason: DisconnectReason,
+    description: any
+  ): void | Promise<void> {
+    this.logger.debug(`Client "${socket.id}" is disconnecting ...`, { reason, description });
   }
 }
