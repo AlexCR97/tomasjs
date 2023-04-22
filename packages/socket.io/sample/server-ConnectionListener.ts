@@ -1,11 +1,10 @@
-import { inject } from "@tomasjs/core";
+import { inject, injectable } from "@tomasjs/core";
 import { Logger, LoggerFactory, LoggerFactoryToken } from "@tomasjs/logging";
 import { Socket } from "socket.io";
-import { DefaultEventsMap } from "socket.io/dist/typed-events";
-import { ConnectionListener, connectionListener } from "../src";
+import { ConnectionListener } from "../src";
 
-//@ts-ignore: Fix decorators not working in sample files.
-@connectionListener()
+//@ts-ignore: Fix decorators not working in sample files.s
+@injectable()
 export class SocketConnectionListener implements ConnectionListener {
   private readonly logger: Logger;
 
@@ -16,9 +15,7 @@ export class SocketConnectionListener implements ConnectionListener {
     this.logger = loggerFactory.create(SocketConnectionListener.name);
   }
 
-  onConnection(
-    socket: Socket<DefaultEventsMap, DefaultEventsMap, DefaultEventsMap, any>
-  ): void | Promise<void> {
+  onConnection(socket: Socket): void | Promise<void> {
     this.logger.info(`Client "${socket.id}" connected!`);
 
     // Disconnect after the specified milliseconds
