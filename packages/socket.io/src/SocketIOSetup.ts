@@ -9,6 +9,7 @@ import { connectionListenerToken } from "./connectionListenerToken";
 import { FallbackConnectionListener } from "./FallbackConnectionListener";
 import { disconnectingListenerToken } from "./disconnectingListenerToken";
 import { FallbackDisconnectingListener } from "./FallbackDisconnectingListener";
+import { serverToken } from "./serverToken";
 
 export class SocketIOSetup extends ContainerSetupFactory {
   constructor(private readonly options: SocketIOSetupOptions) {
@@ -30,6 +31,8 @@ export class SocketIOSetup extends ContainerSetupFactory {
   create(): ContainerSetup {
     return (container) => {
       this.logger?.debug("Started setup for socket.io server ...");
+
+      container.addInstance(this.server, serverToken);
 
       this.server.on("connection", (socket) => {
         // TODO Fix type error: Argument of type 'Container' is not assignable to parameter of type 'GlobalContainer'.
