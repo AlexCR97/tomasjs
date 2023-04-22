@@ -28,6 +28,8 @@
     "socket.io": "^4.6.1"
   },
   "peerDependencies": {
+    "@tomasjs/core": "^1.1.0",
+    "@tomasjs/logging": "^1.2.0",
     "socket.io": "^4.6.1"
   },
   "devDependencies": {
