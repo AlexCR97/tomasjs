@@ -3,8 +3,10 @@ import { ClassConstructor } from "@/reflection";
 import { Container } from "./Container";
 import { Scope } from "./Scope";
 import { Token } from "./Token";
+import { UnknownTokenError } from "./UnknownTokenError";
+import { RemoveTokenError } from "./RemoveTokenError";
 
-export class GlobalContainer implements Container {
+export class ServiceContainer implements Container {
   private _container = new InversifyContainer({
     /**
      * The following statement prevents the error "Missing required @injectable annotation in: SomeClass".
@@ -42,30 +44,42 @@ export class GlobalContainer implements Container {
   }
 
   get<T>(token: Token<T>): T {
-    return this._container.get<T>(token);
-  }
-
-  getAll<T>(token: Token<T>): T[] {
-    return this._container.getAll<T>(token);
-  }
-
-  has<T>(token: Token<T>): boolean {
     try {
-      this.get(token);
-      return true;
+      return this._container.get<T>(token);
     } catch (err) {
-      // TODO Check err for a better check?
-      return false;
+      throw new UnknownTokenError(token, err);
     }
   }
 
-  isClassConstructor<T>(token: Token<T>): token is ClassConstructor<T> {
-    // TODO Improve type check?
-    return typeof token === "function";
+  getOrDefault<T>(token: Token<T>): T | undefined {
+    try {
+      return this._container.get<T>(token);
+    } catch (err) {
+      // TODO Check error
+      return undefined;
+    }
+  }
+
+  getAll<T>(token: Token<T>): T[] {
+    try {
+      return this._container.getAll<T>(token);
+    } catch (err) {
+      // TODO Check error type
+      return [];
+    }
+  }
+
+  has<T>(token: Token<T>): boolean {
+    const service = this.getOrDefault<T>(token);
+    return service !== undefined;
   }
 
   remove<T>(token: Token<T>): Container {
-    this._container.unbind(token);
-    return this;
+    try {
+      this._container.unbind(token);
+      return this;
+    } catch (err) {
+      throw new RemoveTokenError(token, err);
+    }
   }
 }
