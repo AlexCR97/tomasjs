@@ -2,7 +2,7 @@ import { Container } from "./Container";
 import { ServiceProvider } from "./ServiceProvider";
 import { Token } from "./Token";
 
-export class ContainerServiceProvider implements ServiceProvider {
+export class ServiceContainerProvider implements ServiceProvider {
   constructor(private readonly container: Container) {}
 
   get<T>(token: Token<T>): T {

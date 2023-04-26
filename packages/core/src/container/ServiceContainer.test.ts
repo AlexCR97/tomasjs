@@ -5,7 +5,7 @@ import { ServiceContainer } from "./ServiceContainer";
 import { UnknownTokenError } from "./UnknownTokenError";
 import { RemoveTokenError } from "./RemoveTokenError";
 
-describe("Container", () => {
+describe("ServiceContainer", () => {
   it("Can add a class", () => {
     //@ts-ignore: Fix decorators not working in test files
     @injectable()

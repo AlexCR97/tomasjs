@@ -1,5 +1,5 @@
-import { ContainerTeardown } from "./ContainerTeardown";
+import { ContainerTeardownFunction } from "./ContainerTeardownFunction";
 
 export interface ContainerTeardownFactory {
-  create(): ContainerTeardown;
+  create(): ContainerTeardownFunction;
 }
