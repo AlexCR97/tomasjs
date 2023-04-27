@@ -9,8 +9,8 @@ export interface Container {
   ): Container;
   addInstance<T>(instance: T, token: Token<T>): Container;
   get<T>(token: Token<T>): T;
+  getOrDefault<T>(token: Token<T>): T | undefined;
   getAll<T>(token: Token<T>): T[];
   has<T>(token: Token<T>): boolean;
-  isClassConstructor<T>(token: Token<T>): token is ClassConstructor<T>;
   remove<T>(token: Token<T>): Container;
 }

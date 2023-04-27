@@ -1,21 +1,18 @@
-import { ContainerSetup } from "./ContainerSetup";
-import { ContainerSetupFactory } from "./ContainerSetupFactory";
-import { globalContainer } from "./globalContainerInstance";
+import { ClassConstructor } from "@/reflection";
+import { Container } from "./Container";
+import { ContainerSetupType } from "./ContainerSetupType";
+import { ServiceProvider } from "./ServiceProvider";
+import { Token } from "./Token";
+import { Scope } from "./Scope";
 
-type Setup = ContainerSetup | ContainerSetupFactory;
-
-export class ContainerBuilder {
-  private readonly setups: Setup[] = [];
-
-  setup(setup: Setup): ContainerBuilder {
-    this.setups.push(setup);
-    return this;
-  }
-
-  async buildAsync(): Promise<void> {
-    for (const setup of this.setups) {
-      const setupCallback = setup instanceof ContainerSetupFactory ? setup.create() : setup;
-      await setupCallback(globalContainer);
-    }
-  }
+export interface ContainerBuilder {
+  addClass<T>(
+    constructor: ClassConstructor<T>,
+    options?: { token?: Token<T>; scope?: Scope }
+  ): ContainerBuilder;
+  addInstance<T>(instance: T, token: Token<T>): ContainerBuilder;
+  setup(setup: ContainerSetupType): ContainerBuilder;
+  buildAsync(): Promise<void>;
+  buildContainerAsync(): Promise<Container>;
+  buildServiceProviderAsync(): Promise<ServiceProvider>;
 }
