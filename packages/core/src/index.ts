@@ -17,10 +17,8 @@ export {
   ServiceProvider,
   Token,
   UnknownTokenError,
-  globalContainer,
   inject,
   injectable,
-  singleton,
 } from "./container";
 
 export { NotImplementedError, RequiredArgumentError, TomasError } from "./errors";
