@@ -1,4 +1,4 @@
-export { Configuration, ConfigurationResolver, ConfigurationToken } from "./configuration";
+export { Configuration, ConfigurationToken } from "./configuration";
 
 export {
   Container,
