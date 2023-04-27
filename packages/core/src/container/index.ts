@@ -1,6 +1,5 @@
 export { inject } from "./@inject";
 export { injectable } from "./@injectable";
-export { singleton } from "./@singleton";
 export { Container } from "./Container";
 export { ContainerBuilder } from "./ContainerBuilder";
 export { ContainerSetupFactory } from "./ContainerSetupFactory";
@@ -9,7 +8,6 @@ export { ContainerSetupType } from "./ContainerSetupType";
 export { ContainerTeardownFunction } from "./ContainerTeardownFunction";
 export { ContainerTeardownFactory } from "./ContainerTeardownFactory";
 export { ContainerTeardownType } from "./ContainerTeardownType";
-export { globalContainer } from "./globalContainerInstance";
 export { RemoveTokenError } from "./RemoveTokenError";
 export { Scope } from "./Scope";
 export { ServiceContainer } from "./ServiceContainer";
