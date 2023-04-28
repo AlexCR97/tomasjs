@@ -1,9 +1,8 @@
 export { LogLevel } from "./LogLevel";
 export { Logger } from "./Logger";
 export { LoggerFactory } from "./LoggerFactory";
-export { LoggerFactoryResolver } from "./LoggerFactoryResolver";
 export { LoggerFactorySetup } from "./LoggerFactorySetup";
-export { LoggerFactoryToken } from "./LoggerFactoryToken";
+export { loggerFactoryToken } from "./loggerFactoryToken";
 export { TomasLogger } from "./TomasLogger";
 export { TomasLoggerFactory } from "./TomasLoggerFactory";
 export { TomasLoggerFactorySetup } from "./TomasLoggerFactorySetup";

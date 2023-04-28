@@ -1,18 +1,17 @@
-import { ClassConstructor, ContainerSetup, ContainerSetupFactory } from "@tomasjs/core";
+import { ClassConstructor, ContainerSetupFactory, ContainerSetupFunction } from "@tomasjs/core";
 import { LoggerFactory } from "./LoggerFactory";
-import { LoggerFactoryToken } from "./LoggerFactoryToken";
+import { loggerFactoryToken } from "./loggerFactoryToken";
 
-export class LoggerFactorySetup<
-  TLoggerFactory extends LoggerFactory
-> extends ContainerSetupFactory {
-  constructor(private readonly loggerFactoryClass: ClassConstructor<TLoggerFactory>) {
-    super();
-  }
-  create(): ContainerSetup {
+export class LoggerFactorySetup<TLoggerFactory extends LoggerFactory>
+  implements ContainerSetupFactory
+{
+  constructor(private readonly loggerFactoryClass: ClassConstructor<TLoggerFactory>) {}
+
+  create(): ContainerSetupFunction {
     return (container) => {
       container.addClass(this.loggerFactoryClass, {
         scope: "singleton",
-        token: LoggerFactoryToken,
+        token: loggerFactoryToken,
       });
     };
   }

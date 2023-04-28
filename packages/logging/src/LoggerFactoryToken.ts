@@ -1,1 +1,1 @@
-export const LoggerFactoryToken = "tomasjs:loggerFactory";
+export const loggerFactoryToken = "tomasjs:loggerFactory";

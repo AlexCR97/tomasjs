@@ -1,30 +1,17 @@
 import "reflect-metadata";
-import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { ContainerBuilder, globalContainer, injectable } from "@tomasjs/core";
+import { describe, expect, it } from "@jest/globals";
+import { ServiceContainerBuilder, injectable } from "@tomasjs/core";
 import { LogLevel } from "./LogLevel";
 import { Logger } from "./Logger";
 import { LoggerFactory } from "./LoggerFactory";
-import { LoggerFactoryResolver } from "./LoggerFactoryResolver";
 import { LoggerFactorySetup } from "./LoggerFactorySetup";
-import { LoggerFactoryToken } from "./LoggerFactoryToken";
+import { loggerFactoryToken } from "./loggerFactoryToken";
 import { TomasLogger } from "./TomasLogger";
 import { TomasLoggerFactory } from "./TomasLoggerFactory";
 import { TomasLoggerFactorySetup } from "./TomasLoggerFactorySetup";
 import { bootstrapLoggerFactory } from "./bootstrapLoggerFactory";
 
 describe("logger", () => {
-  beforeEach(async () => {
-    if (globalContainer.has(LoggerFactoryToken)) {
-      globalContainer.remove(LoggerFactoryToken);
-    }
-  });
-
-  afterEach(async () => {
-    if (globalContainer.has(LoggerFactoryToken)) {
-      globalContainer.remove(LoggerFactoryToken);
-    }
-  });
-
   it(`The ${bootstrapLoggerFactory.name} can be used to create logger`, () => {
     const logger = bootstrapLoggerFactory("debug");
 
@@ -56,22 +43,17 @@ describe("logger", () => {
   });
 
   it(`The ${TomasLoggerFactorySetup.name} can be used to register the ${TomasLogger.name} as the default logger`, async () => {
-    await new ContainerBuilder().setup(new TomasLoggerFactorySetup()).buildAsync();
+    const services = await new ServiceContainerBuilder()
+      .setup(new TomasLoggerFactorySetup())
+      .buildServiceProviderAsync();
 
-    const factory = new LoggerFactoryResolver().getLoggerFactory();
-    const logger = factory.create("logger.test.ts");
+    const loggerFactory = services.get<LoggerFactory>(loggerFactoryToken);
+    expect(loggerFactory).toBeInstanceOf(TomasLoggerFactory);
 
+    const logger = loggerFactory.create("logger.test.ts");
     expect(logger).toBeInstanceOf(TomasLogger);
 
     logger.info('This is a log with "info" level!');
-  });
-
-  it(`The ${TomasLoggerFactory.name} can be resolved via the LoggerFactoryToken`, async () => {
-    await new ContainerBuilder().setup(new TomasLoggerFactorySetup()).buildAsync();
-
-    const loggerFactory = globalContainer.get(LoggerFactoryToken);
-
-    expect(loggerFactory).toBeTruthy();
   });
 
   it(`The ${LoggerFactorySetup.name} can be used to register a custom Logger`, async () => {
@@ -109,9 +91,11 @@ describe("logger", () => {
       }
     }
 
-    await new ContainerBuilder().setup(new CustomLoggerFactorySetup()).buildAsync();
+    const services = await new ServiceContainerBuilder()
+      .setup(new CustomLoggerFactorySetup())
+      .buildServiceProviderAsync();
 
-    const loggerFactory = globalContainer.get(LoggerFactoryToken);
+    const loggerFactory = services.get<LoggerFactory>(loggerFactoryToken);
 
     expect(loggerFactory).toBeInstanceOf(CustomLoggerFactory);
   });
