@@ -8,10 +8,22 @@ import { Token } from "./Token";
 import { Scope } from "./Scope";
 import { ServiceContainer } from "./ServiceContainer";
 import { ContainerBuilder } from "./ContainerBuilder";
+import { serviceProviderToken } from "./serviceProviderToken";
 
 export class ServiceContainerBuilder implements ContainerBuilder {
   private readonly setups: ContainerSetupType[] = [];
   private readonly container = new ServiceContainer();
+  private readonly serviceProvider: ServiceProvider;
+
+  constructor() {
+    this.serviceProvider = this.registerServiceProvider();
+  }
+
+  private registerServiceProvider(): ServiceProvider {
+    const serviceProvider = new ServiceContainerProvider(this.container);
+    this.container.addInstance(serviceProvider, serviceProviderToken);
+    return serviceProvider;
+  }
 
   addClass<T>(
     constructor: ClassConstructor<T>,
@@ -31,21 +43,17 @@ export class ServiceContainerBuilder implements ContainerBuilder {
     return this;
   }
 
-  async buildAsync(): Promise<void> {
-    await this.setupServicesAsync();
-  }
-
   async buildContainerAsync(): Promise<Container> {
-    await this.setupServicesAsync();
+    await this.runContainerSetupsAsync();
     return this.container;
   }
 
   async buildServiceProviderAsync(): Promise<ServiceProvider> {
-    await this.setupServicesAsync();
-    return new ServiceContainerProvider(this.container);
+    await this.runContainerSetupsAsync();
+    return this.serviceProvider;
   }
 
-  private async setupServicesAsync() {
+  private async runContainerSetupsAsync() {
     for (const setup of this.setups) {
       const setupFunction = isContainerSetupFactory(setup) ? setup.create() : setup;
       await setupFunction(this.container);

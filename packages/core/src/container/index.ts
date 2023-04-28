@@ -14,5 +14,6 @@ export { ServiceContainer } from "./ServiceContainer";
 export { ServiceContainerBuilder } from "./ServiceContainerBuilder";
 export { ServiceContainerProvider } from "./ServiceContainerProvider";
 export { ServiceProvider } from "./ServiceProvider";
+export { serviceProviderToken } from "./serviceProviderToken";
 export { Token } from "./Token";
 export { UnknownTokenError } from "./UnknownTokenError";

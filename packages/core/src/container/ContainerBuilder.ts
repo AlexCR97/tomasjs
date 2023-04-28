@@ -12,7 +12,6 @@ export interface ContainerBuilder {
   ): ContainerBuilder;
   addInstance<T>(instance: T, token: Token<T>): ContainerBuilder;
   setup(setup: ContainerSetupType): ContainerBuilder;
-  buildAsync(): Promise<void>;
   buildContainerAsync(): Promise<Container>;
   buildServiceProviderAsync(): Promise<ServiceProvider>;
 }
