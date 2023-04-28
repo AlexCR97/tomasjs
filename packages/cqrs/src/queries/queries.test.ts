@@ -1,68 +1,118 @@
-import "express-async-errors";
 import "reflect-metadata";
-import fetch from "node-fetch";
-import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { inject } from "@tomasjs/core";
-import { HttpContext, AppBuilder, statusCodes } from "@tomasjs/express";
-import { Endpoint, endpoint, path } from "@tomasjs/express/endpoints";
+import { describe, expect, it } from "@jest/globals";
+import { ServiceContainerBuilder } from "@tomasjs/core";
 import { queryHandler } from "./@queryHandler";
-import { QueryHandler } from "./QueryHandler";
 import { QueryDispatcher } from "./QueryDispatcher";
-import { tryCloseServerAsync } from "../tests/utils";
+import { QueryHandler } from "./QueryHandler";
+import { UseQueries } from "./UseQueries";
+import { UseServiceProvider } from "../UseServiceProvider";
+import { QueryHandlerToken } from "./metadata";
 
-describe("cqrs-queries", () => {
-  const port = 3043;
-  const serverAddress = `http://localhost:${port}`;
-  let server: any; // TODO Set http.Server type
+describe("queries", () => {
+  it(`Can register the ${QueryDispatcher.name}`, async () => {
+    const services = await new ServiceContainerBuilder()
+      .setup(new UseServiceProvider())
+      .setup(new UseQueries())
+      .buildServiceProviderAsync();
 
-  beforeEach(async () => {
-    await tryCloseServerAsync(server);
+    const queryDispatcher = services.get<QueryDispatcher>(QueryDispatcher);
+    expect(queryDispatcher).toBeInstanceOf(QueryDispatcher);
   });
 
-  afterEach(async () => {
-    await tryCloseServerAsync(server);
+  it("Can register a QueryHandler", async () => {
+    class TestQuery {}
+
+    //@ts-ignore: Fix decorators not working in test files
+    @queryHandler(TestQuery)
+    class TestQueryHandler implements QueryHandler<TestQuery, void> {
+      fetch(query: TestQuery) {}
+    }
+
+    const services = await new ServiceContainerBuilder()
+      .setup(new UseServiceProvider())
+      .setup(new UseQueries([TestQueryHandler]))
+      .buildServiceProviderAsync();
+
+    const queryHandlers = services.getAll<QueryHandler<any, any>>(QueryHandlerToken);
+
+    expect(queryHandlers.length).toBe(1);
+    expect(queryHandlers[0]).toBeInstanceOf(TestQueryHandler);
   });
 
-  it(`An QueryHandler works`, async () => {
-    // Arrange
-    const expectedUsername = "expectedUsername";
+  it("Can register and use a QueryHandler", async () => {
+    function meow(catName: string): string {
+      return `${catName} says meow`;
+    }
 
-    class GetUserQuery {
-      constructor(readonly username: string) {}
+    class MeowQuery {
+      constructor(readonly catName: string) {}
     }
 
     //@ts-ignore: Fix decorators not working in test files
-    @queryHandler(GetUserQuery)
-    class GetUserQueryHandler implements QueryHandler<GetUserQuery, string> {
-      fetch(query: GetUserQuery): string {
-        return query.username;
+    @queryHandler(MeowQuery)
+    class MeowQueryHandler implements QueryHandler<MeowQuery, string> {
+      fetch(query: MeowQuery): string {
+        return meow(query.catName);
       }
     }
 
-    //@ts-ignore: Fix decorators not working in test files
-    @endpoint()
-    //@ts-ignore: Fix decorators not working in test files
-    @path(":username")
-    class GetUserEndpoint implements Endpoint {
-      constructor(
-        //@ts-ignore: Fix decorators not working in test files
-        @inject(QueryDispatcher) private readonly query: QueryDispatcher
-      ) {}
+    const services = await new ServiceContainerBuilder()
+      .setup(new UseServiceProvider())
+      .setup(new UseQueries([MeowQueryHandler]))
+      .buildServiceProviderAsync();
 
-      async handle({ request }: HttpContext) {
-        return await this.query.fetch<string>(new GetUserQuery(request.params.username));
+    const queryDispatcher = services.get<QueryDispatcher>(QueryDispatcher);
+    const catName = "Tomas";
+    const meowResult = await queryDispatcher.fetch<string>(new MeowQuery(catName));
+    expect(meowResult).toEqual(meow(catName));
+  });
+
+  it("Can register and use multiple QueryHandlers", async () => {
+    function meow(catName: string): string {
+      return `${catName} says meow`;
+    }
+
+    class MeowQuery {
+      constructor(readonly catName: string) {}
+    }
+
+    //@ts-ignore: Fix decorators not working in test files
+    @queryHandler(MeowQuery)
+    class MeowQueryHandler implements QueryHandler<MeowQuery, string> {
+      fetch(query: MeowQuery): string {
+        return meow(query.catName);
       }
     }
 
-    server = await new AppBuilder().useJson().useEndpoint(GetUserEndpoint).buildAsync(port);
+    function woof(dogName: string): string {
+      return `${dogName} says woof`;
+    }
 
-    // Act/Assert
-    new GetUserQueryHandler(); // Make ts happy
+    class WoofQuery {
+      constructor(readonly dogName: string) {}
+    }
 
-    const response = await fetch(`${serverAddress}/${expectedUsername}`);
-    expect(response.status).toEqual(statusCodes.ok);
+    //@ts-ignore: Fix decorators not working in test files
+    @queryHandler(WoofQuery)
+    class WoofQueryHandler implements QueryHandler<WoofQuery, string> {
+      fetch(query: WoofQuery): string | Promise<string> {
+        return woof(query.dogName);
+      }
+    }
 
-    const responseText = await response.text();
-    expect(responseText).toEqual(expectedUsername);
+    const services = await new ServiceContainerBuilder()
+      .setup(new UseServiceProvider())
+      .setup(new UseQueries([MeowQueryHandler, WoofQueryHandler]))
+      .buildServiceProviderAsync();
+
+    const queryDispatcher = services.get<QueryDispatcher>(QueryDispatcher);
+
+    const catName = "Tomas";
+    const meowResult = await queryDispatcher.fetch<string>(new MeowQuery(catName));
+    expect(meowResult).toEqual(meow(catName));
+
+    const dogName = "Doki";
+    const woofResult = await queryDispatcher.fetch<string>(new WoofQuery(dogName));
+    expect(woofResult).toEqual(woof(dogName));
   });
 });

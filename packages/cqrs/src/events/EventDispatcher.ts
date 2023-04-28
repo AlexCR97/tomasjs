@@ -1,25 +1,27 @@
 import {
   ClassConstructor,
+  ServiceProvider,
   TomasError,
   getConstructorOf,
-  globalContainer,
-  singleton,
+  inject,
+  injectable,
 } from "@tomasjs/core";
+import { serviceProviderToken } from "@/serviceProviderToken";
 import { EventHandler } from "./EventHandler";
 import { EventHandlerMetadata, EventHandlerToken } from "./metadata";
 
-@singleton()
+@injectable()
 export class EventDispatcher {
+  constructor(@inject(serviceProviderToken) private readonly services: ServiceProvider) {}
+
   emit<TEvent>(event: TEvent): void {
     const eventConstructor = getConstructorOf<TEvent>(event);
-    const eventHandler = this.getEventHandlerFor<TEvent>(eventConstructor);
+    const eventHandler = this.getHandlerFor<TEvent>(eventConstructor);
     eventHandler.handle(event);
   }
 
-  private getEventHandlerFor<TEvent>(
-    eventConstructor: ClassConstructor<TEvent>
-  ): EventHandler<TEvent> {
-    const eventHandlers = globalContainer.getAll<EventHandler<TEvent>>(EventHandlerToken);
+  private getHandlerFor<TEvent>(eventConstructor: ClassConstructor<TEvent>): EventHandler<TEvent> {
+    const eventHandlers = this.services.getAll<EventHandler<TEvent>>(EventHandlerToken);
 
     const matchingEventHandler = eventHandlers.find((eh) => {
       const metadata = new EventHandlerMetadata(eh);

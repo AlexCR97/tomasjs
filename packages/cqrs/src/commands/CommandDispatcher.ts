@@ -1,26 +1,30 @@
-import { CommandHandler } from "./CommandHandler";
-import { CommandHandlerMetadata, CommandHandlerToken } from "./metadata";
 import {
   ClassConstructor,
+  ServiceProvider,
   TomasError,
   getConstructorOf,
-  globalContainer,
-  singleton,
+  inject,
+  injectable,
 } from "@tomasjs/core";
+import { serviceProviderToken } from "@/serviceProviderToken";
+import { CommandHandler } from "./CommandHandler";
+import { CommandHandlerMetadata, CommandHandlerToken } from "./metadata";
 
-@singleton()
+@injectable()
 export class CommandDispatcher {
+  constructor(@inject(serviceProviderToken) private readonly services: ServiceProvider) {}
+
   async execute<TResult = void, TCommand = any>(command: TCommand): Promise<TResult> {
     const commandConstructor = getConstructorOf<TCommand>(command);
-    const commandHandler = this.getCommandHandlerFor<TCommand, TResult>(commandConstructor);
+    const commandHandler = this.getHandlerFor<TCommand, TResult>(commandConstructor);
     return await commandHandler.execute(command);
   }
 
-  private getCommandHandlerFor<TCommand, TResult>(
+  private getHandlerFor<TCommand, TResult>(
     commandConstructor: ClassConstructor<TCommand>
   ): CommandHandler<TCommand, TResult> {
     const commandHandlers =
-      globalContainer.getAll<CommandHandler<TCommand, TResult>>(CommandHandlerToken);
+      this.services.getAll<CommandHandler<TCommand, TResult>>(CommandHandlerToken);
 
     const matchingCommandHandler = commandHandlers.find((ch) => {
       const metadata = new CommandHandlerMetadata(ch);

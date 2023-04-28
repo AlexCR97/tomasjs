@@ -1,68 +1,104 @@
-import "express-async-errors";
 import "reflect-metadata";
-import fetch from "node-fetch";
-import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { inject } from "@tomasjs/core";
-import { HttpContext, AppBuilder, statusCodes } from "@tomasjs/express";
-import { Endpoint, endpoint } from "@tomasjs/express/endpoints";
+import { describe, expect, it } from "@jest/globals";
+import { ServiceContainerBuilder, inject } from "@tomasjs/core";
 import { eventHandler } from "./@eventHandler";
-import { EventHandler } from "./EventHandler";
 import { EventDispatcher } from "./EventDispatcher";
-import { tryCloseServerAsync } from "../tests/utils";
+import { EventHandler } from "./EventHandler";
+import { UseEvents } from "./UseEvents";
+import { UseServiceProvider } from "../UseServiceProvider";
+import { EventHandlerToken } from "./metadata";
 
-describe("cqrs-events", () => {
-  const port = 3044;
-  const serverAddress = `http://localhost:${port}`;
-  let server: any; // TODO Set http.Server type
+describe("events", () => {
+  it(`Can register the ${EventDispatcher.name}`, async () => {
+    const services = await new ServiceContainerBuilder()
+      .setup(new UseServiceProvider())
+      .setup(new UseEvents())
+      .buildServiceProviderAsync();
 
-  beforeEach(async () => {
-    await tryCloseServerAsync(server);
+    const eventDispatcher = services.get<EventDispatcher>(EventDispatcher);
+    expect(eventDispatcher).toBeInstanceOf(EventDispatcher);
   });
 
-  afterEach(async () => {
-    await tryCloseServerAsync(server);
+  it("Can register an EventHandler", async () => {
+    class TestEvent {}
+
+    //@ts-ignore: Fix decorators not working in test files
+    @eventHandler(TestEvent)
+    class TestEventHandler implements EventHandler<TestEvent> {
+      handle(event: TestEvent) {}
+    }
+
+    const services = await new ServiceContainerBuilder()
+      .setup(new UseServiceProvider())
+      .setup(new UseEvents([TestEventHandler]))
+      .buildServiceProviderAsync();
+
+    const eventHandlers = services.getAll<EventHandler<any>>(EventHandlerToken);
+
+    expect(eventHandlers.length).toBe(1);
+    expect(eventHandlers[0]).toBeInstanceOf(TestEventHandler);
   });
 
-  it(`An EventHandler works`, async () => {
-    // Arrange
-    const expectedUsername = "expectedUsername";
-
-    class UserCreatedEvent {
-      constructor(readonly username: string) {}
+  it("Can register and use an EventHandler", (done) => {
+    class TestEvent {
+      constructor() {}
     }
 
     //@ts-ignore: Fix decorators not working in test files
-    @eventHandler(UserCreatedEvent)
-    class UserCreatedEventHandler implements EventHandler<UserCreatedEvent> {
-      handle(event: UserCreatedEvent): void | Promise<void> {
-        console.log("Event received!", event);
+    @eventHandler(TestEvent)
+    class TestEventHandler implements EventHandler<TestEvent> {
+      handle(event: TestEvent): void {
+        done(); // The test will pass if the event is successfully handled
       }
     }
 
+    new ServiceContainerBuilder()
+      .setup(new UseServiceProvider())
+      .setup(new UseEvents([TestEventHandler]))
+      .buildServiceProviderAsync()
+      .then((services) => {
+        const eventDispatcher = services.get<EventDispatcher>(EventDispatcher);
+        eventDispatcher.emit(new TestEvent());
+      });
+  });
+
+  it("Can register and use multiple EventHandlers", (done) => {
+    class EventA {
+      constructor() {}
+    }
+
     //@ts-ignore: Fix decorators not working in test files
-    @endpoint("post")
-    class CreateUserEndpoint implements Endpoint {
+    @eventHandler(EventA)
+    class EventAHandler implements EventHandler<EventA> {
       constructor(
         //@ts-ignore: Fix decorators not working in test files
-        @inject(EventDispatcher) private readonly events: EventDispatcher
+        @inject(EventDispatcher) private readonly eventDispatcher: EventDispatcher
       ) {}
 
-      async handle({ request }: HttpContext) {
-        this.events.emit(new UserCreatedEvent(request.body.username));
+      handle(event: EventA): void {
+        this.eventDispatcher.emit(new EventB()); // propagate to EventB
       }
     }
 
-    server = await new AppBuilder().useJson().useEndpoint(CreateUserEndpoint).buildAsync(port);
+    class EventB {
+      constructor() {}
+    }
 
-    // Act/Assert
-    new UserCreatedEventHandler(); // Make ts happy
+    //@ts-ignore: Fix decorators not working in test files
+    @eventHandler(EventB)
+    class EventBHandler implements EventHandler<EventB> {
+      handle(event: EventB): void {
+        done(); // The test will pass if the EventB is successfully handled
+      }
+    }
 
-    const response = await fetch(serverAddress, {
-      method: "post",
-      body: JSON.stringify({ username: expectedUsername }),
-      headers: { "Content-Type": "application/json" },
-    });
-
-    expect(response.status).toEqual(statusCodes.ok);
+    new ServiceContainerBuilder()
+      .setup(new UseServiceProvider())
+      .setup(new UseEvents([EventAHandler, EventBHandler]))
+      .buildServiceProviderAsync()
+      .then((services) => {
+        const eventDispatcher = services.get<EventDispatcher>(EventDispatcher);
+        eventDispatcher.emit(new EventA());
+      });
   });
 });
