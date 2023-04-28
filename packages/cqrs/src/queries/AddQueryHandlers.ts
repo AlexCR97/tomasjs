@@ -1,12 +1,10 @@
-import { ClassConstructor, ContainerSetup, ContainerSetupFactory } from "@tomasjs/core";
+import { ClassConstructor, ContainerSetupFactory, ContainerSetupFunction } from "@tomasjs/core";
 import { QueryHandlerToken } from "./metadata";
 
-export class AddQueryHandlers extends ContainerSetupFactory {
-  constructor(private readonly queryHandlers: ClassConstructor<any>[]) {
-    super();
-  }
+export class UseQueries implements ContainerSetupFactory {
+  constructor(private readonly queryHandlers: ClassConstructor<any>[]) {}
 
-  create(): ContainerSetup {
+  create(): ContainerSetupFunction {
     return (container) => {
       if (!this.queryHandlers) {
         return;

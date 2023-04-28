@@ -1,12 +1,10 @@
-import { ClassConstructor, ContainerSetup, ContainerSetupFactory } from "@tomasjs/core";
+import { ClassConstructor, ContainerSetupFactory, ContainerSetupFunction } from "@tomasjs/core";
 import { EventHandlerToken } from "./metadata";
 
-export class AddEventHandlers extends ContainerSetupFactory {
-  constructor(private readonly eventHandlers: ClassConstructor<any>[]) {
-    super();
-  }
+export class AddEventHandlers implements ContainerSetupFactory {
+  constructor(private readonly eventHandlers: ClassConstructor<any>[]) {}
 
-  create(): ContainerSetup {
+  create(): ContainerSetupFunction {
     return (container) => {
       if (!this.eventHandlers) {
         return;

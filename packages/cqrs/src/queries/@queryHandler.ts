@@ -1,10 +1,9 @@
-import { ClassConstructor, globalContainer, injectable } from "@tomasjs/core";
-import { QueryHandlerMetadata, QueryHandlerToken } from "./metadata";
+import { ClassConstructor, injectable } from "@tomasjs/core";
+import { QueryHandlerMetadata } from "./metadata";
 
 export function queryHandler<TQuery>(queryConstructor: ClassConstructor<TQuery>) {
   return function <T extends new (...args: any[]) => any>(constructor: T) {
     Reflect.decorate([injectable() as ClassDecorator], constructor);
-    globalContainer.addClass(constructor, { token: QueryHandlerToken });
     const metadata = new QueryHandlerMetadata(constructor);
     metadata.queryConstructor = queryConstructor;
     return constructor;

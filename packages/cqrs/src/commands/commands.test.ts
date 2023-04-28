@@ -1,72 +1,118 @@
-import "express-async-errors";
 import "reflect-metadata";
-import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { inject } from "@tomasjs/core";
-import { AppBuilder, HttpContext, statusCodes } from "@tomasjs/express";
-import { Endpoint, endpoint } from "@tomasjs/express/endpoints";
-import fetch from "node-fetch";
-import { CommandHandler } from "./CommandHandler";
+import { describe, expect, it } from "@jest/globals";
+import { ServiceContainerBuilder } from "@tomasjs/core";
 import { commandHandler } from "./@commandHandler";
 import { CommandDispatcher } from "./CommandDispatcher";
-import { tryCloseServerAsync } from "../tests/utils";
+import { CommandHandler } from "./CommandHandler";
+import { UseCommands } from "./UseCommands";
+import { UseServiceProvider } from "../UseServiceProvider";
+import { CommandHandlerToken } from "./metadata";
 
 describe("cqrs-commands", () => {
-  const port = 3042;
-  const serverAddress = `http://localhost:${port}`;
-  let server: any; // TODO Set http.Server type
+  it(`Can register the ${CommandDispatcher.name}`, async () => {
+    const services = await new ServiceContainerBuilder()
+      .setup(new UseServiceProvider())
+      .setup(new UseCommands())
+      .buildServiceProviderAsync();
 
-  beforeEach(async () => {
-    await tryCloseServerAsync(server);
+    const commandDispatcher = services.get<CommandDispatcher>(CommandDispatcher);
+    expect(commandDispatcher).toBeInstanceOf(CommandDispatcher);
   });
 
-  afterEach(async () => {
-    await tryCloseServerAsync(server);
+  it("Can register a CommandHandler", async () => {
+    class TestCommand {}
+
+    //@ts-ignore: Fix decorators not working in test files
+    @commandHandler(TestCommand)
+    class TestCommandHandler implements CommandHandler<TestCommand> {
+      execute(command: TestCommand) {}
+    }
+
+    const services = await new ServiceContainerBuilder()
+      .setup(new UseServiceProvider())
+      .setup(new UseCommands([TestCommandHandler]))
+      .buildServiceProviderAsync();
+
+    const commandHandlers = services.getAll<CommandHandler<any>>(CommandHandlerToken);
+
+    expect(commandHandlers.length).toBe(1);
+    expect(commandHandlers[0]).toBeInstanceOf(TestCommandHandler);
   });
 
-  it(`A CommandHandler works`, async () => {
-    // Arrange
-    const expectedUsername = "expectedUsername";
+  it("Can register and use a CommandHandler", async () => {
+    function meow(catName: string): string {
+      return `${catName} says meow`;
+    }
 
-    class CreateUserCommand {
-      constructor(readonly username: string) {}
+    class MeowCommand {
+      constructor(readonly catName: string) {}
     }
 
     //@ts-ignore: Fix decorators not working in test files
-    @commandHandler(CreateUserCommand)
-    class CreateUserCommandHandler implements CommandHandler<CreateUserCommand, string> {
-      execute(command: CreateUserCommand): string {
-        return command.username;
+    @commandHandler(MeowCommand)
+    class MeowCommandHandler implements CommandHandler<MeowCommand, string> {
+      execute(command: MeowCommand): string {
+        return meow(command.catName);
       }
+    }
+
+    const services = await new ServiceContainerBuilder()
+      .setup(new UseServiceProvider())
+      .setup(new UseCommands([MeowCommandHandler]))
+      .buildServiceProviderAsync();
+
+    const commandDispatcher = services.get<CommandDispatcher>(CommandDispatcher);
+    const catName = "Tomas";
+    const meowResult = await commandDispatcher.execute<string>(new MeowCommand(catName));
+    expect(meowResult).toEqual(meow(catName));
+  });
+
+  it("Can register and use multiple CommandHandlers", async () => {
+    function meow(catName: string): string {
+      return `${catName} says meow`;
+    }
+
+    class MeowCommand {
+      constructor(readonly catName: string) {}
     }
 
     //@ts-ignore: Fix decorators not working in test files
-    @endpoint("post")
-    class CreateUserEndpoint implements Endpoint {
-      constructor(
-        //@ts-ignore: Fix decorators not working in test files
-        @inject(CommandDispatcher) private readonly commandDispatcher: CommandDispatcher
-      ) {}
-
-      async handle({ request }: HttpContext) {
-        return await this.commandDispatcher.execute<string>(
-          new CreateUserCommand(request.body.username)
-        );
+    @commandHandler(MeowCommand)
+    class MeowCommandHandler implements CommandHandler<MeowCommand, string> {
+      execute(command: MeowCommand): string {
+        return meow(command.catName);
       }
     }
 
-    server = await new AppBuilder().useJson().useEndpoint(CreateUserEndpoint).buildAsync(port);
+    function woof(dogName: string): string {
+      return `${dogName} says woof`;
+    }
 
-    // Act/Assert
-    new CreateUserCommandHandler(); // Make ts happy
+    class WoofCommand {
+      constructor(readonly dogName: string) {}
+    }
 
-    const response = await fetch(serverAddress, {
-      method: "post",
-      body: JSON.stringify({ username: expectedUsername }),
-      headers: { "Content-Type": "application/json" },
-    });
-    expect(response.status).toEqual(statusCodes.ok);
+    //@ts-ignore: Fix decorators not working in test files
+    @commandHandler(WoofCommand)
+    class WoofCommandHandler implements CommandHandler<WoofCommand, string> {
+      execute(command: WoofCommand): string | Promise<string> {
+        return woof(command.dogName);
+      }
+    }
 
-    const responseText = await response.text();
-    expect(responseText).toEqual(expectedUsername);
+    const services = await new ServiceContainerBuilder()
+      .setup(new UseServiceProvider())
+      .setup(new UseCommands([MeowCommandHandler, WoofCommandHandler]))
+      .buildServiceProviderAsync();
+
+    const commandDispatcher = services.get<CommandDispatcher>(CommandDispatcher);
+
+    const catName = "Tomas";
+    const meowResult = await commandDispatcher.execute<string>(new MeowCommand(catName));
+    expect(meowResult).toEqual(meow(catName));
+
+    const dogName = "Doki";
+    const woofResult = await commandDispatcher.execute<string>(new WoofCommand(dogName));
+    expect(woofResult).toEqual(woof(dogName));
   });
 });
