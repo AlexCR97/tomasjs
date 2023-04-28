@@ -1,6 +1,3 @@
-import { serviceProviderToken } from "@/serviceProviderToken";
-import { CommandHandler } from "./CommandHandler";
-import { CommandHandlerMetadata, CommandHandlerToken } from "./metadata";
 import {
   ClassConstructor,
   ServiceProvider,
@@ -9,6 +6,9 @@ import {
   inject,
   injectable,
 } from "@tomasjs/core";
+import { serviceProviderToken } from "@/serviceProviderToken";
+import { CommandHandler } from "./CommandHandler";
+import { CommandHandlerMetadata, CommandHandlerToken } from "./metadata";
 
 @injectable()
 export class CommandDispatcher {
@@ -16,11 +16,11 @@ export class CommandDispatcher {
 
   async execute<TResult = void, TCommand = any>(command: TCommand): Promise<TResult> {
     const commandConstructor = getConstructorOf<TCommand>(command);
-    const commandHandler = this.getCommandHandlerFor<TCommand, TResult>(commandConstructor);
+    const commandHandler = this.getHandlerFor<TCommand, TResult>(commandConstructor);
     return await commandHandler.execute(command);
   }
 
-  private getCommandHandlerFor<TCommand, TResult>(
+  private getHandlerFor<TCommand, TResult>(
     commandConstructor: ClassConstructor<TCommand>
   ): CommandHandler<TCommand, TResult> {
     const commandHandlers =

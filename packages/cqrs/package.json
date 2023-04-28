@@ -20,6 +20,8 @@
     "test": "jest",
     "testw": "jest --watchAll --verbose",
     "testw-commands": "jest --testNamePattern commands --watchAll --verbose",
+    "testw-queries": "jest --testNamePattern queries --watchAll --verbose",
+    "testw-events": "jest --testNamePattern events --watchAll --verbose",
     "sample": "nodemon -r tsconfig-paths/register ./sample/main.ts"
   },
   "dependencies": {

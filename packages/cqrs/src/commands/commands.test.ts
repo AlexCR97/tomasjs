@@ -8,7 +8,7 @@ import { UseCommands } from "./UseCommands";
 import { UseServiceProvider } from "../UseServiceProvider";
 import { CommandHandlerToken } from "./metadata";
 
-describe("cqrs-commands", () => {
+describe("commands", () => {
   it(`Can register the ${CommandDispatcher.name}`, async () => {
     const services = await new ServiceContainerBuilder()
       .setup(new UseServiceProvider())

@@ -13,7 +13,6 @@ export class UseCommands implements ContainerSetupFactory {
   create(): ContainerSetupFunction {
     return (container) => {
       container.addClass(CommandDispatcher);
-
       this.registerHandlers(container);
     };
   }

@@ -1,17 +1,26 @@
-import { ClassConstructor, ServiceProvider, TomasError, getConstructorOf } from "@tomasjs/core";
-import { QueryHandlerMetadata, QueryHandlerToken } from "./metadata";
+import {
+  ClassConstructor,
+  ServiceProvider,
+  TomasError,
+  getConstructorOf,
+  inject,
+  injectable,
+} from "@tomasjs/core";
+import { serviceProviderToken } from "@/serviceProviderToken";
 import { QueryHandler } from "./QueryHandler";
+import { QueryHandlerMetadata, QueryHandlerToken } from "./metadata";
 
+@injectable()
 export class QueryDispatcher {
-  constructor(private readonly services: ServiceProvider) {}
+  constructor(@inject(serviceProviderToken) private readonly services: ServiceProvider) {}
 
   async fetch<TResult, TQuery = any>(query: TQuery): Promise<TResult> {
     const queryConstructor = getConstructorOf<TQuery>(query);
-    const queryHandler = this.getQueryHandlerFor<TQuery, TResult>(queryConstructor);
+    const queryHandler = this.getHandlerFor<TQuery, TResult>(queryConstructor);
     return await queryHandler.fetch(query);
   }
 
-  private getQueryHandlerFor<TQuery, TResult>(
+  private getHandlerFor<TQuery, TResult>(
     queryConstructor: ClassConstructor<TQuery>
   ): QueryHandler<TQuery, TResult> {
     const queryHandlers = this.services.getAll<QueryHandler<TQuery, TResult>>(QueryHandlerToken);
