@@ -5,13 +5,11 @@ import { eventHandler } from "./@eventHandler";
 import { EventDispatcher } from "./EventDispatcher";
 import { EventHandler } from "./EventHandler";
 import { UseEvents } from "./UseEvents";
-import { UseServiceProvider } from "../UseServiceProvider";
 import { EventHandlerToken } from "./metadata";
 
 describe("events", () => {
   it(`Can register the ${EventDispatcher.name}`, async () => {
     const services = await new ServiceContainerBuilder()
-      .setup(new UseServiceProvider())
       .setup(new UseEvents())
       .buildServiceProviderAsync();
 
@@ -29,7 +27,6 @@ describe("events", () => {
     }
 
     const services = await new ServiceContainerBuilder()
-      .setup(new UseServiceProvider())
       .setup(new UseEvents([TestEventHandler]))
       .buildServiceProviderAsync();
 
@@ -53,7 +50,6 @@ describe("events", () => {
     }
 
     new ServiceContainerBuilder()
-      .setup(new UseServiceProvider())
       .setup(new UseEvents([TestEventHandler]))
       .buildServiceProviderAsync()
       .then((services) => {
@@ -93,7 +89,6 @@ describe("events", () => {
     }
 
     new ServiceContainerBuilder()
-      .setup(new UseServiceProvider())
       .setup(new UseEvents([EventAHandler, EventBHandler]))
       .buildServiceProviderAsync()
       .then((services) => {

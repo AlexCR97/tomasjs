@@ -5,8 +5,8 @@ import {
   getConstructorOf,
   inject,
   injectable,
+  serviceProviderToken,
 } from "@tomasjs/core";
-import { serviceProviderToken } from "@/serviceProviderToken";
 import { CommandHandler } from "./CommandHandler";
 import { CommandHandlerMetadata, CommandHandlerToken } from "./metadata";
 

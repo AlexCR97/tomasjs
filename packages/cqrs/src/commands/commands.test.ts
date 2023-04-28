@@ -5,13 +5,11 @@ import { commandHandler } from "./@commandHandler";
 import { CommandDispatcher } from "./CommandDispatcher";
 import { CommandHandler } from "./CommandHandler";
 import { UseCommands } from "./UseCommands";
-import { UseServiceProvider } from "../UseServiceProvider";
 import { CommandHandlerToken } from "./metadata";
 
 describe("commands", () => {
   it(`Can register the ${CommandDispatcher.name}`, async () => {
     const services = await new ServiceContainerBuilder()
-      .setup(new UseServiceProvider())
       .setup(new UseCommands())
       .buildServiceProviderAsync();
 
@@ -29,7 +27,6 @@ describe("commands", () => {
     }
 
     const services = await new ServiceContainerBuilder()
-      .setup(new UseServiceProvider())
       .setup(new UseCommands([TestCommandHandler]))
       .buildServiceProviderAsync();
 
@@ -57,7 +54,6 @@ describe("commands", () => {
     }
 
     const services = await new ServiceContainerBuilder()
-      .setup(new UseServiceProvider())
       .setup(new UseCommands([MeowCommandHandler]))
       .buildServiceProviderAsync();
 
@@ -101,7 +97,6 @@ describe("commands", () => {
     }
 
     const services = await new ServiceContainerBuilder()
-      .setup(new UseServiceProvider())
       .setup(new UseCommands([MeowCommandHandler, WoofCommandHandler]))
       .buildServiceProviderAsync();
 

@@ -5,13 +5,11 @@ import { queryHandler } from "./@queryHandler";
 import { QueryDispatcher } from "./QueryDispatcher";
 import { QueryHandler } from "./QueryHandler";
 import { UseQueries } from "./UseQueries";
-import { UseServiceProvider } from "../UseServiceProvider";
 import { QueryHandlerToken } from "./metadata";
 
 describe("queries", () => {
   it(`Can register the ${QueryDispatcher.name}`, async () => {
     const services = await new ServiceContainerBuilder()
-      .setup(new UseServiceProvider())
       .setup(new UseQueries())
       .buildServiceProviderAsync();
 
@@ -29,7 +27,6 @@ describe("queries", () => {
     }
 
     const services = await new ServiceContainerBuilder()
-      .setup(new UseServiceProvider())
       .setup(new UseQueries([TestQueryHandler]))
       .buildServiceProviderAsync();
 
@@ -57,7 +54,6 @@ describe("queries", () => {
     }
 
     const services = await new ServiceContainerBuilder()
-      .setup(new UseServiceProvider())
       .setup(new UseQueries([MeowQueryHandler]))
       .buildServiceProviderAsync();
 
@@ -101,7 +97,6 @@ describe("queries", () => {
     }
 
     const services = await new ServiceContainerBuilder()
-      .setup(new UseServiceProvider())
       .setup(new UseQueries([MeowQueryHandler, WoofQueryHandler]))
       .buildServiceProviderAsync();
 
