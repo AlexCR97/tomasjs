@@ -15,6 +15,7 @@ export {
   ServiceContainerBuilder,
   ServiceContainerProvider,
   ServiceProvider,
+  serviceProviderToken,
   Token,
   UnknownTokenError,
   inject,
