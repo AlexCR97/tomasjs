@@ -1,6 +1,10 @@
 export { queueMessageHandler } from "./@queueMessageHandler";
 export { AddQueueMessageHandlers } from "./AddQueueMessageHandlers";
-export { AmqplibSetup } from "./AmqplibSetup";
+export { DisposeAmqplib } from "./DisposeAmqplib";
+export { OnConnectedFunction } from "./OnConnectedFunction";
+export { OnDefaultChannelOpenedFunction } from "./OnDefaultChannelOpenedFunction";
+export { OnBootstrappedFunction } from "./OnBootstrappedFunction";
 export { QueueMessageHandler } from "./QueueMessageHandler";
 export { QueueSetup } from "./QueueSetup";
 export { channelToken, connectionToken } from "./tokens";
+export { UseAmqplib } from "./UseAmqplib";
