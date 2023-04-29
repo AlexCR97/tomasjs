@@ -21,8 +21,6 @@ export class DisposeMikroOrm implements ContainerTeardownFactory {
 
       await orm.close(true);
       container.remove(token);
-
-      // TODO Remove repositories too
     };
   }
 }

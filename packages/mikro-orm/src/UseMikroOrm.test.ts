@@ -2,11 +2,12 @@ import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { Entity, MikroORM, PrimaryKey } from "@mikro-orm/core";
 import { ObjectId } from "@mikro-orm/mongodb";
-import { Container, ServiceContainerBuilder } from "@tomasjs/core";
-import { DisposeMikroOrm } from "./DisposeMikroOrm";
-import { UseMikroOrm } from "./UseMikroOrm";
+import { Container, ServiceContainerBuilder, injectable } from "@tomasjs/core";
 import { TomasLogger } from "@tomasjs/logging";
+import { injectMikroOrm } from "./@injectMikroOrm";
+import { DisposeMikroOrm } from "./DisposeMikroOrm";
 import { mikroOrmToken } from "./mikroOrmToken";
+import { UseMikroOrm } from "./UseMikroOrm";
 
 describe("UseMikroOrm", () => {
   const connectionString = "mongodb://127.0.0.1:27017";
@@ -81,7 +82,7 @@ describe("UseMikroOrm", () => {
       });
   });
 
-  it(`Can resolve the bootstrapped MikroORM instance`, async () => {
+  it(`Can resolve the MikroORM instance via the ServiceProvider`, async () => {
     testContainer = await new ServiceContainerBuilder()
       .setup(
         new UseMikroOrm({
@@ -100,6 +101,39 @@ describe("UseMikroOrm", () => {
       .buildContainerAsync();
 
     const orm = testContainer.get<MikroORM>(mikroOrmToken("mongo"));
+    expect(orm).toBeInstanceOf(MikroORM);
+  });
+
+  it(`Can resolve the MikroORM instance via DI`, async () => {
+    //@ts-ignore: Fix decorators not working in test files
+    @injectable()
+    class TestClass {
+      constructor(
+        //@ts-ignore: Fix decorators not working in test files
+        @injectMikroOrm("mongo") readonly orm: MikroORM
+      ) {}
+    }
+
+    testContainer = await new ServiceContainerBuilder()
+      .addClass(TestClass)
+      .setup(
+        new UseMikroOrm({
+          logger,
+          mikroOrmOptions: {
+            options: {
+              clientUrl: connectionString,
+              dbName: database,
+              entities: [TestEntity],
+              allowGlobalContext: true,
+              type: "mongo",
+            },
+          },
+        })
+      )
+      .buildContainerAsync();
+
+    const testInstance = testContainer.get<TestClass>(TestClass);
+    const orm = testInstance.orm;
     expect(orm).toBeInstanceOf(MikroORM);
   });
 

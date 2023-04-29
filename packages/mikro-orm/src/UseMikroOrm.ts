@@ -1,15 +1,11 @@
 import { ContainerSetupFactory, ContainerSetupFunction } from "@tomasjs/core";
 import { Logger } from "@tomasjs/logging";
-import { Configuration, IDatabaseDriver, MikroORM, Options } from "@mikro-orm/core";
+import { IDatabaseDriver, MikroORM } from "@mikro-orm/core";
 import { DatabaseDriver } from "./DatabaseDriver";
 import { mikroOrmToken } from "./mikroOrmToken";
 import { OnConnectedFunction } from "./OnConnectedFunction";
 import { OnOrmBootstrappedFunction } from "./OnOrmBootstrappedFunction";
-
-interface MikroOrmOptions<D extends IDatabaseDriver = IDatabaseDriver> {
-  options: Options<D> | Configuration<D>;
-  connect?: boolean;
-}
+import { MikroOrmOptions } from "./MikroOrmOptions";
 
 export class UseMikroOrm<D extends IDatabaseDriver = IDatabaseDriver>
   implements ContainerSetupFactory
@@ -48,7 +44,7 @@ export class UseMikroOrm<D extends IDatabaseDriver = IDatabaseDriver>
       const orm = await this.establishConnectionAsync();
       const ormToken = mikroOrmToken(this.databaseDriver);
       container.addInstance(orm, ormToken);
-      this.tryInvokeOnBootstrappedFunction(orm);
+      await this.tryInvokeOnBootstrappedFunctionAsync(orm);
     };
   }
 
@@ -56,21 +52,19 @@ export class UseMikroOrm<D extends IDatabaseDriver = IDatabaseDriver>
     this.logger?.info(`Establishing connection to ${this.databaseDriver} ...`);
     const orm = await MikroORM.init(this.mikroOrmOptions.options, this.mikroOrmOptions.connect);
     this.logger?.info("`Connection established!");
-
-    this.tryInvokeOnConnectedFunction();
-
+    await this.tryInvokeOnConnectedFunctionAsync();
     return orm;
   }
 
-  private tryInvokeOnConnectedFunction() {
+  private async tryInvokeOnConnectedFunctionAsync() {
     if (!this.onConnected) {
       return;
     }
 
-    this.onConnected();
+    await this.onConnected();
   }
 
-  private tryInvokeOnBootstrappedFunction(orm: MikroORM<D>) {
+  private async tryInvokeOnBootstrappedFunctionAsync(orm: MikroORM<D>) {
     if (!this.onBootstrapped) {
       return;
     }
