@@ -1,30 +1,28 @@
-import { ContainerSetup, ContainerSetupFactory } from "@tomasjs/core";
+import { ContainerSetupFactory, ContainerSetupFunction } from "@tomasjs/core";
 import { Logger } from "@tomasjs/logging";
 import amqp, { Channel, Connection, Options } from "amqplib";
-import { ChannelToken, ConnectionToken } from "./tokens";
+import { channelToken, connectionToken } from "./tokens";
 
-export class AmqplibSetup extends ContainerSetupFactory {
+export class AmqplibSetup implements ContainerSetupFactory {
   constructor(
     private readonly options: {
       url: string | Options.Connect;
       socketOptions?: any;
       logger?: Logger;
     }
-  ) {
-    super();
-  }
+  ) {}
 
   private get logger(): Logger | undefined {
     return this.options.logger;
   }
 
-  create(): ContainerSetup {
+  create(): ContainerSetupFunction {
     return async (container) => {
       const connection = await this.establishConnectionAsync();
-      container.addInstance(connection, ConnectionToken);
+      container.addInstance(connection, connectionToken);
 
       const defaultChannel = await this.openDefaultChannelAsync(connection);
-      container.addInstance(defaultChannel, ChannelToken);
+      container.addInstance(defaultChannel, channelToken);
     };
   }
 

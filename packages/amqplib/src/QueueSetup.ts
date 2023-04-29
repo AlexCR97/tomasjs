@@ -1,11 +1,11 @@
-import { Container, ContainerSetup, ContainerSetupFactory, globalContainer } from "@tomasjs/core";
+import { Container, ContainerSetupFactory, ContainerSetupFunction } from "@tomasjs/core";
 import { Logger } from "@tomasjs/logging";
 import { Channel, Options } from "amqplib";
 import { QueueMessageHandler } from "./QueueMessageHandler";
 import { QueueMessageHandlerMetadata, QueueMessageHandlerToken } from "./metadata";
-import { ChannelToken } from "./tokens";
+import { channelToken } from "./tokens";
 
-export class QueueSetup extends ContainerSetupFactory {
+export class QueueSetup implements ContainerSetupFactory {
   constructor(
     private readonly options: {
       queueName: string;
@@ -13,30 +13,26 @@ export class QueueSetup extends ContainerSetupFactory {
       assertQueueOptions?: Options.AssertQueue;
       logger?: Logger;
     }
-  ) {
-    super();
-  }
+  ) {}
 
   private get queueName(): string {
     return this.options.queueName;
-  }
-
-  private get channel(): Channel {
-    return this.options.channel ?? globalContainer.get<Channel>(ChannelToken);
   }
 
   private get logger(): Logger | undefined {
     return this.options.logger;
   }
 
-  create(): ContainerSetup {
+  create(): ContainerSetupFunction {
     return async (container) => {
       this.logger?.info(`Opening queue "${this.queueName}" ...`);
-      await this.channel.assertQueue(this.queueName, this.options.assertQueueOptions);
+
+      const channel = this.options.channel ?? container.get<Channel>(channelToken);
+      await channel.assertQueue(this.queueName, this.options.assertQueueOptions);
+
       this.logger?.info(`The queue "${this.queueName}" is ready for consumption.`);
 
-      //@ts-ignore: Fix error "Argument of type 'Container' is not assignable to parameter of type 'GlobalContainer'. Property '_container' is missing in type 'Container' but required in type 'GlobalContainer'."
-      this.beginChannelConsumption(container);
+      this.beginChannelConsumption(container, channel);
     };
   }
 
@@ -48,8 +44,8 @@ export class QueueSetup extends ContainerSetupFactory {
     }
   }
 
-  private beginChannelConsumption(container: Container) {
-    this.channel.consume(this.queueName, (message) => {
+  private beginChannelConsumption(container: Container, channel: Channel) {
+    channel.consume(this.queueName, (message) => {
       this.logger?.info(`Received message from queue "${this.queueName}".`);
 
       if (!message) {
@@ -72,7 +68,7 @@ export class QueueSetup extends ContainerSetupFactory {
       }
 
       this.logger?.info("Found message handler for the queue.");
-      matchingMessageHandler.handle(this.channel, message);
+      matchingMessageHandler.handle(channel, message);
     });
   }
 }
