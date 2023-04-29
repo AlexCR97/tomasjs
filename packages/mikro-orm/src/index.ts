@@ -1,6 +1,5 @@
+export { injectMikroOrm } from "./@injectMikroOrm";
 export { DatabaseDriver } from "./DatabaseDriver";
-export { MikroOrmResolver } from "./MikroOrmResolver";
-export { MikroOrmSetup } from "./MikroOrmSetup";
-export { MikroOrmTeardown } from "./MikroOrmTeardown";
-export { RepositorySetup } from "./RepositorySetup";
-export { inMikroOrm } from "./inMikroOrm";
+export { DisposeMikroOrm } from "./DisposeMikroOrm";
+export { UseMikroOrm } from "./UseMikroOrm";
+export { UseRepositories } from "./UseRepositories";
