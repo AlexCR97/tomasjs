@@ -20,7 +20,8 @@
     "publish": "cd ./dist && npm publish --access public",
     "sample": "nodemon -r tsconfig-paths/register ./sample/main.ts",
     "test": "jest",
-    "testw": "jest --watchAll --verbose"
+    "testw": "jest --watchAll --verbose",
+    "testw-usequeue": "jest --testNamePattern UseQueue --watchAll --verbose"
   },
   "dependencies": {
     "@tomasjs/core": "^1.3.1",

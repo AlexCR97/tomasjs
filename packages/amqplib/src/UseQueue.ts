@@ -5,7 +5,7 @@ import { QueueMessageHandler } from "./QueueMessageHandler";
 import { QueueMessageHandlerMetadata, QueueMessageHandlerToken } from "./metadata";
 import { channelToken } from "./tokens";
 
-export class QueueSetup implements ContainerSetupFactory {
+export class UseQueue implements ContainerSetupFactory {
   constructor(
     private readonly options: {
       queueName: string;
@@ -32,19 +32,11 @@ export class QueueSetup implements ContainerSetupFactory {
 
       this.logger?.info(`The queue "${this.queueName}" is ready for consumption.`);
 
-      this.beginChannelConsumption(container, channel);
+      this.beginQueueConsumption(container, channel);
     };
   }
 
-  private getQueueMessageHandlers(container: Container): QueueMessageHandler[] {
-    try {
-      return container.getAll<QueueMessageHandler>(QueueMessageHandlerToken);
-    } catch (err) {
-      return [];
-    }
-  }
-
-  private beginChannelConsumption(container: Container, channel: Channel) {
+  private beginQueueConsumption(container: Container, channel: Channel) {
     channel.consume(this.queueName, (message) => {
       this.logger?.info(`Received message from queue "${this.queueName}".`);
 
@@ -53,7 +45,7 @@ export class QueueSetup implements ContainerSetupFactory {
         return;
       }
 
-      const messageHandlers = this.getQueueMessageHandlers(container);
+      const messageHandlers = container.getAll<QueueMessageHandler>(QueueMessageHandlerToken);
       this.logger?.debug("messageHandlers", { messageHandlers });
 
       const matchingMessageHandler = messageHandlers.find((ch) => {

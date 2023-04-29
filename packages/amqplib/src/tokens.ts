@@ -1,3 +1,3 @@
-export const connectionToken = "amqplib.Connection";
+export const connectionToken = "amqplib:Connection";
 
-export const channelToken = "amqplib.Channel";
+export const channelToken = "amqplib:Channel";

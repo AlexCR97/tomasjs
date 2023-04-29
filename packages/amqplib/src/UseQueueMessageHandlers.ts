@@ -1,7 +1,7 @@
 import { ClassConstructor, ContainerSetupFactory, ContainerSetupFunction } from "@tomasjs/core";
 import { QueueMessageHandlerToken } from "./metadata";
 
-export class AddQueueMessageHandlers implements ContainerSetupFactory {
+export class UseQueueMessageHandlers implements ContainerSetupFactory {
   constructor(private readonly queueMessageHandlers: ClassConstructor<any>[]) {}
 
   create(): ContainerSetupFunction {
