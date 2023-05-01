@@ -1,4 +1,4 @@
-import { MiddlewareParam } from "@/endpoints";
+import { MiddlewareType } from "@/middleware";
 import { ControllerMetadata } from "./metadata";
 
 /**
@@ -7,7 +7,7 @@ import { ControllerMetadata } from "./metadata";
  * @param middleware The middleware function or array of middleware functions to add.
  * @returns A decorator function that adds the specified middleware to the controller.
  */
-export function useMiddleware(middleware: MiddlewareParam) {
+export function useMiddleware(middleware: MiddlewareType) {
   /**
    * A decorator function that adds middleware to a controller.
    *

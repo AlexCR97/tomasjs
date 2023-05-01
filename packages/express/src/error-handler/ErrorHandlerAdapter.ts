@@ -3,10 +3,20 @@ import { ExpressErrorMiddlewareHandler } from "@/core/express";
 import { ErrorHandler } from "./ErrorHandler";
 import { ErrorHandlerFunction } from "./ErrorHandlerFunction";
 import { ErrorHandlerType } from "./ErrorHandlerType";
-import { ClassConstructor, TomasError, globalContainer, isClassConstructor } from "@tomasjs/core";
+import {
+  ClassConstructor,
+  Container,
+  NotImplementedError,
+  TomasError,
+  isClassConstructor,
+} from "@tomasjs/core";
 
 export class ErrorHandlerAdapter<THandler extends ErrorHandler = ErrorHandler> {
   constructor(private readonly handler: ErrorHandlerType<THandler>) {}
+
+  private get container(): Container {
+    throw new NotImplementedError("get container"); // TODO Implement
+  }
 
   adapt(): ExpressErrorMiddlewareHandler {
     if (this.isFunction(this.handler)) {
@@ -81,7 +91,7 @@ export class ErrorHandlerAdapter<THandler extends ErrorHandler = ErrorHandler> {
     handler: ClassConstructor<THandler>
   ): ExpressErrorMiddlewareHandler {
     return async (err, req, res, next) => {
-      const handlerInstance = globalContainer.get(handler);
+      const handlerInstance = this.container.get(handler);
       const context = HttpContextResolver.fromExpress(req, res);
       await handlerInstance.catch(err, context, next);
     };

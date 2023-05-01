@@ -1,10 +1,10 @@
-import { MiddlewareParam } from "@/endpoints";
 import { GuardType } from "@/guards";
 import { Controller } from "../Controller";
 import { ControllerType } from "../ControllerType";
 import { isController } from "../isController";
 import { HttpMethodMetadata } from "./HttpMethodMetadata";
 import { TomasError } from "@tomasjs/core";
+import { MiddlewareType } from "@/middleware";
 
 export class ControllerMetadata<TController extends Controller> {
   constructor(private readonly controller: ControllerType<TController>) {}
@@ -27,15 +27,15 @@ export class ControllerMetadata<TController extends Controller> {
 
   private readonly middlewaresKey = "tomasjs:controller:middlewares";
 
-  get middlewares(): MiddlewareParam[] | undefined {
-    return this.getMetadata<MiddlewareParam[] | undefined>(this.middlewaresKey);
+  get middlewares(): MiddlewareType[] | undefined {
+    return this.getMetadata<MiddlewareType[] | undefined>(this.middlewaresKey);
   }
 
-  set middlewares(value: MiddlewareParam[] | undefined) {
+  set middlewares(value: MiddlewareType[] | undefined) {
     this.setMetadata(this.middlewaresKey, value);
   }
 
-  addMiddleware(value: MiddlewareParam) {
+  addMiddleware(value: MiddlewareType) {
     if (this.middlewares === undefined) {
       this.middlewares = [];
     }

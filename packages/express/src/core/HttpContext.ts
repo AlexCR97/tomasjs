@@ -1,10 +1,10 @@
-import { singleton } from "@tomasjs/core";
 import { response } from "express";
 import { ResponseAdapter } from "@/responses";
 import { RequestContext } from "./RequestContext";
 import { UserContext } from "./UserContext";
+import { injectable } from "@tomasjs/core";
 
-@singleton()
+@injectable()
 export class HttpContext {
   request!: RequestContext; // TODO Make readonly?
   response!: typeof response; // TODO Make readonly?

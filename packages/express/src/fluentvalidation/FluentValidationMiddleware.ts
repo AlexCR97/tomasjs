@@ -5,9 +5,9 @@ import { BadRequestResponse } from "@/responses/status-codes";
 import { NextFunction } from "express";
 import { Validator } from "fluentvalidation-ts";
 import { ValidatorAdapter } from "./ValidatorAdapter";
-import { ClassConstructor, singleton } from "@tomasjs/core";
+import { ClassConstructor, injectable } from "@tomasjs/core";
 
-@singleton()
+@injectable()
 export class FluentValidationMiddleware<
   TModel extends object,
   TValidator extends Validator<TModel> = Validator<TModel>

@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { tryCloseServerAsync } from "../../tests/utils";
 import { DotenvConfiguration } from "./DotenvConfiguration";
 import { DotenvSetup } from "./DotenvSetup";
-import { ConfigurationResolver, ConfigurationToken, globalContainer } from "@tomasjs/core";
+import { ConfigurationToken } from "@tomasjs/core";
 
 describe("configuration", () => {
   let server: any; // TODO Set http.Server type

@@ -2,10 +2,12 @@ import { NextFunction } from "express";
 import { HttpContext, statusCodes } from "@/core";
 import { JsonResponse } from "@/responses";
 import { ErrorHandler } from "./ErrorHandler";
-import { singleton } from "@tomasjs/core";
 import { StatusCodeError } from "@/errors";
+import { injectable } from "@tomasjs/core";
 
-@singleton()
+// TODO Update json response to meet industry standards
+
+@injectable()
 export class TomasErrorHandler implements ErrorHandler {
   catch(error: any, context: HttpContext, next: NextFunction) {
     if (error instanceof StatusCodeError) {

@@ -2,8 +2,8 @@ import {
   ClassConstructor,
   Configuration,
   ConfigurationToken,
-  ContainerSetup,
   ContainerSetupFactory,
+  ContainerSetupFunction,
   TomasError,
 } from "@tomasjs/core";
 import { config, DotenvConfigOptions } from "dotenv";
@@ -15,12 +15,10 @@ type DotenvSetupOptions<TSettings extends object> = DotenvConfigOptions & {
   keyConfigurations?: KeyConfiguration<TSettings>[];
 };
 
-export class DotenvSetup<TSettings extends object> extends ContainerSetupFactory {
-  constructor(private readonly options: DotenvSetupOptions<TSettings>) {
-    super();
-  }
+export class DotenvSetup<TSettings extends object> implements ContainerSetupFactory {
+  constructor(private readonly options: DotenvSetupOptions<TSettings>) {}
 
-  create(): ContainerSetup {
+  create(): ContainerSetupFunction {
     return (container) => {
       const dotenvConfigOutput = config(this.options);
 

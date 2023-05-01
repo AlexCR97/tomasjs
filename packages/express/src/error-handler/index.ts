@@ -1,4 +1,3 @@
-export { errorHandler } from "./@errorHandler";
 export { ErrorHandler } from "./ErrorHandler";
 export { ErrorHandlerAdapter } from "./ErrorHandlerAdapter";
 export { ErrorHandlerFunction } from "./ErrorHandlerFunction";

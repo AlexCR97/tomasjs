@@ -1,4 +1,9 @@
-import { ClassConstructor, globalContainer, isClassConstructor } from "@tomasjs/core";
+import {
+  ClassConstructor,
+  Container,
+  NotImplementedError,
+  isClassConstructor,
+} from "@tomasjs/core";
 import { Middleware } from "./Middleware";
 import { MiddlewareFactory } from "./MiddlewareFactory";
 import { isMiddlewareFactoryHandler, MiddlewareFactoryHandler } from "./MiddlewareFactoryHandler";
@@ -17,6 +22,10 @@ import { MiddlewareHandler } from "./MiddlewareHandler";
  */
 export abstract class MiddlewareFactoryAdapter {
   private constructor() {}
+
+  private static get container(): Container {
+    throw new NotImplementedError("get container"); // TODO Implement
+  }
 
   static isFactory<TMiddleware extends Middleware = Middleware>(
     obj: any
@@ -61,7 +70,7 @@ export abstract class MiddlewareFactoryAdapter {
   static fromConstructor<TMiddleware extends Middleware = Middleware>(
     factory: ClassConstructor<MiddlewareFactory<TMiddleware>>
   ): MiddlewareHandler | TMiddleware | ClassConstructor<TMiddleware> {
-    const factoryInstance = globalContainer.get(factory);
+    const factoryInstance = this.container.get(factory);
     return factoryInstance.create();
   }
 }

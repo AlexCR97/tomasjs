@@ -1,6 +1,6 @@
-import { singleton } from "@tomasjs/core";
+import { injectable } from "@tomasjs/core";
 
-@singleton()
+@injectable()
 export class UserContext<TClaims = any> {
   claims?: TClaims;
 }

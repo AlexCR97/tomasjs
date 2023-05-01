@@ -11,7 +11,7 @@ import { Controller } from "./Controller";
 import { ControllerType } from "./ControllerType";
 import { isController } from "./isController";
 import { ControllerMetadata, HttpMethodMetadata } from "./metadata";
-import { ClassConstructor, globalContainer } from "@tomasjs/core";
+import { ClassConstructor, Container, NotImplementedError } from "@tomasjs/core";
 
 /**
  * Adapts a Controller to an Express Router.
@@ -19,6 +19,10 @@ import { ClassConstructor, globalContainer } from "@tomasjs/core";
  */
 export class ControllerAdapter<TController extends Controller> {
   constructor(private readonly controller: ControllerType<TController>) {}
+
+  private get container(): Container {
+    throw new NotImplementedError("get container"); // TODO Implement
+  }
 
   /**
    * Adapts the controller to an Express Router.
@@ -69,7 +73,7 @@ export class ControllerAdapter<TController extends Controller> {
   }
 
   private fromConstructor(controller: ClassConstructor<TController>): Router {
-    const registeredController = globalContainer.get<TController>(controller);
+    const registeredController = this.container.get<TController>(controller);
     return this.fromInstance(registeredController);
   }
 

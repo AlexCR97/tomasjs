@@ -1,4 +1,10 @@
-import { ClassConstructor, TomasError, globalContainer, isClassConstructor } from "@tomasjs/core";
+import {
+  ClassConstructor,
+  Container,
+  NotImplementedError,
+  TomasError,
+  isClassConstructor,
+} from "@tomasjs/core";
 import { Guard } from "./Guard";
 import { GuardContext } from "./GuardContext";
 import { GuardFactory } from "./GuardFactory";
@@ -8,6 +14,10 @@ import { GuardType } from "./GuardType";
 
 export class GuardBridge {
   constructor(private readonly guard: GuardType) {}
+
+  private get container(): Container {
+    throw new NotImplementedError("get container"); // TODO Implement
+  }
 
   isAllowed(context: GuardContext): GuardResult {
     if (this.isFunction(this.guard)) {
@@ -19,7 +29,7 @@ export class GuardBridge {
     }
 
     if (this.isConstructor(this.guard)) {
-      const guardInstance = globalContainer.get(this.guard);
+      const guardInstance = this.container.get(this.guard);
       return guardInstance.isAllowed(context);
     }
 

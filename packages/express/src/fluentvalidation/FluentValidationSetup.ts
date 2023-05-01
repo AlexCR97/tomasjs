@@ -1,13 +1,11 @@
-import { ContainerSetup, ContainerSetupFactory } from "@tomasjs/core";
+import { ContainerSetupFactory, ContainerSetupFunction } from "@tomasjs/core";
 import { FluentValidationSetupOptions } from "./FluentValidationSetupOptions";
 import { ValidatorInjectionTokenFactory } from "./ValidatorInjectionTokenFactory";
 
-export class FluentValidationSetup extends ContainerSetupFactory {
-  constructor(private readonly options: FluentValidationSetupOptions) {
-    super();
-  }
+export class FluentValidationSetup implements ContainerSetupFactory {
+  constructor(private readonly options: FluentValidationSetupOptions) {}
 
-  create(): ContainerSetup {
+  create(): ContainerSetupFunction {
     return (container) => {
       if (
         this.options.validators !== undefined &&

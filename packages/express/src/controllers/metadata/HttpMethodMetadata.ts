@@ -1,7 +1,7 @@
 import { HttpMethod } from "@/core";
 import { ClassMethodMetadata } from "@/core/metadata";
-import { MiddlewareParam } from "@/endpoints";
 import { GuardType } from "@/guards";
+import { MiddlewareType } from "@/middleware";
 
 export class HttpMethodMetadata {
   private readonly metadata: ClassMethodMetadata;
@@ -56,15 +56,15 @@ export class HttpMethodMetadata {
 
   private readonly middlewaresKey = "tomasjs:controller:method:middlewares";
 
-  get middlewares(): MiddlewareParam[] | undefined {
-    return this.metadata.get<MiddlewareParam[] | undefined>(this.middlewaresKey);
+  get middlewares(): MiddlewareType[] | undefined {
+    return this.metadata.get<MiddlewareType[] | undefined>(this.middlewaresKey);
   }
 
-  set middlewares(value: MiddlewareParam[] | undefined) {
+  set middlewares(value: MiddlewareType[] | undefined) {
     this.metadata.set(this.middlewaresKey, value);
   }
 
-  addMiddleware(value: MiddlewareParam) {
+  addMiddleware(value: MiddlewareType) {
     if (this.middlewares === undefined) {
       this.middlewares = [];
     }

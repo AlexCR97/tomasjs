@@ -9,10 +9,8 @@ import {
 import cors from "cors";
 import express, { Express } from "express";
 import { AbstractApiBuilder } from "./AbstractApiBuilder";
-import { EndpointGroupBuilder } from "./EndpointGroupBuilder";
-import { EndpointGroupBuilderFunction } from "./EndpointGroupBuilderFunction";
 import { ExpressPathAdapter } from "@/core/express";
-import { Configuration, ConfigurationResolver, globalContainer } from "@tomasjs/core";
+import { Configuration, NotImplementedError } from "@tomasjs/core";
 
 interface IAppBuilder extends AbstractApiBuilder<IAppBuilder> {
   getConfiguration<TSettings extends object>(): Configuration<TSettings>;
@@ -27,8 +25,6 @@ interface IAppBuilder extends AbstractApiBuilder<IAppBuilder> {
   useText(options?: any): IAppBuilder; // TODO Figure out how to pass type parameter
   useJson(options?: any): IAppBuilder; // TODO Figure out how to pass type parameter
   /* #endregion */
-
-  useEndpointGroup(endpoints: EndpointGroupBuilderFunction): IAppBuilder;
 
   useErrorHandler<THandler extends ErrorHandler = ErrorHandler>(
     handler: ErrorHandlerType<THandler>
@@ -46,7 +42,8 @@ export class AppBuilder extends AbstractApiBuilder<IAppBuilder> implements IAppB
   protected override root = express();
 
   getConfiguration<TSettings extends object>(): Configuration<TSettings> {
-    return new ConfigurationResolver().getConfiguration<TSettings>();
+    throw new NotImplementedError(this.getConfiguration.name); // TODO Implement
+    // return new ConfigurationResolver().getConfiguration<TSettings>();
   }
 
   use(appSetup: (app: Express) => void): IAppBuilder {
@@ -78,42 +75,6 @@ export class AppBuilder extends AbstractApiBuilder<IAppBuilder> implements IAppB
 
   /* #endregion */
 
-  /* #region Endpoint Groups */
-
-  private readonly endpointGroups: EndpointGroupBuilderFunction[] = [];
-
-  useEndpointGroup(endpoints: EndpointGroupBuilderFunction): IAppBuilder {
-    this.endpointGroups.push(endpoints);
-    return this;
-  }
-
-  private bindEndpointGroup(endpointsBuilderFunction: EndpointGroupBuilderFunction) {
-    const endpointGroupBuilder = new EndpointGroupBuilder();
-    endpointsBuilderFunction(endpointGroupBuilder);
-
-    const routerBasePath = ExpressPathAdapter.adapt(endpointGroupBuilder._basePath);
-
-    const expressRouter = endpointGroupBuilder.build();
-
-    this.root.use(routerBasePath, expressRouter);
-
-    return this;
-  }
-
-  protected tryBindEndpointGroups() {
-    if (this.endpointGroups.length === 0) {
-      return this;
-    }
-
-    for (const endpointGroup of this.endpointGroups) {
-      this.bindEndpointGroup(endpointGroup);
-    }
-
-    return this;
-  }
-
-  /* #endregion */
-
   /* #region Controllers */
 
   private readonly controllers: ControllerType[] = [];
@@ -132,7 +93,7 @@ export class AppBuilder extends AbstractApiBuilder<IAppBuilder> implements IAppB
       return this.bindControllerInstance(controller);
     }
 
-    const controllerInstance = globalContainer.get<TController>(controller);
+    const controllerInstance = this.container.get<TController>(controller);
     return this.bindControllerInstance(controllerInstance);
   }
 
@@ -187,8 +148,6 @@ export class AppBuilder extends AbstractApiBuilder<IAppBuilder> implements IAppB
   async buildAsync(port: number): Promise<any> {
     return await this.tryBindMiddlewares()
       .tryBindGuards()
-      .tryBindEndpoints()
-      .tryBindEndpointGroups()
       .tryBindControllers()
       .tryBindErrorHandler()
       .createServerAsync(port);
