@@ -1,13 +1,11 @@
-import { ClassConstructor, ContainerSetup, ContainerSetupFactory } from "@tomasjs/core";
+import { ClassConstructor, ContainerSetupFactory, ContainerSetupFunction } from "@tomasjs/core";
 import { DisconnectListener } from "./DisconnectListener";
 import { disconnectListenerToken } from "./disconnectListenerToken";
 
-export class UseDisconnectListener extends ContainerSetupFactory {
-  constructor(private readonly listener: ClassConstructor<DisconnectListener>) {
-    super();
-  }
+export class UseDisconnectListener implements ContainerSetupFactory {
+  constructor(private readonly listener: ClassConstructor<DisconnectListener>) {}
 
-  create(): ContainerSetup {
+  create(): ContainerSetupFunction {
     return (container) => {
       container.addClass(this.listener, { token: disconnectListenerToken });
     };

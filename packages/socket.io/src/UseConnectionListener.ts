@@ -1,13 +1,11 @@
-import { ClassConstructor, ContainerSetup, ContainerSetupFactory } from "@tomasjs/core";
+import { ClassConstructor, ContainerSetupFactory, ContainerSetupFunction } from "@tomasjs/core";
 import { ConnectionListener } from "./ConnectionListener";
 import { connectionListenerToken } from "./connectionListenerToken";
 
-export class UseConnectionListener extends ContainerSetupFactory {
-  constructor(private readonly connectionListener: ClassConstructor<ConnectionListener>) {
-    super();
-  }
+export class UseConnectionListener implements ContainerSetupFactory {
+  constructor(private readonly connectionListener: ClassConstructor<ConnectionListener>) {}
 
-  create(): ContainerSetup {
+  create(): ContainerSetupFunction {
     return (container) => {
       container.addClass(this.connectionListener, { token: connectionListenerToken });
     };
