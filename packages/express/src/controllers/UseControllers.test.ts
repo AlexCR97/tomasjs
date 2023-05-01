@@ -13,7 +13,8 @@ import { OkResponse } from "../responses/status-codes";
 describe("controllers-UseControllers", () => {
   let server: Server | undefined;
   const port = 3002;
-  const logger = bootstrapLoggerFactory("debug");
+  const serverAddress = `http://localhost:${port}`;
+  const logger = bootstrapLoggerFactory("error");
 
   beforeEach(async () => {
     await disposeAsync();
@@ -43,9 +44,43 @@ describe("controllers-UseControllers", () => {
       )
       .buildAsync();
 
-    const response = await axios.get(`http://localhost:${port}/test`);
+    const response = await axios.get(`${serverAddress}/test`);
 
     expect(response.status).toBe(statusCodes.ok);
+  });
+
+  it("Can receive json data from a Controller", async () => {
+    interface User {
+      email: string;
+      password: string;
+    }
+
+    const expectedFetchedUser: User = {
+      email: "example@domain.com",
+      password: "123456",
+    };
+
+    //@ts-ignore: Fix decorators not working in test files
+    @controller("users")
+    class UsersController {
+      //@ts-ignore: Fix decorators not working in test files
+      @get("paged")
+      find(): User[] {
+        return [expectedFetchedUser];
+      }
+    }
+
+    server = await new ExpressAppBuilder({ port, logger })
+      .use(new UseControllers({ controllers: [UsersController], logger }))
+      .buildAsync();
+
+    // Act/Assert
+    const response = await fetch(`${serverAddress}/users/paged`);
+    expect(response.status).toBe(statusCodes.ok);
+
+    const responseJson = await response.json();
+    const responseUser = responseJson[0];
+    expect(responseUser).toEqual(expectedFetchedUser);
   });
 
   async function disposeAsync() {
