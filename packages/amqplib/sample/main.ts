@@ -1,30 +1,31 @@
 import "reflect-metadata";
-import { ContainerBuilder, globalContainer } from "@tomasjs/core";
+import { ServiceContainerBuilder } from "@tomasjs/core";
 import { TomasLoggerFactory } from "@tomasjs/logging";
 import { Channel } from "amqplib";
 import { testQueueName, url } from "./env";
 import { TestQueueMessageHandler } from "./TestQueueMessageHandler";
-import { AddQueueMessageHandlers, AmqplibSetup, ChannelToken, QueueSetup } from "../src";
+import { UseAmqplib, UseQueue, channelToken } from "../src";
+import { tick } from "../src/tests/utils";
 
 async function main() {
   const loggerFactory = new TomasLoggerFactory();
 
-  await new ContainerBuilder()
-    .setup(new AmqplibSetup({ url, logger: loggerFactory.create(AmqplibSetup.name) }))
+  const services = await new ServiceContainerBuilder()
+    .setup(new UseAmqplib({ url, logger: loggerFactory.create(UseAmqplib.name) }))
     .setup(
-      new QueueSetup({
+      new UseQueue({
         queueName: testQueueName,
-        logger: loggerFactory.create(QueueSetup.name),
+        messageHandlers: [TestQueueMessageHandler],
+        logger: loggerFactory.create(UseQueue.name),
       })
     )
-    .setup(new AddQueueMessageHandlers([TestQueueMessageHandler]))
-    .buildAsync();
+    .buildServiceProviderAsync();
 
   // Send a message after the specified time has passed
-  setTimeout(() => {
-    const channel = globalContainer.get<Channel>(ChannelToken);
+  tick(2000).then(() => {
+    const channel = services.get<Channel>(channelToken);
     channel.sendToQueue(testQueueName, Buffer.from("Hello RabbitMQ!"));
-  }, 2000);
+  });
 }
 
 main();

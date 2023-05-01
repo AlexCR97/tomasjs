@@ -1,1 +1,1 @@
-export const QueueMessageHandlerToken = "queueMessageHandler";
+export const queueMessageHandlerToken = "queueMessageHandler";

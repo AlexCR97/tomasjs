@@ -7,5 +7,6 @@ import { testQueueName } from "./env";
 export class TestQueueMessageHandler implements QueueMessageHandler {
   handle(channel: Channel, message: Message): void | Promise<void> {
     console.log("Message:", message.content.toString());
+    channel.ack(message);
   }
 }
