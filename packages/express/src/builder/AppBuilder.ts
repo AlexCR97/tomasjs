@@ -9,8 +9,8 @@ import {
 import cors from "cors";
 import express, { Express } from "express";
 import { AbstractApiBuilder } from "./AbstractApiBuilder";
-import { ExpressPathAdapter } from "@/core/express";
 import { Configuration, NotImplementedError } from "@tomasjs/core";
+import { ExpressPathNormalizer } from "@/core/express";
 
 interface IAppBuilder extends AbstractApiBuilder<IAppBuilder> {
   getConfiguration<TSettings extends object>(): Configuration<TSettings>;
@@ -38,10 +38,7 @@ interface IAppBuilder extends AbstractApiBuilder<IAppBuilder> {
   buildAsync(port: number): Promise<any>;
 }
 
-export class AppBuilder
-  extends AbstractApiBuilder<IAppBuilder>
-  implements IAppBuilder
-{
+export class AppBuilder extends AbstractApiBuilder<IAppBuilder> implements IAppBuilder {
   protected override root = express();
 
   getConfiguration<TSettings extends object>(): Configuration<TSettings> {
@@ -102,8 +99,8 @@ export class AppBuilder
 
   private bindControllerInstance(controller: Controller) {
     const controllerMetadata = new ControllerMetadata(controller);
-    const expressRouterPath = ExpressPathAdapter.adapt(controllerMetadata.path);
-    const expressRouter = new ControllerAdapter(controller).adapt();
+    const expressRouterPath = new ExpressPathNormalizer(controllerMetadata.path).normalize();
+    const expressRouter = new ControllerAdapter({ controller }).adapt();
     this.root.use(expressRouterPath, expressRouter);
     return this;
   }

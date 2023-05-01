@@ -1,5 +1,5 @@
 export { ExpressErrorMiddlewareHandler } from "./ExpressErrorMiddlewareHandler";
 export { ExpressMiddlewareHandler } from "./ExpressMiddlewareHandler";
-export { ExpressPathAdapter } from "./ExpressPathAdapter";
+export { ExpressPathNormalizer } from "./ExpressPathNormalizer";
 export { ExpressRequestHandler } from "./ExpressRequestHandler";
 export { Headers } from "./Headers";
