@@ -7,7 +7,6 @@ import { DisposeAmqplib } from "./DisposeAmqplib";
 import { QueueMessageHandler } from "./QueueMessageHandler";
 import { UseAmqplib } from "./UseAmqplib";
 import { UseQueue } from "./UseQueue";
-import { UseQueueMessageHandlers } from "./UseQueueMessageHandlers";
 import { Channel, Message } from "amqplib";
 import { channelToken } from "./tokens";
 
@@ -87,8 +86,7 @@ describe("UseQueue", () => {
           logger,
         })
       )
-      .setup(new UseQueue({ queueName, logger }))
-      .setup(new UseQueueMessageHandlers([options.messageHandler]))
+      .setup(new UseQueue({ queueName, messageHandlers: [options.messageHandler], logger }))
       .buildContainerAsync();
   }
 });
