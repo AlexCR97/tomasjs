@@ -38,7 +38,10 @@ interface IAppBuilder extends AbstractApiBuilder<IAppBuilder> {
   buildAsync(port: number): Promise<any>;
 }
 
-export class AppBuilder extends AbstractApiBuilder<IAppBuilder> implements IAppBuilder {
+export class AppBuilder
+  extends AbstractApiBuilder<IAppBuilder>
+  implements IAppBuilder
+{
   protected override root = express();
 
   getConfiguration<TSettings extends object>(): Configuration<TSettings> {
