@@ -24,6 +24,7 @@
     "test-builder-ExpressAppBuilder": "jest --testNamePattern ExpressAppBuilder --verbose",
     "test-builder-UseJson": "jest --testNamePattern UseJson --verbose",
     "test-controllers": "jest --testNamePattern controllers --verbose",
+    "test-controllers-controllerDecorator": "jest --testNamePattern controllers-controllerDecorator --verbose",
     "test-controllers-UseControllers": "jest --testNamePattern controllers-UseControllers --verbose",
     "testw-auth-jwt-guard": "jest --testNamePattern auth-jwt-guard --watchAll --verbose",
     "testw-auth-required-claim-guard": "jest --testNamePattern auth-required-claim-guard --watchAll --verbose",

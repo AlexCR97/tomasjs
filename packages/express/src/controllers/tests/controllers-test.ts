@@ -36,22 +36,6 @@ describe("controllers", () => {
     await tryCloseServerAsync(server);
   });
 
-  it(`A Controller can be decorated`, () => {
-    // Arrange
-    const expectedPath = "test";
-
-    //@ts-ignore: Fix decorators not working in test files
-    @controller(expectedPath)
-    class TestController {}
-
-    // Act/Assert
-    const registeredController = globalContainer.get<TestController>(TestController);
-    expect(registeredController).toBeTruthy();
-
-    const metadata = new ControllerMetadata(registeredController);
-    expect(metadata.path).toEqual(expectedPath);
-  });
-
   it("A controller can declare http methods", () => {
     // Arrange
     interface ExpectedMethod {
