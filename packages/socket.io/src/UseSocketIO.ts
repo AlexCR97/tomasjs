@@ -1,7 +1,7 @@
-import { Container, ContainerSetup, ContainerSetupFactory } from "@tomasjs/core";
+import { Container, ContainerSetupFactory, ContainerSetupFunction } from "@tomasjs/core";
 import { Logger, TomasLoggerFactory } from "@tomasjs/logging";
 import { DisconnectReason, Server, Socket } from "socket.io";
-import { SocketIOSetupOptions } from "./SocketIOSetupOptions";
+import { UseSocketIOOptions } from "./UseSocketIOOptions";
 import { ServiceResolver } from "./ServiceResolver";
 import { disconnectListenerToken } from "./disconnectListenerToken";
 import { FallbackDisconnectListener } from "./FallbackDisconnectListener";
@@ -11,10 +11,8 @@ import { disconnectingListenerToken } from "./disconnectingListenerToken";
 import { FallbackDisconnectingListener } from "./FallbackDisconnectingListener";
 import { serverToken } from "./serverToken";
 
-export class SocketIOSetup extends ContainerSetupFactory {
-  constructor(private readonly options: SocketIOSetupOptions) {
-    super();
-  }
+export class UseSocketIO implements ContainerSetupFactory {
+  constructor(private readonly options: UseSocketIOOptions) {}
 
   private get port(): number | undefined {
     return this.options.port;
@@ -28,7 +26,7 @@ export class SocketIOSetup extends ContainerSetupFactory {
     return this.options.logger;
   }
 
-  create(): ContainerSetup {
+  create(): ContainerSetupFunction {
     return (container) => {
       this.logger?.debug("Started setup for socket.io server ...");
 

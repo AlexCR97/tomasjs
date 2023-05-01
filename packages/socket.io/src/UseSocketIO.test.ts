@@ -1,34 +1,36 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { ContainerBuilder, globalContainer, inject, injectable } from "@tomasjs/core";
+import { Container, ServiceContainerBuilder, inject, injectable } from "@tomasjs/core";
 import { Server } from "socket.io";
-import { SocketIOSetup } from "./SocketIOSetup";
+import { DisposeSocketIO } from "./DisposeSocketIO";
+import { UseSocketIO } from "./UseSocketIO";
 import { serverToken } from "./serverToken";
 
-describe("server", () => {
+describe("UseSocketIO", () => {
   const port = 3031;
-  let ioServer: Server;
+  let ioServer: Server | undefined;
+  let testContainer: Container | undefined;
 
-  beforeEach(() => {
-    disposeResources();
+  beforeEach(async () => {
+    await disposeAsync();
   });
 
-  afterEach(() => {
-    disposeResources();
+  afterEach(async () => {
+    await disposeAsync();
   });
 
   it(`The ${Server.name} should be retrievable via the "serverToken" after the setup.`, async () => {
     ioServer = new Server(port);
 
-    await new ContainerBuilder()
+    testContainer = await new ServiceContainerBuilder()
       .setup(
-        new SocketIOSetup({
+        new UseSocketIO({
           server: ioServer,
         })
       )
-      .buildAsync();
+      .buildContainerAsync();
 
-    const server = globalContainer.get<Server>(serverToken);
+    const server = testContainer.get<Server>(serverToken);
     expect(server).toBeTruthy();
     expect(server).toBeInstanceOf(Server);
   });
@@ -45,28 +47,27 @@ describe("server", () => {
       ) {}
     }
 
-    await new ContainerBuilder()
+    testContainer = await new ServiceContainerBuilder()
       .setup(
-        new SocketIOSetup({
+        new UseSocketIO({
           server: ioServer,
         })
       )
       .setup((container) => {
         container.addClass(TestClass);
       })
-      .buildAsync();
+      .buildContainerAsync();
 
-    const testInstance = globalContainer.get(TestClass);
+    const testInstance = testContainer.get(TestClass);
     expect(testInstance).toBeTruthy();
     expect(testInstance.server).toBeTruthy();
     expect(testInstance.server).toBeInstanceOf(Server);
   });
 
-  function disposeResources() {
-    ioServer?.close();
-
-    if (globalContainer.has(serverToken)) {
-      globalContainer.remove(serverToken);
+  async function disposeAsync() {
+    if (ioServer && testContainer) {
+      const teardownFunction = new DisposeSocketIO(ioServer).create();
+      await teardownFunction(testContainer);
     }
   }
 });

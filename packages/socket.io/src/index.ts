@@ -1,9 +1,10 @@
 export { ConnectionListener } from "./ConnectionListener";
 export { DisconnectListener } from "./DisconnectListener";
 export { DisconnectingListener } from "./DisconnectingListener";
+export { DisposeSocketIO } from "./DisposeSocketIO";
 export { serverToken } from "./serverToken";
-export { SocketIOSetup } from "./SocketIOSetup";
-export { SocketIOSetupOptions } from "./SocketIOSetupOptions";
+export { UseSocketIO } from "./UseSocketIO";
+export { UseSocketIOOptions } from "./UseSocketIOOptions";
 export { UseConnectionListener } from "./UseConnectionListener";
 export { UseDisconnectListener } from "./UseDisconnectListener";
 export { UseDisconnectingListener } from "./UseDisconnectingListener";
