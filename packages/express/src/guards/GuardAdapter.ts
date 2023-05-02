@@ -1,17 +1,15 @@
-import { HttpContextResolver } from "@/core";
-import { ExpressMiddlewareHandler } from "@/core/express";
-import { UnauthorizedResponse } from "@/responses/status-codes";
 import { GuardBridge } from "./GuardBridge";
 import { GuardContextFactory } from "./GuardContextFactory";
 import { GuardType } from "./GuardType";
+import { ExpressMiddlewareFunction } from "@/core/express";
+import { NotImplementedError } from "@tomasjs/core";
 
 export abstract class GuardAdapter {
   private constructor() {}
 
-  static toExpress(guard: GuardType): ExpressMiddlewareHandler {
+  static toExpress(guard: GuardType): ExpressMiddlewareFunction {
     return async (req, res, next) => {
-      const httpContext = HttpContextResolver.fromExpress(req, res);
-      const guardContext = GuardContextFactory.fromHttpContext(httpContext);
+      const guardContext = GuardContextFactory.fromExpress(req, res);
       const guardResult = await new GuardBridge(guard).isAllowed(guardContext);
 
       if (guardResult === true) {
@@ -19,10 +17,12 @@ export abstract class GuardAdapter {
       }
 
       if (guardResult === false) {
-        return httpContext.respond(new UnauthorizedResponse());
+        throw new NotImplementedError(this.toExpress.name); // TODO Implement
+        // return httpContext.respond(new UnauthorizedResponse());
       }
 
-      return httpContext.respond(guardResult);
+      throw new NotImplementedError(this.toExpress.name); // TODO Implement
+      // return httpContext.respond(guardResult);
     };
   }
 }

@@ -12,3 +12,4 @@ export { Controller } from "./Controller";
 export { ControllerAdapter } from "./ControllerAdapter";
 export { ControllerType } from "./ControllerType";
 export { isController } from "./isController";
+export { UseControllers } from "./UseControllers";

@@ -70,11 +70,13 @@ export class UseControllers implements AppSetupFactory {
     container: Container,
     controller: ClassConstructor<Controller>
   ) {
+    return; // TODO Implement
     const controllerMetadata = new ControllerMetadata(controller);
     this.bootstrapMiddlewaresToContainer(container, controllerMetadata.middlewares);
   }
 
   private bootstrapMethodLevelMiddlewaresToContainer(container: Container, controller: Controller) {
+    return; // TODO Implement
     const controllerMetadata = new ControllerMetadata(controller);
 
     for (const httpMethod of controllerMetadata.httpMethods) {

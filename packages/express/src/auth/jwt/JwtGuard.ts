@@ -13,7 +13,7 @@ export class JwtGuard implements Guard {
   }
 
   async isAllowed(context: GuardContext): Promise<boolean> {
-    const authHeader = context.request.headers.authorization;
+    const authHeader = context.req.headers.authorization;
 
     if (!authHeader) {
       return false;

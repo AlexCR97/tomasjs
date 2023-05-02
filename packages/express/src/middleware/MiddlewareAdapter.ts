@@ -1,23 +1,17 @@
-import { HttpContextResolver } from "@/core";
-import { ExpressMiddlewareHandler } from "@/core/express";
-import { Middleware } from "./Middleware";
-import { isMiddlewareHandler, MiddlewareHandler } from "./MiddlewareHandler";
-import { ClassConstructor, Container } from "@tomasjs/core";
+import { isMiddleware, Middleware } from "./Middleware";
+import { isMiddlewareFunction, MiddlewareFunction } from "./MiddlewareFunction";
+import {
+  ClassConstructor,
+  Container,
+  isClassConstructor,
+  NotImplementedError,
+} from "@tomasjs/core";
 import { Logger } from "@tomasjs/logging";
 import { MiddlewareType } from "./MiddlewareType";
+import { isMiddlewareFactory, MiddlewareFactory } from "./MiddlewareFactory";
+import { ExpressMiddlewareFunction } from "@/core/express";
 
-/**
- * Resolves a `Middleware` into an `ExpressMiddlewareHandler`.
- *
- * Considering that:
- * `TMiddleware extends Middleware = Middleware`
- *
- * Then, a valid `Middleware` could be:
- * - An arrow function of type `MiddlewareHandler`
- * - An instance of a `TMiddleware`
- * - A constructor of a `TMiddleware`
- */
-export class MiddlewareAdapter<TMiddleware extends Middleware = Middleware> {
+export class MiddlewareAdapter {
   constructor(
     private readonly options: {
       container: Container;
@@ -34,73 +28,63 @@ export class MiddlewareAdapter<TMiddleware extends Middleware = Middleware> {
     return this.options.middleware;
   }
 
-  isMiddleware(obj: any): obj is TMiddleware {
-    if (obj === undefined || obj === null) {
-      return false;
-    }
-
-    const func = obj.handle as Function;
-
-    if (typeof func !== "function") {
-      return false;
-    }
-
-    // Considering that "handle" must be a named function...
-    return (
-      func.name.trim() === "handle" && // The name must be "handle"
-      func.prototype === undefined && // The prototype must be undefined
-      func.length === 2 // It must receive 2 arguments
-    );
+  private get logger() {
+    return this.options.logger;
   }
 
-  adapt() {
-    // console.log("from", middleware);
-
-    if (isMiddlewareHandler(this.middleware)) {
-      // console.log("middleware is type");
-      return this.fromType(this.middleware);
+  adapt(): ExpressMiddlewareFunction {
+    if (isMiddlewareFunction(this.middleware)) {
+      this.logger?.debug("The middleware is a MiddlewareFunction");
+      return this.fromFunction(this.middleware);
     }
 
-    if (this.isMiddleware(this.middleware)) {
-      // console.log("middleware is instance");
+    if (isMiddleware(this.middleware)) {
+      this.logger?.debug("The middleware is a Middleware instance");
       return this.fromInstance(this.middleware);
     }
 
-    // console.log("middleware is instance");
-    return this.fromConstructor(this.middleware as any); // TODO Improve type-check
+    if (isClassConstructor(this.middleware)) {
+      this.logger?.debug("The middleware is a class constructor");
+      return this.fromConstructor(this.middleware);
+    }
+
+    if (isMiddlewareFactory(this.middleware)) {
+      this.logger?.debug("The middleware is a MiddlewareFactory instance");
+      return this.fromFactory(this.middleware);
+    }
+
+    this.logger?.debug("The middleware did not match any of the supported types.");
+    throw new NotImplementedError(this.adapt.name);
   }
 
-  private fromType(middleware: MiddlewareHandler): ExpressMiddlewareHandler {
+  private fromFunction(middleware: MiddlewareFunction): ExpressMiddlewareFunction {
     return async (req, res, next) => {
-      const context = HttpContextResolver.fromExpress(req, res);
-      await middleware(context, next);
+      await middleware(req, res, next);
     };
   }
 
-  private fromInstance(middleware: TMiddleware): ExpressMiddlewareHandler {
+  private fromInstance(middleware: Middleware): ExpressMiddlewareFunction {
     return async (req, res, next) => {
-      const context = HttpContextResolver.fromExpress(req, res);
-      await middleware.handle(context, next);
+      await middleware.handle(req, res, next);
     };
   }
 
-  private fromConstructor(middleware: ClassConstructor<TMiddleware>): ExpressMiddlewareHandler {
+  private fromConstructor(middleware: ClassConstructor<Middleware>): ExpressMiddlewareFunction {
     return async (req, res, next) => {
-      try {
-        // console.log("resolving middleware instance...");
-        this.container.get(middleware);
-        // console.log("middleware instance resolved!");
-      } catch (err) {
-        // console.log("err", err);
-        throw err;
-      }
-
-      // console.log("resolving middleware instance...");
       const middlewareInstance = this.container.get(middleware);
-      // console.log("middleware instance resolved!", middlewareInstance);
-
-      const context = HttpContextResolver.fromExpress(req, res);
-      await middlewareInstance.handle(context, next);
+      await middlewareInstance.handle(req, res, next);
     };
+  }
+
+  private fromFactory(factory: MiddlewareFactory): ExpressMiddlewareFunction {
+    const middleware = factory.create();
+
+    const middlewareAdapter = new MiddlewareAdapter({
+      container: this.container,
+      middleware,
+      logger: this.logger,
+    });
+
+    return middlewareAdapter.adapt();
   }
 }

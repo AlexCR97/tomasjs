@@ -1,10 +1,10 @@
 import {
-  ExpressMiddlewareHandler,
+  ExpressMiddlewareFunction,
   ExpressPathNormalizer,
   ExpressRequestHandler,
 } from "@/core/express";
 import { GuardAdapter } from "@/guards";
-import { MiddlewareAdapter, MiddlewareFactoryAdapter } from "@/middleware";
+import { MiddlewareAdapter } from "@/middleware";
 import { ResponseAdapter } from "@/responses";
 import { Router } from "express";
 import { Controller } from "./Controller";
@@ -88,31 +88,27 @@ export class ControllerAdapter {
 
   private getControllerLevelMiddlewares(
     metadata: ControllerMetadata<Controller>
-  ): ExpressMiddlewareHandler[] {
-    return (metadata.middlewares ?? []).map((middleware) => {
-      const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(middleware)
-        ? new MiddlewareFactoryAdapter({
-            container: this.container,
-            factory: middleware,
-            logger: this.logger,
-          }).adapt()
-        : middleware;
+  ): ExpressMiddlewareFunction[] {
+    const middlewares = metadata.middlewares ?? [];
 
-      return new MiddlewareAdapter({
+    return middlewares.map((middleware) => {
+      const adapter = new MiddlewareAdapter({
         container: this.container,
-        middleware: middlewareToAdapt,
+        middleware: middleware,
         logger: this.logger,
-      }).adapt();
+      });
+
+      return adapter.adapt();
     });
   }
 
   private getControllerLevelGuards(
     metadata: ControllerMetadata<Controller>
-  ): ExpressMiddlewareHandler[] {
+  ): ExpressMiddlewareFunction[] {
     return (metadata.guards ?? []).map(GuardAdapter.toExpress);
   }
 
-  private getMethodLevelMiddlewares(metadata: HttpMethodMetadata): ExpressMiddlewareHandler[] {
+  private getMethodLevelMiddlewares(metadata: HttpMethodMetadata): ExpressMiddlewareFunction[] {
     return (metadata.middlewares ?? []).map((middleware) => {
       return new MiddlewareAdapter({
         container: this.container,
@@ -122,7 +118,7 @@ export class ControllerAdapter {
     });
   }
 
-  private getMethodLevelGuards(metadata: HttpMethodMetadata): ExpressMiddlewareHandler[] {
+  private getMethodLevelGuards(metadata: HttpMethodMetadata): ExpressMiddlewareFunction[] {
     return (metadata.guards ?? []).map(GuardAdapter.toExpress);
   }
 }
