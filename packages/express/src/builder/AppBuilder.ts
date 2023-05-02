@@ -1,168 +1,168 @@
-import { Controller, ControllerAdapter, ControllerType, isController } from "@/controllers";
-import { ControllerMetadata } from "@/controllers/metadata";
-import {
-  ErrorHandler,
-  ErrorHandlerAdapter,
-  ErrorHandlerType,
-  TomasErrorHandler,
-} from "@/error-handler";
-import cors from "cors";
-import express, { Express } from "express";
-import { AbstractApiBuilder } from "./AbstractApiBuilder";
-import { Configuration, NotImplementedError } from "@tomasjs/core";
-import { ExpressPathNormalizer } from "@/core/express";
+// import { Controller, ControllerAdapter, ControllerType, isController } from "@/controllers";
+// import { ControllerMetadata } from "@/controllers/metadata";
+// import {
+//   ErrorHandler,
+//   ErrorHandlerAdapter,
+//   ErrorHandlerType,
+//   TomasErrorHandler,
+// } from "@/error-handler";
+// import cors from "cors";
+// import express, { Express } from "express";
+// import { AbstractApiBuilder } from "./AbstractApiBuilder";
+// import { Configuration, NotImplementedError } from "@tomasjs/core";
+// import { ExpressPathNormalizer } from "@/core/express";
 
-interface IAppBuilder extends AbstractApiBuilder<IAppBuilder> {
-  getConfiguration<TSettings extends object>(): Configuration<TSettings>;
+// interface IAppBuilder extends AbstractApiBuilder<IAppBuilder> {
+//   getConfiguration<TSettings extends object>(): Configuration<TSettings>;
 
-  use(appSetup: (app: Express) => void): IAppBuilder;
+//   use(appSetup: (app: Express) => void): IAppBuilder;
 
-  useCors<T extends cors.CorsRequest = cors.CorsRequest>(
-    options?: cors.CorsOptions | cors.CorsOptionsDelegate<T>
-  ): IAppBuilder;
+//   useCors<T extends cors.CorsRequest = cors.CorsRequest>(
+//     options?: cors.CorsOptions | cors.CorsOptionsDelegate<T>
+//   ): IAppBuilder;
 
-  /* #region Formatters */
-  useText(options?: any): IAppBuilder; // TODO Figure out how to pass type parameter
-  useJson(options?: any): IAppBuilder; // TODO Figure out how to pass type parameter
-  /* #endregion */
+//   /* #region Formatters */
+//   useText(options?: any): IAppBuilder; // TODO Figure out how to pass type parameter
+//   useJson(options?: any): IAppBuilder; // TODO Figure out how to pass type parameter
+//   /* #endregion */
 
-  useErrorHandler<THandler extends ErrorHandler = ErrorHandler>(
-    handler: ErrorHandlerType<THandler>
-  ): IAppBuilder;
+//   useErrorHandler<THandler extends ErrorHandler = ErrorHandler>(
+//     handler: ErrorHandlerType<THandler>
+//   ): IAppBuilder;
 
-  useController<TController extends object = object>(
-    controller: ControllerType<TController>
-  ): IAppBuilder;
+//   useController<TController extends object = object>(
+//     controller: ControllerType<TController>
+//   ): IAppBuilder;
 
-  // TODO Add return type for server
-  buildAsync(port: number): Promise<any>;
-}
+//   // TODO Add return type for server
+//   buildAsync(port: number): Promise<any>;
+// }
 
-export class AppBuilder extends AbstractApiBuilder<IAppBuilder> implements IAppBuilder {
-  protected override root = express();
+// export class AppBuilder extends AbstractApiBuilder<IAppBuilder> implements IAppBuilder {
+//   protected override root = express();
 
-  getConfiguration<TSettings extends object>(): Configuration<TSettings> {
-    throw new NotImplementedError(this.getConfiguration.name); // TODO Implement
-    // return new ConfigurationResolver().getConfiguration<TSettings>();
-  }
+//   getConfiguration<TSettings extends object>(): Configuration<TSettings> {
+//     throw new NotImplementedError(this.getConfiguration.name); // TODO Implement
+//     // return new ConfigurationResolver().getConfiguration<TSettings>();
+//   }
 
-  use(appSetup: (app: Express) => void): IAppBuilder {
-    appSetup(this.root);
-    return this;
-  }
+//   use(appSetup: (app: Express) => void): IAppBuilder {
+//     appSetup(this.root);
+//     return this;
+//   }
 
-  useCors<T extends cors.CorsRequest = cors.CorsRequest>(
-    options?: cors.CorsOptions | cors.CorsOptionsDelegate<T>
-  ): IAppBuilder {
-    const corsMiddleware = cors(options as any); // TODO Improve typing
-    this.root.use(corsMiddleware);
-    return this;
-  }
+//   useCors<T extends cors.CorsRequest = cors.CorsRequest>(
+//     options?: cors.CorsOptions | cors.CorsOptionsDelegate<T>
+//   ): IAppBuilder {
+//     const corsMiddleware = cors(options as any); // TODO Improve typing
+//     this.root.use(corsMiddleware);
+//     return this;
+//   }
 
-  /* #region Formatters */
+//   /* #region Formatters */
 
-  // TODO Figure out how to pass type parameter
-  useText(options?: any): IAppBuilder {
-    this.root.use(express.text(options));
-    return this;
-  }
+//   // TODO Figure out how to pass type parameter
+//   useText(options?: any): IAppBuilder {
+//     this.root.use(express.text(options));
+//     return this;
+//   }
 
-  // TODO Figure out how to pass type parameter
-  useJson(options?: any): IAppBuilder {
-    this.root.use(express.json(options));
-    return this;
-  }
+//   // TODO Figure out how to pass type parameter
+//   useJson(options?: any): IAppBuilder {
+//     this.root.use(express.json(options));
+//     return this;
+//   }
 
-  /* #endregion */
+//   /* #endregion */
 
-  /* #region Controllers */
+//   /* #region Controllers */
 
-  private readonly controllers: ControllerType[] = [];
+//   private readonly controllers: ControllerType[] = [];
 
-  useController<TController extends Controller = Controller>(
-    controller: ControllerType<TController>
-  ): IAppBuilder {
-    this.controllers.push(controller);
-    return this as any; // TODO Figure out how to satisfy generic
-  }
+//   useController<TController extends Controller = Controller>(
+//     controller: ControllerType<TController>
+//   ): IAppBuilder {
+//     this.controllers.push(controller);
+//     return this as any; // TODO Figure out how to satisfy generic
+//   }
 
-  private bindController<TController extends Controller = Controller>(
-    controller: ControllerType<TController>
-  ) {
-    if (isController<TController>(controller)) {
-      return this.bindControllerInstance(controller);
-    }
+//   private bindController<TController extends Controller = Controller>(
+//     controller: ControllerType<TController>
+//   ) {
+//     if (isController<TController>(controller)) {
+//       return this.bindControllerInstance(controller);
+//     }
 
-    const controllerInstance = this.container.get<TController>(controller);
-    return this.bindControllerInstance(controllerInstance);
-  }
+//     const controllerInstance = this.container.get<TController>(controller);
+//     return this.bindControllerInstance(controllerInstance);
+//   }
 
-  private bindControllerInstance(controller: Controller) {
-    const controllerMetadata = new ControllerMetadata(controller);
-    const expressRouterPath = new ExpressPathNormalizer(controllerMetadata.path).normalize();
-    const expressRouter = new ControllerAdapter({ controller }).adapt();
-    this.root.use(expressRouterPath, expressRouter);
-    return this;
-  }
+//   private bindControllerInstance(controller: Controller) {
+//     const controllerMetadata = new ControllerMetadata(controller);
+//     const expressRouterPath = new ExpressPathNormalizer(controllerMetadata.path).normalize();
+//     const expressRouter = new ControllerAdapter({ controller }).adapt();
+//     this.root.use(expressRouterPath, expressRouter);
+//     return this;
+//   }
 
-  protected tryBindControllers() {
-    if (this.controllers.length === 0) {
-      return this;
-    }
+//   protected tryBindControllers() {
+//     if (this.controllers.length === 0) {
+//       return this;
+//     }
 
-    for (const controller of this.controllers) {
-      this.bindController(controller);
-    }
+//     for (const controller of this.controllers) {
+//       this.bindController(controller);
+//     }
 
-    return this;
-  }
+//     return this;
+//   }
 
-  /* #endregion */
+//   /* #endregion */
 
-  /* #region Error Handler */
+//   /* #region Error Handler */
 
-  private errorHandler: ErrorHandlerType<ErrorHandler> = new TomasErrorHandler();
+//   private errorHandler: ErrorHandlerType<ErrorHandler> = new TomasErrorHandler();
 
-  useErrorHandler<THandler extends ErrorHandler = ErrorHandler>(
-    handler: ErrorHandlerType<THandler>
-  ): IAppBuilder {
-    this.errorHandler = handler;
-    return this;
-  }
+//   useErrorHandler<THandler extends ErrorHandler = ErrorHandler>(
+//     handler: ErrorHandlerType<THandler>
+//   ): IAppBuilder {
+//     this.errorHandler = handler;
+//     return this;
+//   }
 
-  private bindErrorHandler<THandler extends ErrorHandler = ErrorHandler>(
-    handler: ErrorHandlerType<THandler>
-  ) {
-    const expressErrorMiddlewareFunction = new ErrorHandlerAdapter(handler).adapt();
-    this.root.use(expressErrorMiddlewareFunction);
-    return this;
-  }
+//   private bindErrorHandler<THandler extends ErrorHandler = ErrorHandler>(
+//     handler: ErrorHandlerType<THandler>
+//   ) {
+//     const expressErrorMiddlewareFunction = new ErrorHandlerAdapter(handler).adapt();
+//     this.root.use(expressErrorMiddlewareFunction);
+//     return this;
+//   }
 
-  private tryBindErrorHandler() {
-    return this.bindErrorHandler(this.errorHandler);
-  }
+//   private tryBindErrorHandler() {
+//     return this.bindErrorHandler(this.errorHandler);
+//   }
 
-  /* #endregion */
+//   /* #endregion */
 
-  // TODO Add return type
-  async buildAsync(port: number): Promise<any> {
-    return await this.tryBindMiddlewares()
-      .tryBindGuards()
-      .tryBindControllers()
-      .tryBindErrorHandler()
-      .createServerAsync(port);
-  }
+//   // TODO Add return type
+//   async buildAsync(port: number): Promise<any> {
+//     return await this.tryBindMiddlewares()
+//       .tryBindGuards()
+//       .tryBindControllers()
+//       .tryBindErrorHandler()
+//       .createServerAsync(port);
+//   }
 
-  // TODO Add return type
-  private async createServerAsync(port: number): Promise<any> {
-    return new Promise<any>((resolve, reject) => {
-      const server = this.root
-        .listen(port, () => {
-          return resolve(server);
-        })
-        .on("error", (err) => {
-          return reject(err);
-        });
-    });
-  }
-}
+//   // TODO Add return type
+//   private async createServerAsync(port: number): Promise<any> {
+//     return new Promise<any>((resolve, reject) => {
+//       const server = this.root
+//         .listen(port, () => {
+//           return resolve(server);
+//         })
+//         .on("error", (err) => {
+//           return reject(err);
+//         });
+//     });
+//   }
+// }

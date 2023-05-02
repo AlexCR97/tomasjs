@@ -1,13 +1,9 @@
-import {
-  ClassConstructor,
-  Container,
-  NotImplementedError,
-  isClassConstructor,
-} from "@tomasjs/core";
+import { ClassConstructor, Container, isClassConstructor } from "@tomasjs/core";
 import { Middleware } from "./Middleware";
 import { MiddlewareFactory } from "./MiddlewareFactory";
 import { isMiddlewareFactoryHandler, MiddlewareFactoryHandler } from "./MiddlewareFactoryHandler";
 import { MiddlewareHandler } from "./MiddlewareHandler";
+import { Logger } from "@tomasjs/logging";
 
 /**
  * Resolves a `MiddlewareFactory` into a `Middleware`.
@@ -20,11 +16,24 @@ import { MiddlewareHandler } from "./MiddlewareHandler";
  * - An instance of a `MiddlewareFactory<TMiddleware>`
  * - A constructor of a `MiddlewareFactory<TMiddleware>`
  */
-export abstract class MiddlewareFactoryAdapter {
-  private constructor() {}
+export class MiddlewareFactoryAdapter<TMiddleware extends Middleware = Middleware> {
+  constructor(
+    private readonly options: {
+      container: Container;
+      factory:
+        | MiddlewareFactoryHandler<TMiddleware>
+        | MiddlewareFactory<TMiddleware>
+        | ClassConstructor<MiddlewareFactory<TMiddleware>>;
+      logger?: Logger;
+    }
+  ) {}
 
-  private static get container(): Container {
-    throw new NotImplementedError("get container"); // TODO Implement
+  private get container(): Container {
+    return this.options.container;
+  }
+
+  private get factory() {
+    return this.options.factory;
   }
 
   static isFactory<TMiddleware extends Middleware = Middleware>(
@@ -40,34 +49,29 @@ export abstract class MiddlewareFactoryAdapter {
     );
   }
 
-  static from<TMiddleware extends Middleware = Middleware>(
-    factory:
-      | MiddlewareFactoryHandler<TMiddleware>
-      | MiddlewareFactory<TMiddleware>
-      | ClassConstructor<MiddlewareFactory<TMiddleware>>
-  ) {
-    if (isMiddlewareFactoryHandler(factory)) {
-      return this.fromType(factory);
-    } else if (factory instanceof MiddlewareFactory<TMiddleware>) {
-      return this.fromInstance(factory);
+  adapt() {
+    if (isMiddlewareFactoryHandler(this.factory)) {
+      return this.fromType(this.factory);
+    } else if (this.factory instanceof MiddlewareFactory<TMiddleware>) {
+      return this.fromInstance(this.factory);
     } else {
-      return this.fromConstructor(factory);
+      return this.fromConstructor(this.factory);
     }
   }
 
-  static fromType<TMiddleware extends Middleware = Middleware>(
+  private fromType<TMiddleware extends Middleware = Middleware>(
     factory: MiddlewareFactoryHandler<TMiddleware>
   ) {
     return factory();
   }
 
-  static fromInstance<TMiddleware extends Middleware = Middleware>(
+  private fromInstance<TMiddleware extends Middleware = Middleware>(
     factory: MiddlewareFactory<TMiddleware>
   ): MiddlewareHandler | TMiddleware | ClassConstructor<TMiddleware> {
     return factory.create();
   }
 
-  static fromConstructor<TMiddleware extends Middleware = Middleware>(
+  private fromConstructor<TMiddleware extends Middleware = Middleware>(
     factory: ClassConstructor<MiddlewareFactory<TMiddleware>>
   ): MiddlewareHandler | TMiddleware | ClassConstructor<TMiddleware> {
     const factoryInstance = this.container.get(factory);

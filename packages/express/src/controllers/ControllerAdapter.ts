@@ -10,6 +10,7 @@ import { Router } from "express";
 import { Controller } from "./Controller";
 import { ControllerMetadata, HttpMethodMetadata } from "./metadata";
 import { Logger } from "@tomasjs/logging";
+import { Container } from "@tomasjs/core";
 
 /**
  * Adapts a Controller to an Express Router.
@@ -17,10 +18,15 @@ import { Logger } from "@tomasjs/logging";
 export class ControllerAdapter {
   constructor(
     private readonly options: {
+      container: Container;
       controller: Controller;
       logger?: Logger;
     }
   ) {}
+
+  private get container(): Container {
+    return this.options.container;
+  }
 
   private get controller(): Controller {
     return this.options.controller;
@@ -50,6 +56,20 @@ export class ControllerAdapter {
       const methodLevelGuards = this.getMethodLevelGuards(httpMethodMetadata);
 
       const expressRequestHandler: ExpressRequestHandler = async (req, res) => {
+        this.logger?.debug(`Incoming request: ${req.method} ${req.path}`);
+
+        if (req.params) {
+          this.logger?.debug(`params: ${req.params}`);
+        }
+
+        if (req.query) {
+          this.logger?.debug(`query: ${req.query}`);
+        }
+
+        if (req.body) {
+          this.logger?.debug(`body: ${req.body}`);
+        }
+
         const result = await (this.controller as any)[instanceMethod](req, res);
         ResponseAdapter.fromThomasToExpress(res, result);
       };
@@ -71,9 +91,18 @@ export class ControllerAdapter {
   ): ExpressMiddlewareHandler[] {
     return (metadata.middlewares ?? []).map((middleware) => {
       const middlewareToAdapt = MiddlewareFactoryAdapter.isFactory(middleware)
-        ? MiddlewareFactoryAdapter.from(middleware)
+        ? new MiddlewareFactoryAdapter({
+            container: this.container,
+            factory: middleware,
+            logger: this.logger,
+          }).adapt()
         : middleware;
-      return MiddlewareAdapter.from(middlewareToAdapt);
+
+      return new MiddlewareAdapter({
+        container: this.container,
+        middleware: middlewareToAdapt,
+        logger: this.logger,
+      }).adapt();
     });
   }
 
@@ -85,8 +114,11 @@ export class ControllerAdapter {
 
   private getMethodLevelMiddlewares(metadata: HttpMethodMetadata): ExpressMiddlewareHandler[] {
     return (metadata.middlewares ?? []).map((middleware) => {
-      // TODO Add support for MiddlewareFactories
-      return MiddlewareAdapter.from(middleware as any); // TODO Improve type check
+      return new MiddlewareAdapter({
+        container: this.container,
+        middleware,
+        logger: this.logger,
+      }).adapt();
     });
   }
 

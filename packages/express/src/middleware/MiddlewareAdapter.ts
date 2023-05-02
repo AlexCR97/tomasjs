@@ -2,7 +2,9 @@ import { HttpContextResolver } from "@/core";
 import { ExpressMiddlewareHandler } from "@/core/express";
 import { Middleware } from "./Middleware";
 import { isMiddlewareHandler, MiddlewareHandler } from "./MiddlewareHandler";
-import { ClassConstructor, Container, NotImplementedError } from "@tomasjs/core";
+import { ClassConstructor, Container } from "@tomasjs/core";
+import { Logger } from "@tomasjs/logging";
+import { MiddlewareType } from "./MiddlewareType";
 
 /**
  * Resolves a `Middleware` into an `ExpressMiddlewareHandler`.
@@ -15,14 +17,24 @@ import { ClassConstructor, Container, NotImplementedError } from "@tomasjs/core"
  * - An instance of a `TMiddleware`
  * - A constructor of a `TMiddleware`
  */
-export abstract class MiddlewareAdapter {
-  private constructor() {}
+export class MiddlewareAdapter<TMiddleware extends Middleware = Middleware> {
+  constructor(
+    private readonly options: {
+      container: Container;
+      middleware: MiddlewareType;
+      logger?: Logger;
+    }
+  ) {}
 
-  private static get container(): Container {
-    throw new NotImplementedError("get container"); // TODO Implement
+  private get container(): Container {
+    return this.options.container;
   }
 
-  static isMiddleware(obj: any): obj is Middleware {
+  private get middleware() {
+    return this.options.middleware;
+  }
+
+  isMiddleware(obj: any): obj is TMiddleware {
     if (obj === undefined || obj === null) {
       return false;
     }
@@ -41,45 +53,42 @@ export abstract class MiddlewareAdapter {
     );
   }
 
-  static from(middleware: MiddlewareHandler | Middleware | ClassConstructor<Middleware>) {
+  adapt() {
     // console.log("from", middleware);
 
-    if (isMiddlewareHandler(middleware)) {
+    if (isMiddlewareHandler(this.middleware)) {
       // console.log("middleware is type");
-      return MiddlewareAdapter.fromType(middleware);
+      return this.fromType(this.middleware);
     }
-    if (this.isMiddleware(middleware)) {
+
+    if (this.isMiddleware(this.middleware)) {
       // console.log("middleware is instance");
-      return MiddlewareAdapter.fromInstance(middleware);
+      return this.fromInstance(this.middleware);
     }
 
     // console.log("middleware is instance");
-    return MiddlewareAdapter.fromConstructor(middleware);
+    return this.fromConstructor(this.middleware as any); // TODO Improve type-check
   }
 
-  static fromType(middleware: MiddlewareHandler): ExpressMiddlewareHandler {
+  private fromType(middleware: MiddlewareHandler): ExpressMiddlewareHandler {
     return async (req, res, next) => {
-      const context = HttpContextResolver.fromExpress(req, res); // HttpContext needs to be resolved at runtime to support DI
+      const context = HttpContextResolver.fromExpress(req, res);
       await middleware(context, next);
     };
   }
 
-  static fromInstance<TMiddleware extends Middleware = Middleware>(
-    middleware: TMiddleware
-  ): ExpressMiddlewareHandler {
+  private fromInstance(middleware: TMiddleware): ExpressMiddlewareHandler {
     return async (req, res, next) => {
-      const context = HttpContextResolver.fromExpress(req, res); // HttpContext needs to be resolved at runtime to support DI
+      const context = HttpContextResolver.fromExpress(req, res);
       await middleware.handle(context, next);
     };
   }
 
-  static fromConstructor<TMiddleware extends Middleware = Middleware>(
-    middleware: ClassConstructor<TMiddleware>
-  ): ExpressMiddlewareHandler {
+  private fromConstructor(middleware: ClassConstructor<TMiddleware>): ExpressMiddlewareHandler {
     return async (req, res, next) => {
       try {
         // console.log("resolving middleware instance...");
-        this.container.get(middleware); // Middleware needs to be resolved at runtime to support DI
+        this.container.get(middleware);
         // console.log("middleware instance resolved!");
       } catch (err) {
         // console.log("err", err);
@@ -87,10 +96,10 @@ export abstract class MiddlewareAdapter {
       }
 
       // console.log("resolving middleware instance...");
-      const middlewareInstance = this.container.get(middleware); // Middleware needs to be resolved at runtime to support DI
+      const middlewareInstance = this.container.get(middleware);
       // console.log("middleware instance resolved!", middlewareInstance);
 
-      const context = HttpContextResolver.fromExpress(req, res); // HttpContext needs to be resolved at runtime to support DI
+      const context = HttpContextResolver.fromExpress(req, res);
       await middlewareInstance.handle(context, next);
     };
   }
