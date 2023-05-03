@@ -81,7 +81,7 @@ describe("controllers-queryDecorator", () => {
   });
 
   it("The @query decorator can inject multiple query params into the controller's method parameters", (done) => {
-    const logger = bootstrapLoggerFactory("debug");
+    const logger = bootstrapLoggerFactory("error");
 
     const expectedQuery = {
       pageIndex: "10",

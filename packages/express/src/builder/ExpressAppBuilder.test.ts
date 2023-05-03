@@ -9,7 +9,7 @@ import { statusCodes } from "../core";
 describe("ExpressAppBuilder", () => {
   let server: Server | undefined;
   const port = 3000;
-  const logger = bootstrapLoggerFactory("debug");
+  const logger = bootstrapLoggerFactory("error");
 
   beforeEach(async () => {
     await disposeAsync();

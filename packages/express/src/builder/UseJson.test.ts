@@ -10,7 +10,7 @@ import { statusCodes } from "../core";
 describe("UseJson", () => {
   let server: Server | undefined;
   const port = 3001;
-  const logger = bootstrapLoggerFactory("debug");
+  const logger = bootstrapLoggerFactory("error");
 
   beforeEach(async () => {
     await disposeAsync();

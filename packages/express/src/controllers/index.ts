@@ -7,7 +7,7 @@ export { useGuard } from "./@useGuard";
 export { useInterceptor } from "./@useInterceptor";
 export { useMethodGuard } from "./@useMethodGuard";
 export { useMethodMiddleware } from "./@useMethodMiddleware";
-export { useMiddleware } from "./@useMiddleware";
+export { useMiddlewares as useMiddleware } from "./@useMiddlewares";
 export { Controller } from "./Controller";
 export { ControllerAdapter } from "./ControllerAdapter";
 export { ControllerType } from "./ControllerType";
