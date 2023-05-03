@@ -2,11 +2,14 @@ import { HttpMethod } from "@/core";
 import { ClassMethodMetadata } from "@/core/metadata";
 import { GuardType } from "@/guards";
 import { MiddlewareType } from "@/middleware";
+import { RequiredArgumentError } from "@tomasjs/core";
 
 export class HttpMethodMetadata {
   private readonly metadata: ClassMethodMetadata;
 
   constructor(target: object, propertyKey: string) {
+    RequiredArgumentError.throw(target, "target");
+    RequiredArgumentError.throw(propertyKey, "propertyKey");
     this.metadata = new ClassMethodMetadata(target, propertyKey);
   }
 

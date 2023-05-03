@@ -72,7 +72,7 @@ export class ControllerMetadata<TController extends Controller> {
   get httpMethods(): HttpMethodMetadata[] {
     if (!isController<TController>(this.controller)) {
       throw new TomasError(
-        'The get accessor "httpMethods" is only supported for Controller instances.'
+        'The method "get httpMethods" is only supported for Controller instances.'
       );
     }
 

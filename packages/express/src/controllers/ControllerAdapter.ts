@@ -94,7 +94,7 @@ export class ControllerAdapter {
     return middlewares.map((middleware) => {
       const adapter = new MiddlewareAdapter({
         container: this.container,
-        middleware: middleware,
+        middleware,
         logger: this.logger,
       });
 
@@ -109,12 +109,16 @@ export class ControllerAdapter {
   }
 
   private getMethodLevelMiddlewares(metadata: HttpMethodMetadata): ExpressMiddlewareFunction[] {
-    return (metadata.middlewares ?? []).map((middleware) => {
-      return new MiddlewareAdapter({
+    const middlewares = metadata.middlewares ?? [];
+
+    return middlewares.map((middleware) => {
+      const adapter = new MiddlewareAdapter({
         container: this.container,
         middleware,
         logger: this.logger,
-      }).adapt();
+      });
+
+      return adapter.adapt();
     });
   }
 

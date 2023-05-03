@@ -12,7 +12,7 @@ import { Middleware } from "../../middleware";
 import { StatusCodeResponse } from "../../responses";
 import { NextFunction } from "express";
 import { useMethodGuard } from "../@useMethodGuard";
-import { useMethodMiddleware } from "../@useMethodMiddleware";
+import { useMethodMiddleware } from "../@useMethodMiddlewares";
 import { tryCloseServerAsync } from "../../tests/utils";
 import { inject } from "@tomasjs/core";
 import { AppBuilder } from "../../builder";

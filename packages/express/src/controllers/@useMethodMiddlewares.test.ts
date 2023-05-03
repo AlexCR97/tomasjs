@@ -9,13 +9,13 @@ import { ExpressAppBuilder } from "../builder";
 import { ServiceContainerBuilder, injectable } from "@tomasjs/core";
 import { Middleware } from "../middleware";
 import { Request, Response, NextFunction } from "express";
-import { useMiddlewares } from "./@useMiddlewares";
+import { useMethodMiddleware } from "./@useMethodMiddlewares";
 
-describe("controllers-useMiddlewaresDecorator", () => {
+describe("controllers-useMethodMiddlewaresDecorator", () => {
   let server: Server | undefined;
-  const port = 3010;
+  const port = 3011;
   const serverAddress = `http://localhost:${port}`;
-  const logger = bootstrapLoggerFactory("error");
+  const logger = bootstrapLoggerFactory("debug");
 
   beforeEach(async () => {
     await disposeAsync();
@@ -25,7 +25,7 @@ describe("controllers-useMiddlewaresDecorator", () => {
     await disposeAsync();
   });
 
-  it("Can bootstrap controller-level middlewares", (done) => {
+  it("Can bootstrap method-level middlewares", (done) => {
     const collectedData: number[] = [];
 
     //@ts-ignore TODO Fix decorators not working in test files
@@ -50,9 +50,9 @@ describe("controllers-useMiddlewaresDecorator", () => {
 
     //@ts-ignore: Fix decorators not working in test files
     @controller()
-    // @ts-ignore: Fix decorators not working in test files
-    @useMiddlewares(FirstMiddleware, SecondMiddleware)
     class TestController {
+      //@ts-ignore: Fix decorators not working in test files
+      @useMethodMiddleware(FirstMiddleware, SecondMiddleware) // TODO Make this prettier. Maybe add a "middlewares" option to the @get decorator?
       //@ts-ignore: Fix decorators not working in test files
       @get()
       get() {
