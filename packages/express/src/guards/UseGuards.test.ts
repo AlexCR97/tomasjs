@@ -11,6 +11,8 @@ import { Guard } from "./Guard";
 import { GuardContext } from "./GuardContext";
 import { ServiceContainerBuilder, injectable } from "@tomasjs/core";
 import { GuardFactory } from "./GuardFactory";
+import { ForbiddenResponse, OkResponse, UnauthorizedResponse } from "../responses/status-codes";
+import { statusCodes } from "../core";
 
 describe("guards-UseGuards", () => {
   let server: Server | undefined;
@@ -372,6 +374,133 @@ describe("guards-UseGuards", () => {
             fetch(serverAddress);
           });
       });
+  });
+
+  it("The http pipeline will continue if a guard returns true", async () => {
+    const guard: GuardFunction = (context) => {
+      return true;
+    };
+
+    //@ts-ignore TODO Fix decorators not working in test files
+    @controller()
+    class TestController {
+      //@ts-ignore TODO Fix decorators not working in test files
+      @httpGet()
+      get() {
+        return new OkResponse();
+      }
+    }
+
+    await new ExpressAppBuilder({ port, logger })
+      .use(
+        new UseGuards({
+          guards: [guard],
+        })
+      )
+      .use(new UseControllers({ controllers: [TestController], logger }))
+      .buildAsync();
+
+    const response = await fetch(`${serverAddress}`);
+    expect(response.status).toBe(statusCodes.ok);
+  });
+
+  it("The server will respond with a 401 unauthorized if a guard returns false", async () => {
+    const port = 3013;
+    const serverAddress = `http://localhost:${port}`;
+    const logger = bootstrapLoggerFactory("error");
+
+    const guard: GuardFunction = (context) => {
+      return false;
+    };
+
+    //@ts-ignore TODO Fix decorators not working in test files
+    @controller()
+    class TestController {
+      //@ts-ignore TODO Fix decorators not working in test files
+      @httpGet()
+      get() {
+        return new OkResponse();
+      }
+    }
+
+    await new ExpressAppBuilder({ port, logger })
+      .use(
+        new UseGuards({
+          guards: [guard],
+          logger,
+        })
+      )
+      .use(new UseControllers({ controllers: [TestController], logger }))
+      .buildAsync();
+
+    const response = await fetch(`${serverAddress}`);
+    expect(response.status).toBe(statusCodes.unauthorized);
+  });
+
+  it("The server will respond with a 401 unauthorized if a guard returns an UnauthorizedResponse instance", async () => {
+    const port = 3014;
+    const serverAddress = `http://localhost:${port}`;
+    const logger = bootstrapLoggerFactory("error");
+
+    const guard: GuardFunction = (context) => {
+      return new UnauthorizedResponse();
+    };
+
+    //@ts-ignore TODO Fix decorators not working in test files
+    @controller()
+    class TestController {
+      //@ts-ignore TODO Fix decorators not working in test files
+      @httpGet()
+      get() {
+        return new OkResponse();
+      }
+    }
+
+    await new ExpressAppBuilder({ port, logger })
+      .use(
+        new UseGuards({
+          guards: [guard],
+          logger,
+        })
+      )
+      .use(new UseControllers({ controllers: [TestController], logger }))
+      .buildAsync();
+
+    const response = await fetch(`${serverAddress}`);
+    expect(response.status).toBe(statusCodes.unauthorized);
+  });
+
+  it("The server will respond with a 403 forbidden if a guard returns a ForbiddenResponse instance", async () => {
+    const port = 3015;
+    const serverAddress = `http://localhost:${port}`;
+    const logger = bootstrapLoggerFactory("error");
+
+    const guard: GuardFunction = (context) => {
+      return new ForbiddenResponse();
+    };
+
+    //@ts-ignore TODO Fix decorators not working in test files
+    @controller()
+    class TestController {
+      //@ts-ignore TODO Fix decorators not working in test files
+      @httpGet()
+      get() {
+        return new OkResponse();
+      }
+    }
+
+    await new ExpressAppBuilder({ port, logger })
+      .use(
+        new UseGuards({
+          guards: [guard],
+          logger,
+        })
+      )
+      .use(new UseControllers({ controllers: [TestController], logger }))
+      .buildAsync();
+
+    const response = await fetch(`${serverAddress}`);
+    expect(response.status).toBe(statusCodes.forbidden);
   });
 
   async function disposeAsync() {

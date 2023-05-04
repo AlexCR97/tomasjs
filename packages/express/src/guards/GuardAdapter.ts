@@ -24,6 +24,10 @@ export class GuardAdapter {
     return this.options.guard;
   }
 
+  private get logger(): Logger | undefined {
+    return this.options.logger;
+  }
+
   adapt(): ExpressMiddlewareFunction {
     return async (req, res, next) => {
       const guardContext = new GuardContextFactory(req, res).create();
@@ -35,7 +39,9 @@ export class GuardAdapter {
       }
 
       if (guardResult === false) {
-        ResponseAdapter.fromThomasToExpress(res, new UnauthorizedResponse());
+        ResponseAdapter.fromThomasToExpress(res, new UnauthorizedResponse(), {
+          logger: this.logger,
+        });
         return;
       }
 

@@ -23,9 +23,13 @@ export class UseGuards implements AppSetupFactory {
 
   create(): AppSetupFunction {
     return (app, container) => {
+      this.logger?.debug("Bootstrapping guards ...");
+
       for (const guard of this.guards) {
         this.bootstrapIntoHttpPipeline(app, container, guard);
       }
+
+      this.logger?.debug("Guards bootstrapped.");
     };
   }
 
