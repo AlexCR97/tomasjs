@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { Server } from "http";
 import fetch from "node-fetch";
 import { controller } from "./@controller";
-import { get } from "./@http";
+import { httpGet } from "./@http";
 import { query } from "./@query";
 import { bootstrapLoggerFactory } from "@tomasjs/logging";
 import { ExpressAppBuilder } from "../builder";
@@ -30,7 +30,7 @@ describe("controllers-queryDecorator", () => {
     @controller("test")
     class TestController {
       //@ts-ignore: Fix decorators not working in test files
-      @get()
+      @httpGet()
       find(
         //@ts-ignore: Fix decorators not working in test files
         @query("pageIndex") pageIndex: string
@@ -59,7 +59,7 @@ describe("controllers-queryDecorator", () => {
     @controller("test")
     class TestController {
       //@ts-ignore: Fix decorators not working in test files
-      @get()
+      @httpGet()
       find(
         //@ts-ignore: Fix decorators not working in test files
         @query() query: any
@@ -92,7 +92,7 @@ describe("controllers-queryDecorator", () => {
     @controller("test")
     class TestController {
       //@ts-ignore: Fix decorators not working in test files
-      @get()
+      @httpGet()
       find(
         //@ts-ignore: Fix decorators not working in test files
         @query("pageIndex") pageIndex: string,

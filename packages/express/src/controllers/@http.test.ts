@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { controller } from "./@controller";
-import { http, post } from "./@http";
+import { http, httpPost } from "./@http";
 import { HttpMethodMetadata } from "./metadata";
 import { HttpMethod } from "../core";
 
@@ -34,7 +34,7 @@ describe("controllers-httpDecorator", () => {
       getMethod() {}
 
       //@ts-ignore: Fix decorators not working in test files
-      @post(expectedPostMethod.path)
+      @httpPost(expectedPostMethod.path)
       postMethod() {}
     }
 

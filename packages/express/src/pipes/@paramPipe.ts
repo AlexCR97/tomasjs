@@ -1,21 +1,23 @@
-import { HttpContext } from "@/core";
-import { PayloadTransformDecoratorFactory } from "./PayloadTransformDecoratorFactory";
-import { PipeTransformParam } from "./PipeTransformParam";
+// TODO Re-implement?
 
-class ParamTransformDecoratorFactory<TOutput> extends PayloadTransformDecoratorFactory<TOutput> {
-  constructor(
-    private readonly _key: string,
-    private readonly _transform: PipeTransformParam<any, TOutput>
-  ) {
-    super();
-  }
+// import { HttpContext } from "@/core";
+// import { PayloadTransformDecoratorFactory } from "./PayloadTransformDecoratorFactory";
+// import { PipeTransformParam } from "./PipeTransformParam";
 
-  protected transform = this._transform;
-  protected transformInput = (context: HttpContext) => context.request.params[this._key];
-  protected transformOutputSource = (context: HttpContext) => context.request.params;
-  protected transformOutputKey = this._key;
-}
+// class ParamTransformDecoratorFactory<TOutput> extends PayloadTransformDecoratorFactory<TOutput> {
+//   constructor(
+//     private readonly _key: string,
+//     private readonly _transform: PipeTransformParam<any, TOutput>
+//   ) {
+//     super();
+//   }
 
-export const paramPipe = <TOutput>(key: string, transform: PipeTransformParam<any, TOutput>) => {
-  return new ParamTransformDecoratorFactory(key, transform).create();
-};
+//   protected transform = this._transform;
+//   protected transformInput = (context: HttpContext) => context.request.params[this._key];
+//   protected transformOutputSource = (context: HttpContext) => context.request.params;
+//   protected transformOutputKey = this._key;
+// }
+
+// export const paramPipe = <TOutput>(key: string, transform: PipeTransformParam<any, TOutput>) => {
+//   return new ParamTransformDecoratorFactory(key, transform).create();
+// };

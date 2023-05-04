@@ -3,13 +3,12 @@ import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { bootstrapLoggerFactory } from "@tomasjs/logging";
 import { Server } from "http";
 import { controller } from "./@controller";
-import { get } from "./@http";
+import { httpGet } from "./@http";
 import { UseControllers } from "./UseControllers";
 import { ExpressAppBuilder } from "../builder";
 import { ServiceContainerBuilder, injectable } from "@tomasjs/core";
 import { Middleware } from "../middleware";
 import { Request, Response, NextFunction } from "express";
-import { useMethodMiddleware } from "./@useMethodMiddlewares";
 
 describe("controllers-useMethodMiddlewaresDecorator", () => {
   let server: Server | undefined;
@@ -52,9 +51,7 @@ describe("controllers-useMethodMiddlewaresDecorator", () => {
     @controller()
     class TestController {
       //@ts-ignore: Fix decorators not working in test files
-      @useMethodMiddleware(FirstMiddleware, SecondMiddleware) // TODO Make this prettier. Maybe add a "middlewares" option to the @get decorator?
-      //@ts-ignore: Fix decorators not working in test files
-      @get()
+      @httpGet("/", { middlewares: [FirstMiddleware, SecondMiddleware] })
       get() {
         expect(collectedData.length).toBe(2);
         expect(collectedData[0]).toBe(1);

@@ -4,7 +4,7 @@ import { Server } from "http";
 import fetch from "node-fetch";
 import { controller } from "./@controller";
 import { header } from "./@header";
-import { post } from "./@http";
+import { httpPost } from "./@http";
 import { bootstrapLoggerFactory } from "@tomasjs/logging";
 import { ExpressAppBuilder } from "../builder";
 import { UseControllers } from "./UseControllers";
@@ -33,7 +33,7 @@ describe("controllers-headerDecorator", () => {
     @controller("test")
     class TestController {
       //@ts-ignore: Fix decorators not working in test files
-      @post("token")
+      @httpPost("token")
       find(
         //@ts-ignore: Fix decorators not working in test files
         @header("client_id") clientId: string,

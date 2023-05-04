@@ -3,7 +3,7 @@ import "reflect-metadata";
 import fetch from "node-fetch";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { controller } from "../@controller";
-import { get } from "../@http";
+import { httpGet } from "../@http";
 import { param } from "../@param";
 import { AddQueryHandlers, QueryDispatcher, QueryHandler, queryHandler } from "@tomasjs/cqrs";
 import { HttpContext, statusCodes } from "../../core";
@@ -49,7 +49,7 @@ describe("controllers", () => {
       //@ts-ignore: Fix decorators not working in test files
       @useMethodMiddleware(TestMiddleware)
       //@ts-ignore: Fix decorators not working in test files
-      @get()
+      @httpGet()
       getMethod() {
         return new StatusCodeResponse(statusCodes.ok);
       }
@@ -77,7 +77,7 @@ describe("controllers", () => {
       //@ts-ignore: Fix decorators not working in test files
       @useMethodGuard(TestGuard)
       //@ts-ignore: Fix decorators not working in test files
-      @get()
+      @httpGet()
       getMethod() {
         return new StatusCodeResponse(statusCodes.ok);
       }
@@ -115,7 +115,7 @@ describe("controllers", () => {
       ) {}
 
       //@ts-ignore: Fix decorators not working in test files
-      @get(":id")
+      @httpGet(":id")
       async find(
         //@ts-ignore: Fix decorators not working in test files
         @param("id") id: string
@@ -170,7 +170,7 @@ describe("controllers", () => {
       ) {}
 
       //@ts-ignore: Fix decorators not working in test files
-      @get(":id")
+      @httpGet(":id")
       async find(
         //@ts-ignore: Fix decorators not working in test files
         @param("id") id: string

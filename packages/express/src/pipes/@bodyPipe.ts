@@ -1,18 +1,20 @@
-import { HttpContext } from "@/core";
-import { PayloadTransformDecoratorFactory } from "./PayloadTransformDecoratorFactory";
-import { PipeTransformParam } from "./PipeTransformParam";
+// TODO Re-implement?
 
-class BodyTransformDecoratorFactory<TOutput> extends PayloadTransformDecoratorFactory<TOutput> {
-  constructor(private readonly _transform: PipeTransformParam<any, TOutput>) {
-    super();
-  }
+// import { HttpContext } from "@/core";
+// import { PayloadTransformDecoratorFactory } from "./PayloadTransformDecoratorFactory";
+// import { PipeTransformParam } from "./PipeTransformParam";
 
-  protected override transform = this._transform;
-  protected override transformInput = (context: HttpContext) => context.request.body;
-  protected override transformOutputSource = (context: HttpContext) => context.request;
-  protected override transformOutputKey = "body";
-}
+// class BodyTransformDecoratorFactory<TOutput> extends PayloadTransformDecoratorFactory<TOutput> {
+//   constructor(private readonly _transform: PipeTransformParam<any, TOutput>) {
+//     super();
+//   }
 
-export const bodyPipe = <TOutput>(transform: PipeTransformParam<any, TOutput>) => {
-  return new BodyTransformDecoratorFactory(transform).create();
-};
+//   protected override transform = this._transform;
+//   protected override transformInput = (context: HttpContext) => context.request.body;
+//   protected override transformOutputSource = (context: HttpContext) => context.request;
+//   protected override transformOutputKey = "body";
+// }
+
+// export const bodyPipe = <TOutput>(transform: PipeTransformParam<any, TOutput>) => {
+//   return new BodyTransformDecoratorFactory(transform).create();
+// };

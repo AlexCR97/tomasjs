@@ -5,7 +5,7 @@ import { Server } from "http";
 import fetch from "node-fetch";
 import { MiddlewareFunction } from "./MiddlewareFunction";
 import { UseMiddlewares } from "./UseMiddlewares";
-import { UseControllers, controller, get } from "../controllers";
+import { UseControllers, controller, httpGet } from "../controllers";
 import { ExpressAppBuilder } from "../builder";
 import { Middleware } from "./Middleware";
 import { Request, Response, NextFunction } from "express";
@@ -43,7 +43,7 @@ describe("middlewares-UseMiddlewares", () => {
     @controller()
     class TestController {
       //@ts-ignore TODO Fix decorators not working in test files
-      @get()
+      @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
         expect(collectedData[0]).toBe(1);
@@ -93,7 +93,7 @@ describe("middlewares-UseMiddlewares", () => {
     @controller()
     class TestController {
       //@ts-ignore TODO Fix decorators not working in test files
-      @get()
+      @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
         expect(collectedData[0]).toBe(1);
@@ -147,7 +147,7 @@ describe("middlewares-UseMiddlewares", () => {
     @controller()
     class TestController {
       //@ts-ignore TODO Fix decorators not working in test files
-      @get()
+      @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
         expect(collectedData[0]).toBe(1);
@@ -211,7 +211,7 @@ describe("middlewares-UseMiddlewares", () => {
     @controller()
     class TestController {
       //@ts-ignore TODO Fix decorators not working in test files
-      @get()
+      @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
         expect(collectedData[0]).toBe(1);
@@ -273,7 +273,7 @@ describe("middlewares-UseMiddlewares", () => {
     @controller()
     class TestController {
       //@ts-ignore TODO Fix decorators not working in test files
-      @get()
+      @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
         expect(collectedData[0]).toBe(1);
@@ -339,7 +339,7 @@ describe("middlewares-UseMiddlewares", () => {
     @controller()
     class TestController {
       //@ts-ignore TODO Fix decorators not working in test files
-      @get()
+      @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
         expect(collectedData[0]).toBe(1);

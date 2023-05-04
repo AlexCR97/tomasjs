@@ -67,12 +67,12 @@ export class HttpMethodMetadata {
     this.metadata.set(this.middlewaresKey, value);
   }
 
-  addMiddleware(value: MiddlewareType) {
+  addMiddleware(...value: MiddlewareType[]) {
     if (this.middlewares === undefined) {
       this.middlewares = [];
     }
 
-    this.middlewares.push(value);
+    this.middlewares.push(...value);
   }
 
   /* #endregion */

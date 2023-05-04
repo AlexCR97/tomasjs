@@ -4,7 +4,7 @@ import { bootstrapLoggerFactory } from "@tomasjs/logging";
 import axios from "axios";
 import { Server } from "http";
 import { controller } from "./@controller";
-import { get } from "./@http";
+import { httpGet } from "./@http";
 import { UseControllers } from "./UseControllers";
 import { ExpressAppBuilder } from "../builder";
 import { statusCodes } from "../core";
@@ -29,7 +29,7 @@ describe("controllers-UseControllers", () => {
     @controller("test")
     class TestController {
       //@ts-ignore TODO Fix decorators not working in test files
-      @get()
+      @httpGet()
       get() {
         return new OkResponse();
       }
@@ -64,7 +64,7 @@ describe("controllers-UseControllers", () => {
     @controller("users")
     class UsersController {
       //@ts-ignore: Fix decorators not working in test files
-      @get("paged")
+      @httpGet("paged")
       find(): User[] {
         return [expectedFetchedUser];
       }

@@ -4,10 +4,11 @@ import { Server } from "http";
 import fetch from "node-fetch";
 import { body } from "./@body";
 import { controller } from "./@controller";
-import { post } from "./@http";
+
 import { bootstrapLoggerFactory } from "@tomasjs/logging";
 import { ExpressAppBuilder, UseJson } from "../builder";
 import { UseControllers } from "./UseControllers";
+import { httpPost } from "./@http";
 
 describe("controllers-bodyDecorator", () => {
   let server: Server | undefined;
@@ -33,7 +34,7 @@ describe("controllers-bodyDecorator", () => {
     @controller()
     class TestController {
       //@ts-ignore: Fix decorators not working in test files
-      @post()
+      @httpPost()
       find(
         //@ts-ignore: Fix decorators not working in test files
         @body() body: any
