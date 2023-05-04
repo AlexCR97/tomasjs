@@ -503,6 +503,76 @@ describe("guards-UseGuards", () => {
     expect(response.status).toBe(statusCodes.forbidden);
   });
 
+  it("An app-level guard will be applied to all endpoints", async () => {
+    const port = 3016;
+    const serverAddress = `http://localhost:${port}`;
+    const logger = bootstrapLoggerFactory("error");
+
+    const collectedData: number[] = [];
+
+    const guard: GuardFunction = (context) => {
+      const currentCount = collectedData.length;
+      collectedData.push(currentCount + 1);
+      return true;
+    };
+
+    //@ts-ignore TODO Fix decorators not working in test files
+    @controller("first")
+    class FirstController {
+      //@ts-ignore TODO Fix decorators not working in test files
+      @httpGet()
+      get() {
+        return new OkResponse();
+      }
+    }
+
+    //@ts-ignore TODO Fix decorators not working in test files
+    @controller("second")
+    class SecondController {
+      //@ts-ignore TODO Fix decorators not working in test files
+      @httpGet()
+      get() {
+        return new OkResponse();
+      }
+    }
+
+    //@ts-ignore TODO Fix decorators not working in test files
+    @controller("third")
+    class ThirdController {
+      //@ts-ignore TODO Fix decorators not working in test files
+      @httpGet()
+      get() {
+        return new OkResponse();
+      }
+    }
+
+    await new ExpressAppBuilder({ port, logger })
+      .use(
+        new UseGuards({
+          guards: [guard],
+          logger,
+        })
+      )
+      .use(
+        new UseControllers({
+          controllers: [FirstController, SecondController, ThirdController],
+          logger,
+        })
+      )
+      .buildAsync();
+
+    const firstResponse = await fetch(`${serverAddress}/first`);
+    expect(firstResponse.status).toBe(statusCodes.ok);
+
+    const secondResponse = await fetch(`${serverAddress}/second`);
+    expect(secondResponse.status).toBe(statusCodes.ok);
+
+    const thirdResponse = await fetch(`${serverAddress}/third`);
+    expect(thirdResponse.status).toBe(statusCodes.ok);
+
+    expect(collectedData.length).toBe(3);
+  });
+
   async function disposeAsync() {
     server?.close();
   }
