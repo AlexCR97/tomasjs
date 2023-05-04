@@ -26,6 +26,7 @@
     "test-controllers": "jest --testNamePattern controllers --verbose",
     "test-controllers-queryDecorator": "jest --testNamePattern controllers-queryDecorator --verbose",
     "test-middlewares-UseMiddlewares": "jest --testNamePattern middlewares-UseMiddlewares --verbose",
+    "test-guards": "jest --testNamePattern guards --verbose",
     "testw-auth-jwt-guard": "jest --testNamePattern auth-jwt-guard --watchAll --verbose",
     "testw-auth-required-claim-guard": "jest --testNamePattern auth-required-claim-guard --watchAll --verbose",
     "testw-builder": "jest --testNamePattern builder --watchAll --verbose",

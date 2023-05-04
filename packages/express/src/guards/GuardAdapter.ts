@@ -5,12 +5,14 @@ import { ExpressMiddlewareFunction } from "@/core/express";
 import { Container } from "@tomasjs/core";
 import { ResponseAdapter } from "@/responses";
 import { UnauthorizedResponse } from "@/responses/status-codes";
+import { Logger } from "@tomasjs/logging";
 
 export class GuardAdapter {
   constructor(
     private readonly options: {
       container: Container;
       guard: GuardType;
+      logger?: Logger;
     }
   ) {}
 

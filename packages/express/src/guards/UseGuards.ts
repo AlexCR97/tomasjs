@@ -5,7 +5,7 @@ import { Container } from "@tomasjs/core";
 import { Express } from "express";
 import { GuardAdapter } from "./GuardAdapter";
 
-export class UseGuard implements AppSetupFactory {
+export class UseGuards implements AppSetupFactory {
   constructor(
     private readonly options: {
       guards?: GuardType[];
@@ -33,6 +33,7 @@ export class UseGuard implements AppSetupFactory {
     const adapter = new GuardAdapter({
       container,
       guard,
+      logger: this.logger,
     });
 
     const middlewareFunction = adapter.adapt();
