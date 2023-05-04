@@ -57,12 +57,12 @@ export class ControllerMetadata<TController extends Controller> {
     this.setMetadata(this.guardsKey, value);
   }
 
-  addGuard(value: GuardType): void {
+  addGuard(...value: GuardType[]): void {
     if (this.guards === undefined) {
       this.guards = [];
     }
 
-    this.guards.push(value);
+    this.guards.push(...value);
   }
 
   /* #endregion */

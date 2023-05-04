@@ -1,9 +1,11 @@
 import { injectable } from "@tomasjs/core";
 import { ControllerMetadata } from "./metadata/ControllerMetadata";
 import { MiddlewareType } from "@/middleware";
+import { GuardType } from "@/guards";
 
 interface ControllerOptions {
   middlewares?: MiddlewareType[];
+  guards?: GuardType[];
 }
 
 export function controller(path?: string, options?: ControllerOptions) {
@@ -12,6 +14,7 @@ export function controller(path?: string, options?: ControllerOptions) {
     const metadata = new ControllerMetadata(constructor);
     metadata.path = path ?? "/";
     metadata.addMiddleware(...(options?.middlewares ?? []));
+    metadata.addGuard(...(options?.guards ?? []));
     return constructor;
   };
 }
