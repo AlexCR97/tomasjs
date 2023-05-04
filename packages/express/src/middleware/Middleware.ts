@@ -5,6 +5,8 @@ export interface Middleware {
   handle(req: Request, res: Response, next: NextFunction): void | Promise<void>;
 }
 
+// TODO Rename to isMiddlewareInstance
+// TODO Write unit test
 export function isMiddleware(obj: any): obj is Middleware {
   if (obj === undefined || obj === null) {
     return false;

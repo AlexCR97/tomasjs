@@ -1,5 +1,10 @@
+import { FunctionChecker } from "@/core";
 import { GuardContext } from "./GuardContext";
+import { GuardResult } from "./GuardResult";
 
-export type GuardFunction = (
-  context: GuardContext
-) => boolean | Promise<boolean>;
+export type GuardFunction = (context: GuardContext) => GuardResult | Promise<GuardResult>;
+
+// TODO Write unit test for this
+export function isGuardFunction(obj: any): obj is GuardFunction {
+  return new FunctionChecker(obj).isNotNull().isTypeFunction().hasArgumentCount(1).check();
+}

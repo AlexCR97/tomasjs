@@ -7,6 +7,7 @@ export interface MiddlewareFactory {
   create(): MiddlewareFunction | Middleware | ClassConstructor<Middleware>;
 }
 
+// TODO Write unit test for this function
 export function isMiddlewareFactory(obj: any): obj is MiddlewareFactory {
   if (obj === undefined || obj === null) {
     return false;

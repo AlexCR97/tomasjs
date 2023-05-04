@@ -105,7 +105,9 @@ export class ControllerAdapter {
   private getControllerLevelGuards(
     metadata: ControllerMetadata<Controller>
   ): ExpressMiddlewareFunction[] {
-    return (metadata.guards ?? []).map(GuardAdapter.toExpress);
+    return (metadata.guards ?? []).map((guard) => {
+      return new GuardAdapter({ container: this.container, guard }).adapt();
+    });
   }
 
   private getMethodLevelMiddlewares(metadata: HttpMethodMetadata): ExpressMiddlewareFunction[] {
@@ -123,6 +125,8 @@ export class ControllerAdapter {
   }
 
   private getMethodLevelGuards(metadata: HttpMethodMetadata): ExpressMiddlewareFunction[] {
-    return (metadata.guards ?? []).map(GuardAdapter.toExpress);
+    return (metadata.guards ?? []).map((guard) => {
+      return new GuardAdapter({ container: this.container, guard }).adapt();
+    });
   }
 }

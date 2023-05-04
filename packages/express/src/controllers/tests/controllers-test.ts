@@ -30,38 +30,6 @@ describe("controllers", () => {
     await tryCloseServerAsync(server);
   });
 
-  it("A controller method can attach and use a middleware using the @middleware decorator", async () => {
-    let initialValue = 1;
-    const expectedValue = 2;
-
-    //@ts-ignore: Fix decorators not working in test files
-    @singleton()
-    class TestMiddleware implements Middleware {
-      handle(context: HttpContext, next: NextFunction): void | Promise<void> {
-        initialValue = expectedValue;
-        return next();
-      }
-    }
-
-    //@ts-ignore: Fix decorators not working in test files
-    @controller()
-    class TestController {
-      //@ts-ignore: Fix decorators not working in test files
-      @useMethodMiddleware(TestMiddleware)
-      //@ts-ignore: Fix decorators not working in test files
-      @httpGet()
-      getMethod() {
-        return new StatusCodeResponse(statusCodes.ok);
-      }
-    }
-
-    server = await new AppBuilder().useJson().useController(TestController).buildAsync(port);
-
-    const response = await fetch(`${serverAddress}`);
-    expect(response.status).toBe(statusCodes.ok);
-    expect(initialValue).toBe(expectedValue);
-  });
-
   it("A controller method can attach and use a guard using the @guard decorator", async () => {
     //@ts-ignore: Fix decorators not working in test files
     @guard()

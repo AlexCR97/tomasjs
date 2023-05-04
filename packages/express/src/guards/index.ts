@@ -1,7 +1,7 @@
 export { guard } from "./@guard";
 export { Guard } from "./Guard";
 export { GuardAdapter } from "./GuardAdapter";
-export { GuardBridge } from "./GuardBridge";
+export { GuardResultResolver as GuardBridge } from "./GuardResultResolver";
 export { GuardContext } from "./GuardContext";
 export { GuardContextFactory } from "./GuardContextFactory";
 export { GuardFactory } from "./GuardFactory";
