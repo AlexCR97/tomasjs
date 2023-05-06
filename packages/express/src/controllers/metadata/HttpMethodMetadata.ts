@@ -89,12 +89,12 @@ export class HttpMethodMetadata {
     this.metadata.set(this.guardsKey, value);
   }
 
-  addGuard(value: GuardType) {
+  addGuard(...value: GuardType[]) {
     if (this.guards === undefined) {
       this.guards = [];
     }
 
-    this.guards.push(value);
+    this.guards.push(...value);
   }
 
   /* #endregion */

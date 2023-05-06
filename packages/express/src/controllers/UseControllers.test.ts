@@ -10,7 +10,7 @@ import { UseControllers } from "./UseControllers";
 import { ExpressAppBuilder } from "../builder";
 import { statusCodes } from "../core";
 import { OkResponse } from "../responses/status-codes";
-import { Guard, GuardContext, guard } from "../guards";
+import { Guard, GuardContext, GuardResult, guard } from "../guards";
 import { ServiceContainerBuilder } from "@tomasjs/core";
 
 describe("controllers-UseControllers", () => {
@@ -82,7 +82,7 @@ describe("controllers-UseControllers", () => {
     expect(responseUser).toEqual(expectedFetchedUser);
   });
 
-  it("Can use a controller-level guard", async () => {
+  it("Can use controller-level guards", async () => {
     const collectedData: string[] = [];
     const dataFromGuard = "Data from TestGuard";
     const dataFromFirstController = "Data from FirstController";
@@ -137,25 +137,32 @@ describe("controllers-UseControllers", () => {
     expect(collectedData[2]).toBe(dataFromFirstController);
   });
 
-  it("Can use a method-level guard", async () => {
-    // TODO Implement this
-
+  it("Can use method-level guards", async () => {
     const collectedData: string[] = [];
-    const dataFromGuard = "Data from TestGuard";
+    const dataFromControllerGuard = "Data from ControllerGuard";
+    const dataFromMethodGuard = "Data from MethodGuard";
     const dataFromFirstController = "Data from FirstController";
     const dataFromSecondController = "Data from SecondController";
 
     @guard()
-    class TestGuard implements Guard {
+    class ControllerGuard implements Guard {
       isAllowed(context: GuardContext) {
-        collectedData.push(dataFromGuard);
+        collectedData.push(dataFromControllerGuard);
         return true;
       }
     }
 
-    @controller("first", { guards: [TestGuard] })
+    @guard()
+    class MethodGuard implements Guard {
+      isAllowed(context: GuardContext): GuardResult {
+        collectedData.push(dataFromMethodGuard);
+        return true;
+      }
+    }
+
+    @controller("first", { guards: [ControllerGuard] })
     class FirstController {
-      @httpGet()
+      @httpGet("/", { guards: [MethodGuard] })
       get() {
         collectedData.push(dataFromFirstController);
         return new OkResponse();
@@ -164,14 +171,17 @@ describe("controllers-UseControllers", () => {
 
     @controller("second")
     class SecondController {
-      @httpGet()
+      @httpGet("/", { guards: [MethodGuard] })
       get() {
         collectedData.push(dataFromSecondController);
         return new OkResponse();
       }
     }
 
-    const container = await new ServiceContainerBuilder().addClass(TestGuard).buildContainerAsync();
+    const container = await new ServiceContainerBuilder()
+      .addClass(ControllerGuard)
+      .addClass(MethodGuard)
+      .buildContainerAsync();
 
     server = await new ExpressAppBuilder({ port, logger, container })
       .use(
@@ -188,10 +198,12 @@ describe("controllers-UseControllers", () => {
     const firstResponse = await fetch(`${serverAddress}/first`);
     expect(firstResponse.status).toBe(statusCodes.ok);
 
-    expect(collectedData.length).toBe(3);
-    expect(collectedData[0]).toBe(dataFromSecondController);
-    expect(collectedData[1]).toBe(dataFromGuard);
-    expect(collectedData[2]).toBe(dataFromFirstController);
+    expect(collectedData.length).toBe(5);
+    expect(collectedData[0]).toBe(dataFromMethodGuard);
+    expect(collectedData[1]).toBe(dataFromSecondController);
+    expect(collectedData[2]).toBe(dataFromControllerGuard);
+    expect(collectedData[3]).toBe(dataFromMethodGuard);
+    expect(collectedData[4]).toBe(dataFromFirstController);
   });
 
   async function disposeAsync() {

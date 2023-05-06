@@ -8,9 +8,11 @@ import { QueryMetadata, QueryMetadataKey } from "./@query";
 import { HttpMethodMetadata } from "./metadata";
 import { RequiredArgumentError } from "@tomasjs/core";
 import { MiddlewareType } from "@/middleware";
+import { GuardType } from "@/guards";
 
 interface HttpOptions {
-  middlewares: MiddlewareType[];
+  middlewares?: MiddlewareType[];
+  guards?: GuardType[];
 }
 
 export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
@@ -20,6 +22,7 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
     metadata.httpMethod = method;
     metadata.path = path;
     metadata.addMiddleware(...(options?.middlewares ?? []));
+    metadata.addGuard(...(options?.guards ?? []));
 
     const originalFunction: Function = descriptor.value;
 
