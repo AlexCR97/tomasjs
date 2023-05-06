@@ -29,17 +29,10 @@ describe("controllers-headerDecorator", () => {
       client_secret: "456",
     };
 
-    //@ts-ignore: Fix decorators not working in test files
     @controller("test")
     class TestController {
-      //@ts-ignore: Fix decorators not working in test files
       @httpPost("token")
-      find(
-        //@ts-ignore: Fix decorators not working in test files
-        @header("client_id") clientId: string,
-        //@ts-ignore: Fix decorators not working in test files
-        @header("client_secret") clientSecret: string
-      ) {
+      find(@header("client_id") clientId: string, @header("client_secret") clientSecret: string) {
         expect(clientId).toEqual(expectedHeaders.client_id);
         expect(clientSecret).toEqual(expectedHeaders.client_secret);
         done();

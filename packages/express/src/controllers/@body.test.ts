@@ -30,15 +30,10 @@ describe("controllers-bodyDecorator", () => {
       password: "123456",
     };
 
-    //@ts-ignore: Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore: Fix decorators not working in test files
       @httpPost()
-      find(
-        //@ts-ignore: Fix decorators not working in test files
-        @body() body: any
-      ) {
+      find(@body() body: any) {
         expect(body).toEqual(expectedBody);
         done();
       }

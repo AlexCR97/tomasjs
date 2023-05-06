@@ -26,15 +26,10 @@ describe("controllers-paramDecorator", () => {
   it("The @param decorator injects a url path parameter into a controller's method parameter", (done) => {
     const expectedParam = "someCoolUsername";
 
-    //@ts-ignore: Fix decorators not working in test files
     @controller("test")
     class TestController {
-      //@ts-ignore: Fix decorators not working in test files
       @httpGet(":id")
-      find(
-        //@ts-ignore: Fix decorators not working in test files
-        @param("id") id: string
-      ) {
+      find(@param("id") id: string) {
         expect(id).toEqual(expectedParam);
         done();
       }

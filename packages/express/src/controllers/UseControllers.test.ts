@@ -28,10 +28,8 @@ describe("controllers-UseControllers", () => {
   });
 
   it("Can bootstrap a Controller", async () => {
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller("test")
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         return new OkResponse();
@@ -63,10 +61,8 @@ describe("controllers-UseControllers", () => {
       password: "123456",
     };
 
-    //@ts-ignore: Fix decorators not working in test files
     @controller("users")
     class UsersController {
-      //@ts-ignore: Fix decorators not working in test files
       @httpGet("paged")
       find(): User[] {
         return [expectedFetchedUser];
@@ -92,7 +88,6 @@ describe("controllers-UseControllers", () => {
     const dataFromFirstController = "Data from FirstController";
     const dataFromSecondController = "Data from SecondController";
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @guard()
     class TestGuard implements Guard {
       isAllowed(context: GuardContext) {
@@ -101,10 +96,8 @@ describe("controllers-UseControllers", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller("first", { guards: [TestGuard] })
     class FirstController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         collectedData.push(dataFromFirstController);
@@ -112,10 +105,65 @@ describe("controllers-UseControllers", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller("second")
     class SecondController {
-      //@ts-ignore TODO Fix decorators not working in test files
+      @httpGet()
+      get() {
+        collectedData.push(dataFromSecondController);
+        return new OkResponse();
+      }
+    }
+
+    const container = await new ServiceContainerBuilder().addClass(TestGuard).buildContainerAsync();
+
+    server = await new ExpressAppBuilder({ port, logger, container })
+      .use(
+        new UseControllers({
+          controllers: [FirstController, SecondController],
+          logger,
+        })
+      )
+      .buildAsync();
+
+    const secondResponse = await fetch(`${serverAddress}/second`);
+    expect(secondResponse.status).toBe(statusCodes.ok);
+
+    const firstResponse = await fetch(`${serverAddress}/first`);
+    expect(firstResponse.status).toBe(statusCodes.ok);
+
+    expect(collectedData.length).toBe(3);
+    expect(collectedData[0]).toBe(dataFromSecondController);
+    expect(collectedData[1]).toBe(dataFromGuard);
+    expect(collectedData[2]).toBe(dataFromFirstController);
+  });
+
+  it("Can use a method-level guard", async () => {
+    // TODO Implement this
+
+    const collectedData: string[] = [];
+    const dataFromGuard = "Data from TestGuard";
+    const dataFromFirstController = "Data from FirstController";
+    const dataFromSecondController = "Data from SecondController";
+
+    @guard()
+    class TestGuard implements Guard {
+      isAllowed(context: GuardContext) {
+        collectedData.push(dataFromGuard);
+        return true;
+      }
+    }
+
+    @controller("first", { guards: [TestGuard] })
+    class FirstController {
+      @httpGet()
+      get() {
+        collectedData.push(dataFromFirstController);
+        return new OkResponse();
+      }
+    }
+
+    @controller("second")
+    class SecondController {
       @httpGet()
       get() {
         collectedData.push(dataFromSecondController);

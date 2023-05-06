@@ -26,14 +26,11 @@ describe("controllers-httpDecorator", () => {
       path: "foo",
     };
 
-    //@ts-ignore: Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore: Fix decorators not working in test files
       @http(expectedGetMethod.method, expectedGetMethod.path)
       getMethod() {}
 
-      //@ts-ignore: Fix decorators not working in test files
       @httpPost(expectedPostMethod.path)
       postMethod() {}
     }

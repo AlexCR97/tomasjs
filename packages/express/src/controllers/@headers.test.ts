@@ -27,15 +27,10 @@ describe("controllers-headersDecorator", () => {
   it("The @headers decorator can inject the request headers into the controller's method parameters", (done) => {
     const expectedHeaderValue = "Bearer someValidJwt";
 
-    //@ts-ignore: Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore: Fix decorators not working in test files
       @httpPost()
-      find(
-        //@ts-ignore: Fix decorators not working in test files
-        @headers() headers: Headers
-      ) {
+      find(@headers() headers: Headers) {
         expect(headers).toBeTruthy();
         expect(headers.authorization).toEqual(expectedHeaderValue);
         done();

@@ -26,15 +26,10 @@ describe("controllers-queryDecorator", () => {
   it("The @query decorator can inject a single query param into the controller's method parameter", (done) => {
     const expectedQuery = "10";
 
-    //@ts-ignore: Fix decorators not working in test files
     @controller("test")
     class TestController {
-      //@ts-ignore: Fix decorators not working in test files
       @httpGet()
-      find(
-        //@ts-ignore: Fix decorators not working in test files
-        @query("pageIndex") pageIndex: string
-      ) {
+      find(@query("pageIndex") pageIndex: string) {
         expect(pageIndex).toEqual(expectedQuery);
         done();
       }
@@ -55,15 +50,10 @@ describe("controllers-queryDecorator", () => {
       pageSize: "40",
     };
 
-    //@ts-ignore: Fix decorators not working in test files
     @controller("test")
     class TestController {
-      //@ts-ignore: Fix decorators not working in test files
       @httpGet()
-      find(
-        //@ts-ignore: Fix decorators not working in test files
-        @query() query: any
-      ) {
+      find(@query() query: any) {
         expect(query).toEqual(expectedQuery);
         done();
       }
@@ -88,17 +78,10 @@ describe("controllers-queryDecorator", () => {
       pageSize: "40",
     };
 
-    //@ts-ignore: Fix decorators not working in test files
     @controller("test")
     class TestController {
-      //@ts-ignore: Fix decorators not working in test files
       @httpGet()
-      find(
-        //@ts-ignore: Fix decorators not working in test files
-        @query("pageIndex") pageIndex: string,
-        //@ts-ignore: Fix decorators not working in test files
-        @query("pageSize") pageSize: string
-      ) {
+      find(@query("pageIndex") pageIndex: string, @query("pageSize") pageSize: string) {
         expect(pageIndex).toEqual(expectedQuery.pageIndex);
         expect(pageSize).toEqual(expectedQuery.pageSize);
         done();

@@ -27,7 +27,6 @@ describe("controllers-useMethodMiddlewaresDecorator", () => {
   it("Can bootstrap method-level middlewares", (done) => {
     const collectedData: number[] = [];
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @injectable()
     class FirstMiddleware implements Middleware {
       handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
@@ -37,7 +36,6 @@ describe("controllers-useMethodMiddlewaresDecorator", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @injectable()
     class SecondMiddleware implements Middleware {
       handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
@@ -47,10 +45,8 @@ describe("controllers-useMethodMiddlewaresDecorator", () => {
       }
     }
 
-    //@ts-ignore: Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore: Fix decorators not working in test files
       @httpGet("/", { middlewares: [FirstMiddleware, SecondMiddleware] })
       get() {
         expect(collectedData.length).toBe(2);

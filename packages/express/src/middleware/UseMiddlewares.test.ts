@@ -39,10 +39,8 @@ describe("middlewares-UseMiddlewares", () => {
       next();
     };
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
@@ -89,10 +87,8 @@ describe("middlewares-UseMiddlewares", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
@@ -125,7 +121,6 @@ describe("middlewares-UseMiddlewares", () => {
   it("Can bootstrap Middleware constructors", (done) => {
     const collectedData: number[] = [];
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @injectable()
     class FirstMiddleware implements Middleware {
       handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
@@ -134,7 +129,6 @@ describe("middlewares-UseMiddlewares", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @injectable()
     class SecondMiddleware implements Middleware {
       handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
@@ -143,10 +137,8 @@ describe("middlewares-UseMiddlewares", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
@@ -207,10 +199,8 @@ describe("middlewares-UseMiddlewares", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
@@ -269,10 +259,8 @@ describe("middlewares-UseMiddlewares", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
@@ -305,7 +293,6 @@ describe("middlewares-UseMiddlewares", () => {
   it("Can bootstrap MiddlewareFactories that return a Middleware constructor", (done) => {
     const collectedData: number[] = [];
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @injectable()
     class FirstMiddleware implements Middleware {
       handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
@@ -314,7 +301,6 @@ describe("middlewares-UseMiddlewares", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @injectable()
     class SecondMiddleware implements Middleware {
       handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
@@ -335,10 +321,8 @@ describe("middlewares-UseMiddlewares", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         expect(collectedData.length).toBe(2);

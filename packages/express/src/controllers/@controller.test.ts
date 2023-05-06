@@ -11,7 +11,6 @@ describe("controllers-controllerDecorator", () => {
   it(`The @controller decorator sets the "path" metadata`, () => {
     const expectedPath = "test";
 
-    //@ts-ignore: Fix decorators not working in test files
     @controller(expectedPath)
     class TestController {}
 

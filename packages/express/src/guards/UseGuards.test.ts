@@ -41,10 +41,8 @@ describe("guards-UseGuards", () => {
       return true;
     };
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
@@ -91,10 +89,8 @@ describe("guards-UseGuards", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
@@ -127,7 +123,6 @@ describe("guards-UseGuards", () => {
   it("Can bootstrap Guard constructors", (done) => {
     const collectedData: number[] = [];
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @injectable()
     class FirstGuard implements Guard {
       isAllowed(context: GuardContext) {
@@ -136,7 +131,6 @@ describe("guards-UseGuards", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @injectable()
     class SecondGuard implements Guard {
       isAllowed(context: GuardContext) {
@@ -145,10 +139,8 @@ describe("guards-UseGuards", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
@@ -209,10 +201,8 @@ describe("guards-UseGuards", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
@@ -271,10 +261,8 @@ describe("guards-UseGuards", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
@@ -307,7 +295,6 @@ describe("guards-UseGuards", () => {
   it("Can bootstrap GuardFactories that return a Guard constructor", (done) => {
     const collectedData: number[] = [];
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @injectable()
     class FirstGuard implements Guard {
       isAllowed(context: GuardContext) {
@@ -316,7 +303,6 @@ describe("guards-UseGuards", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @injectable()
     class SecondGuard implements Guard {
       isAllowed(context: GuardContext) {
@@ -337,10 +323,8 @@ describe("guards-UseGuards", () => {
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         expect(collectedData.length).toBe(2);
@@ -381,10 +365,8 @@ describe("guards-UseGuards", () => {
       return true;
     };
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         return new OkResponse();
@@ -413,10 +395,8 @@ describe("guards-UseGuards", () => {
       return false;
     };
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         return new OkResponse();
@@ -446,10 +426,8 @@ describe("guards-UseGuards", () => {
       return new UnauthorizedResponse();
     };
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         return new OkResponse();
@@ -479,10 +457,8 @@ describe("guards-UseGuards", () => {
       return new ForbiddenResponse();
     };
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller()
     class TestController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         return new OkResponse();
@@ -516,30 +492,24 @@ describe("guards-UseGuards", () => {
       return true;
     };
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller("first")
     class FirstController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         return new OkResponse();
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller("second")
     class SecondController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         return new OkResponse();
       }
     }
 
-    //@ts-ignore TODO Fix decorators not working in test files
     @controller("third")
     class ThirdController {
-      //@ts-ignore TODO Fix decorators not working in test files
       @httpGet()
       get() {
         return new OkResponse();
