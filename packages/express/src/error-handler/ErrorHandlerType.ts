@@ -1,8 +1,10 @@
 import { ClassConstructor } from "@tomasjs/core";
 import { ErrorHandler } from "./ErrorHandler";
 import { ErrorHandlerFunction } from "./ErrorHandlerFunction";
+import { ErrorHandlerFactory } from "./ErrorHandlerFactory";
 
-export type ErrorHandlerType<THandler extends ErrorHandler> =
+export type ErrorHandlerType =
   | ErrorHandlerFunction
-  | THandler
-  | ClassConstructor<THandler>;
+  | ErrorHandler
+  | ClassConstructor<ErrorHandler>
+  | ErrorHandlerFactory;

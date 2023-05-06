@@ -1,99 +1,92 @@
-import { HttpContextResolver } from "@/core";
-import { ExpressErrorMiddlewareHandler } from "@/core/express";
-import { ErrorHandler } from "./ErrorHandler";
-import { ErrorHandlerFunction } from "./ErrorHandlerFunction";
-import { ErrorHandlerType } from "./ErrorHandlerType";
 import {
   ClassConstructor,
   Container,
   NotImplementedError,
-  TomasError,
   isClassConstructor,
 } from "@tomasjs/core";
+import { Logger } from "@tomasjs/logging";
+import { ExpressErrorMiddlewareFunction } from "@/core/express";
+import { ErrorHandler, isErrorHandlerInstance } from "./ErrorHandler";
+import { ErrorHandlerFunction, isErrorHandlerFunction } from "./ErrorHandlerFunction";
+import { ErrorHandlerType } from "./ErrorHandlerType";
+import { ErrorHandlerFactory, isErrorHandlerFactory } from "./ErrorHandlerFactory";
 
-export class ErrorHandlerAdapter<THandler extends ErrorHandler = ErrorHandler> {
-  constructor(private readonly handler: ErrorHandlerType<THandler>) {}
+export class ErrorHandlerAdapter {
+  constructor(
+    private readonly options: {
+      container: Container;
+      errorHandler: ErrorHandlerType;
+      logger?: Logger;
+    }
+  ) {}
 
   private get container(): Container {
-    throw new NotImplementedError("get container"); // TODO Implement
+    return this.options.container;
   }
 
-  adapt(): ExpressErrorMiddlewareHandler {
-    if (this.isFunction(this.handler)) {
-      return this.fromFunctionToExpress(this.handler);
-    }
-
-    if (this.isInstance(this.handler)) {
-      return this.fromInstanceToExpress(this.handler);
-    }
-
-    if (this.isConstructor(this.handler)) {
-      return this.fromConstructorToExpress(this.handler);
-    }
-
-    throw new TomasError(`Unknown ErrorHandler ${this.handler}`);
+  private get errorHandler() {
+    return this.options.errorHandler;
   }
 
-  private isFunction<THandler extends ErrorHandler = ErrorHandler>(
-    handler: ErrorHandlerType<THandler>
-  ): handler is ErrorHandlerFunction {
-    if (typeof handler !== "function") {
-      return false;
-    }
-
-    // Considering that an ErrorHandlerFunction must be a function...
-    return (
-      handler.prototype === undefined && // The prototype must be undefined
-      handler.length === 3 // It must receive 3 arguments
-    );
+  private get logger() {
+    return this.options.logger;
   }
 
-  private fromFunctionToExpress(handler: ErrorHandlerFunction): ExpressErrorMiddlewareHandler {
+  adapt(): ExpressErrorMiddlewareFunction {
+    if (isErrorHandlerFunction(this.errorHandler)) {
+      this.logger?.debug("The errorHandler is an ErrorHandlerFunction");
+      return this.fromFunction(this.errorHandler);
+    }
+
+    if (isErrorHandlerInstance(this.errorHandler)) {
+      this.logger?.debug("The errorHandler is an ErrorHandler instance");
+      return this.fromInstance(this.errorHandler);
+    }
+
+    if (isClassConstructor(this.errorHandler)) {
+      this.logger?.debug("The errorHandler is an ErrorHandler constructor");
+      return this.fromConstructor(this.errorHandler);
+    }
+
+    if (isErrorHandlerFactory(this.errorHandler)) {
+      this.logger?.debug("The errorHandler is an ErrorHandlerFactory");
+      return this.fromFactory(this.errorHandler);
+    }
+
+    this.logger?.debug("The errorHandler did not match any of the supported types.");
+    throw new NotImplementedError(this.adapt.name);
+  }
+
+  private fromFunction(errorHandler: ErrorHandlerFunction): ExpressErrorMiddlewareFunction {
     return async (err, req, res, next) => {
-      const context = HttpContextResolver.fromExpress(req, res);
-      await handler(err, context, next);
+      await errorHandler(err, req, res, next);
     };
   }
 
-  private isInstance<THandler extends ErrorHandler = ErrorHandler>(
-    handler: ErrorHandlerType<THandler>
-  ): handler is THandler {
-    const func = (handler as any).catch as Function;
-
-    if (typeof func !== "function") {
-      return false;
-    }
-
-    // Considering that "catch" must be a named function...
-    return (
-      func.name.trim() === "catch" && // The name must be "catch"
-      func.prototype === undefined && // The prototype must be undefined
-      func.length === 3 // It must receive 3 arguments
-    );
-  }
-
-  private fromInstanceToExpress<THandler extends ErrorHandler = ErrorHandler>(
-    handler: THandler
-  ): ExpressErrorMiddlewareHandler {
+  private fromInstance(errorHandler: ErrorHandler): ExpressErrorMiddlewareFunction {
     return async (err, req, res, next) => {
-      const context = HttpContextResolver.fromExpress(req, res);
-      await handler.catch(err, context, next);
+      await errorHandler.catch(err, req, res, next);
     };
   }
 
-  private isConstructor<THandler extends ErrorHandler = ErrorHandler>(
-    handler: ErrorHandlerType<THandler>
-  ): handler is ClassConstructor<THandler> {
-    return isClassConstructor(handler as any); // TODO Improve type check
+  private fromConstructor(
+    errorHandler: ClassConstructor<ErrorHandler>
+  ): ExpressErrorMiddlewareFunction {
+    return async (err, req, res, next) => {
+      const errorHandlerInstance = this.container.get(errorHandler);
+      await errorHandlerInstance.catch(err, req, res, next);
+    };
   }
 
-  private fromConstructorToExpress<THandler extends ErrorHandler = ErrorHandler>(
-    handler: ClassConstructor<THandler>
-  ): ExpressErrorMiddlewareHandler {
-    return async (err, req, res, next) => {
-      const handlerInstance = this.container.get(handler);
-      const context = HttpContextResolver.fromExpress(req, res);
-      await handlerInstance.catch(err, context, next);
-    };
+  private fromFactory(factory: ErrorHandlerFactory): ExpressErrorMiddlewareFunction {
+    const errorHandler = factory.create();
+
+    const errorHandlerAdapter = new ErrorHandlerAdapter({
+      container: this.container,
+      errorHandler,
+      logger: this.logger,
+    });
+
+    return errorHandlerAdapter.adapt();
   }
 }

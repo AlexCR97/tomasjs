@@ -1,4 +1,4 @@
-export { ExpressErrorMiddlewareHandler } from "./ExpressErrorMiddlewareHandler";
+export { ExpressErrorMiddlewareFunction } from "./ExpressErrorMiddlewareFunction";
 export { ExpressMiddlewareFunction } from "./ExpressMiddlewareFunction";
 export { ExpressPathNormalizer } from "./ExpressPathNormalizer";
 export { ExpressRequestHandler } from "./ExpressRequestHandler";

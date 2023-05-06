@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 
-export type ExpressErrorMiddlewareHandler<TError = any> = (
-  err: TError,
+export type ExpressErrorMiddlewareFunction = (
+  err: any,
   req: Request,
   res: Response,
   next: NextFunction

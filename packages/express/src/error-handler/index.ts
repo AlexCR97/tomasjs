@@ -3,3 +3,4 @@ export { ErrorHandlerAdapter } from "./ErrorHandlerAdapter";
 export { ErrorHandlerFunction } from "./ErrorHandlerFunction";
 export { ErrorHandlerType } from "./ErrorHandlerType";
 export { TomasErrorHandler } from "./TomasErrorHandler";
+export { UseErrorHandler } from "./UseErrorHandler";
