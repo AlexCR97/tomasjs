@@ -5,17 +5,24 @@ import { bootstrapLoggerFactory } from "@tomasjs/logging";
 import { Server } from "http";
 import fetch from "node-fetch";
 import { UseControllers, controller, httpGet } from "@/controllers";
-import { NotImplementedError } from "@tomasjs/core";
+import {
+  NotImplementedError,
+  ServiceContainerBuilder,
+  TomasError,
+  injectable,
+} from "@tomasjs/core";
 import { ExpressAppBuilder } from "@/builder";
-import { TomasErrorHandler, UseErrorHandler } from ".";
+import { ErrorHandler, ErrorHandlerFunction, TomasErrorHandler, UseErrorHandler } from ".";
 import { statusCodes } from "@/core";
 import { TomasErrorHandlerFactory } from "./TomasErrorHandlerFactory";
+import { Request, Response, NextFunction } from "express";
+import { ErrorHandlerFactory } from "./ErrorHandlerFactory";
 
 describe("errorHandlers-UseErrorHandler", () => {
   let server: Server | undefined;
   const port = 3017;
   const serverAddress = `http://localhost:${port}`;
-  const logger = bootstrapLoggerFactory("debug");
+  const logger = bootstrapLoggerFactory("error");
 
   beforeEach(async () => {
     await disposeAsync();
@@ -71,6 +78,200 @@ describe("errorHandlers-UseErrorHandler", () => {
 
     const responseJson = await response.json();
     console.log("responseJson", responseJson);
+  });
+
+  it("Can bootstrap ErrorHandlerFunction", (done) => {
+    const port = 3019;
+    const serverAddress = `http://localhost:${port}`;
+    const logger = bootstrapLoggerFactory("error");
+
+    const testErrorHandler: ErrorHandlerFunction = (err, req, res, next) => {
+      done();
+    };
+
+    @controller()
+    class TestController {
+      @httpGet()
+      get() {
+        throw new TomasError("This is a test error");
+      }
+    }
+
+    new ExpressAppBuilder({ port, logger })
+      .use(new UseControllers({ controllers: [TestController], logger }))
+      .use(new UseErrorHandler({ errorHandler: testErrorHandler }))
+      .buildAsync()
+      .then(() => {
+        fetch(`${serverAddress}`);
+      });
+  });
+
+  it("Can bootstrap ErrorHandler instance", (done) => {
+    const port = 3020;
+    const serverAddress = `http://localhost:${port}`;
+    const logger = bootstrapLoggerFactory("error");
+
+    class TestErrorHandler implements ErrorHandler {
+      catch(error: any, req: Request, res: Response, next: NextFunction) {
+        done();
+      }
+    }
+
+    @controller()
+    class TestController {
+      @httpGet()
+      get() {
+        throw new TomasError("This is a test error");
+      }
+    }
+
+    new ExpressAppBuilder({ port, logger })
+      .use(new UseControllers({ controllers: [TestController], logger }))
+      .use(new UseErrorHandler({ errorHandler: new TestErrorHandler() }))
+      .buildAsync()
+      .then(() => {
+        fetch(`${serverAddress}`);
+      });
+  });
+
+  it("Can bootstrap ErrorHandler class", (done) => {
+    const port = 3021;
+    const serverAddress = `http://localhost:${port}`;
+    const logger = bootstrapLoggerFactory("error");
+
+    @injectable()
+    class TestErrorHandler implements ErrorHandler {
+      catch(error: any, req: Request, res: Response, next: NextFunction) {
+        done();
+      }
+    }
+
+    @controller()
+    class TestController {
+      @httpGet()
+      get() {
+        throw new TomasError("This is a test error");
+      }
+    }
+
+    new ServiceContainerBuilder()
+      .addClass(TestErrorHandler)
+      .buildContainerAsync()
+      .then((container) => {
+        new ExpressAppBuilder({ port, logger, container })
+          .use(new UseControllers({ controllers: [TestController], logger }))
+          .use(new UseErrorHandler({ errorHandler: TestErrorHandler }))
+          .buildAsync()
+          .then(() => {
+            fetch(`${serverAddress}`);
+          });
+      });
+  });
+
+  it("Can bootstrap ErrorHandlerFactory that returns an ErrorHandlerFunction", (done) => {
+    const port = 3023;
+    const serverAddress = `http://localhost:${port}`;
+    const logger = bootstrapLoggerFactory("error");
+
+    const testErrorHandler: ErrorHandlerFunction = (err, req, res, next) => {
+      done();
+    };
+
+    class TestErrorHandlerFactory implements ErrorHandlerFactory {
+      create(): ErrorHandlerFunction {
+        return testErrorHandler;
+      }
+    }
+
+    @controller()
+    class TestController {
+      @httpGet()
+      get() {
+        throw new TomasError("This is a test error");
+      }
+    }
+
+    new ExpressAppBuilder({ port, logger })
+      .use(new UseControllers({ controllers: [TestController], logger }))
+      .use(new UseErrorHandler({ errorHandler: new TestErrorHandlerFactory() }))
+      .buildAsync()
+      .then(() => {
+        fetch(`${serverAddress}`);
+      });
+  });
+
+  it("Can bootstrap ErrorHandlerFactory that returns an ErrorHandler instance", (done) => {
+    const port = 3024;
+    const serverAddress = `http://localhost:${port}`;
+    const logger = bootstrapLoggerFactory("error");
+
+    class TestErrorHandler implements ErrorHandler {
+      catch(error: any, req: Request, res: Response, next: NextFunction) {
+        done();
+      }
+    }
+
+    class TestErrorHandlerFactory implements ErrorHandlerFactory {
+      create(): ErrorHandler {
+        return new TestErrorHandler();
+      }
+    }
+
+    @controller()
+    class TestController {
+      @httpGet()
+      get() {
+        throw new TomasError("This is a test error");
+      }
+    }
+
+    new ExpressAppBuilder({ port, logger })
+      .use(new UseControllers({ controllers: [TestController], logger }))
+      .use(new UseErrorHandler({ errorHandler: new TestErrorHandlerFactory() }))
+      .buildAsync()
+      .then(() => {
+        fetch(`${serverAddress}`);
+      });
+  });
+
+  it("Can bootstrap ErrorHandlerFactory that returns an ErrorHandler class", (done) => {
+    const port = 3025;
+    const serverAddress = `http://localhost:${port}`;
+    const logger = bootstrapLoggerFactory("error");
+
+    @injectable()
+    class TestErrorHandler implements ErrorHandler {
+      catch(error: any, req: Request, res: Response, next: NextFunction) {
+        done();
+      }
+    }
+
+    class TestErrorHandlerFactory implements ErrorHandlerFactory {
+      create(): ErrorHandler {
+        return new TestErrorHandler();
+      }
+    }
+
+    @controller()
+    class TestController {
+      @httpGet()
+      get() {
+        throw new TomasError("This is a test error");
+      }
+    }
+
+    new ServiceContainerBuilder()
+      .addClass(TestErrorHandler)
+      .buildContainerAsync()
+      .then((container) => {
+        new ExpressAppBuilder({ port, logger, container })
+          .use(new UseControllers({ controllers: [TestController], logger }))
+          .use(new UseErrorHandler({ errorHandler: new TestErrorHandlerFactory() }))
+          .buildAsync()
+          .then(() => {
+            fetch(`${serverAddress}`);
+          });
+      });
   });
 
   async function disposeAsync() {
