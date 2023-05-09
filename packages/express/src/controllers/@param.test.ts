@@ -8,6 +8,7 @@ import { param } from "./@param";
 import { bootstrapLoggerFactory } from "@tomasjs/logging";
 import { ExpressAppBuilder } from "../builder";
 import { UseControllers } from "./UseControllers";
+import { numberTransform } from "@tomasjs/core";
 
 describe("controllers-paramDecorator", () => {
   let server: Server | undefined;
@@ -31,6 +32,27 @@ describe("controllers-paramDecorator", () => {
       @httpGet(":id")
       find(@param("id") id: string) {
         expect(id).toEqual(expectedParam);
+        done();
+      }
+    }
+
+    new ExpressAppBuilder({ port, logger })
+      .use(new UseControllers({ controllers: [TestController], logger }))
+      .buildAsync()
+      .then((expressServer) => {
+        server = expressServer;
+        fetch(`${serverAddress}/test/${expectedParam}`);
+      });
+  });
+
+  it("Can use a Transform in a @param decorator", (done) => {
+    const expectedParam = 2022;
+
+    @controller("test")
+    class TestController {
+      @httpGet(":id")
+      find(@param("id", { transform: numberTransform }) id: number) {
+        expect(id).toBe(expectedParam);
         done();
       }
     }

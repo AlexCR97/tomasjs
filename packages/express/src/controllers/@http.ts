@@ -9,6 +9,7 @@ import { HttpMethodMetadata } from "./metadata";
 import { RequiredArgumentError } from "@tomasjs/core";
 import { MiddlewareType } from "@/middleware";
 import { GuardType } from "@/guards";
+import { TransformResultResolver } from "@/transforms";
 
 interface HttpOptions {
   middlewares?: MiddlewareType[];
@@ -75,6 +76,12 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
 
         if (!paramMetadata) {
           return;
+        }
+
+        if (paramMetadata.transform) {
+          req.params[paramMetadata.paramKey] = new TransformResultResolver(
+            paramMetadata.transform
+          ).resolve(req.params[paramMetadata.paramKey]);
         }
 
         controllerMethodArgs[paramMetadata.parameterIndex] = req.params[paramMetadata.paramKey];
