@@ -10,13 +10,13 @@ import { config, DotenvConfigOptions } from "dotenv";
 import { KeyConfiguration } from "./KeyConfiguration";
 import { DotenvConfiguration } from "./DotenvConfiguration";
 
-type DotenvSetupOptions<TSettings extends object> = DotenvConfigOptions & {
+type UseDotenvOptions<TSettings extends object> = DotenvConfigOptions & {
   constructor: ClassConstructor<TSettings>;
   keyConfigurations?: KeyConfiguration<TSettings>[];
 };
 
-export class DotenvSetup<TSettings extends object> implements ContainerSetupFactory {
-  constructor(private readonly options: DotenvSetupOptions<TSettings>) {}
+export class UseDotenv<TSettings extends object> implements ContainerSetupFactory {
+  constructor(private readonly options: UseDotenvOptions<TSettings>) {}
 
   create(): ContainerSetupFunction {
     return (container) => {

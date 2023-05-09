@@ -1,3 +1,3 @@
 export { DotenvConfiguration } from "./DotenvConfiguration";
-export { DotenvSetup } from "./DotenvSetup";
+export { UseDotenv as DotenvSetup } from "./UseDotenv";
 export { KeyConfiguration } from "./KeyConfiguration";
