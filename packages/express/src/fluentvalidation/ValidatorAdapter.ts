@@ -1,9 +1,12 @@
-import { ClassConstructor, globalContainer } from "@tomasjs/core";
+import { ClassConstructor, Container, NotImplementedError } from "@tomasjs/core";
 import { Validator } from "fluentvalidation-ts";
 
 export abstract class ValidatorAdapter {
   private constructor() {}
 
+  private static get container(): Container {
+    throw new NotImplementedError("get container"); // TODO Implement
+  }
   static from<TModel extends object, TValidator extends Validator<TModel> = Validator<TModel>>(
     validator: TValidator | ClassConstructor<TValidator>
   ): TValidator {
@@ -11,6 +14,6 @@ export abstract class ValidatorAdapter {
       return validator;
     }
 
-    return globalContainer.get(validator);
+    return this.container.get(validator);
   }
 }

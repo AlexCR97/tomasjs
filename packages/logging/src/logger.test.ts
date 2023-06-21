@@ -13,7 +13,7 @@ import { bootstrapLoggerFactory } from "./bootstrapLoggerFactory";
 
 describe("logger", () => {
   it(`The ${bootstrapLoggerFactory.name} can be used to create logger`, () => {
-    const logger = bootstrapLoggerFactory("debug");
+    const logger = bootstrapLoggerFactory("error");
 
     expect(logger).toBeTruthy();
     expect(logger.debug).toBeTruthy();

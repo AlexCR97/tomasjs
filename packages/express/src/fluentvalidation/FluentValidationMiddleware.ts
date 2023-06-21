@@ -1,13 +1,13 @@
-import { HttpContext, statusCodes } from "@/core";
+import { statusCodes } from "@/core";
 import { Middleware } from "@/middleware";
-import { JsonResponse } from "@/responses";
+import { JsonResponse, ResponseAdapter } from "@/responses";
 import { BadRequestResponse } from "@/responses/status-codes";
-import { NextFunction } from "express";
+import { NextFunction, Request, Response } from "express";
 import { Validator } from "fluentvalidation-ts";
 import { ValidatorAdapter } from "./ValidatorAdapter";
-import { ClassConstructor, singleton } from "@tomasjs/core";
+import { ClassConstructor, injectable } from "@tomasjs/core";
 
-@singleton()
+@injectable()
 export class FluentValidationMiddleware<
   TModel extends object,
   TValidator extends Validator<TModel> = Validator<TModel>
@@ -15,16 +15,17 @@ export class FluentValidationMiddleware<
 {
   constructor(private validator: TValidator | ClassConstructor<TValidator>) {}
 
-  handle(context: HttpContext, next: NextFunction): void | Promise<void> {
+  handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
     const validator: TValidator =
       this.validator instanceof Validator
         ? this.validator
         : ValidatorAdapter.from<TModel, TValidator>(this.validator);
 
-    const body = context.request.body;
+    const body = req.body;
 
     if (body === undefined || body === null) {
-      return context.respond(new BadRequestResponse());
+      ResponseAdapter.fromThomasToExpress(res, new BadRequestResponse());
+      return;
     }
 
     const results = validator.validate(body);
@@ -33,7 +34,8 @@ export class FluentValidationMiddleware<
       return next();
     }
 
-    return context.respond(
+    ResponseAdapter.fromThomasToExpress(
+      res,
       new JsonResponse(results, {
         status: statusCodes.badRequest,
       })

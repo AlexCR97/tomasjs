@@ -1,12 +1,15 @@
 import { HttpMethod } from "@/core";
 import { ClassMethodMetadata } from "@/core/metadata";
-import { MiddlewareParam } from "@/endpoints";
 import { GuardType } from "@/guards";
+import { MiddlewareType } from "@/middleware";
+import { RequiredArgumentError } from "@tomasjs/core";
 
 export class HttpMethodMetadata {
   private readonly metadata: ClassMethodMetadata;
 
   constructor(target: object, propertyKey: string) {
+    RequiredArgumentError.throw(target, "target");
+    RequiredArgumentError.throw(propertyKey, "propertyKey");
     this.metadata = new ClassMethodMetadata(target, propertyKey);
   }
 
@@ -56,20 +59,20 @@ export class HttpMethodMetadata {
 
   private readonly middlewaresKey = "tomasjs:controller:method:middlewares";
 
-  get middlewares(): MiddlewareParam[] | undefined {
-    return this.metadata.get<MiddlewareParam[] | undefined>(this.middlewaresKey);
+  get middlewares(): MiddlewareType[] | undefined {
+    return this.metadata.get<MiddlewareType[] | undefined>(this.middlewaresKey);
   }
 
-  set middlewares(value: MiddlewareParam[] | undefined) {
+  set middlewares(value: MiddlewareType[] | undefined) {
     this.metadata.set(this.middlewaresKey, value);
   }
 
-  addMiddleware(value: MiddlewareParam) {
+  addMiddleware(...value: MiddlewareType[]) {
     if (this.middlewares === undefined) {
       this.middlewares = [];
     }
 
-    this.middlewares.push(value);
+    this.middlewares.push(...value);
   }
 
   /* #endregion */
@@ -86,12 +89,12 @@ export class HttpMethodMetadata {
     this.metadata.set(this.guardsKey, value);
   }
 
-  addGuard(value: GuardType) {
+  addGuard(...value: GuardType[]) {
     if (this.guards === undefined) {
       this.guards = [];
     }
 
-    this.guards.push(value);
+    this.guards.push(...value);
   }
 
   /* #endregion */

@@ -1,8 +1,14 @@
-import { HttpContext } from "@/core";
-import { NextFunction } from "express";
+import { FunctionChecker } from "@/core";
+import { NextFunction, Response, Request } from "express";
 
 export type ErrorHandlerFunction = (
   error: any,
-  context: HttpContext,
+  req: Request,
+  res: Response,
   next: NextFunction
 ) => void | Promise<void>;
+
+// TODO Write unit test for this
+export function isErrorHandlerFunction(obj: any): obj is ErrorHandlerFunction {
+  return new FunctionChecker(obj).isNotNull().isTypeFunction().hasArgumentCount(4).check();
+}

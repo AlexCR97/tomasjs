@@ -1,10 +1,10 @@
 import { ClassConstructor } from "@tomasjs/core";
 import { Middleware } from "./Middleware";
 import { MiddlewareFactory } from "./MiddlewareFactory";
-import { MiddlewareHandler } from "./MiddlewareHandler";
+import { MiddlewareFunction } from "./MiddlewareFunction";
 
-export type MiddlewareType<TMiddleware extends Middleware = Middleware> =
-  | MiddlewareHandler
-  | TMiddleware
-  | ClassConstructor<TMiddleware>
-  | MiddlewareFactory<TMiddleware>;
+export type MiddlewareType =
+  | MiddlewareFunction
+  | Middleware
+  | ClassConstructor<Middleware>
+  | MiddlewareFactory;
