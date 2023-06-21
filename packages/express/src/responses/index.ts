@@ -16,7 +16,6 @@ export {
 export { BaseResponse } from "./BaseResponse";
 export { JsonResponse } from "./JsonResponse";
 export { PlainTextResponse } from "./PlainTextResponse";
-export { ProblemDetails } from "../core/ProblemDetails";
 export { ProblemDetailsResponse } from "./ProblemDetailsResponse";
 export { ResponseAdapter } from "./ResponseAdapter";
 export { ResponseOptions } from "./ResponseOptions";

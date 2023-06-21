@@ -1,8 +1,8 @@
 import { injectable } from "@tomasjs/core";
 import { NextFunction, Request, Response } from "express";
-import { statusCodes } from "@/core";
+import { ProblemDetails, statusCodes } from "@/core";
 import { ProblemDetailsError, StatusCodeError } from "@/errors";
-import { ProblemDetails, ProblemDetailsResponse, ResponseAdapter } from "@/responses";
+import { ProblemDetailsResponse, ResponseAdapter } from "@/responses";
 import { ErrorHandler } from "./ErrorHandler";
 import { Logger } from "@tomasjs/logging";
 

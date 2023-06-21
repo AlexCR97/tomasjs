@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { describe, expect, it } from "@jest/globals";
 import { TransformError, numberTransform } from "@tomasjs/core";
 
-describe("number-transform", () => {
+describe("NumberTransform", () => {
   it(`The ${numberTransform.name} function transforms number to number`, () => {
     // Arrange
     const input = 10;

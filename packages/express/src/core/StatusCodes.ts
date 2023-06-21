@@ -58,4 +58,4 @@ export const statusCodes = {
   serviceUnavailable: 503 as const,
 
   /* #endregion */
-};
+} as const;

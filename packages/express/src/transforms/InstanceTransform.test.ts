@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { describe, expect, it } from "@jest/globals";
 import { InstanceTransform, transformType } from "./InstanceTransform";
 
-describe("instance-transform", () => {
+describe("InstanceTransform", () => {
   it(`The ${InstanceTransform.name} transforms a simple pojo to a class instance`, async () => {
     // Arrange
     const getterOutput = "The getter was called!";
@@ -26,7 +26,7 @@ describe("instance-transform", () => {
 
     // Act
     const transformer = new InstanceTransform<TestClass>(TestClass);
-    const output = await transformer.transform(input);
+    const output = transformer.transform(input);
 
     // Assert
     expect(output.key1).toEqual(input.key1);
@@ -76,7 +76,7 @@ describe("instance-transform", () => {
 
     // Act
     const transformer = new InstanceTransform<TestClass>(TestClass);
-    const output = await transformer.transform(input);
+    const output = transformer.transform(input);
 
     // Assert
     let currentOutput: TestClass | undefined = output;
