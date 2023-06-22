@@ -1,4 +1,4 @@
-import { injectable } from "@tomasjs/core";
+import { TomasError, injectable } from "@tomasjs/core";
 import { NextFunction, Request, Response } from "express";
 import { ProblemDetails, statusCodes } from "@/core";
 import { ProblemDetailsError, StatusCodeError } from "@/errors";
@@ -36,24 +36,29 @@ export class TomasErrorHandler implements ErrorHandler {
 
     try {
       if (error instanceof ProblemDetailsError) {
-        this.logger?.error("The error is an instance of ProblemDetailsError");
+        this.logger?.debug("The error is an instance of ProblemDetailsError");
         return this.respondWithProblemDetails(error);
       }
 
       if (error instanceof StatusCodeError) {
-        this.logger?.error("The error is an instance of StatusCodeError");
+        this.logger?.debug("The error is an instance of StatusCodeError");
         return this.respondWithStatusCode(error);
       }
 
+      if (error instanceof TomasError) {
+        this.logger?.debug("The error is an instance of TomasError");
+        return this.respondWithTomasError(error);
+      }
+
       if (error instanceof Error) {
-        this.logger?.error("The error is an instance of Error");
+        this.logger?.debug("The error is an instance of Error");
         return this.respondWithError(error);
       }
 
-      this.logger?.error("The error is an unknown error");
+      this.logger?.debug("The error is an unknown error");
       return this.respondWithUnknownError(error);
     } catch {
-      this.logger?.error("An unexpected error ocurred. The express error handler will be used.");
+      this.logger?.debug("An unexpected error ocurred. The express error handler will be used.");
       return this.respondWithExpressDefault(error);
     }
   }
@@ -70,6 +75,26 @@ export class TomasErrorHandler implements ErrorHandler {
           type: error.name,
           instance: this.req.path,
           status: error.status,
+          title: "An unexpected error ocurred",
+          details: error.message,
+          extensions: {
+            stackTrace: this.includeStackTrace ? error.stack : undefined,
+            data: error.data,
+            innerError: error.innerError,
+          },
+        })
+      )
+    );
+  }
+
+  private respondWithTomasError(error: TomasError) {
+    ResponseAdapter.fromThomasToExpress(
+      this.res,
+      new ProblemDetailsResponse(
+        new ProblemDetails({
+          type: error.name,
+          instance: this.req.path,
+          status: statusCodes.internalServerError,
           title: "An unexpected error ocurred",
           details: error.message,
           extensions: {
