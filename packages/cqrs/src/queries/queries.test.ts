@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { describe, expect, it } from "@jest/globals";
-import { ServiceContainerBuilder } from "@tomasjs/core";
+import { ServiceContainerBuilder, TomasError } from "@tomasjs/core";
 import { queryHandler } from "./@queryHandler";
 import { QueryDispatcher } from "./QueryDispatcher";
 import { QueryHandler } from "./QueryHandler";
@@ -109,5 +109,30 @@ describe("queries", () => {
     const dogName = "Doki";
     const woofResult = await queryDispatcher.fetch<string>(new WoofQuery(dogName));
     expect(woofResult).toEqual(woof(dogName));
+  });
+
+  it("Should throw a detailed error when fetching and unknown query", async () => {
+    class TestQuery {
+      constructor() {}
+    }
+
+    const services = await new ServiceContainerBuilder()
+      .setup(new UseQueries([]))
+      .buildServiceProviderAsync();
+
+    const queryDispatcher = services.get<QueryDispatcher>(QueryDispatcher);
+
+    try {
+      await queryDispatcher.fetch(new TestQuery());
+      throw "The test should have thrown an error";
+    } catch (err) {
+      if (err instanceof TomasError) {
+        console.log("err.name", err.name);
+        console.log("err.message", err.message);
+        console.log("err.data", err.data);
+        console.log("err.innerError", err.innerError);
+      }
+      expect(err).toBeInstanceOf(TomasError);
+    }
   });
 });

@@ -32,7 +32,7 @@ export class QueryDispatcher {
 
     if (!matchingQueryHandler) {
       throw new TomasError("Could not find a QueryHandler for the dispatched query.", {
-        data: { queryConstructor },
+        data: { queryConstructor: queryConstructor.name },
       });
     }
 
