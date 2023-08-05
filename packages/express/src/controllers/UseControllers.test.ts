@@ -5,13 +5,27 @@ import axios from "axios";
 import fetch from "node-fetch";
 import { Server } from "http";
 import { controller } from "./@controller";
-import { httpGet } from "./@http";
+import { httpGet, httpPost } from "./@http";
 import { UseControllers } from "./UseControllers";
 import { ExpressAppBuilder } from "../builder";
 import { statusCodes } from "../core";
 import { OkResponse } from "../responses/status-codes";
 import { Guard, GuardContext, GuardResult, guard } from "../guards";
-import { ServiceContainerBuilder } from "@tomasjs/core";
+import { ServiceContainerBuilder, inject } from "@tomasjs/core";
+import {
+  CommandDispatcher,
+  CommandHandler,
+  QueryDispatcher,
+  QueryHandler,
+  UseCommands,
+  UseQueries,
+  commandHandler,
+  queryHandler,
+} from "@tomasjs/cqrs";
+import { UseMikroOrm, UseRepositories } from "@tomasjs/mikro-orm";
+import { Repository, injectRepository } from "@tomasjs/mikro-orm/mongodb";
+import { Entity, PrimaryKey, Property } from "@mikro-orm/core";
+import { ObjectId } from "@mikro-orm/mongodb";
 
 describe("controllers-UseControllers", () => {
   let server: Server | undefined;
@@ -204,6 +218,170 @@ describe("controllers-UseControllers", () => {
     expect(collectedData[2]).toBe(dataFromControllerGuard);
     expect(collectedData[3]).toBe(dataFromMethodGuard);
     expect(collectedData[4]).toBe(dataFromFirstController);
+  });
+
+  it("Can use with CQRS", async () => {
+    const collectedData: string[] = [];
+    const dataFromController = "Data from Controller";
+    const dataFromCommand = "Data from Command";
+    const dataFromQuery = "Data from Query";
+
+    class TestCommand {}
+
+    class TestQuery {}
+
+    @commandHandler(TestCommand)
+    class TestCommandHandler implements CommandHandler<TestQuery> {
+      execute(command: TestQuery): void {
+        collectedData.push(dataFromCommand);
+      }
+    }
+
+    @queryHandler(TestQuery)
+    class TestQueryHandler implements QueryHandler<TestQuery, void> {
+      fetch(query: TestQuery): void {
+        collectedData.push(dataFromQuery);
+      }
+    }
+
+    @controller("test")
+    class TestController {
+      constructor(
+        @inject(CommandDispatcher) private readonly commands: CommandDispatcher,
+        @inject(QueryDispatcher) private readonly queries: QueryDispatcher
+      ) {}
+
+      @httpGet()
+      async get() {
+        collectedData.push(dataFromController);
+        await this.commands.execute(new TestCommand());
+        await this.queries.fetch(new TestQuery());
+        return new OkResponse();
+      }
+    }
+
+    const container = await new ServiceContainerBuilder()
+      .setup(new UseCommands([TestCommandHandler]))
+      .setup(new UseQueries([TestQueryHandler]))
+      .buildContainerAsync();
+
+    server = await new ExpressAppBuilder({ port, logger, container })
+      .use(
+        new UseControllers({
+          controllers: [TestController],
+          logger,
+        })
+      )
+      .buildAsync();
+
+    const response = await fetch(`${serverAddress}/test`);
+    expect(response.status).toBe(statusCodes.ok);
+
+    expect(collectedData.length).toBe(3);
+    expect(collectedData[0]).toBe(dataFromController);
+    expect(collectedData[1]).toBe(dataFromCommand);
+    expect(collectedData[2]).toBe(dataFromQuery);
+  });
+
+  it("Can use with CQRS and MikroORM", async () => {
+    @Entity()
+    class TestDocument {
+      @PrimaryKey()
+      _id!: ObjectId;
+
+      @Property()
+      someProperty!: string;
+    }
+
+    class CreateTestDocumentCommand {
+      constructor(readonly someProperty: string) {}
+    }
+
+    class GetTestDocumentQuery {
+      constructor(readonly someProperty: string) {}
+    }
+
+    @commandHandler(CreateTestDocumentCommand)
+    class CreateTestDocumentCommandHandler implements CommandHandler<CreateTestDocumentCommand> {
+      constructor(
+        @injectRepository(TestDocument) private readonly repo: Repository<TestDocument>
+      ) {}
+
+      async execute(command: CreateTestDocumentCommand): Promise<void> {
+        const document = new TestDocument();
+        document.someProperty = command.someProperty;
+        await this.repo.persistAndFlush(document);
+      }
+    }
+
+    @queryHandler(GetTestDocumentQuery)
+    class GetTestDocumentQueryHandler implements QueryHandler<GetTestDocumentQuery, TestDocument> {
+      constructor(
+        @injectRepository(TestDocument) private readonly repo: Repository<TestDocument>
+      ) {}
+
+      async fetch(query: GetTestDocumentQuery): Promise<TestDocument> {
+        const document = await this.repo.findOne({ someProperty: query.someProperty });
+        return document!;
+      }
+    }
+
+    @controller("test")
+    class TestController {
+      constructor(
+        @inject(CommandDispatcher) private readonly commands: CommandDispatcher,
+        @inject(QueryDispatcher) private readonly queries: QueryDispatcher
+      ) {}
+
+      @httpPost()
+      async post() {
+        await this.commands.execute(new CreateTestDocumentCommand("someProperty"));
+        return new OkResponse();
+      }
+
+      @httpGet()
+      async get() {
+        return await this.queries.fetch(new GetTestDocumentQuery("someProperty"));
+      }
+    }
+
+    const container = await new ServiceContainerBuilder()
+      .setup(
+        new UseMikroOrm({
+          mikroOrmOptions: {
+            options: {
+              clientUrl: "mongodb://host.docker.internal:27017",
+              dbName: "tomasjs-tests-express",
+              entities: [TestDocument],
+              allowGlobalContext: true,
+              type: "mongo",
+            },
+          },
+        })
+      )
+      .setup(new UseRepositories("mongo", [TestDocument]))
+      .setup(new UseCommands([CreateTestDocumentCommandHandler]))
+      .setup(new UseQueries([GetTestDocumentQueryHandler]))
+      .buildContainerAsync();
+
+    server = await new ExpressAppBuilder({ port, logger, container })
+      .use(
+        new UseControllers({
+          controllers: [TestController],
+          logger,
+        })
+      )
+      .buildAsync();
+
+    const responseForPost = await fetch(`${serverAddress}/test`, { method: "post" });
+    expect(responseForPost.status).toBe(statusCodes.ok);
+
+    const responseForGet = await fetch(`${serverAddress}/test`);
+    expect(responseForGet.status).toBe(statusCodes.ok);
+
+    const responseForGetBody = await responseForGet.json();
+    expect(responseForGetBody).toBeTruthy();
+    expect(responseForGetBody.someProperty).toEqual("someProperty");
   });
 
   async function disposeAsync() {
