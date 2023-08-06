@@ -1,5 +1,11 @@
+<script setup lang="ts">
+  import "bootstrap/dist/css/bootstrap.min.css";
+</script>
+
 <template>
   <div>
-    <NuxtWelcome />
+    <NuxtLayout>
+      <NuxtPage />
+    </NuxtLayout>
   </div>
 </template>
