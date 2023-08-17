@@ -47,7 +47,7 @@ jobs:
         uses: azure/CLI@v1
         with:
           inlineScript: |
-            az storage blob upload-batch --account-name ${{env.STORAGE_ACCOUNT_NAME}} --auth-mode key --destination '$web' --source ${{env.WEBSITE_BUILD_OUTPUT_PATH}}
+            az storage blob upload-batch --account-name ${{env.STORAGE_ACCOUNT_NAME}} --auth-mode key --destination '$web' --source ${{env.WEBSITE_BUILD_OUTPUT_PATH}} --overwrite
 
       - name: logout
         run: |
