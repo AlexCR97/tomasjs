@@ -1,0 +1,42 @@
+name: Publish website to Azure Storage Account
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - .github/workflows/website-publish.yml
+      - website
+
+env:
+  STORAGE_ACCOUNT_NAME: tomasjs
+  WEBSITE_BUILD_OUTPUT_PATH: ./website/.output/public
+  RESOURCE_GROUP: tomasjs
+  CDN_PROFILE_NAME: TODO # Name of the CDN profile which is unique within the resource group
+  CDN_ENDPOINT: https://tomasjs.z21.web.core.windows.net/ # Name of the CDN endpoint
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Upload to blob storage
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az storage blob upload-batch --account-name ${{env.STORAGE_ACCOUNT_NAME}} --auth-mode key --destination '$web' --source ${{env.WEBSITE_BUILD_OUTPUT_PATH}}
+
+      # - name: Purge CDN endpoint
+      #   uses: azure/CLI@v1
+      #   with:
+      #     inlineScript: |
+      #       az cdn endpoint purge --content-paths "${{env.WEBSITE_BUILD_OUTPUT_PATH}}/*" --profile-name "${{env.CDN_PROFILE_NAME}}" --name "${{env.CDN_ENDPOINT}}" --resource-group "${{env.RESOURCE_GROUP}}"
+
+      - name: logout
+        run: |
+          az logout
+        if: always()
