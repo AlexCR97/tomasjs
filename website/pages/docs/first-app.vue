@@ -8,7 +8,7 @@
       </template>
 
       <main class="container py-4">
-        <h3 class="mb-5">Your first TomasJS app</h3>
+        <h3 class="mb-5">Your first TomasJS Console app</h3>
 
         <section id="creatingTheProjectSection" class="mb-5">
           <h4 class="mb-4">Creating the project</h4>
