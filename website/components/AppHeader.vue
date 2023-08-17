@@ -5,7 +5,7 @@
         <NuxtLink to="/">Home</NuxtLink>
       </li>
       <li class="me-4">
-        <NuxtLink to="/docs/installation">Docs</NuxtLink>
+        <NuxtLink to="/docs/first-app">Docs</NuxtLink>
       </li>
       <li class="me-4">
         <NuxtLink to="/packages">Packages</NuxtLink>
