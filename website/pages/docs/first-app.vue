@@ -58,11 +58,7 @@
 
         <p>Install the dependencies:</p>
 
-        <Code title="powershell / bash" class="mb-4">
-          <pre class="m-0 p-0">
-npm install
-          </pre>
-        </Code>
+        <Code class="mb-4" lang="powershell" code="npm install" />
       </section>
 
       <section :id="theGreeterServiceSectionId" class="mb-5">
@@ -70,40 +66,44 @@ npm install
 
         <p>Create a GreeterService.ts file:</p>
 
-        <Code title="src/GreeterService.ts" class="mb-4">
-          <pre class="m-0 p-0">
+        <Code
+          class="mb-4"
+          title="src/GreeterService.ts"
+          code='
 import { injectable } from "@tomasjs/core";
 
 @injectable()
 export class GreeterService {
-greet(name: string) {
-  console.log(`Hello ${name}!`);
+  greet(name: string) {
+    console.log(`Hello ${name}!`);
+  }
 }
-}
-          </pre>
-        </Code>
+        '
+        />
 
         <p>Now in your main.ts file, place the following content:</p>
 
-        <Code title="src/main.ts" class="mb-4">
-          <pre class="m-0 p-0">
+        <Code
+          title="src/main.ts"
+          class="mb-4"
+          code='
 import "reflect-metadata";
 import { ServiceContainerBuilder } from "@tomasjs/core";
 import { GreeterService } from "./GreeterService";
 
 async function main() {
-const serviceProvider = await new ServiceContainerBuilder()
-  .addClass(GreeterService)
-  .buildServiceProviderAsync();
+  const serviceProvider = await new ServiceContainerBuilder()
+    .addClass(GreeterService)
+    .buildServiceProviderAsync();
 
-const greeterService = serviceProvider.get(GreeterService);
+  const greeterService = serviceProvider.get(GreeterService);
 
-greeterService.greet("TomasJS");
+  greeterService.greet("TomasJS");
 }
 
 main();
-          </pre>
-        </Code>
+        '
+        />
       </section>
 
       <section :id="runningTheAppSectionId" class="mb-5">
@@ -111,20 +111,11 @@ main();
 
         <p>Run your app by running the "dev" command:</p>
 
-        <Code title="powershell / bash" class="mb-4">
-          <pre class="m-0 p-0">
-npm run dev
-          </pre>
-        </Code>
+        <Code class="mb-4" lang="ps1" code="npm run dev" />
 
         <p>You should see the following output:</p>
 
-        <Code class="mb-4">
-          <pre class="m-0 p-0">
-Hello, TomasJS!
-      </pre
-          >
-        </Code>
+        <Code class="mb-4" lang="ps1" code="Hello, TomasJS!" />
       </section>
 
       <section :id="buildingTheAppSectionId" class="mb-5">
@@ -132,21 +123,13 @@ Hello, TomasJS!
 
         <p>Build your app by running the "compile" command:</p>
 
-        <Code title="powershell / bash" class="mb-4">
-          <pre class="m-0 p-0">
-npm run compile
-          </pre>
-        </Code>
+        <Code class="mb-4" lang="ps1" code="npm run compile" />
 
         <p>This will generate a build of your app in a ./dist folder.</p>
 
         <p>To run the built version of the app, run the "start" command:</p>
 
-        <Code title="powershell / bash" class="mb-4">
-          <pre class="m-0 p-0">
-npm run start
-          </pre>
-        </Code>
+        <Code class="mb-4" lang="ps1" code="npm run start" />
 
         <p>You should see the same output, but from the built version of your app.</p>
       </section>

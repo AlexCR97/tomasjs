@@ -1,20 +1,30 @@
 <script setup lang="ts">
-  const props = defineProps<{
-    title?: string;
-  }>();
+  withDefaults(
+    defineProps<{
+      title?: string;
+      lang?: string;
+      code?: string;
+    }>(),
+    {
+      lang: "plaintext",
+      code: "TODO",
+    }
+  );
+
+  let com = ref();
+
+  onMounted(async () => {
+    const hljsVuePlugin = (await import("@highlightjs/vue-plugin")).default;
+    console.log("hljsVuePlugin", hljsVuePlugin);
+    com.value = hljsVuePlugin.component;
+  });
 </script>
 
 <template>
-  <div class="card">
-    <div v-if="props.title" class="card-header" style="font-size: 0.9rem">
-      <code class="m-0.p-0">
-        {{ props.title }}
-      </code>
-    </div>
-    <div class="card-body m-0 p-0 px-3 pt-3">
-      <code class="m-0 p-0">
-        <slot></slot>
-      </code>
-    </div>
+  <div>
+    <p v-if="title" class="m-0 p-0 fw-bold" style="font-size: 0.9rem">
+      {{ title }}
+    </p>
+    <component :is="com" language="ts" :code="code" />
   </div>
 </template>
