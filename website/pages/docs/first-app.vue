@@ -25,7 +25,7 @@
       to: `#${buildingTheAppSectionId}`,
     },
     {
-      label: "Next steps",
+      label: "Next Steps",
       to: `#${nextStepsSectionId}`,
     },
   ];
@@ -138,7 +138,7 @@ main();
       </section>
 
       <section :id="nextStepsSectionId" class="mb-5">
-        <p class="fw-bold">Next steps:</p>
+        <p class="fw-bold">Next Steps</p>
         <ul>
           <li>
             <!-- TODO Insert link -->

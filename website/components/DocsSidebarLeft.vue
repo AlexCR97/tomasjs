@@ -14,9 +14,6 @@
       to: "/docs/fundamentals/dependency-injection",
     },
     {
-      label: "ContainerSetupFactory",
-    },
-    {
       label: "CQRS",
     },
     {
