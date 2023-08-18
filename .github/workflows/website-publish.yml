@@ -9,7 +9,7 @@ on:
       - dev
     paths:
       - .github/workflows/website-publish.yml
-      - website
+      - website/**
 
 env:
   STORAGE_ACCOUNT_NAME: tomasjs
