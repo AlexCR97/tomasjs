@@ -45,9 +45,12 @@
 
         <p>You can find the starter project template from the following repo:</p>
         <p>
-          <a href="https://github.com/AlexCR97/Node-Project-Templates/tree/main/app%20-%20tomasjs"
-            >Node-Project-Templates / app - tomasjs</a
+          <a
+            href="https://github.com/AlexCR97/Node-Project-Templates/tree/main/app%20-%20tomasjs"
+            target="_blank"
           >
+            Node-Project-Templates / app - tomasjs
+          </a>
         </p>
 
         <p>
@@ -139,7 +142,7 @@ main();
         <ul>
           <li>
             <!-- TODO Insert link -->
-            <NuxtLink to="#">Learn the fundamentals</NuxtLink>
+            <NuxtLink to="/docs/fundamentals/dependency-injection">Learn the fundamentals</NuxtLink>
           </li>
         </ul>
       </section>

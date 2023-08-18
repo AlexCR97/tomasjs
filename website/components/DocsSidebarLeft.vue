@@ -11,6 +11,7 @@
   const fundamentalsItems: MenuItem[] = [
     {
       label: "Dependency Injection",
+      to: "/docs/fundamentals/dependency-injection",
     },
     {
       label: "ContainerSetupFactory",
