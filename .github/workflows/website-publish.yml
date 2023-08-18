@@ -1,0 +1,55 @@
+# This workflow was copied and adapted from:
+# https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-static-site-github-actions?tabs=userlevel
+
+name: Publish website to Azure Storage Account
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - .github/workflows/website-publish.yml
+      - website/**
+
+env:
+  STORAGE_ACCOUNT_NAME: tomasjs
+  WEBSITE_PATH: ./website
+  WEBSITE_BUILD_OUTPUT_PATH: ./website/.output/public
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Install website dependencies
+        run: |
+          cd ${{env.WEBSITE_PATH}}
+          npm install
+
+      - name: Build website
+        run: |
+          cd ${{env.WEBSITE_PATH}}
+          npm run generate
+
+      - name: Log into Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Upload to blob storage
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az storage blob upload-batch --account-name ${{env.STORAGE_ACCOUNT_NAME}} --auth-mode key --destination '$web' --source ${{env.WEBSITE_BUILD_OUTPUT_PATH}} --overwrite
+
+      - name: logout
+        run: |
+          az logout
+        if: always()

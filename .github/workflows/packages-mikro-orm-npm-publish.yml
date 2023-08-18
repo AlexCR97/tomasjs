@@ -1,0 +1,41 @@
+name: Publish @tomasjs/mikro-orm to NPM
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - .github/workflows/packages-mikro-orm-npm-publish.yml
+      - packages/mikro-orm/src
+      - packages/mikro-orm/package.json
+
+jobs:
+  build-and-publish:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+          registry-url: https://registry.npmjs.org/
+          token: ${{secrets.NPM_ACCESS_TOKEN}}
+
+      - name: Install dependencies
+        run: |
+          cd ./packages/mikro-orm
+          npm install
+
+      - name: Build source code
+        run: |
+          cd ./packages/mikro-orm
+          npm run compile
+
+      - name: Publish build to NPM
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.NPM_ACCESS_TOKEN}}
+        run: |
+          cd ./packages/mikro-orm
+          npm run publish
