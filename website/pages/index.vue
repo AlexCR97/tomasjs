@@ -58,7 +58,7 @@
 
       <p class="text-center mb-4">Ah yes, and it's named after my cat:</p>
       <div class="d-flex justify-content-center mb-2">
-        <img src="tomas.jpg" alt="Tomas" style="border-radius: 100%; width: 200px; height: 200px" />
+        <img src="~/assets/img/tomas.jpg" alt="Tomas" style="border-radius: 100%; width: 200px; height: 200px" />
       </div>
       <p class="m-0 text-center">
         <small>Tomas</small>
