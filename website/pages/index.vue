@@ -9,7 +9,14 @@
 <template>
   <div class="h-100 d-flex justify-content-center align-items-center border-bottom mb-5 px-5">
     <div>
-      <!-- <h1 class="text-center">TomasJS</h1> -->
+      <div class="d-flex justify-content-center">
+        <img
+          class="me-2"
+          src="~/assets/img/logo.png"
+          alt="TomasJS logo"
+          style="border-radius: 100%; width: 90px; height: 90px"
+        />
+      </div>
       <p class="text-center" style="font-size: 4rem">TomasJS</p>
       <p class="text-center" style="font-size: 1.1rem">
         Node.js applications how their supposed to be
@@ -58,7 +65,11 @@
 
       <p class="text-center mb-4">Ah yes, and it's named after my cat:</p>
       <div class="d-flex justify-content-center mb-2">
-        <img src="~/assets/img/tomas.jpg" alt="Tomas" style="border-radius: 100%; width: 200px; height: 200px" />
+        <img
+          src="~/assets/img/tomas.jpg"
+          alt="Tomas"
+          style="border-radius: 100%; width: 200px; height: 200px"
+        />
       </div>
       <p class="m-0 text-center">
         <small>Tomas</small>

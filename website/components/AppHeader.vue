@@ -17,35 +17,32 @@
 
 <template>
   <div>
-    <header class="border-bottom px-4 py-3">
-      <div class="row m-0 p-0">
-        <div class="col m-0 p-0">
-          <Icon
-            v-if="route.path !== '/'"
-            name="list"
-            class="d-block d-lg-none"
-            data-bs-toggle="offcanvas"
-            data-bs-target="#docsSidebarLeftOffcanvas"
-          />
-        </div>
-        <div class="col m-0 p-0">
-          <ul
-            class="d-flex justify-content-center align-items-center w-100 m-0 p-0"
-            style="list-style: none"
-          >
-            <li class="mx-2 mx-sm-3">
-              <NuxtLink to="/">Home</NuxtLink>
-            </li>
-            <li class="mx-2 mx-sm-3">
-              <NuxtLink to="/docs/first-app">Docs</NuxtLink>
-            </li>
-            <!-- <li class="mx-2 mx-sm-3">
-              <NuxtLink to="/packages">Packages</NuxtLink>
-            </li> -->
-          </ul>
-        </div>
-        <div class="col m-0 p-0"></div>
+    <header class="border-bottom d-flex align-items-center px-4 py-3">
+      <Icon
+        v-if="route.path !== '/'"
+        name="list"
+        class="d-block d-lg-none me-4"
+        data-bs-toggle="offcanvas"
+        data-bs-target="#docsSidebarLeftOffcanvas"
+        role="button"
+      />
+      <div class="d-flex align-items-center me-3" role="button">
+        <img
+          class="me-2"
+          src="~/assets/img/logo.png"
+          alt="TomasJS logo"
+          style="border-radius: 100%; width: 35px; height: 35px"
+        />
+        <p class="fw-bold m-0 p-0" style="font-size: 1.2rem">TomasJS</p>
       </div>
+      <ul class="d-flex align-items-center w-100 m-0 p-0" style="list-style: none">
+        <li class="me-3">
+          <NuxtLink to="/">Home</NuxtLink>
+        </li>
+        <li class="me-3">
+          <NuxtLink to="/docs/first-app">Docs</NuxtLink>
+        </li>
+      </ul>
     </header>
 
     <div
