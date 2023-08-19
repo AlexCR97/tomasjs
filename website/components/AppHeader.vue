@@ -1,13 +1,13 @@
 <template>
   <header class="border-bottom px-4 py-3">
-    <ul class="d-flex align-items-center m-0 p-0" style="list-style: none">
-      <li class="me-4">
+    <ul class="d-flex justify-content-center align-items-center m-0 p-0" style="list-style: none">
+      <li class="mx-3">
         <NuxtLink to="/">Home</NuxtLink>
       </li>
-      <li class="me-4">
+      <li class="mx-3">
         <NuxtLink to="/docs/first-app">Docs</NuxtLink>
       </li>
-      <li class="me-4">
+      <li class="mx-3">
         <NuxtLink to="/packages">Packages</NuxtLink>
       </li>
     </ul>

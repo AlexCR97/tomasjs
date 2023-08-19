@@ -15,7 +15,6 @@
 
   onMounted(async () => {
     const hljsVuePlugin = (await import("@highlightjs/vue-plugin")).default;
-    console.log("hljsVuePlugin", hljsVuePlugin);
     com.value = hljsVuePlugin.component;
   });
 </script>
