@@ -1,6 +1,6 @@
 {
   "name": "@tomasjs/cli",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "The official CLI for TomasJS",
   "author": "viex",
   "license": "ISC",
