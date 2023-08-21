@@ -29,7 +29,7 @@
       <div class="d-flex align-items-center me-3" role="button">
         <img
           class="me-2"
-          src="~/assets/img/logo.png"
+          src="~/assets/img/logo.webp"
           alt="TomasJS logo"
           style="border-radius: 100%; width: 35px; height: 35px"
         />

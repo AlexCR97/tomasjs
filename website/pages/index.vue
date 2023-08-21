@@ -12,7 +12,7 @@
       <div class="d-flex justify-content-center">
         <img
           class="me-2"
-          src="~/assets/img/logo.png"
+          src="~/assets/img/logo.webp"
           alt="TomasJS logo"
           style="border-radius: 100%; width: 90px; height: 90px"
         />
@@ -66,7 +66,7 @@
       <p class="text-center mb-4">Ah yes, and it's named after my cat:</p>
       <div class="d-flex justify-content-center mb-2">
         <img
-          src="~/assets/img/tomas.jpg"
+          src="~/assets/img/tomas.webp"
           alt="Tomas"
           style="border-radius: 100%; width: 200px; height: 200px"
         />
