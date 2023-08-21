@@ -75,7 +75,7 @@ export class ZipService {
               const writePath = path.join(toPath, entry.fileName);
               this.logger.debug(`Writing stream to ${writePath} ...`);
               fs.writeFileSync(writePath, "");
-              const writeStream = fs.createWriteStream(`temp/${entry.fileName}`);
+              const writeStream = fs.createWriteStream(writePath);
               readStream.pipe(writeStream);
             });
           }
