@@ -43,25 +43,29 @@
       <section :id="creatingTheProjectSectionId" class="mb-5">
         <h4 class="mb-4">Creating the project</h4>
 
-        <p>You can find the starter project template from the following repo:</p>
-        <p>
-          <a
-            href="https://github.com/AlexCR97/Node-Project-Templates/tree/main/app%20-%20tomasjs"
-            target="_blank"
-          >
-            Node-Project-Templates / app - tomasjs
-          </a>
-        </p>
+        <p>Install the TomasJS CLI:</p>
+
+        <Code code="npm install -g @tomasjs/cli" />
 
         <p>
-          In a folder of your choice, copy the template "app - tomasjs" with your preferred method.
+          In a folder of your choice, create a new project by running the "new" command. This
+          command will ask you for a project name and a project template. Choose the "Console"
+          template to create a console application.
         </p>
 
-        <p>This template has the necessary files to develop a console application.</p>
+        <Code code="tomasjs new" />
 
-        <p>Install the dependencies:</p>
+        <p>The CLI will create the necessary files and install the dependencies.</p>
 
-        <Code class="mb-4" lang="powershell" code="npm install" />
+        <p>You can quickly test the project like this:</p>
+
+        <Code
+          class="mb-4"
+          code="
+cd ./YourProjectName
+npm run dev
+        "
+        />
       </section>
 
       <section :id="theGreeterServiceSectionId" class="mb-5">
