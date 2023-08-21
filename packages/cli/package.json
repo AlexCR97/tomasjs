@@ -1,6 +1,6 @@
 {
   "name": "@tomasjs/cli",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "The official CLI for TomasJS",
   "author": "viex",
   "license": "ISC",
@@ -15,13 +15,15 @@
   "engines": {
     "node": ">=14.16"
   },
+  "main": "./main.js",
   "bin": {
-    "tomasjs": "./bin/main.js"
+    "tomasjs": "./main.js"
   },
   "scripts": {
     "compile-clean": "del bin /s /q",
     "compile-build": "tsc -b ./tsconfig.compile.json && tsc-alias",
     "compile": "npm run compile-clean && npm run compile-build && node ./bin/SetupPackage.js",
+    "install": "npm run compile && npm install -g ./bin",
     "publish": "cd ./bin && npm publish --access public",
     "pack": "cd ./bin && npm pack",
     "link": "cd ./bin && npm link",
