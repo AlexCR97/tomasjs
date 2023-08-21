@@ -6,7 +6,7 @@ on:
       - dev
     paths:
       - .github/workflows/packages-cli-npm-publish.yml
-      - packages/cli/src
+      - packages/cli/src/**
       - packages/cli/package.json
 
 jobs:
