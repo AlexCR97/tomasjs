@@ -20,9 +20,13 @@
   },
   "scripts": {
     "compile-clean": "del bin /s /q",
-    "compile-build": "tsc -b && tsc-alias",
-    "compile": "npm run compile-clean && npm run compile-build",
-    "compile-install": "npm run compile && npm install -g .",
+    "compile-build": "tsc -b ./tsconfig.compile.json && tsc-alias",
+    "compile": "npm run compile-clean && npm run compile-build && node ./bin/SetupPackage.js",
+    "publish": "cd ./bin && npm publish --access public",
+    "pack": "cd ./bin && npm pack",
+    "link": "cd ./bin && npm link",
+    "test": "jest",
+    "testw": "jest --watchAll --verbose",
     "tomasjs": "npm run compile && node ./bin/main.js"
   },
   "dependencies": {
