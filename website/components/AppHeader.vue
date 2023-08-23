@@ -27,7 +27,7 @@
         role="button"
         size="1.5rem"
       />
-      <div class="d-flex align-items-center me-3" role="button">
+      <div class="d-flex align-items-center me-3" style="user-select: none">
         <img
           class="me-2"
           src="~/assets/img/logo.webp"

@@ -31,6 +31,34 @@
     },
   ];
 
+  const webApiItems: MenuItem[] = [
+    {
+      label: "Your first TomasJS Web API",
+    },
+    {
+      label: "ExpressAppBuilder",
+    },
+    {
+      label: "Controllers",
+    },
+    {
+      label: "Middlewares",
+    },
+    {
+      label: "Guards",
+    },
+    {
+      label: "JWT Authentication",
+    },
+    {
+      label: "Error Handling",
+    },
+    {
+      label: "File Uploads",
+      to: "/docs/web-api/file-uploads",
+    },
+  ];
+
   function onLinkClick() {
     emit("onLinkClick");
   }
@@ -59,26 +87,8 @@
     <section class="mb-4">
       <p class="fw-bold m-0 mb-2">Develop a Web API</p>
       <ul>
-        <li>
-          <NuxtLink @click.native="onLinkClick">Your first TomasJS Web API</NuxtLink>
-        </li>
-        <li>
-          <NuxtLink @click.native="onLinkClick">ExpressAppBuilder</NuxtLink>
-        </li>
-        <li>
-          <NuxtLink @click.native="onLinkClick">Controllers</NuxtLink>
-        </li>
-        <li>
-          <NuxtLink @click.native="onLinkClick">Middlewares</NuxtLink>
-        </li>
-        <li>
-          <NuxtLink @click.native="onLinkClick">Guards</NuxtLink>
-        </li>
-        <li>
-          <NuxtLink @click.native="onLinkClick">JWT Authentication</NuxtLink>
-        </li>
-        <li>
-          <NuxtLink @click.native="onLinkClick">Error Handling</NuxtLink>
+        <li v-for="item of webApiItems">
+          <NuxtLink :to="item.to" @click.native="onLinkClick">{{ item.label }}</NuxtLink>
         </li>
       </ul>
     </section>
