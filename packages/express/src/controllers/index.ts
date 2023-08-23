@@ -10,6 +10,8 @@ export { query } from "./@query";
 export { Controller } from "./Controller";
 export { ControllerAdapter } from "./ControllerAdapter";
 export { ControllerType } from "./ControllerType";
+export { FormFile } from "./FormFile";
+export { FormFiles } from "./FormFiles";
 export { isController } from "./isController";
 export { UseControllers } from "./UseControllers";
 export { UseFiles, UseFilesOptions } from "./UseFiles";
