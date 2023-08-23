@@ -25,6 +25,7 @@
         data-bs-toggle="offcanvas"
         data-bs-target="#docsSidebarLeftOffcanvas"
         role="button"
+        size="1.5rem"
       />
       <div class="d-flex align-items-center me-3" role="button">
         <img
