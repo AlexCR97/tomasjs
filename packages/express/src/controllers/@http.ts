@@ -6,10 +6,12 @@ import { HeadersMetadataKey } from "./@headers";
 import { ParamMetadata, ParamMetadataKey } from "./@param";
 import { QueryMetadata, QueryMetadataKey } from "./@query";
 import { HttpMethodMetadata } from "./metadata";
-import { RequiredArgumentError } from "@tomasjs/core";
+import { RequiredArgumentError, TomasError } from "@tomasjs/core";
 import { MiddlewareType } from "@/middleware";
 import { GuardType } from "@/guards";
 import { TransformResultResolver } from "@/transforms";
+import { FileMetadata, fileMetadataKey } from "./@file";
+import { FormFile } from "./FormFile";
 
 interface HttpOptions {
   middlewares?: MiddlewareType[];
@@ -33,11 +35,13 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
 
       const controllerMethodArgs: any[] = [];
 
+      req.files;
       tryInjectHeadersArg();
       tryInjectHeaderArgs();
       tryInjectParamsArg();
       tryInjectQueryArgs();
       tryInjectBodyArg();
+      tryInjectFileArgs();
 
       return originalFunction.apply(this, controllerMethodArgs);
 
@@ -115,6 +119,42 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
         }
 
         controllerMethodArgs[paramIndex] = req.body;
+      }
+
+      function tryInjectFileArgs() {
+        const fileMetadatas: FileMetadata[] | undefined | null = Reflect.getOwnMetadata(
+          fileMetadataKey,
+          target,
+          propertyKey
+        );
+
+        if (fileMetadatas === undefined || fileMetadatas === null || fileMetadatas.length === 0) {
+          return;
+        }
+
+        if (req.files === undefined || req.files === null) {
+          throw new TomasError('Cannot use files. Did you forget to call ".use(new UseFiles())"?');
+        }
+
+        for (const { parameterIndex, formField } of fileMetadatas) {
+          const file = req.files[formField];
+
+          if (Array.isArray(file)) {
+            throw new TomasError(
+              "Cannot bind FormFile array with @file decorator. Please use @files decorator instead."
+            );
+          }
+
+          controllerMethodArgs[parameterIndex] = new FormFile(
+            file.name,
+            file.encoding,
+            file.mimetype,
+            file.data,
+            file.truncated,
+            file.size,
+            file.md5
+          );
+        }
       }
     };
 

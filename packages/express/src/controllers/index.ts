@@ -1,5 +1,6 @@
 export { body } from "./@body";
 export { controller } from "./@controller";
+export { file } from "./@file";
 export { header } from "./@header";
 export { headers } from "./@headers";
 export { http, httpGet, httpPatch, httpPost, httpPut, httpDelete } from "./@http";
@@ -10,3 +11,4 @@ export { ControllerAdapter } from "./ControllerAdapter";
 export { ControllerType } from "./ControllerType";
 export { isController } from "./isController";
 export { UseControllers } from "./UseControllers";
+export { UseFiles, UseFilesOptions } from "./UseFiles";
