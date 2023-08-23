@@ -1,6 +1,7 @@
 export { body } from "./@body";
 export { controller } from "./@controller";
 export { file } from "./@file";
+export { files } from "./@files";
 export { header } from "./@header";
 export { headers } from "./@headers";
 export { http, httpGet, httpPatch, httpPost, httpPut, httpDelete } from "./@http";

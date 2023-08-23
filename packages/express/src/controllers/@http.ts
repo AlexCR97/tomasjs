@@ -12,6 +12,10 @@ import { GuardType } from "@/guards";
 import { TransformResultResolver } from "@/transforms";
 import { FileMetadata, fileMetadataKey } from "./@file";
 import { FormFile } from "./FormFile";
+import { filesMetadataKey } from "./@files";
+import { FormFilesBuilder } from "./FormFilesBuilder";
+import { UploadedFile } from "express-fileupload";
+import { UseFilesError } from "./UseFilesError";
 
 interface HttpOptions {
   middlewares?: MiddlewareType[];
@@ -41,6 +45,7 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
       tryInjectParamsArg();
       tryInjectQueryArgs();
       tryInjectBodyArg();
+      tryInjectFilesArg();
       tryInjectFileArgs();
 
       return originalFunction.apply(this, controllerMethodArgs);
@@ -121,6 +126,28 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
         controllerMethodArgs[paramIndex] = req.body;
       }
 
+      function tryInjectFilesArg() {
+        const paramIndex = Reflect.getOwnMetadata(filesMetadataKey, target, propertyKey);
+
+        if (typeof paramIndex !== "number") {
+          return;
+        }
+
+        if (req.files === undefined || req.files === null) {
+          throw new UseFilesError();
+        }
+
+        const formFilesBuilder = new FormFilesBuilder();
+
+        for (const formField of Object.keys(req.files)) {
+          const file = req.files[formField];
+          const formFile = toFormFileOrFormFileArray(file);
+          formFilesBuilder.with(formField, formFile);
+        }
+
+        controllerMethodArgs[paramIndex] = formFilesBuilder.build();
+      }
+
       function tryInjectFileArgs() {
         const fileMetadatas: FileMetadata[] | undefined | null = Reflect.getOwnMetadata(
           fileMetadataKey,
@@ -133,7 +160,7 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
         }
 
         if (req.files === undefined || req.files === null) {
-          throw new TomasError('Cannot use files. Did you forget to call ".use(new UseFiles())"?');
+          throw new UseFilesError();
         }
 
         for (const { parameterIndex, formField } of fileMetadatas) {
@@ -145,16 +172,28 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
             );
           }
 
-          controllerMethodArgs[parameterIndex] = new FormFile(
-            file.name,
-            file.encoding,
-            file.mimetype,
-            file.data,
-            file.truncated,
-            file.size,
-            file.md5
-          );
+          controllerMethodArgs[parameterIndex] = toFormFile(file);
         }
+      }
+
+      function toFormFile(file: UploadedFile): FormFile {
+        return new FormFile(
+          file.name,
+          file.encoding,
+          file.mimetype,
+          file.data,
+          file.truncated,
+          file.size,
+          file.md5
+        );
+      }
+
+      function toFormFileOrFormFileArray(
+        fileOrFileArray: UploadedFile | UploadedFile[]
+      ): FormFile | FormFile[] {
+        return Array.isArray(fileOrFileArray)
+          ? fileOrFileArray.map((x) => toFormFile(x))
+          : toFormFile(fileOrFileArray);
       }
     };
 

@@ -25,6 +25,7 @@
     "test-builder-UseJson": "jest --testNamePattern UseJson --verbose",
     "test-controllers": "jest --testNamePattern controllers --verbose",
     "test-controllers-fileDecorator": "jest --testNamePattern controllers-fileDecorator --verbose",
+    "test-controllers-filesDecorator": "jest --testNamePattern controllers-filesDecorator --verbose",
     "test-controllers-queryDecorator": "jest --testNamePattern controllers-queryDecorator --verbose",
     "test-middlewares-UseMiddlewares": "jest --testNamePattern middlewares-UseMiddlewares --verbose",
     "test-guards": "jest --testNamePattern guards --verbose",
