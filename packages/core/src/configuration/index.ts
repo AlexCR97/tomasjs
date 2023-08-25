@@ -1,2 +1,4 @@
 export { Configuration } from "./Configuration";
-export { ConfigurationToken } from "./ConfigurationToken";
+export { KeyConfiguration } from "./KeyConfiguration";
+export { UseConfiguration, UseConfigurationOptions } from "./UseConfiguration";
+export { configurationToken } from "./configurationToken";

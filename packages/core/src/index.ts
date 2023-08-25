@@ -1,6 +1,12 @@
 export { Result, ResultFailure, ResultSuccess } from "./Result";
 
-export { Configuration, ConfigurationToken } from "./configuration";
+export {
+  Configuration,
+  KeyConfiguration,
+  UseConfiguration,
+  UseConfigurationOptions,
+  configurationToken,
+} from "./configuration";
 
 export {
   Container,

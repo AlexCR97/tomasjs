@@ -1,3 +1,1 @@
-export interface Configuration<TObject extends object> {
-  get root(): TObject;
-}
+export type Configuration<T extends object> = Readonly<T>;

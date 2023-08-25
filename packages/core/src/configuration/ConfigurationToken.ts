@@ -1,1 +1,3 @@
-export const ConfigurationToken = "__configuration__";
+import { tokenFactory, tomasJsToken } from "@/tokens";
+
+export const configurationToken = tokenFactory(tomasJsToken, "configuration");
