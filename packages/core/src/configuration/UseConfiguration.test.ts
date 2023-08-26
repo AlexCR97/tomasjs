@@ -141,4 +141,51 @@ describe("UseConfiguration", () => {
     process.env.numberFromEnv = undefined;
     process.env.booleanFromEnv = undefined;
   });
+
+  it("Can map environment variables into a json configuration object", async () => {
+    interface MyConfiguration {
+      stringFromEnv: string;
+      numberFromEnv: number;
+      booleanFromEnv: boolean;
+    }
+
+    process.env.stringFromEnv = "A string value";
+    process.env.numberFromEnv = "10";
+    process.env.booleanFromEnv = "true";
+
+    const services = await new ServiceContainerBuilder()
+      .setup(
+        new UseConfiguration<MyConfiguration>({
+          source: "json",
+          keyConfigs: [
+            {
+              key: "stringFromEnv",
+              overrideFromEnvironment: true,
+            },
+            {
+              key: "numberFromEnv",
+              type: "number",
+              overrideFromEnvironment: true,
+            },
+            {
+              key: "booleanFromEnv",
+              type: "boolean",
+              overrideFromEnvironment: true,
+            },
+          ],
+        })
+      )
+      .buildServiceProviderAsync();
+
+    const configuration = services.get<Configuration<MyConfiguration>>(configurationToken);
+
+    expect(configuration).toBeTruthy();
+    expect(typeof configuration.stringFromEnv === "string").toBeTruthy();
+    expect(typeof configuration.numberFromEnv === "number").toBeTruthy();
+    expect(typeof configuration.booleanFromEnv === "boolean").toBeTruthy();
+
+    process.env.stringFromEnv = undefined;
+    process.env.numberFromEnv = undefined;
+    process.env.booleanFromEnv = undefined;
+  });
 });

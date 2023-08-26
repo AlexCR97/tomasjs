@@ -7,6 +7,7 @@ import { ConfigurationSourceError } from "./ConfigurationSourceError";
 import { DotenvTransform } from "./DotenvTransform";
 import { KeyConfiguration } from "./KeyConfiguration";
 import { configurationToken } from "./configurationToken";
+import { JsonTransform } from "./JsonTransform";
 
 export type UseConfigurationOptions<T extends object> = {
   source?: ConfigurationSource;
@@ -73,7 +74,7 @@ export class UseConfiguration<T extends object> implements ContainerSetupFactory
       throw new TomasError("The JSON content should be a string");
     }
 
-    return JSON.parse(jsonContent);
+    return new JsonTransform(this.options.keyConfigs).transform(jsonContent);
   }
 
   private readFile(path: string, encoding?: BufferEncoding) {
