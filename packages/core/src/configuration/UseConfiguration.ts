@@ -3,10 +3,10 @@ import { readFileSync } from "fs";
 import { ContainerSetupFactory, ContainerSetupFunction } from "@/container";
 import { TomasError } from "@/errors";
 import { ConfigurationSource } from "./ConfigurationSource";
-import { DotenvTransform } from "./DotenvConfiguration";
+import { ConfigurationSourceError } from "./ConfigurationSourceError";
+import { DotenvTransform } from "./DotenvTransform";
 import { KeyConfiguration } from "./KeyConfiguration";
 import { configurationToken } from "./configurationToken";
-import { ConfigurationSourceError } from "./ConfigurationSourceError";
 
 export type UseConfigurationOptions<T extends object> = {
   source?: ConfigurationSource;
