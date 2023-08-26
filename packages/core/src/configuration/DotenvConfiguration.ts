@@ -21,14 +21,20 @@ export class DotenvTransform<T extends object>
     }
 
     for (const keyConfig of this.keyConfigurations) {
-      const transformInput = output[keyConfig.key as any]; // TODO Avoid using "any"
+      // TODO Clean this code
+
+      let transformInput = output[keyConfig.key as any]; // TODO Avoid using "any"
+
+      if (keyConfig.overrideFromEnvironment === true) {
+        const valueFromEnv = process.env[keyConfig.key as any]; // TODO Avoid using "any"
+
+        if (valueFromEnv !== undefined && valueFromEnv !== null) {
+          transformInput = valueFromEnv;
+        }
+      }
 
       if (transformInput === undefined || transformInput === null) {
-        throw new TomasError(
-          `The key "${keyConfig.key.toString()}: ${
-            keyConfig.type
-          }" was not found in the configuration source`
-        );
+        continue;
       }
 
       const transformOutput = new KeyConfigurationTransform(keyConfig).transform(transformInput);
