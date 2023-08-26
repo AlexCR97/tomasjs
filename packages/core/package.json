@@ -23,6 +23,7 @@
     "testw": "jest --watchAll --verbose",
     "testw-Result": "jest --testNamePattern Result --verbose",
     "test-UseConfiguration": "jest --testNamePattern UseConfiguration --verbose",
+    "test-Pipe": "jest --testNamePattern Pipe --verbose",
     "sample": "nodemon -r tsconfig-paths/register ./sample/main.ts"
   },
   "dependencies": {

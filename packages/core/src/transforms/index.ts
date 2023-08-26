@@ -1,6 +1,7 @@
-export { Transform } from "./Transform";
+export { Transform, isTransformInstance } from "./Transform";
 export { TransformError } from "./TransformError";
-export { TransformFactory } from "./TransformFactory";
-export { TransformFunction } from "./TransformFunction";
+export { TransformFactory, isTransformFactory } from "./TransformFactory";
+export { TransformFunction, isTransformFunction } from "./TransformFunction";
+export { TransformType } from "./TransformType";
 export { booleanTransform } from "./booleanTransform";
 export { numberTransform } from "./numberTransform";
