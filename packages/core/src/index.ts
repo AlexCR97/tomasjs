@@ -2,6 +2,8 @@ export { Result, ResultFailure, ResultSuccess } from "./Result";
 
 export {
   Configuration,
+  ConfigurationSource,
+  ConfigurationSourceError,
   KeyConfiguration,
   UseConfiguration,
   UseConfigurationOptions,
@@ -23,11 +25,11 @@ export {
   ServiceContainerBuilder,
   ServiceContainerProvider,
   ServiceProvider,
-  serviceProviderToken,
   Token,
   UnknownTokenError,
   inject,
   injectable,
+  serviceProviderToken,
 } from "./container";
 
 export { NotImplementedError, RequiredArgumentError, TomasError } from "./errors";
@@ -35,6 +37,7 @@ export { NotImplementedError, RequiredArgumentError, TomasError } from "./errors
 export {
   ClassConstructor,
   ClassMethodMetadata,
+  FunctionChecker,
   getConstructorOf,
   isClassConstructor,
 } from "./reflection";
@@ -44,5 +47,10 @@ export {
   TransformError,
   TransformFactory,
   TransformFunction,
+  TransformType,
+  booleanTransform,
+  isTransformFactory,
+  isTransformFunction,
+  isTransformInstance,
   numberTransform,
 } from "./transforms";

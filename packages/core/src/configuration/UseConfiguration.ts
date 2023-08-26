@@ -4,18 +4,18 @@ import { ContainerSetupFactory, ContainerSetupFunction } from "@/container";
 import { TomasError } from "@/errors";
 import { ConfigurationSource } from "./ConfigurationSource";
 import { ConfigurationSourceError } from "./ConfigurationSourceError";
-import { DotenvTransform } from "./DotenvTransform";
+import { KeyConfigTransform } from "./KeyConfigTransform";
 import { KeyConfiguration } from "./KeyConfiguration";
 import { configurationToken } from "./configurationToken";
-import { JsonTransform } from "./JsonTransform";
+import { Pipe } from "@/pipes";
 
-export type UseConfigurationOptions<T extends object> = {
+export type UseConfigurationOptions<T extends Record<string, any>> = {
   source?: ConfigurationSource;
   path?: string;
   keyConfigs?: KeyConfiguration<T>[];
 };
 
-export class UseConfiguration<T extends object> implements ContainerSetupFactory {
+export class UseConfiguration<T extends Record<string, any>> implements ContainerSetupFactory {
   private readonly defaultSource: ConfigurationSource = ".env";
   private readonly defaultEnvPath = ".env";
   private readonly defaultJsonPath = "app.config.json";
@@ -42,6 +42,10 @@ export class UseConfiguration<T extends object> implements ContainerSetupFactory
     throw new ConfigurationSourceError(this.source);
   }
 
+  private get keyConfigs(): KeyConfiguration<T>[] {
+    return this.options.keyConfigs ?? [];
+  }
+
   create(): ContainerSetupFunction {
     return (container) => {
       const configurationInstance = this.buildConfigurationInstance();
@@ -62,19 +66,23 @@ export class UseConfiguration<T extends object> implements ContainerSetupFactory
   }
 
   private buildEnvConfigurationInstance(): Readonly<T> {
-    const envFileBuffer = this.readFile(this.path);
-    const dotenvParseOutput = parse(envFileBuffer);
-    return new DotenvTransform(this.options.keyConfigs).transform(dotenvParseOutput);
+    return new Pipe(this.path)
+      .apply((path) => this.readFile(path))
+      .apply((envFile) => parse(envFile))
+      .apply((dotenvParseOutput) => {
+        return new KeyConfigTransform(this.keyConfigs).transform(dotenvParseOutput as any); // TODO Avoid using "any"
+      })
+      .get();
   }
 
   private buildJsonConfigurationInstance(): Readonly<T> {
-    const jsonContent = this.readFile(this.path, "utf-8");
-
-    if (typeof jsonContent !== "string") {
-      throw new TomasError("The JSON content should be a string");
-    }
-
-    return new JsonTransform(this.options.keyConfigs).transform(jsonContent);
+    return new Pipe(this.path)
+      .apply((path) => this.readFile(path, "utf-8") as string)
+      .apply((jsonContent) => JSON.parse(jsonContent))
+      .apply((json) => {
+        return new KeyConfigTransform(this.keyConfigs).transform(json);
+      })
+      .get();
   }
 
   private readFile(path: string, encoding?: BufferEncoding) {

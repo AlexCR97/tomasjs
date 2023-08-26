@@ -1,7 +1,5 @@
-import { Configuration } from "./Configuration";
-
-export interface KeyConfiguration<T extends object> {
-  key: keyof Configuration<T>;
+export interface KeyConfiguration<T extends Record<string, any>> {
+  key: keyof T;
   type?: "string" | "number" | "boolean";
   overrideFromEnvironment?: boolean;
 }
