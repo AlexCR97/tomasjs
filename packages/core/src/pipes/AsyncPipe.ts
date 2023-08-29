@@ -27,8 +27,6 @@ export class AsyncPipe<TInput> {
   async apply<TOutput>(
     transform: AsyncTransformType<TInput, TOutput>
   ): Promise<AsyncPipe<TOutput>> {
-    console.log("transform", transform);
-
     if (isAsyncTransformFunction<TInput, TOutput>(transform)) {
       const next = await transform(this.input);
       return new AsyncPipe<TOutput>(next);
