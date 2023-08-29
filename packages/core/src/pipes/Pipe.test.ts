@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { it, describe, expect } from "@jest/globals";
 import { Pipe } from "./Pipe";
 
-describe("Pipe", () => {
+describe("pipes-Pipe", () => {
   it("Can pipe a value", () => {
     const original = {};
 

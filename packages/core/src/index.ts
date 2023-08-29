@@ -34,6 +34,8 @@ export {
 
 export { NotImplementedError, RequiredArgumentError, TomasError } from "./errors";
 
+export { AsyncPipe, Pipe } from "./pipes";
+
 export {
   ClassConstructor,
   ClassMethodMetadata,
@@ -43,6 +45,13 @@ export {
 } from "./reflection";
 
 export {
+  AsyncTransform,
+  AsyncTransformFactory,
+  AsyncTransformFunction,
+  AsyncTransformType,
+  isAsyncTransformFactory,
+  isAsyncTransformFunction,
+  isAsyncTransformInstance,
   Transform,
   TransformError,
   TransformFactory,
