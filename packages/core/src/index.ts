@@ -1,6 +1,14 @@
 export { Result, ResultFailure, ResultSuccess } from "./Result";
 
-export { Configuration, ConfigurationToken } from "./configuration";
+export {
+  Configuration,
+  ConfigurationSource,
+  ConfigurationSourceError,
+  KeyConfiguration,
+  UseConfiguration,
+  UseConfigurationOptions,
+  configurationToken,
+} from "./configuration";
 
 export {
   Container,
@@ -17,26 +25,41 @@ export {
   ServiceContainerBuilder,
   ServiceContainerProvider,
   ServiceProvider,
-  serviceProviderToken,
   Token,
   UnknownTokenError,
   inject,
   injectable,
+  serviceProviderToken,
 } from "./container";
 
 export { NotImplementedError, RequiredArgumentError, TomasError } from "./errors";
 
+export { AsyncPipe, Pipe } from "./pipes";
+
 export {
   ClassConstructor,
   ClassMethodMetadata,
+  FunctionChecker,
   getConstructorOf,
   isClassConstructor,
 } from "./reflection";
 
 export {
+  AsyncTransform,
+  AsyncTransformFactory,
+  AsyncTransformFunction,
+  AsyncTransformType,
+  isAsyncTransformFactory,
+  isAsyncTransformFunction,
+  isAsyncTransformInstance,
   Transform,
   TransformError,
   TransformFactory,
   TransformFunction,
+  TransformType,
+  booleanTransform,
+  isTransformFactory,
+  isTransformFunction,
+  isTransformInstance,
   numberTransform,
 } from "./transforms";

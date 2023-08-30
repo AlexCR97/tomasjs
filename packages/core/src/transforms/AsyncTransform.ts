@@ -1,11 +1,13 @@
 import { FunctionChecker } from "@/reflection";
 
-export interface Transform<TInput, TOutput> {
-  transform(input: TInput): TOutput;
+export interface AsyncTransform<TInput, TOutput> {
+  transform(input: TInput): Promise<TOutput>;
 }
 
-// TODO Write unit test for isTransformInstance
-export function isTransformInstance<TInput, TOutput>(obj: any): obj is Transform<TInput, TOutput> {
+// TODO Write unit test for isAsyncTransformInstance
+export function isAsyncTransformInstance<TInput, TOutput>(
+  obj: any
+): obj is AsyncTransform<TInput, TOutput> {
   if (obj === undefined || obj === null) {
     return false;
   }
