@@ -25,7 +25,7 @@
       to: `#${buildingTheAppSectionId}`,
     },
     {
-      label: "Next steps",
+      label: "Next Steps",
       to: `#${nextStepsSectionId}`,
     },
   ];
@@ -43,26 +43,29 @@
       <section :id="creatingTheProjectSectionId" class="mb-5">
         <h4 class="mb-4">Creating the project</h4>
 
-        <p>You can find the starter project template from the following repo:</p>
-        <p>
-          <a href="https://github.com/AlexCR97/Node-Project-Templates/tree/main/app%20-%20tomasjs"
-            >Node-Project-Templates / app - tomasjs</a
-          >
-        </p>
+        <p>Install the TomasJS CLI:</p>
+
+        <Code code="npm install -g @tomasjs/cli" />
 
         <p>
-          In a folder of your choice, copy the template "app - tomasjs" with your preferred method.
+          In a folder of your choice, create a new project by running the "new" command. This
+          command will ask you for a project name and a project template. Choose the "Console"
+          template to create a console application.
         </p>
 
-        <p>This template has the necessary files to develop a console application.</p>
+        <Code code="tomasjs new" />
 
-        <p>Install the dependencies:</p>
+        <p>The CLI will create the necessary files and install the dependencies.</p>
 
-        <Code title="powershell / bash" class="mb-4">
-          <pre class="m-0 p-0">
-npm install
-          </pre>
-        </Code>
+        <p>You can quickly test the project like this:</p>
+
+        <Code
+          class="mb-4"
+          code="
+cd ./YourProjectName
+npm run dev
+        "
+        />
       </section>
 
       <section :id="theGreeterServiceSectionId" class="mb-5">
@@ -70,40 +73,44 @@ npm install
 
         <p>Create a GreeterService.ts file:</p>
 
-        <Code title="src/GreeterService.ts" class="mb-4">
-          <pre class="m-0 p-0">
+        <Code
+          class="mb-4"
+          title="src/GreeterService.ts"
+          code='
 import { injectable } from "@tomasjs/core";
 
 @injectable()
 export class GreeterService {
-greet(name: string) {
-  console.log(`Hello ${name}!`);
+  greet(name: string) {
+    console.log(`Hello ${name}!`);
+  }
 }
-}
-          </pre>
-        </Code>
+        '
+        />
 
         <p>Now in your main.ts file, place the following content:</p>
 
-        <Code title="src/main.ts" class="mb-4">
-          <pre class="m-0 p-0">
+        <Code
+          title="src/main.ts"
+          class="mb-4"
+          code='
 import "reflect-metadata";
 import { ServiceContainerBuilder } from "@tomasjs/core";
 import { GreeterService } from "./GreeterService";
 
 async function main() {
-const serviceProvider = await new ServiceContainerBuilder()
-  .addClass(GreeterService)
-  .buildServiceProviderAsync();
+  const serviceProvider = await new ServiceContainerBuilder()
+    .addClass(GreeterService)
+    .buildServiceProviderAsync();
 
-const greeterService = serviceProvider.get(GreeterService);
+  const greeterService = serviceProvider.get(GreeterService);
 
-greeterService.greet("TomasJS");
+  greeterService.greet("TomasJS");
 }
 
 main();
-          </pre>
-        </Code>
+        '
+        />
       </section>
 
       <section :id="runningTheAppSectionId" class="mb-5">
@@ -111,20 +118,11 @@ main();
 
         <p>Run your app by running the "dev" command:</p>
 
-        <Code title="powershell / bash" class="mb-4">
-          <pre class="m-0 p-0">
-npm run dev
-          </pre>
-        </Code>
+        <Code class="mb-4" lang="ps1" code="npm run dev" />
 
         <p>You should see the following output:</p>
 
-        <Code class="mb-4">
-          <pre class="m-0 p-0">
-Hello, TomasJS!
-      </pre
-          >
-        </Code>
+        <Code class="mb-4" lang="ps1" code="Hello, TomasJS!" />
       </section>
 
       <section :id="buildingTheAppSectionId" class="mb-5">
@@ -132,31 +130,23 @@ Hello, TomasJS!
 
         <p>Build your app by running the "compile" command:</p>
 
-        <Code title="powershell / bash" class="mb-4">
-          <pre class="m-0 p-0">
-npm run compile
-          </pre>
-        </Code>
+        <Code class="mb-4" lang="ps1" code="npm run compile" />
 
         <p>This will generate a build of your app in a ./dist folder.</p>
 
         <p>To run the built version of the app, run the "start" command:</p>
 
-        <Code title="powershell / bash" class="mb-4">
-          <pre class="m-0 p-0">
-npm run start
-          </pre>
-        </Code>
+        <Code class="mb-4" lang="ps1" code="npm run start" />
 
         <p>You should see the same output, but from the built version of your app.</p>
       </section>
 
       <section :id="nextStepsSectionId" class="mb-5">
-        <p class="fw-bold">Next steps:</p>
+        <p class="fw-bold">Next Steps</p>
         <ul>
           <li>
             <!-- TODO Insert link -->
-            <NuxtLink to="#">Learn the fundamentals</NuxtLink>
+            <NuxtLink to="/docs/fundamentals/dependency-injection">Learn the fundamentals</NuxtLink>
           </li>
         </ul>
       </section>

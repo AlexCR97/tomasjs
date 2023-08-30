@@ -6,10 +6,16 @@ import { HeadersMetadataKey } from "./@headers";
 import { ParamMetadata, ParamMetadataKey } from "./@param";
 import { QueryMetadata, QueryMetadataKey } from "./@query";
 import { HttpMethodMetadata } from "./metadata";
-import { RequiredArgumentError } from "@tomasjs/core";
+import { RequiredArgumentError, TomasError } from "@tomasjs/core";
 import { MiddlewareType } from "@/middleware";
 import { GuardType } from "@/guards";
 import { TransformResultResolver } from "@/transforms";
+import { FileMetadata, fileMetadataKey } from "./@file";
+import { FormFile } from "./FormFile";
+import { filesMetadataKey } from "./@files";
+import { FormFilesBuilder } from "./FormFilesBuilder";
+import { UploadedFile } from "express-fileupload";
+import { UseFilesError } from "./UseFilesError";
 
 interface HttpOptions {
   middlewares?: MiddlewareType[];
@@ -33,11 +39,14 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
 
       const controllerMethodArgs: any[] = [];
 
+      req.files;
       tryInjectHeadersArg();
       tryInjectHeaderArgs();
       tryInjectParamsArg();
       tryInjectQueryArgs();
       tryInjectBodyArg();
+      tryInjectFilesArg();
+      tryInjectFileArgs();
 
       return originalFunction.apply(this, controllerMethodArgs);
 
@@ -115,6 +124,76 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
         }
 
         controllerMethodArgs[paramIndex] = req.body;
+      }
+
+      function tryInjectFilesArg() {
+        const paramIndex = Reflect.getOwnMetadata(filesMetadataKey, target, propertyKey);
+
+        if (typeof paramIndex !== "number") {
+          return;
+        }
+
+        if (req.files === undefined || req.files === null) {
+          throw new UseFilesError();
+        }
+
+        const formFilesBuilder = new FormFilesBuilder();
+
+        for (const formField of Object.keys(req.files)) {
+          const file = req.files[formField];
+          const formFile = toFormFileOrFormFileArray(file);
+          formFilesBuilder.with(formField, formFile);
+        }
+
+        controllerMethodArgs[paramIndex] = formFilesBuilder.build();
+      }
+
+      function tryInjectFileArgs() {
+        const fileMetadatas: FileMetadata[] | undefined | null = Reflect.getOwnMetadata(
+          fileMetadataKey,
+          target,
+          propertyKey
+        );
+
+        if (fileMetadatas === undefined || fileMetadatas === null || fileMetadatas.length === 0) {
+          return;
+        }
+
+        if (req.files === undefined || req.files === null) {
+          throw new UseFilesError();
+        }
+
+        for (const { parameterIndex, formField } of fileMetadatas) {
+          const file = req.files[formField];
+
+          if (Array.isArray(file)) {
+            throw new TomasError(
+              "Cannot bind FormFile array with @file decorator. Please use @files decorator instead."
+            );
+          }
+
+          controllerMethodArgs[parameterIndex] = toFormFile(file);
+        }
+      }
+
+      function toFormFile(file: UploadedFile): FormFile {
+        return new FormFile(
+          file.name,
+          file.encoding,
+          file.mimetype,
+          file.data,
+          file.truncated,
+          file.size,
+          file.md5
+        );
+      }
+
+      function toFormFileOrFormFileArray(
+        fileOrFileArray: UploadedFile | UploadedFile[]
+      ): FormFile | FormFile[] {
+        return Array.isArray(fileOrFileArray)
+          ? fileOrFileArray.map((x) => toFormFile(x))
+          : toFormFile(fileOrFileArray);
       }
     };
 

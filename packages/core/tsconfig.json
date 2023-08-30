@@ -29,6 +29,6 @@
     }
   },
   "include": ["src/", "src/**/*.ts"],
-  "exclude": ["node_modules", ".vscode", "src/examples", "src/tests", "src/**/*.test.ts"],
+  "exclude": ["node_modules", ".vscode", "src/examples"],
   "lib": ["es2015"]
 }

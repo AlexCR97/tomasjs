@@ -1,2 +1,6 @@
 export { Configuration } from "./Configuration";
-export { ConfigurationToken } from "./ConfigurationToken";
+export { ConfigurationSource } from "./ConfigurationSource";
+export { ConfigurationSourceError } from "./ConfigurationSourceError";
+export { KeyConfiguration } from "./KeyConfiguration";
+export { UseConfiguration, UseConfigurationOptions } from "./UseConfiguration";
+export { configurationToken } from "./configurationToken";

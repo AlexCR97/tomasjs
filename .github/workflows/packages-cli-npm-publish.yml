@@ -1,13 +1,13 @@
-name: Publish @tomasjs/core to NPM
+name: Publish @tomasjs/cli to NPM
 
 on:
   push:
     branches:
       - dev
     paths:
-      - .github/workflows/packages-core-npm-publish.yml
-      - packages/core/src
-      - packages/core/package.json
+      - .github/workflows/packages-cli-npm-publish.yml
+      - packages/cli/src/**
+      - packages/cli/package.json
 
 jobs:
   build-and-publish:
@@ -25,17 +25,17 @@ jobs:
 
       - name: Install dependencies
         run: |
-          cd ./packages/core
+          cd ./packages/cli
           npm install
 
       - name: Build source code
         run: |
-          cd ./packages/core
+          cd ./packages/cli
           npm run compile
 
       - name: Publish build to NPM
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_ACCESS_TOKEN}}
         run: |
-          cd ./packages/core
+          cd ./packages/cli
           npm run publish

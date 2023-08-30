@@ -11,3 +11,4 @@
  */
 
 import "reflect-metadata";
+import "express-fileupload";

@@ -10,10 +10,13 @@
   },
   "devDependencies": {
     "@nuxt/devtools": "latest",
+    "@types/bootstrap": "^5.2.6",
     "@types/node": "^18.17.1",
     "nuxt": "^3.6.5"
   },
   "dependencies": {
-    "bootstrap": "^5.3.1"
+    "@highlightjs/vue-plugin": "^2.1.0",
+    "bootstrap": "^5.3.1",
+    "bootstrap-icons": "^1.10.5"
   }
 }
