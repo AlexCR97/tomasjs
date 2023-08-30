@@ -1,16 +1,16 @@
-name: Publish @tomasjs/core to NPM
+name: Publish @tomasjs/core
 
 on:
   push:
     branches:
-      - dev
+      - main
     paths:
-      - .github/workflows/packages-core-npm-publish.yml
+      - .github/workflows/packages-core-cicd.yml
       - packages/core/src/**
       - packages/core/package.json
 
 jobs:
-  prepare:
+  cicd:
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -28,28 +28,11 @@ jobs:
           cd ./packages/core
           npm install
 
-  test:
-    runs-on: windows-latest
-    needs: prepare
-    steps:
-      - name: Run tests
-        run: |
-          cd ./packages/core
-          npm run test
-
-  build:
-    runs-on: windows-latest
-    needs: test
-    steps:
       - name: Build
         run: |
           cd ./packages/core
           npm run compile
 
-  publish:
-    runs-on: windows-latest
-    needs: build
-    steps:
       - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_ACCESS_TOKEN}}
