@@ -22,6 +22,7 @@
     "test": "jest",
     "testw": "jest --watchAll --verbose",
     "testw-Result": "jest --testNamePattern Result --verbose",
+    "test-logging": "jest --testNamePattern logging --verbose",
     "test-UseConfiguration": "jest --testNamePattern UseConfiguration --verbose",
     "test-pipes": "jest --testNamePattern pipes --verbose",
     "sample": "nodemon -r tsconfig-paths/register ./sample/main.ts"
@@ -29,11 +30,14 @@
   "dependencies": {
     "dotenv": "^16.3.1",
     "inversify": "^6.0.1",
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "winston": "^3.8.2"
   },
   "peerDependencies": {
+    "dotenv": "^16.3.1",
     "inversify": "^6.0.1",
-    "reflect-metadata": "^0.1.13"
+    "reflect-metadata": "^0.1.13",
+    "winston": "^3.8.2"
   },
   "devDependencies": {
     "@jest/globals": "^29.3.1",
