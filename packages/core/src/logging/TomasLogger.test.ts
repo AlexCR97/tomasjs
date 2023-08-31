@@ -1,8 +1,20 @@
 import "reflect-metadata";
 import { describe, it } from "@jest/globals";
 import { TomasLogger } from "./TomasLogger";
+import { LogLevel } from "./LogLevel";
+import { Logger } from "./Logger";
 
 describe("logging-TomasLogger", () => {
+  const logLevels: LogLevel[] = ["debug", "verbose", "info", "warn", "error"];
+
+  function doLogs(logger: Logger) {
+    logger.debug("debug");
+    logger.verbose("verbose");
+    logger.info("info");
+    logger.warn("warn");
+    logger.error("error");
+  }
+
   it("Can create and use a TomasLogger", () => {
     const logger = new TomasLogger("test", "debug");
     logger.debug('This is a log with "debug" level.');
@@ -25,5 +37,12 @@ describe("logging-TomasLogger", () => {
       { propC: "PropC", propD: "PropD" }
     );
     console.log("");
+  });
+
+  it("Can use log levels", () => {
+    for (const level of logLevels) {
+      console.log("Now using level:", level);
+      doLogs(new TomasLogger("TestLogLevels", level));
+    }
   });
 });

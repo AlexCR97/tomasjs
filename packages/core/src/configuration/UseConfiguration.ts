@@ -1,13 +1,12 @@
 import { parse } from "dotenv";
-import { readFileSync } from "fs";
 import { ContainerSetupFactory, ContainerSetupFunction } from "@/container";
-import { TomasError } from "@/errors";
+import { Pipe } from "@/pipes";
+import { readFile, readJsonFile } from "@/files";
 import { ConfigurationSource } from "./ConfigurationSource";
 import { ConfigurationSourceError } from "./ConfigurationSourceError";
 import { KeyConfigTransform } from "./KeyConfigTransform";
 import { KeyConfiguration } from "./KeyConfiguration";
 import { configurationToken } from "./configurationToken";
-import { Pipe } from "@/pipes";
 
 export type UseConfigurationOptions<T extends Record<string, any>> = {
   source?: ConfigurationSource;
@@ -67,7 +66,7 @@ export class UseConfiguration<T extends Record<string, any>> implements Containe
 
   private buildEnvConfigurationInstance(): Readonly<T> {
     return new Pipe(this.path)
-      .apply((path) => this.readFile(path))
+      .apply((path) => readFile(path))
       .apply((envFile) => parse(envFile))
       .apply((dotenvParseOutput) => {
         return new KeyConfigTransform(this.keyConfigs).transform(dotenvParseOutput as any); // TODO Avoid using "any"
@@ -77,22 +76,10 @@ export class UseConfiguration<T extends Record<string, any>> implements Containe
 
   private buildJsonConfigurationInstance(): Readonly<T> {
     return new Pipe(this.path)
-      .apply((path) => this.readFile(path, "utf-8") as string)
-      .apply((jsonContent) => JSON.parse(jsonContent))
+      .apply((path) => readJsonFile<T>(path))
       .apply((json) => {
         return new KeyConfigTransform(this.keyConfigs).transform(json);
       })
       .get();
-  }
-
-  private readFile(path: string, encoding?: BufferEncoding) {
-    try {
-      return readFileSync(path, encoding);
-    } catch (err) {
-      throw new TomasError(`Could not find file at path "${path}"`, {
-        data: { path },
-        innerError: err,
-      });
-    }
   }
 }

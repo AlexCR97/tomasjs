@@ -8,6 +8,7 @@ import { Logger } from "./Logger";
 import { LogLevel } from "./LogLevel";
 import { SPLAT } from "triple-beam";
 import { Pipe } from "@/pipes";
+import { globalLoggingOptions } from "./GlobalLoggingOptions";
 
 interface LoggerContext {
   message: string;
@@ -18,7 +19,6 @@ interface LoggerContext {
 }
 
 const customMessageFormat = winstonFormat.printf((context: LoggerContext) => {
-  // console.log("context", context);
   const { timestamp, category, level, message } = context;
   const messageTokens: string[] = [timestamp, `[${category}]`, `${level}:`, message];
   const splat = context[SPLAT];
@@ -36,6 +36,14 @@ const customMessageFormat = winstonFormat.printf((context: LoggerContext) => {
   return messageTokens.join(" ");
 });
 
+const logLevelScores = new Map<LogLevel, number>([
+  ["error", 0],
+  ["warn", 1],
+  ["info", 2],
+  ["verbose", 3],
+  ["debug", 4],
+]);
+
 export class TomasLogger implements Logger {
   private readonly logger: WinstonLogger;
 
@@ -49,41 +57,58 @@ export class TomasLogger implements Logger {
 
   private readonly defaultTransport = new winstonTransport.Console();
 
-  constructor(category: string, level: LogLevel) {
+  constructor(private readonly category: string, private readonly level: LogLevel) {
     this.logger = createWinstonLogger({
       defaultMeta: { category },
       level,
-      levels: Object.fromEntries(
-        new Map<keyof Logger, number>([
-          ["error", 0],
-          ["warn", 1],
-          ["info", 2],
-          ["verbose", 3],
-          ["debug", 4],
-        ])
-      ),
+      levels: Object.fromEntries(logLevelScores),
       format: this.format,
       transports: [this.defaultTransport],
     });
   }
 
   debug(message: any, ...params: any[]): void {
-    this.logger.debug(message, ...params);
+    this.log("debug", message, ...params);
   }
 
   verbose(message: any, ...params: any[]): void {
-    this.logger.verbose(message, ...params);
+    this.log("verbose", message, ...params);
   }
 
   info(message: any, ...params: any[]) {
-    this.logger.info(message, ...params);
+    this.log("info", message, ...params);
   }
 
   warn(message: any, ...params: any[]): void {
-    this.logger.warn(message, ...params);
+    this.log("warn", message, ...params);
   }
 
   error(message: any, ...params: any[]): void {
-    this.logger.error(message, ...params);
+    this.log("error", message, ...params);
+  }
+
+  private log(method: keyof WinstonLogger, message: any, ...params: any[]): void {
+    this.tryOverrideWithDefaultLevel();
+    this.tryOverrideWithOverrideLevel();
+    this.logger[method](message, ...params);
+    this.resetOriginalLevel();
+  }
+
+  private tryOverrideWithDefaultLevel() {
+    this.logger.level = globalLoggingOptions.value().minimumLevel?.default ?? this.level;
+  }
+
+  private tryOverrideWithOverrideLevel() {
+    const override = globalLoggingOptions.value().minimumLevel?.override;
+
+    if (override === undefined) {
+      return;
+    }
+
+    this.logger.level = override[this.category] ?? this.level;
+  }
+
+  private resetOriginalLevel() {
+    this.logger.level = this.level;
   }
 }
