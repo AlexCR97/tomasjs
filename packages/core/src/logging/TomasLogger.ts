@@ -18,8 +18,10 @@ interface LoggerContext {
   [SPLAT]: any[];
 }
 
-const customMessageFormat = winstonFormat.printf((context: LoggerContext) => {
-  const { timestamp, category, level, message } = context;
+const customMessageFormat = winstonFormat.printf((context: any) => {
+  // IMPORTANT: Apply type in next line instead of in param to avoid this error:
+  // Argument of type '(context: LoggerContext) => string' is not assignable to parameter of type '(info: TransformableInfo) => string'
+  const { timestamp, category, level, message } = context as LoggerContext;
   const messageTokens: string[] = [timestamp, `[${category}]`, `${level}:`, message];
   const splat = context[SPLAT];
 
