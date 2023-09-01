@@ -377,7 +377,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    await new ExpressAppBuilder({ port, logger })
+    context.server = await new ExpressAppBuilder({ port, logger })
       .use(
         new UseGuards({
           guards: [guard],
@@ -407,7 +407,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    await new ExpressAppBuilder({ port, logger })
+    context.server = await new ExpressAppBuilder({ port, logger })
       .use(
         new UseGuards({
           guards: [guard],
@@ -438,7 +438,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    await new ExpressAppBuilder({ port, logger })
+    context.server = await new ExpressAppBuilder({ port, logger })
       .use(
         new UseGuards({
           guards: [guard],
@@ -469,7 +469,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    await new ExpressAppBuilder({ port, logger })
+    context.server = await new ExpressAppBuilder({ port, logger })
       .use(
         new UseGuards({
           guards: [guard],
@@ -520,7 +520,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    await new ExpressAppBuilder({ port, logger })
+    context.server = await new ExpressAppBuilder({ port, logger })
       .use(
         new UseGuards({
           guards: [guard],
