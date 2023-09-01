@@ -37,6 +37,14 @@ export { NotImplementedError, RequiredArgumentError, TomasError } from "./errors
 export { AsyncPipe, Pipe } from "./pipes";
 
 export {
+  GlobalLoggingOptions,
+  LogLevel,
+  Logger,
+  TomasLogger,
+  globalLoggingOptions,
+} from "./logging";
+
+export {
   ClassConstructor,
   ClassMethodMetadata,
   FunctionChecker,
