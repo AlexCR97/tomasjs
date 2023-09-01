@@ -1,11 +1,11 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import fetch from "node-fetch";
 import { ExpressAppBuilder } from "./ExpressAppBuilder";
 import { UseJson } from "./UseJson";
 import { Logger } from "@tomasjs/core";
 import { TestContext } from "@/tests";
 import { statusCodes } from "@/core";
+import axios from "axios";
 
 const testSuiteName = "builder/UseJson";
 
@@ -35,20 +35,13 @@ describe(testSuiteName, () => {
     context.server = await new ExpressAppBuilder({ port, logger })
       .use(new UseJson())
       .use((app) => {
-        app.post("/", (req, res) => {
-          console.log("Received!");
-          res.json(req.body);
-        });
+        app.post("/", (req, res) => res.json(req.body));
       })
       .buildAsync();
 
-    const response = await fetch(address, {
-      method: "post",
-      body: JSON.stringify(testJson),
-      headers: { "Content-Type": "application/json" },
-    });
+    const response = await axios.post(address, testJson);
 
     expect(response.status).toBe(statusCodes.ok);
-    expect(await response.json()).toEqual(testJson);
+    expect(response.data).toEqual(testJson);
   });
 });
