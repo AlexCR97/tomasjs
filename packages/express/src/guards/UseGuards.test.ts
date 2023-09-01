@@ -21,8 +21,8 @@ describe(testSuiteName, () => {
   let address: string;
   let logger: Logger;
 
-  beforeEach(() => {
-    context = new TestContext(testSuiteName);
+  beforeEach(async () => {
+    context = await TestContext.new(testSuiteName);
     port = context.port;
     address = context.address;
     logger = context.logger;

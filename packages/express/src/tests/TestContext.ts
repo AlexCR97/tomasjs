@@ -3,15 +3,15 @@ import { Server } from "http";
 import { getAvailablePort } from "./getAvailablePort";
 
 export class TestContext {
-  readonly port: number;
-  readonly address: string;
-  readonly logger: Logger;
   server: Server | undefined;
 
-  constructor(name: string, level?: LogLevel) {
-    this.port = getAvailablePort();
-    this.address = `http://localhost:${this.port}`;
-    this.logger = new TomasLogger(name, level ?? "error");
+  private constructor(readonly port: number, readonly address: string, readonly logger: Logger) {}
+
+  static async new(name: string, level?: LogLevel): Promise<TestContext> {
+    const port = await getAvailablePort();
+    const address = `http://localhost:${port}`;
+    const logger = new TomasLogger(name, level ?? "error");
+    return new TestContext(port, address, logger);
   }
 
   dispose(): Promise<void> {
