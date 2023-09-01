@@ -21,7 +21,7 @@
     "link": "cd ./dist && npm link",
     "test": "jest",
     "testw": "jest --watchAll --verbose",
-    "test-builder-ExpressAppBuilder": "jest --testNamePattern ExpressAppBuilder --verbose",
+    "test-builder/ExpressAppBuilder": "jest --testNamePattern builder/ExpressAppBuilder --verbose",
     "test-builder-UseJson": "jest --testNamePattern UseJson --verbose",
     "test-controllers": "jest --testNamePattern controllers --verbose",
     "test-controllers-fileDecorator": "jest --testNamePattern controllers-fileDecorator --verbose",
