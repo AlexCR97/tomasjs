@@ -1,19 +1,19 @@
-name: Publish @tomasjs/express to NPM
+name: Publish @tomasjs/express
 
 on:
   push:
     branches:
-      - dev
+      - main
     paths:
-      - .github/workflows/packages-express-npm-publish.yml
-      - packages/express/src
+      - .github/workflows/packages-core-cicd.yml
+      - packages/express/src/**
       - packages/express/package.json
 
 jobs:
-  build-and-publish:
+  cicd:
     runs-on: windows-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v3
 
       - name: Setup node
@@ -23,17 +23,17 @@ jobs:
           registry-url: https://registry.npmjs.org/
           token: ${{secrets.NPM_ACCESS_TOKEN}}
 
-      - name: Install dependencies
+      - name: Install modules
         run: |
           cd ./packages/express
           npm install
 
-      - name: Build source code
+      - name: Build
         run: |
           cd ./packages/express
           npm run compile
 
-      - name: Publish build to NPM
+      - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_ACCESS_TOKEN}}
         run: |
