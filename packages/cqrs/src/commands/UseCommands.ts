@@ -5,10 +5,14 @@ import {
   ContainerSetupFunction,
 } from "@tomasjs/core";
 import { CommandDispatcher } from "./CommandDispatcher";
-import { CommandHandlerToken } from "./metadata";
+import { commandHandlerToken } from "./commandHandlerToken";
 
 export class UseCommands implements ContainerSetupFactory {
   constructor(private readonly commandHandlers?: ClassConstructor<any>[]) {}
+
+  private get handlers(): ClassConstructor<any>[] {
+    return this.commandHandlers ?? [];
+  }
 
   create(): ContainerSetupFunction {
     return (container) => {
@@ -18,16 +22,8 @@ export class UseCommands implements ContainerSetupFactory {
   }
 
   private registerHandlers(container: Container) {
-    if (!this.commandHandlers) {
-      return;
-    }
-
-    if (this.commandHandlers.length === 0) {
-      return;
-    }
-
-    for (const handler of this.commandHandlers) {
-      container.addClass(handler, { token: CommandHandlerToken });
+    for (const handler of this.handlers) {
+      container.addClass(handler, { token: commandHandlerToken });
     }
   }
 }

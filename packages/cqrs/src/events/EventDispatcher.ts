@@ -8,7 +8,8 @@ import {
   serviceProviderToken,
 } from "@tomasjs/core";
 import { EventHandler } from "./EventHandler";
-import { EventHandlerMetadata, EventHandlerToken } from "./metadata";
+import { eventHandlerToken } from "./eventHandlerToken";
+import { EventHandlerMetadata } from "./EventHandlerMetadata";
 
 @injectable()
 export class EventDispatcher {
@@ -21,7 +22,7 @@ export class EventDispatcher {
   }
 
   private getHandlerFor<TEvent>(eventConstructor: ClassConstructor<TEvent>): EventHandler<TEvent> {
-    const eventHandlers = this.services.getAll<EventHandler<TEvent>>(EventHandlerToken);
+    const eventHandlers = this.services.getAll<EventHandler<TEvent>>(eventHandlerToken);
 
     const matchingEventHandler = eventHandlers.find((eh) => {
       const metadata = new EventHandlerMetadata(eh);

@@ -1,5 +1,5 @@
 import { ClassConstructor, injectable } from "@tomasjs/core";
-import { QueryHandlerMetadata } from "./metadata";
+import { QueryHandlerMetadata } from "./QueryHandlerMetadata";
 
 export function queryHandler<TQuery>(queryConstructor: ClassConstructor<TQuery>) {
   return function <T extends new (...args: any[]) => any>(constructor: T) {

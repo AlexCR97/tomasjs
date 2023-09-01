@@ -5,7 +5,7 @@ import { eventHandler } from "./@eventHandler";
 import { EventDispatcher } from "./EventDispatcher";
 import { EventHandler } from "./EventHandler";
 import { UseEvents } from "./UseEvents";
-import { EventHandlerToken } from "./metadata";
+import { eventHandlerToken } from "./eventHandlerToken";
 
 describe("events", () => {
   it(`Can register the ${EventDispatcher.name}`, async () => {
@@ -20,7 +20,6 @@ describe("events", () => {
   it("Can register an EventHandler", async () => {
     class TestEvent {}
 
-    //@ts-ignore: Fix decorators not working in test files
     @eventHandler(TestEvent)
     class TestEventHandler implements EventHandler<TestEvent> {
       handle(event: TestEvent) {}
@@ -30,7 +29,7 @@ describe("events", () => {
       .setup(new UseEvents([TestEventHandler]))
       .buildServiceProviderAsync();
 
-    const eventHandlers = services.getAll<EventHandler<any>>(EventHandlerToken);
+    const eventHandlers = services.getAll<EventHandler<any>>(eventHandlerToken);
 
     expect(eventHandlers.length).toBe(1);
     expect(eventHandlers[0]).toBeInstanceOf(TestEventHandler);
@@ -41,7 +40,6 @@ describe("events", () => {
       constructor() {}
     }
 
-    //@ts-ignore: Fix decorators not working in test files
     @eventHandler(TestEvent)
     class TestEventHandler implements EventHandler<TestEvent> {
       handle(event: TestEvent): void {
@@ -63,13 +61,9 @@ describe("events", () => {
       constructor() {}
     }
 
-    //@ts-ignore: Fix decorators not working in test files
     @eventHandler(EventA)
     class EventAHandler implements EventHandler<EventA> {
-      constructor(
-        //@ts-ignore: Fix decorators not working in test files
-        @inject(EventDispatcher) private readonly eventDispatcher: EventDispatcher
-      ) {}
+      constructor(@inject(EventDispatcher) private readonly eventDispatcher: EventDispatcher) {}
 
       handle(event: EventA): void {
         this.eventDispatcher.emit(new EventB()); // propagate to EventB
@@ -80,7 +74,6 @@ describe("events", () => {
       constructor() {}
     }
 
-    //@ts-ignore: Fix decorators not working in test files
     @eventHandler(EventB)
     class EventBHandler implements EventHandler<EventB> {
       handle(event: EventB): void {

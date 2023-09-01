@@ -1,5 +1,5 @@
 import { ClassConstructor, injectable } from "@tomasjs/core";
-import { EventHandlerMetadata } from "./metadata";
+import { EventHandlerMetadata } from "./EventHandlerMetadata";
 
 export function eventHandler<TEvent>(eventConstructor: ClassConstructor<TEvent>) {
   return function <T extends new (...args: any[]) => any>(constructor: T) {
