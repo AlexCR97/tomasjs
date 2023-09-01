@@ -8,7 +8,8 @@ import {
   serviceProviderToken,
 } from "@tomasjs/core";
 import { QueryHandler } from "./QueryHandler";
-import { QueryHandlerMetadata, QueryHandlerToken } from "./metadata";
+import { queryHandlerToken } from "./queryHandlerToken";
+import { QueryHandlerMetadata } from "./QueryHandlerMetadata";
 
 @injectable()
 export class QueryDispatcher {
@@ -23,7 +24,7 @@ export class QueryDispatcher {
   private getHandlerFor<TQuery, TResult>(
     queryConstructor: ClassConstructor<TQuery>
   ): QueryHandler<TQuery, TResult> {
-    const queryHandlers = this.services.getAll<QueryHandler<TQuery, TResult>>(QueryHandlerToken);
+    const queryHandlers = this.services.getAll<QueryHandler<TQuery, TResult>>(queryHandlerToken);
 
     const matchingQueryHandler = queryHandlers.find((qh) => {
       const metadata = new QueryHandlerMetadata(qh);

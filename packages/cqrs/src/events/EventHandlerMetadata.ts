@@ -1,9 +1,13 @@
 import { ClassConstructor } from "@tomasjs/core";
-import { EventHandler } from "../EventHandler";
-import { EventHandlerMetadataKeys } from "./EventHandlerMetadataKeys";
+import { EventHandler } from "./EventHandler";
+import { TokenBuilder } from "@tomasjs/core/tokens";
+import { eventHandlerToken } from "./eventHandlerToken";
 
 export class EventHandlerMetadata<TEvent> {
-  private readonly eventConstructorKey = EventHandlerMetadataKeys.eventConstructor;
+  private readonly eventConstructorKey = new TokenBuilder()
+    .with(eventHandlerToken)
+    .with("constructor")
+    .build();
 
   constructor(
     private readonly eventHandler: EventHandler<TEvent> | ClassConstructor<EventHandler<TEvent>>

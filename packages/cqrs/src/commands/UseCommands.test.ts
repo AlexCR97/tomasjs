@@ -5,7 +5,7 @@ import { commandHandler } from "./@commandHandler";
 import { CommandDispatcher } from "./CommandDispatcher";
 import { CommandHandler } from "./CommandHandler";
 import { UseCommands } from "./UseCommands";
-import { CommandHandlerToken } from "./metadata";
+import { commandHandlerToken } from "./commandHandlerToken";
 
 describe("commands", () => {
   it(`Can register the ${CommandDispatcher.name}`, async () => {
@@ -20,7 +20,6 @@ describe("commands", () => {
   it("Can register a CommandHandler", async () => {
     class TestCommand {}
 
-    //@ts-ignore: Fix decorators not working in test files
     @commandHandler(TestCommand)
     class TestCommandHandler implements CommandHandler<TestCommand> {
       execute(command: TestCommand) {}
@@ -30,7 +29,7 @@ describe("commands", () => {
       .setup(new UseCommands([TestCommandHandler]))
       .buildServiceProviderAsync();
 
-    const commandHandlers = services.getAll<CommandHandler<any>>(CommandHandlerToken);
+    const commandHandlers = services.getAll<CommandHandler<any>>(commandHandlerToken);
 
     expect(commandHandlers.length).toBe(1);
     expect(commandHandlers[0]).toBeInstanceOf(TestCommandHandler);
@@ -45,7 +44,6 @@ describe("commands", () => {
       constructor(readonly catName: string) {}
     }
 
-    //@ts-ignore: Fix decorators not working in test files
     @commandHandler(MeowCommand)
     class MeowCommandHandler implements CommandHandler<MeowCommand, string> {
       execute(command: MeowCommand): string {
@@ -72,7 +70,6 @@ describe("commands", () => {
       constructor(readonly catName: string) {}
     }
 
-    //@ts-ignore: Fix decorators not working in test files
     @commandHandler(MeowCommand)
     class MeowCommandHandler implements CommandHandler<MeowCommand, string> {
       execute(command: MeowCommand): string {
@@ -88,7 +85,6 @@ describe("commands", () => {
       constructor(readonly dogName: string) {}
     }
 
-    //@ts-ignore: Fix decorators not working in test files
     @commandHandler(WoofCommand)
     class WoofCommandHandler implements CommandHandler<WoofCommand, string> {
       execute(command: WoofCommand): string | Promise<string> {

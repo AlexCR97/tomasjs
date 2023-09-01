@@ -8,7 +8,8 @@ import {
   serviceProviderToken,
 } from "@tomasjs/core";
 import { CommandHandler } from "./CommandHandler";
-import { CommandHandlerMetadata, CommandHandlerToken } from "./metadata";
+import { commandHandlerToken } from "./commandHandlerToken";
+import { CommandHandlerMetadata } from "./CommandHandlerMetadata";
 
 @injectable()
 export class CommandDispatcher {
@@ -24,7 +25,7 @@ export class CommandDispatcher {
     commandConstructor: ClassConstructor<TCommand>
   ): CommandHandler<TCommand, TResult> {
     const commandHandlers =
-      this.services.getAll<CommandHandler<TCommand, TResult>>(CommandHandlerToken);
+      this.services.getAll<CommandHandler<TCommand, TResult>>(commandHandlerToken);
 
     const matchingCommandHandler = commandHandlers.find((ch) => {
       const metadata = new CommandHandlerMetadata(ch);

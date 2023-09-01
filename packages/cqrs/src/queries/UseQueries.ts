@@ -4,11 +4,15 @@ import {
   ContainerSetupFactory,
   ContainerSetupFunction,
 } from "@tomasjs/core";
-import { QueryHandlerToken } from "./metadata";
 import { QueryDispatcher } from "./QueryDispatcher";
+import { queryHandlerToken } from "./queryHandlerToken";
 
 export class UseQueries implements ContainerSetupFactory {
   constructor(private readonly queryHandlers?: ClassConstructor<any>[]) {}
+
+  private get handlers(): ClassConstructor<any>[] {
+    return this.queryHandlers ?? [];
+  }
 
   create(): ContainerSetupFunction {
     return (container) => {
@@ -18,16 +22,8 @@ export class UseQueries implements ContainerSetupFactory {
   }
 
   private registerHandlers(container: Container) {
-    if (!this.queryHandlers) {
-      return;
-    }
-
-    if (this.queryHandlers.length === 0) {
-      return;
-    }
-
-    for (const handler of this.queryHandlers) {
-      container.addClass(handler, { token: QueryHandlerToken });
+    for (const handler of this.handlers) {
+      container.addClass(handler, { token: queryHandlerToken });
     }
   }
 }

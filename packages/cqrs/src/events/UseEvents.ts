@@ -5,10 +5,14 @@ import {
   ContainerSetupFunction,
 } from "@tomasjs/core";
 import { EventDispatcher } from "./EventDispatcher";
-import { EventHandlerToken } from "./metadata";
+import { eventHandlerToken } from "./eventHandlerToken";
 
 export class UseEvents implements ContainerSetupFactory {
   constructor(private readonly eventHandlers?: ClassConstructor<any>[]) {}
+
+  private get handlers(): ClassConstructor<any>[] {
+    return this.eventHandlers ?? [];
+  }
 
   create(): ContainerSetupFunction {
     return (container) => {
@@ -18,16 +22,8 @@ export class UseEvents implements ContainerSetupFactory {
   }
 
   private registerHandlers(container: Container) {
-    if (!this.eventHandlers) {
-      return;
-    }
-
-    if (this.eventHandlers.length === 0) {
-      return;
-    }
-
-    for (const handler of this.eventHandlers) {
-      container.addClass(handler, { token: EventHandlerToken });
+    for (const handler of this.handlers) {
+      container.addClass(handler, { token: eventHandlerToken });
     }
   }
 }
