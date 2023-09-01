@@ -15,7 +15,7 @@ describe(testSuiteName, () => {
   let address: string;
   let logger: Logger;
 
-  beforeEach(async () => {
+  beforeEach(() => {
     context = new TestContext(testSuiteName);
     port = context.port;
     address = context.address;

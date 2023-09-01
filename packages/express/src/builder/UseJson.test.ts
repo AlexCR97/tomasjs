@@ -1,23 +1,29 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { Server } from "http";
 import fetch from "node-fetch";
 import { ExpressAppBuilder } from "./ExpressAppBuilder";
 import { UseJson } from "./UseJson";
-import { statusCodes } from "../core";
-import { TomasLogger } from "@tomasjs/core";
+import { Logger } from "@tomasjs/core";
+import { TestContext } from "@/tests";
+import { statusCodes } from "@/core";
 
-describe("UseJson", () => {
-  let server: Server | undefined;
-  const port = 3001;
-  const logger = new TomasLogger("UseJson", "error");
+const testSuiteName = "builder/UseJson";
 
-  beforeEach(async () => {
-    await disposeAsync();
+describe(testSuiteName, () => {
+  let context: TestContext;
+  let port: number;
+  let address: string;
+  let logger: Logger;
+
+  beforeEach(() => {
+    context = new TestContext(testSuiteName);
+    port = context.port;
+    address = context.address;
+    logger = context.logger;
   });
 
   afterEach(async () => {
-    await disposeAsync();
+    await context.dispose();
   });
 
   it(`Can bootstrap ${UseJson.name}`, async () => {
@@ -26,7 +32,7 @@ describe("UseJson", () => {
       value: "works!",
     };
 
-    server = await new ExpressAppBuilder({ port, logger })
+    context.server = await new ExpressAppBuilder({ port, logger })
       .use(new UseJson())
       .use((app) => {
         app.post("/", (req, res) => {
@@ -36,7 +42,7 @@ describe("UseJson", () => {
       })
       .buildAsync();
 
-    const response = await fetch(`http://localhost:${port}`, {
+    const response = await fetch(address, {
       method: "post",
       body: JSON.stringify(testJson),
       headers: { "Content-Type": "application/json" },
@@ -45,8 +51,4 @@ describe("UseJson", () => {
     expect(response.status).toBe(statusCodes.ok);
     expect(await response.json()).toEqual(testJson);
   });
-
-  async function disposeAsync() {
-    server?.close();
-  }
 });
