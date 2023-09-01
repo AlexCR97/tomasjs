@@ -1,29 +1,33 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-
-import { Server } from "http";
-import fetch from "node-fetch";
 import { MiddlewareFunction } from "./MiddlewareFunction";
 import { UseMiddlewares } from "./UseMiddlewares";
-import { UseControllers, controller, httpGet } from "../controllers";
-import { ExpressAppBuilder } from "../builder";
+import { UseControllers, controller, httpGet } from "@/controllers";
+import { ExpressAppBuilder } from "@/builder";
 import { Middleware } from "./Middleware";
 import { Request, Response, NextFunction } from "express";
-import { ClassConstructor, ServiceContainerBuilder, TomasLogger, injectable } from "@tomasjs/core";
+import { ClassConstructor, Logger, ServiceContainerBuilder, injectable } from "@tomasjs/core";
 import { MiddlewareFactory } from "./MiddlewareFactory";
+import { TestContext } from "@/tests";
+import axios from "axios";
 
-describe("middlewares-UseMiddlewares", () => {
-  let server: Server | undefined;
-  const port = 3009;
-  const serverAddress = `http://localhost:${port}`;
-  const logger = new TomasLogger("test", "error");
+const testSuiteName = "middleware/UseMiddlewares";
 
-  beforeEach(async () => {
-    await disposeAsync();
+describe(testSuiteName, () => {
+  let context: TestContext;
+  let port: number;
+  let address: string;
+  let logger: Logger;
+
+  beforeEach(() => {
+    context = new TestContext(testSuiteName);
+    port = context.port;
+    address = context.address;
+    logger = context.logger;
   });
 
   afterEach(async () => {
-    await disposeAsync();
+    await context.dispose();
   });
 
   it("Can bootstrap MiddlewareFunctions", (done) => {
@@ -64,9 +68,9 @@ describe("middlewares-UseMiddlewares", () => {
         })
       )
       .buildAsync()
-      .then((expressServer) => {
-        server = expressServer;
-        fetch(serverAddress);
+      .then((server) => {
+        context.server = server;
+        axios.get(address);
       });
   });
 
@@ -112,9 +116,9 @@ describe("middlewares-UseMiddlewares", () => {
         })
       )
       .buildAsync()
-      .then((expressServer) => {
-        server = expressServer;
-        fetch(serverAddress);
+      .then((server) => {
+        context.server = server;
+        axios.get(address);
       });
   });
 
@@ -167,9 +171,9 @@ describe("middlewares-UseMiddlewares", () => {
             })
           )
           .buildAsync()
-          .then((expressServer) => {
-            server = expressServer;
-            fetch(serverAddress);
+          .then((server) => {
+            context.server = server;
+            axios.get(address);
           });
       });
   });
@@ -224,9 +228,9 @@ describe("middlewares-UseMiddlewares", () => {
         })
       )
       .buildAsync()
-      .then((expressServer) => {
-        server = expressServer;
-        fetch(serverAddress);
+      .then((server) => {
+        context.server = server;
+        axios.get(address);
       });
   });
 
@@ -284,9 +288,9 @@ describe("middlewares-UseMiddlewares", () => {
         })
       )
       .buildAsync()
-      .then((expressServer) => {
-        server = expressServer;
-        fetch(serverAddress);
+      .then((server) => {
+        context.server = server;
+        axios.get(address);
       });
   });
 
@@ -351,14 +355,10 @@ describe("middlewares-UseMiddlewares", () => {
             })
           )
           .buildAsync()
-          .then((expressServer) => {
-            server = expressServer;
-            fetch(serverAddress);
+          .then((server) => {
+            context.server = server;
+            axios.get(address);
           });
       });
   });
-
-  async function disposeAsync() {
-    server?.close();
-  }
 });
