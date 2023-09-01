@@ -1,30 +1,35 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { Server } from "http";
-import fetch from "node-fetch";
-import { UseControllers, controller, httpGet } from "../controllers";
-import { ExpressAppBuilder } from "../builder";
 import { GuardFunction } from "./GuardFunction";
 import { UseGuards } from "./UseGuards";
 import { Guard } from "./Guard";
 import { GuardContext } from "./GuardContext";
-import { ServiceContainerBuilder, TomasLogger, injectable } from "@tomasjs/core";
+import { Logger, ServiceContainerBuilder, TomasLogger, injectable } from "@tomasjs/core";
 import { GuardFactory } from "./GuardFactory";
-import { ForbiddenResponse, OkResponse, UnauthorizedResponse } from "../responses/status-codes";
-import { statusCodes } from "../core";
+import { TestContext } from "@/tests";
+import { UseControllers, controller, httpGet } from "@/controllers";
+import { ExpressAppBuilder } from "@/builder";
+import axios from "axios";
+import { ForbiddenResponse, OkResponse, UnauthorizedResponse } from "@/responses";
+import { statusCodes } from "@/core";
 
-describe("guards-UseGuards", () => {
-  let server: Server | undefined;
-  const port = 3012;
-  const serverAddress = `http://localhost:${port}`;
-  const logger = new TomasLogger("test", "error");
+const testSuiteName = "guards/UseGuards";
 
-  beforeEach(async () => {
-    await disposeAsync();
+describe(testSuiteName, () => {
+  let context: TestContext;
+  let port: number;
+  let address: string;
+  let logger: Logger;
+
+  beforeEach(() => {
+    context = new TestContext(testSuiteName);
+    port = context.port;
+    address = context.address;
+    logger = context.logger;
   });
 
   afterEach(async () => {
-    await disposeAsync();
+    await context.dispose();
   });
 
   it("Can bootstrap GuardFunctions", (done) => {
@@ -65,9 +70,9 @@ describe("guards-UseGuards", () => {
         })
       )
       .buildAsync()
-      .then((expressServer) => {
-        server = expressServer;
-        fetch(serverAddress);
+      .then((server) => {
+        context.server = server;
+        axios.get(address);
       });
   });
 
@@ -113,9 +118,9 @@ describe("guards-UseGuards", () => {
         })
       )
       .buildAsync()
-      .then((expressServer) => {
-        server = expressServer;
-        fetch(serverAddress);
+      .then((server) => {
+        context.server = server;
+        axios.get(address);
       });
   });
 
@@ -168,9 +173,9 @@ describe("guards-UseGuards", () => {
             })
           )
           .buildAsync()
-          .then((expressServer) => {
-            server = expressServer;
-            fetch(serverAddress);
+          .then((server) => {
+            context.server = server;
+            axios.get(address);
           });
       });
   });
@@ -225,9 +230,9 @@ describe("guards-UseGuards", () => {
         })
       )
       .buildAsync()
-      .then((expressServer) => {
-        server = expressServer;
-        fetch(serverAddress);
+      .then((server) => {
+        context.server = server;
+        axios.get(address);
       });
   });
 
@@ -285,9 +290,9 @@ describe("guards-UseGuards", () => {
         })
       )
       .buildAsync()
-      .then((expressServer) => {
-        server = expressServer;
-        fetch(serverAddress);
+      .then((server) => {
+        context.server = server;
+        axios.get(address);
       });
   });
 
@@ -352,9 +357,9 @@ describe("guards-UseGuards", () => {
             })
           )
           .buildAsync()
-          .then((expressServer) => {
-            server = expressServer;
-            fetch(serverAddress);
+          .then((server) => {
+            context.server = server;
+            axios.get(address);
           });
       });
   });
@@ -381,13 +386,13 @@ describe("guards-UseGuards", () => {
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync();
 
-    const response = await fetch(`${serverAddress}`);
+    const response = await fetch(`${address}`);
     expect(response.status).toBe(statusCodes.ok);
   });
 
   it("The server will respond with a 401 unauthorized if a guard returns false", async () => {
     const port = 3013;
-    const serverAddress = `http://localhost:${port}`;
+    const address = `http://localhost:${port}`;
     const logger = new TomasLogger("test", "error");
 
     const guard: GuardFunction = (context) => {
@@ -412,13 +417,13 @@ describe("guards-UseGuards", () => {
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync();
 
-    const response = await fetch(`${serverAddress}`);
+    const response = await fetch(`${address}`);
     expect(response.status).toBe(statusCodes.unauthorized);
   });
 
   it("The server will respond with a 401 unauthorized if a guard returns an UnauthorizedResponse instance", async () => {
     const port = 3014;
-    const serverAddress = `http://localhost:${port}`;
+    const address = `http://localhost:${port}`;
     const logger = new TomasLogger("test", "error");
 
     const guard: GuardFunction = (context) => {
@@ -443,13 +448,13 @@ describe("guards-UseGuards", () => {
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync();
 
-    const response = await fetch(`${serverAddress}`);
+    const response = await fetch(`${address}`);
     expect(response.status).toBe(statusCodes.unauthorized);
   });
 
   it("The server will respond with a 403 forbidden if a guard returns a ForbiddenResponse instance", async () => {
     const port = 3015;
-    const serverAddress = `http://localhost:${port}`;
+    const address = `http://localhost:${port}`;
     const logger = new TomasLogger("test", "error");
 
     const guard: GuardFunction = (context) => {
@@ -474,13 +479,13 @@ describe("guards-UseGuards", () => {
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync();
 
-    const response = await fetch(`${serverAddress}`);
+    const response = await fetch(`${address}`);
     expect(response.status).toBe(statusCodes.forbidden);
   });
 
   it("An app-level guard will be applied to all endpoints", async () => {
     const port = 3016;
-    const serverAddress = `http://localhost:${port}`;
+    const address = `http://localhost:${port}`;
     const logger = new TomasLogger("test", "error");
 
     const collectedData: number[] = [];
@@ -530,19 +535,15 @@ describe("guards-UseGuards", () => {
       )
       .buildAsync();
 
-    const firstResponse = await fetch(`${serverAddress}/first`);
+    const firstResponse = await fetch(`${address}/first`);
     expect(firstResponse.status).toBe(statusCodes.ok);
 
-    const secondResponse = await fetch(`${serverAddress}/second`);
+    const secondResponse = await fetch(`${address}/second`);
     expect(secondResponse.status).toBe(statusCodes.ok);
 
-    const thirdResponse = await fetch(`${serverAddress}/third`);
+    const thirdResponse = await fetch(`${address}/third`);
     expect(thirdResponse.status).toBe(statusCodes.ok);
 
     expect(collectedData.length).toBe(3);
   });
-
-  async function disposeAsync() {
-    server?.close();
-  }
 });
