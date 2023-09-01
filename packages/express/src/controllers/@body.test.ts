@@ -1,27 +1,31 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { Server } from "http";
-import fetch from "node-fetch";
 import { body } from "./@body";
 import { controller } from "./@controller";
-
-import { ExpressAppBuilder, UseJson } from "../builder";
 import { UseControllers } from "./UseControllers";
 import { httpPost } from "./@http";
-import { TomasLogger } from "@tomasjs/core";
+import { Logger } from "@tomasjs/core";
+import { TestContext } from "@/tests";
+import { ExpressAppBuilder, UseJson } from "@/builder";
+import axios from "axios";
 
-describe("controllers-bodyDecorator", () => {
-  let server: Server | undefined;
-  const port = 3003;
-  const serverAddress = `http://localhost:${port}`;
-  const logger = new TomasLogger("controllers-bodyDecorator", "error");
+const testSuiteName = "controllers/@body";
 
-  beforeEach(async () => {
-    await disposeAsync();
+describe(testSuiteName, () => {
+  let context: TestContext;
+  let port: number;
+  let address: string;
+  let logger: Logger;
+
+  beforeEach(() => {
+    context = new TestContext(testSuiteName);
+    port = context.port;
+    address = context.address;
+    logger = context.logger;
   });
 
   afterEach(async () => {
-    await disposeAsync();
+    await context.dispose();
   });
 
   it("The @body decorator injects the request body into the controller's method parameter", (done) => {
@@ -48,18 +52,9 @@ describe("controllers-bodyDecorator", () => {
         })
       )
       .buildAsync()
-      .then((expressServer) => {
-        server = expressServer;
-
-        fetch(serverAddress, {
-          method: "post",
-          body: JSON.stringify(expectedBody),
-          headers: { "Content-Type": "application/json" },
-        });
+      .then((server) => {
+        context.server = server;
+        axios.post(address, expectedBody);
       });
   });
-
-  async function disposeAsync() {
-    server?.close();
-  }
 });

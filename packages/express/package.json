@@ -25,6 +25,7 @@
     "test-builder/ExpressAppBuilder": "jest --testNamePattern builder/ExpressAppBuilder --verbose",
     "test-builder/UseJson": "jest --testNamePattern builder/UseJson --verbose",
     "test-controllers": "jest --testNamePattern controllers --verbose",
+    "test-controllers/@body": "jest --testNamePattern controllers/@body --verbose",
     "test-controllers-fileDecorator": "jest --testNamePattern controllers-fileDecorator --verbose",
     "test-controllers-filesDecorator": "jest --testNamePattern controllers-filesDecorator --verbose",
     "test-controllers-queryDecorator": "jest --testNamePattern controllers-queryDecorator --verbose",
