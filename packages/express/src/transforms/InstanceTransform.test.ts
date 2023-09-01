@@ -45,7 +45,6 @@ describe("InstanceTransform", () => {
       key1!: number;
       key2!: string;
 
-      //@ts-ignore: Fix decorators not working in test files
       @transformType(TestClass)
       child?: TestClass;
 

@@ -1,9 +1,12 @@
-import { TomasError } from "@tomasjs/core";
-import { TransformType } from "./TransformType";
-import { isTransformFunction } from "./isTransformFunction";
-import { isTransformInstance } from "./isTransformInstance";
-import { isTransformFactory } from "./isTransformFactory";
+import {
+  TomasError,
+  TransformType,
+  isTransformFactory,
+  isTransformFunction,
+  isTransformInstance,
+} from "@tomasjs/core";
 
+// TODO Use Pipe from @tomasjs/core instead
 export class TransformResultResolver<TInput, TOutput> {
   constructor(private readonly transform: TransformType<TInput, TOutput>) {}
 

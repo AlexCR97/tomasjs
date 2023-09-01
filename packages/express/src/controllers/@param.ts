@@ -1,4 +1,4 @@
-import { TransformType } from "@/transforms";
+import { TransformType } from "@tomasjs/core";
 
 export const ParamMetadataKey = "tomasjs:controller:method:payload:param";
 
