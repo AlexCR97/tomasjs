@@ -20,10 +20,9 @@
     "pack": "cd ./dist && npm pack",
     "link": "cd ./dist && npm link",
     "test": "jest",
-    "testw": "jest --watchAll --verbose",
     "test-builder": "jest --testNamePattern builder --verbose",
     "test-controllers": "jest --testNamePattern controllers --verbose",
-    "test-errorHandlers": "jest --testNamePattern errorHandlers --verbose",
+    "test-error-handler": "jest --testNamePattern error-handler --verbose",
     "test-guards": "jest --testNamePattern guards --verbose",
     "test-middlewares": "jest --testNamePattern middlewares --verbose"
   },
