@@ -1,5 +1,5 @@
 import { AppSetupFactory, AppSetupFunction } from "@/builder";
-import { Logger } from "@tomasjs/logging";
+import { Logger } from "@tomasjs/core";
 import { RequestHandler } from "express";
 
 export interface UseFilesOptions {

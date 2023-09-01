@@ -2,10 +2,9 @@ import { GuardResultResolver } from "./GuardResultResolver";
 import { GuardContextFactory } from "./GuardContextFactory";
 import { GuardType } from "./GuardType";
 import { ExpressMiddlewareFunction } from "@/core/express";
-import { Container } from "@tomasjs/core";
+import { Container, Logger } from "@tomasjs/core";
 import { ResponseAdapter } from "@/responses";
 import { UnauthorizedResponse } from "@/responses/status-codes";
-import { Logger } from "@tomasjs/logging";
 
 export class GuardAdapter {
   constructor(

@@ -4,9 +4,9 @@ import {
   ClassConstructor,
   Container,
   isClassConstructor,
+  Logger,
   NotImplementedError,
 } from "@tomasjs/core";
-import { Logger } from "@tomasjs/logging";
 import { MiddlewareType } from "./MiddlewareType";
 import { isMiddlewareFactory, MiddlewareFactory } from "./MiddlewareFactory";
 import { ExpressMiddlewareFunction } from "@/core/express";

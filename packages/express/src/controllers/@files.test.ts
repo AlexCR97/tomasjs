@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { Server } from "http";
 import { controller } from "./@controller";
 import { httpPost } from "./@http";
-import { bootstrapLoggerFactory } from "@tomasjs/logging";
 import { ExpressAppBuilder } from "../builder";
 import { UseControllers } from "./UseControllers";
 import { FormFile } from "./FormFile";
@@ -11,12 +10,13 @@ import axios from "axios";
 import { UseFiles } from "./UseFiles";
 import { files } from "./@files";
 import { FormFiles } from "./FormFiles";
+import { TomasLogger } from "@tomasjs/core";
 
 describe("controllers-filesDecorator", () => {
   let server: Server | undefined;
   const port = 3008;
   const serverAddress = `http://localhost:${port}`;
-  const logger = bootstrapLoggerFactory("debug");
+  const logger = new TomasLogger("controllers-filesDecorator", "error");
 
   beforeEach(async () => {
     await disposeAsync();

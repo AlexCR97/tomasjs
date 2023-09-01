@@ -1,15 +1,15 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { bootstrapLoggerFactory } from "@tomasjs/logging";
 import axios from "axios";
 import { Server } from "http";
 import { ExpressAppBuilder } from "./ExpressAppBuilder";
 import { statusCodes } from "../core";
+import { TomasLogger } from "@tomasjs/core";
 
 describe("ExpressAppBuilder", () => {
   let server: Server | undefined;
   const port = 3000;
-  const logger = bootstrapLoggerFactory("error");
+  const logger = new TomasLogger("ExpressAppBuilder", "error");
 
   beforeEach(async () => {
     await disposeAsync();

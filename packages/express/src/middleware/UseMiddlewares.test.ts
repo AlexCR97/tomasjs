@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { bootstrapLoggerFactory } from "@tomasjs/logging";
+
 import { Server } from "http";
 import fetch from "node-fetch";
 import { MiddlewareFunction } from "./MiddlewareFunction";
@@ -9,14 +9,14 @@ import { UseControllers, controller, httpGet } from "../controllers";
 import { ExpressAppBuilder } from "../builder";
 import { Middleware } from "./Middleware";
 import { Request, Response, NextFunction } from "express";
-import { ClassConstructor, ServiceContainerBuilder, injectable } from "@tomasjs/core";
+import { ClassConstructor, ServiceContainerBuilder, TomasLogger, injectable } from "@tomasjs/core";
 import { MiddlewareFactory } from "./MiddlewareFactory";
 
 describe("middlewares-UseMiddlewares", () => {
   let server: Server | undefined;
   const port = 3009;
   const serverAddress = `http://localhost:${port}`;
-  const logger = bootstrapLoggerFactory("error");
+  const logger = new TomasLogger("test", "error");
 
   beforeEach(async () => {
     await disposeAsync();

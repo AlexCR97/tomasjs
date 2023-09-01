@@ -1,12 +1,11 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { bootstrapLoggerFactory } from "@tomasjs/logging";
 import { Server } from "http";
 import { controller } from "./@controller";
 import { httpGet } from "./@http";
 import { UseControllers } from "./UseControllers";
 import { ExpressAppBuilder } from "../builder";
-import { ServiceContainerBuilder, injectable } from "@tomasjs/core";
+import { ServiceContainerBuilder, TomasLogger, injectable } from "@tomasjs/core";
 import { Middleware } from "../middleware";
 import { Request, Response, NextFunction } from "express";
 
@@ -14,7 +13,7 @@ describe("controllers-useMiddlewaresDecorator", () => {
   let server: Server | undefined;
   const port = 3010;
   const serverAddress = `http://localhost:${port}`;
-  const logger = bootstrapLoggerFactory("error");
+  const logger = new TomasLogger("controllers-useMiddlewaresDecorator", "error");
 
   beforeEach(async () => {
     await disposeAsync();

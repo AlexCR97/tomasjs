@@ -1,10 +1,10 @@
 import {
   ClassConstructor,
   Container,
+  Logger,
   NotImplementedError,
   isClassConstructor,
 } from "@tomasjs/core";
-import { Logger } from "@tomasjs/logging";
 import { ExpressErrorMiddlewareFunction } from "@/core/express";
 import { ErrorHandler, isErrorHandlerInstance } from "./ErrorHandler";
 import { ErrorHandlerFunction, isErrorHandlerFunction } from "./ErrorHandlerFunction";

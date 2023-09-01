@@ -1,6 +1,5 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { bootstrapLoggerFactory } from "@tomasjs/logging";
 import { Server } from "http";
 import fetch from "node-fetch";
 import { UseControllers, controller, httpGet } from "../controllers";
@@ -9,7 +8,7 @@ import { GuardFunction } from "./GuardFunction";
 import { UseGuards } from "./UseGuards";
 import { Guard } from "./Guard";
 import { GuardContext } from "./GuardContext";
-import { ServiceContainerBuilder, injectable } from "@tomasjs/core";
+import { ServiceContainerBuilder, TomasLogger, injectable } from "@tomasjs/core";
 import { GuardFactory } from "./GuardFactory";
 import { ForbiddenResponse, OkResponse, UnauthorizedResponse } from "../responses/status-codes";
 import { statusCodes } from "../core";
@@ -18,7 +17,7 @@ describe("guards-UseGuards", () => {
   let server: Server | undefined;
   const port = 3012;
   const serverAddress = `http://localhost:${port}`;
-  const logger = bootstrapLoggerFactory("error");
+  const logger = new TomasLogger("test", "error");
 
   beforeEach(async () => {
     await disposeAsync();
@@ -389,7 +388,7 @@ describe("guards-UseGuards", () => {
   it("The server will respond with a 401 unauthorized if a guard returns false", async () => {
     const port = 3013;
     const serverAddress = `http://localhost:${port}`;
-    const logger = bootstrapLoggerFactory("error");
+    const logger = new TomasLogger("test", "error");
 
     const guard: GuardFunction = (context) => {
       return false;
@@ -420,7 +419,7 @@ describe("guards-UseGuards", () => {
   it("The server will respond with a 401 unauthorized if a guard returns an UnauthorizedResponse instance", async () => {
     const port = 3014;
     const serverAddress = `http://localhost:${port}`;
-    const logger = bootstrapLoggerFactory("error");
+    const logger = new TomasLogger("test", "error");
 
     const guard: GuardFunction = (context) => {
       return new UnauthorizedResponse();
@@ -451,7 +450,7 @@ describe("guards-UseGuards", () => {
   it("The server will respond with a 403 forbidden if a guard returns a ForbiddenResponse instance", async () => {
     const port = 3015;
     const serverAddress = `http://localhost:${port}`;
-    const logger = bootstrapLoggerFactory("error");
+    const logger = new TomasLogger("test", "error");
 
     const guard: GuardFunction = (context) => {
       return new ForbiddenResponse();
@@ -482,7 +481,7 @@ describe("guards-UseGuards", () => {
   it("An app-level guard will be applied to all endpoints", async () => {
     const port = 3016;
     const serverAddress = `http://localhost:${port}`;
-    const logger = bootstrapLoggerFactory("error");
+    const logger = new TomasLogger("test", "error");
 
     const collectedData: number[] = [];
 

@@ -1,7 +1,6 @@
 import "express-async-errors";
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { bootstrapLoggerFactory } from "@tomasjs/logging";
 import { Server } from "http";
 import fetch from "node-fetch";
 import { UseControllers, controller, httpGet } from "@/controllers";
@@ -9,6 +8,7 @@ import {
   NotImplementedError,
   ServiceContainerBuilder,
   TomasError,
+  TomasLogger,
   injectable,
 } from "@tomasjs/core";
 import { ExpressAppBuilder } from "@/builder";
@@ -22,7 +22,7 @@ describe("errorHandlers-UseErrorHandler", () => {
   let server: Server | undefined;
   const port = 3017;
   const serverAddress = `http://localhost:${port}`;
-  const logger = bootstrapLoggerFactory("error");
+  const logger = new TomasLogger("errorHandlers-UseErrorHandler", "error");
 
   beforeEach(async () => {
     await disposeAsync();
@@ -83,7 +83,7 @@ describe("errorHandlers-UseErrorHandler", () => {
   it("Can bootstrap ErrorHandlerFunction", (done) => {
     const port = 3019;
     const serverAddress = `http://localhost:${port}`;
-    const logger = bootstrapLoggerFactory("error");
+    const logger = new TomasLogger("test", "error");
 
     const testErrorHandler: ErrorHandlerFunction = (err, req, res, next) => {
       done();
@@ -109,7 +109,7 @@ describe("errorHandlers-UseErrorHandler", () => {
   it("Can bootstrap ErrorHandler instance", (done) => {
     const port = 3020;
     const serverAddress = `http://localhost:${port}`;
-    const logger = bootstrapLoggerFactory("error");
+    const logger = new TomasLogger("test", "error");
 
     class TestErrorHandler implements ErrorHandler {
       catch(error: any, req: Request, res: Response, next: NextFunction) {
@@ -137,7 +137,7 @@ describe("errorHandlers-UseErrorHandler", () => {
   it("Can bootstrap ErrorHandler class", (done) => {
     const port = 3021;
     const serverAddress = `http://localhost:${port}`;
-    const logger = bootstrapLoggerFactory("error");
+    const logger = new TomasLogger("test", "error");
 
     @injectable()
     class TestErrorHandler implements ErrorHandler {
@@ -171,7 +171,7 @@ describe("errorHandlers-UseErrorHandler", () => {
   it("Can bootstrap ErrorHandlerFactory that returns an ErrorHandlerFunction", (done) => {
     const port = 3023;
     const serverAddress = `http://localhost:${port}`;
-    const logger = bootstrapLoggerFactory("error");
+    const logger = new TomasLogger("test", "error");
 
     const testErrorHandler: ErrorHandlerFunction = (err, req, res, next) => {
       done();
@@ -203,7 +203,7 @@ describe("errorHandlers-UseErrorHandler", () => {
   it("Can bootstrap ErrorHandlerFactory that returns an ErrorHandler instance", (done) => {
     const port = 3024;
     const serverAddress = `http://localhost:${port}`;
-    const logger = bootstrapLoggerFactory("error");
+    const logger = new TomasLogger("test", "error");
 
     class TestErrorHandler implements ErrorHandler {
       catch(error: any, req: Request, res: Response, next: NextFunction) {
@@ -237,7 +237,7 @@ describe("errorHandlers-UseErrorHandler", () => {
   it("Can bootstrap ErrorHandlerFactory that returns an ErrorHandler class", (done) => {
     const port = 3025;
     const serverAddress = `http://localhost:${port}`;
-    const logger = bootstrapLoggerFactory("error");
+    const logger = new TomasLogger("test", "error");
 
     @injectable()
     class TestErrorHandler implements ErrorHandler {

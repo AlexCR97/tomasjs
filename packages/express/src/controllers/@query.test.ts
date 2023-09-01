@@ -5,15 +5,15 @@ import fetch from "node-fetch";
 import { controller } from "./@controller";
 import { httpGet } from "./@http";
 import { query } from "./@query";
-import { bootstrapLoggerFactory } from "@tomasjs/logging";
 import { ExpressAppBuilder } from "../builder";
 import { UseControllers } from "./UseControllers";
+import { TomasLogger } from "@tomasjs/core";
 
 describe("controllers-queryDecorator", () => {
   let server: Server | undefined;
   const port = 3005;
   const serverAddress = `http://localhost:${port}`;
-  const logger = bootstrapLoggerFactory("error");
+  const logger = new TomasLogger("controllers-queryDecorator", "error");
 
   beforeEach(async () => {
     await disposeAsync();
@@ -71,7 +71,7 @@ describe("controllers-queryDecorator", () => {
   });
 
   it("The @query decorator can inject multiple query params into the controller's method parameters", (done) => {
-    const logger = bootstrapLoggerFactory("error");
+    const logger = new TomasLogger("test", "error");
 
     const expectedQuery = {
       pageIndex: "10",

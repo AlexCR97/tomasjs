@@ -1,9 +1,8 @@
-import { ClassConstructor } from "@tomasjs/core";
+import { ClassConstructor, Logger } from "@tomasjs/core";
 import { ErrorHandler } from "./ErrorHandler";
 import { ErrorHandlerFactory } from "./ErrorHandlerFactory";
 import { ErrorHandlerFunction } from "./ErrorHandlerFunction";
 import { TomasErrorHandler } from "./TomasErrorHandler";
-import { Logger } from "@tomasjs/logging";
 
 export class TomasErrorHandlerFactory implements ErrorHandlerFactory {
   constructor(

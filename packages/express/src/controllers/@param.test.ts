@@ -5,16 +5,15 @@ import fetch from "node-fetch";
 import { controller } from "./@controller";
 import { httpGet } from "./@http";
 import { param } from "./@param";
-import { bootstrapLoggerFactory } from "@tomasjs/logging";
 import { ExpressAppBuilder } from "../builder";
 import { UseControllers } from "./UseControllers";
-import { numberTransform } from "@tomasjs/core";
+import { TomasLogger, numberTransform } from "@tomasjs/core";
 
 describe("controllers-paramDecorator", () => {
   let server: Server | undefined;
   const port = 3004;
   const serverAddress = `http://localhost:${port}`;
-  const logger = bootstrapLoggerFactory("error");
+  const logger = new TomasLogger("controllers-paramDecorator", "error");
 
   beforeEach(async () => {
     await disposeAsync();
