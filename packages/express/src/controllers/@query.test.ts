@@ -1,26 +1,31 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { Server } from "http";
-import fetch from "node-fetch";
 import { controller } from "./@controller";
 import { httpGet } from "./@http";
 import { query } from "./@query";
-import { ExpressAppBuilder } from "../builder";
 import { UseControllers } from "./UseControllers";
-import { TomasLogger } from "@tomasjs/core";
+import { Logger, TomasLogger } from "@tomasjs/core";
+import { TestContext } from "@/tests";
+import axios from "axios";
+import { ExpressAppBuilder } from "@/builder";
 
-describe("controllers-queryDecorator", () => {
-  let server: Server | undefined;
-  const port = 3005;
-  const serverAddress = `http://localhost:${port}`;
-  const logger = new TomasLogger("controllers-queryDecorator", "error");
+const testSuiteName = "controllers/@query";
 
-  beforeEach(async () => {
-    await disposeAsync();
+describe(testSuiteName, () => {
+  let context: TestContext;
+  let port: number;
+  let address: string;
+  let logger: Logger;
+
+  beforeEach(() => {
+    context = new TestContext(testSuiteName);
+    port = context.port;
+    address = context.address;
+    logger = context.logger;
   });
 
   afterEach(async () => {
-    await disposeAsync();
+    await context.dispose();
   });
 
   it("The @query decorator can inject a single query param into the controller's method parameter", (done) => {
@@ -38,9 +43,9 @@ describe("controllers-queryDecorator", () => {
     new ExpressAppBuilder({ port, logger })
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync()
-      .then((expressServer) => {
-        server = expressServer;
-        fetch(`${serverAddress}/test?pageIndex=${expectedQuery}`);
+      .then((server) => {
+        context.server = server;
+        axios.get(`${address}/test?pageIndex=${expectedQuery}`);
       });
   });
 
@@ -62,10 +67,10 @@ describe("controllers-queryDecorator", () => {
     new ExpressAppBuilder({ port, logger })
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync()
-      .then((expressServer) => {
-        server = expressServer;
-        fetch(
-          `${serverAddress}/test?pageIndex=${expectedQuery.pageIndex}&pageSize=${expectedQuery.pageSize}`
+      .then((server) => {
+        context.server = server;
+        axios.get(
+          `${address}/test?pageIndex=${expectedQuery.pageIndex}&pageSize=${expectedQuery.pageSize}`
         );
       });
   });
@@ -91,16 +96,12 @@ describe("controllers-queryDecorator", () => {
     new ExpressAppBuilder({ port, logger })
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync()
-      .then((expressServer) => {
-        server = expressServer;
+      .then((server) => {
+        context.server = server;
 
-        fetch(
-          `${serverAddress}/test?pageIndex=${expectedQuery.pageIndex}&pageSize=${expectedQuery.pageSize}`
+        axios.get(
+          `${address}/test?pageIndex=${expectedQuery.pageIndex}&pageSize=${expectedQuery.pageSize}`
         );
       });
   });
-
-  async function disposeAsync() {
-    server?.close();
-  }
 });

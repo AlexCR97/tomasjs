@@ -1,29 +1,33 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import axios from "axios";
-import fetch from "node-fetch";
-import { Server } from "http";
 import { controller } from "./@controller";
 import { httpGet } from "./@http";
 import { UseControllers } from "./UseControllers";
-import { ExpressAppBuilder } from "../builder";
-import { statusCodes } from "../core";
-import { OkResponse } from "../responses/status-codes";
-import { Guard, GuardContext, GuardResult, guard } from "../guards";
-import { ServiceContainerBuilder, TomasLogger } from "@tomasjs/core";
+import { Logger, ServiceContainerBuilder } from "@tomasjs/core";
+import { TestContext } from "@/tests";
+import { OkResponse } from "@/responses";
+import { ExpressAppBuilder } from "@/builder";
+import { statusCodes } from "@/core";
+import { Guard, GuardContext, GuardResult, guard } from "@/guards";
 
-describe("controllers-UseControllers", () => {
-  let server: Server | undefined;
-  const port = 3002;
-  const serverAddress = `http://localhost:${port}`;
-  const logger = new TomasLogger("controllers-UseControllers", "error");
+const testSuiteName = "controllers/UseControllers";
 
-  beforeEach(async () => {
-    await disposeAsync();
+describe(testSuiteName, () => {
+  let context: TestContext;
+  let port: number;
+  let address: string;
+  let logger: Logger;
+
+  beforeEach(() => {
+    context = new TestContext(testSuiteName);
+    port = context.port;
+    address = context.address;
+    logger = context.logger;
   });
 
   afterEach(async () => {
-    await disposeAsync();
+    await context.dispose();
   });
 
   it("Can bootstrap a Controller", async () => {
@@ -35,7 +39,7 @@ describe("controllers-UseControllers", () => {
       }
     }
 
-    server = await new ExpressAppBuilder({ port, logger })
+    context.server = await new ExpressAppBuilder({ port, logger })
       .use(
         new UseControllers({
           controllers: [TestController],
@@ -44,7 +48,7 @@ describe("controllers-UseControllers", () => {
       )
       .buildAsync();
 
-    const response = await axios.get(`${serverAddress}/test`);
+    const response = await axios.get(`${address}/test`);
 
     expect(response.status).toBe(statusCodes.ok);
   });
@@ -68,15 +72,15 @@ describe("controllers-UseControllers", () => {
       }
     }
 
-    server = await new ExpressAppBuilder({ port, logger })
+    context.server = await new ExpressAppBuilder({ port, logger })
       .use(new UseControllers({ controllers: [UsersController], logger }))
       .buildAsync();
 
     // Act/Assert
-    const response = await fetch(`${serverAddress}/users/paged`);
+    const response = await axios.get(`${address}/users/paged`);
     expect(response.status).toBe(statusCodes.ok);
 
-    const responseJson = await response.json();
+    const responseJson = await response.data;
     const responseUser = responseJson[0];
     expect(responseUser).toEqual(expectedFetchedUser);
   });
@@ -115,7 +119,7 @@ describe("controllers-UseControllers", () => {
 
     const container = await new ServiceContainerBuilder().addClass(TestGuard).buildContainerAsync();
 
-    server = await new ExpressAppBuilder({ port, logger, container })
+    context.server = await new ExpressAppBuilder({ port, logger, container })
       .use(
         new UseControllers({
           controllers: [FirstController, SecondController],
@@ -124,10 +128,10 @@ describe("controllers-UseControllers", () => {
       )
       .buildAsync();
 
-    const secondResponse = await fetch(`${serverAddress}/second`);
+    const secondResponse = await axios.get(`${address}/second`);
     expect(secondResponse.status).toBe(statusCodes.ok);
 
-    const firstResponse = await fetch(`${serverAddress}/first`);
+    const firstResponse = await axios.get(`${address}/first`);
     expect(firstResponse.status).toBe(statusCodes.ok);
 
     expect(collectedData.length).toBe(3);
@@ -182,7 +186,7 @@ describe("controllers-UseControllers", () => {
       .addClass(MethodGuard)
       .buildContainerAsync();
 
-    server = await new ExpressAppBuilder({ port, logger, container })
+    context.server = await new ExpressAppBuilder({ port, logger, container })
       .use(
         new UseControllers({
           controllers: [FirstController, SecondController],
@@ -191,10 +195,10 @@ describe("controllers-UseControllers", () => {
       )
       .buildAsync();
 
-    const secondResponse = await fetch(`${serverAddress}/second`);
+    const secondResponse = await axios.get(`${address}/second`);
     expect(secondResponse.status).toBe(statusCodes.ok);
 
-    const firstResponse = await fetch(`${serverAddress}/first`);
+    const firstResponse = await axios.get(`${address}/first`);
     expect(firstResponse.status).toBe(statusCodes.ok);
 
     expect(collectedData.length).toBe(5);
@@ -204,8 +208,4 @@ describe("controllers-UseControllers", () => {
     expect(collectedData[3]).toBe(dataFromMethodGuard);
     expect(collectedData[4]).toBe(dataFromFirstController);
   });
-
-  async function disposeAsync() {
-    server?.close();
-  }
 });

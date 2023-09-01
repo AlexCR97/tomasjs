@@ -1,26 +1,31 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { Server } from "http";
-import fetch from "node-fetch";
 import { controller } from "./@controller";
 import { header } from "./@header";
 import { httpPost } from "./@http";
-import { ExpressAppBuilder } from "../builder";
 import { UseControllers } from "./UseControllers";
-import { TomasLogger } from "@tomasjs/core";
+import { Logger } from "@tomasjs/core";
+import { TestContext } from "@/tests";
+import { ExpressAppBuilder } from "@/builder";
+import axios from "axios";
 
-describe("controllers-headerDecorator", () => {
-  let server: Server | undefined;
-  const port = 3007;
-  const serverAddress = `http://localhost:${port}`;
-  const logger = new TomasLogger("controllers-headerDecorator", "error");
+const testSuiteName = "controllers/@header";
 
-  beforeEach(async () => {
-    await disposeAsync();
+describe(testSuiteName, () => {
+  let context: TestContext;
+  let port: number;
+  let address: string;
+  let logger: Logger;
+
+  beforeEach(() => {
+    context = new TestContext(testSuiteName);
+    port = context.port;
+    address = context.address;
+    logger = context.logger;
   });
 
   afterEach(async () => {
-    await disposeAsync();
+    await context.dispose();
   });
 
   it("The @header decorator can inject multiple request headers into the controller's method parameters", (done) => {
@@ -42,21 +47,19 @@ describe("controllers-headerDecorator", () => {
     new ExpressAppBuilder({ port, logger })
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync()
-      .then((expressServer) => {
-        server = expressServer;
+      .then((server) => {
+        context.server = server;
 
-        fetch(`${serverAddress}/test/token`, {
-          method: "post",
-          body: JSON.stringify({}),
-          headers: {
-            client_id: expectedHeaders.client_id,
-            client_secret: expectedHeaders.client_secret,
-          },
-        });
+        axios.post(
+          `${address}/test/token`,
+          {},
+          {
+            headers: {
+              client_id: expectedHeaders.client_id,
+              client_secret: expectedHeaders.client_secret,
+            },
+          }
+        );
       });
   });
-
-  async function disposeAsync() {
-    server?.close();
-  }
 });

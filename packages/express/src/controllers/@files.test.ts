@@ -1,29 +1,34 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { Server } from "http";
 import { controller } from "./@controller";
 import { httpPost } from "./@http";
-import { ExpressAppBuilder } from "../builder";
 import { UseControllers } from "./UseControllers";
 import { FormFile } from "./FormFile";
 import axios from "axios";
 import { UseFiles } from "./UseFiles";
 import { files } from "./@files";
 import { FormFiles } from "./FormFiles";
-import { TomasLogger } from "@tomasjs/core";
+import { Logger } from "@tomasjs/core";
+import { TestContext } from "@/tests";
+import { ExpressAppBuilder } from "@/builder";
+
+const testSuiteName = "controllers/@files";
 
 describe("controllers-filesDecorator", () => {
-  let server: Server | undefined;
-  const port = 3008;
-  const serverAddress = `http://localhost:${port}`;
-  const logger = new TomasLogger("controllers-filesDecorator", "error");
+  let context: TestContext;
+  let port: number;
+  let address: string;
+  let logger: Logger;
 
-  beforeEach(async () => {
-    await disposeAsync();
+  beforeEach(() => {
+    context = new TestContext(testSuiteName);
+    port = context.port;
+    address = context.address;
+    logger = context.logger;
   });
 
   afterEach(async () => {
-    await disposeAsync();
+    await context.dispose();
   });
 
   it("The @files decorator can inject the entire form files into the controller's method parameters", async () => {
@@ -32,8 +37,6 @@ describe("controllers-filesDecorator", () => {
       @httpPost("files")
       find(@files() files: FormFiles) {
         logger.debug("received post");
-
-        console.log("files", files);
 
         expect(files["file1"]).toBeTruthy();
         expect(files["file1"]).toBeInstanceOf(FormFile);
@@ -47,7 +50,7 @@ describe("controllers-filesDecorator", () => {
       }
     }
 
-    server = await new ExpressAppBuilder({ port })
+    context.server = await new ExpressAppBuilder({ port, logger })
       // Order matters! UseFiles must go before UseControllers
       .use(
         new UseFiles({
@@ -66,7 +69,7 @@ describe("controllers-filesDecorator", () => {
 
     logger.debug("posting...");
 
-    await axios.post(`${serverAddress}/test/files`, formData, {
+    await axios.post(`${address}/test/files`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -74,8 +77,4 @@ describe("controllers-filesDecorator", () => {
 
     logger.debug("posted!");
   });
-
-  async function disposeAsync() {
-    server?.close();
-  }
 });

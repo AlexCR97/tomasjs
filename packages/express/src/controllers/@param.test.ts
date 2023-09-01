@@ -1,26 +1,31 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { Server } from "http";
-import fetch from "node-fetch";
 import { controller } from "./@controller";
 import { httpGet } from "./@http";
 import { param } from "./@param";
 import { ExpressAppBuilder } from "../builder";
 import { UseControllers } from "./UseControllers";
-import { TomasLogger, numberTransform } from "@tomasjs/core";
+import { Logger, numberTransform } from "@tomasjs/core";
+import { TestContext } from "@/tests";
+import axios from "axios";
 
-describe("controllers-paramDecorator", () => {
-  let server: Server | undefined;
-  const port = 3004;
-  const serverAddress = `http://localhost:${port}`;
-  const logger = new TomasLogger("controllers-paramDecorator", "error");
+const testSuiteName = "controllers/@param";
 
-  beforeEach(async () => {
-    await disposeAsync();
+describe(testSuiteName, () => {
+  let context: TestContext;
+  let port: number;
+  let address: string;
+  let logger: Logger;
+
+  beforeEach(() => {
+    context = new TestContext(testSuiteName);
+    port = context.port;
+    address = context.address;
+    logger = context.logger;
   });
 
   afterEach(async () => {
-    await disposeAsync();
+    await context.dispose();
   });
 
   it("The @param decorator injects a url path parameter into a controller's method parameter", (done) => {
@@ -38,9 +43,9 @@ describe("controllers-paramDecorator", () => {
     new ExpressAppBuilder({ port, logger })
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync()
-      .then((expressServer) => {
-        server = expressServer;
-        fetch(`${serverAddress}/test/${expectedParam}`);
+      .then((server) => {
+        context.server = server;
+        axios.get(`${address}/test/${expectedParam}`);
       });
   });
 
@@ -59,13 +64,9 @@ describe("controllers-paramDecorator", () => {
     new ExpressAppBuilder({ port, logger })
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync()
-      .then((expressServer) => {
-        server = expressServer;
-        fetch(`${serverAddress}/test/${expectedParam}`);
+      .then((server) => {
+        context.server = server;
+        axios.get(`${address}/test/${expectedParam}`);
       });
   });
-
-  async function disposeAsync() {
-    server?.close();
-  }
 });

@@ -1,26 +1,32 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { Server } from "http";
 import { controller } from "./@controller";
 import { httpGet } from "./@http";
 import { UseControllers } from "./UseControllers";
-import { ExpressAppBuilder } from "../builder";
-import { ServiceContainerBuilder, TomasLogger, injectable } from "@tomasjs/core";
-import { Middleware } from "../middleware";
+import { Logger, ServiceContainerBuilder, injectable } from "@tomasjs/core";
 import { Request, Response, NextFunction } from "express";
+import { TestContext } from "@/tests";
+import { ExpressAppBuilder } from "@/builder";
+import axios from "axios";
+import { Middleware } from "@/middleware";
 
-describe("controllers-useMiddlewaresDecorator", () => {
-  let server: Server | undefined;
-  const port = 3010;
-  const serverAddress = `http://localhost:${port}`;
-  const logger = new TomasLogger("controllers-useMiddlewaresDecorator", "error");
+const testSuiteName = "controllers/controllerLevelMiddlewares";
 
-  beforeEach(async () => {
-    await disposeAsync();
+describe(testSuiteName, () => {
+  let context: TestContext;
+  let port: number;
+  let address: string;
+  let logger: Logger;
+
+  beforeEach(() => {
+    context = new TestContext(testSuiteName);
+    port = context.port;
+    address = context.address;
+    logger = context.logger;
   });
 
   afterEach(async () => {
-    await disposeAsync();
+    await context.dispose();
   });
 
   it("Can bootstrap controller-level middlewares", (done) => {
@@ -68,14 +74,10 @@ describe("controllers-useMiddlewaresDecorator", () => {
             })
           )
           .buildAsync()
-          .then((expressServer) => {
-            server = expressServer;
-            fetch(serverAddress);
+          .then((server) => {
+            context.server = server;
+            axios.get(address);
           });
       });
   });
-
-  async function disposeAsync() {
-    server?.close();
-  }
 });

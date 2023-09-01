@@ -1,15 +1,13 @@
 import "reflect-metadata";
-import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "@jest/globals";
 import { controller } from "./@controller";
 import { http, httpPost } from "./@http";
 import { HttpMethodMetadata } from "./metadata";
-import { HttpMethod } from "../core";
+import { HttpMethod } from "@/core";
 
-describe("controllers-httpDecorator", () => {
-  beforeEach(async () => {});
+const testSuiteName = "controllers/@http";
 
-  afterEach(async () => {});
-
+describe(testSuiteName, () => {
   it("The @http decorators set the required metadata to the controller's methods", () => {
     interface ExpectedMethod {
       method: HttpMethod;
