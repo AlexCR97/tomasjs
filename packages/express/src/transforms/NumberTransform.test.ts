@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { describe, expect, it } from "@jest/globals";
 import { TransformError, numberTransform } from "@tomasjs/core";
 
+// TODO Move this to @tomasjs/core
 describe("NumberTransform", () => {
   it(`The ${numberTransform.name} function transforms number to number`, () => {
     // Arrange

@@ -8,8 +8,7 @@ import { ResponseAdapter } from "@/responses";
 import { Router } from "express";
 import { Controller } from "./Controller";
 import { ControllerMetadata, HttpMethodMetadata } from "./metadata";
-import { Logger } from "@tomasjs/logging";
-import { Container } from "@tomasjs/core";
+import { Container, Logger } from "@tomasjs/core";
 import { GuardAdapter } from "@/guards";
 
 /**

@@ -1,10 +1,9 @@
-import { TomasError, injectable } from "@tomasjs/core";
+import { Logger, TomasError, injectable } from "@tomasjs/core";
 import { NextFunction, Request, Response } from "express";
 import { ProblemDetails, statusCodes } from "@/core";
 import { ProblemDetailsError, StatusCodeError } from "@/errors";
 import { ProblemDetailsResponse, ResponseAdapter } from "@/responses";
 import { ErrorHandler } from "./ErrorHandler";
-import { Logger } from "@tomasjs/logging";
 
 @injectable()
 export class TomasErrorHandler implements ErrorHandler {

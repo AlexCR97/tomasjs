@@ -1,23 +1,29 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { bootstrapLoggerFactory } from "@tomasjs/logging";
-import { Server } from "http";
-import fetch from "node-fetch";
 import { ExpressAppBuilder } from "./ExpressAppBuilder";
 import { UseJson } from "./UseJson";
-import { statusCodes } from "../core";
+import { Logger } from "@tomasjs/core";
+import { TestContext } from "@/tests";
+import { statusCodes } from "@/core";
+import axios from "axios";
 
-describe("UseJson", () => {
-  let server: Server | undefined;
-  const port = 3001;
-  const logger = bootstrapLoggerFactory("error");
+const testSuiteName = "builder/UseJson";
+
+describe(testSuiteName, () => {
+  let context: TestContext;
+  let port: number;
+  let address: string;
+  let logger: Logger;
 
   beforeEach(async () => {
-    await disposeAsync();
+    context = await TestContext.new(testSuiteName);
+    port = context.port;
+    address = context.address;
+    logger = context.logger;
   });
 
   afterEach(async () => {
-    await disposeAsync();
+    await context.dispose();
   });
 
   it(`Can bootstrap ${UseJson.name}`, async () => {
@@ -26,27 +32,16 @@ describe("UseJson", () => {
       value: "works!",
     };
 
-    server = await new ExpressAppBuilder({ port, logger })
+    context.server = await new ExpressAppBuilder({ port, logger })
       .use(new UseJson())
       .use((app) => {
-        app.post("/", (req, res) => {
-          console.log("Received!");
-          res.json(req.body);
-        });
+        app.post("/", (req, res) => res.json(req.body));
       })
       .buildAsync();
 
-    const response = await fetch(`http://localhost:${port}`, {
-      method: "post",
-      body: JSON.stringify(testJson),
-      headers: { "Content-Type": "application/json" },
-    });
+    const response = await axios.post(address, testJson);
 
     expect(response.status).toBe(statusCodes.ok);
-    expect(await response.json()).toEqual(testJson);
+    expect(response.data).toEqual(testJson);
   });
-
-  async function disposeAsync() {
-    server?.close();
-  }
 });

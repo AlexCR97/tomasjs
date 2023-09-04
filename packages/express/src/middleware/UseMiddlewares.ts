@@ -1,8 +1,7 @@
 import { Express } from "express";
 import { AppSetupFactory, AppSetupFunction } from "@/builder";
 import { MiddlewareType } from "./MiddlewareType";
-import { Logger } from "@tomasjs/logging";
-import { Container } from "@tomasjs/core";
+import { Container, Logger } from "@tomasjs/core";
 import { MiddlewareAdapter } from "./MiddlewareAdapter";
 
 export class UseMiddlewares implements AppSetupFactory {

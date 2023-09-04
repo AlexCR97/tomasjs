@@ -1,7 +1,6 @@
 import { AppSetupFactory, AppSetupFunction } from "@/builder";
 import { GuardType } from "./GuardType";
-import { Logger } from "@tomasjs/logging";
-import { Container } from "@tomasjs/core";
+import { Container, Logger } from "@tomasjs/core";
 import { Express } from "express";
 import { GuardAdapter } from "./GuardAdapter";
 

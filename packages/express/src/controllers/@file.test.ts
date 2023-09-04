@@ -1,28 +1,33 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { Server } from "http";
 import { controller } from "./@controller";
 import { httpPost } from "./@http";
-import { bootstrapLoggerFactory } from "@tomasjs/logging";
 import { ExpressAppBuilder } from "../builder";
 import { UseControllers } from "./UseControllers";
 import { FormFile } from "./FormFile";
 import axios from "axios";
 import { UseFiles } from "./UseFiles";
 import { file } from "./@file";
+import { Logger } from "@tomasjs/core";
+import { TestContext } from "@/tests";
 
-describe("controllers-fileDecorator", () => {
-  let server: Server | undefined;
-  const port = 3008;
-  const serverAddress = `http://localhost:${port}`;
-  const logger = bootstrapLoggerFactory("debug");
+const testSuiteName = "controllers/@file";
+
+describe(testSuiteName, () => {
+  let context: TestContext;
+  let port: number;
+  let address: string;
+  let logger: Logger;
 
   beforeEach(async () => {
-    await disposeAsync();
+    context = await TestContext.new(testSuiteName);
+    port = context.port;
+    address = context.address;
+    logger = context.logger;
   });
 
   afterEach(async () => {
-    await disposeAsync();
+    await context.dispose();
   });
 
   it("The @file decorator can inject multiple request form files into the controller's method parameters", async () => {
@@ -38,7 +43,7 @@ describe("controllers-fileDecorator", () => {
       }
     }
 
-    server = await new ExpressAppBuilder({ port })
+    context.server = await new ExpressAppBuilder({ port })
       // Order matters! UseFiles must go before UseControllers
       .use(
         new UseFiles({
@@ -55,7 +60,7 @@ describe("controllers-fileDecorator", () => {
 
     logger.debug("posting...");
 
-    await axios.post(`${serverAddress}/test/files`, formData, {
+    await axios.post(`${address}/test/files`, formData, {
       headers: {
         "Content-Type": "multipart/form-data",
       },
@@ -63,8 +68,4 @@ describe("controllers-fileDecorator", () => {
 
     logger.debug("posted!");
   });
-
-  async function disposeAsync() {
-    server?.close();
-  }
 });

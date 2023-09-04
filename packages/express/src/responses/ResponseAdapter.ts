@@ -1,7 +1,7 @@
 import { Response } from "express";
 import { statusCodes } from "@/core";
 import { BaseResponse, JsonResponse, PlainTextResponse, StatusCodeResponse } from "@/responses";
-import { Logger } from "@tomasjs/logging";
+import { Logger } from "@tomasjs/core";
 
 export abstract class ResponseAdapter {
   private constructor() {}

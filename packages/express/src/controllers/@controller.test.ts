@@ -1,13 +1,11 @@
 import "reflect-metadata";
-import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
+import { describe, expect, it } from "@jest/globals";
 import { controller } from "./@controller";
 import { ControllerMetadata } from "./metadata";
 
-describe("controllers-controllerDecorator", () => {
-  beforeEach(async () => {});
+const testSuiteName = "controllers/@controller";
 
-  afterEach(async () => {});
-
+describe(testSuiteName, () => {
   it(`The @controller decorator sets the "path" metadata`, () => {
     const expectedPath = "test";
 

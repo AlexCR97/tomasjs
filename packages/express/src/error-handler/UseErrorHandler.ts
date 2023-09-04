@@ -1,7 +1,7 @@
-import { Logger } from "@tomasjs/logging";
 import { AppSetupFactory, AppSetupFunction } from "@/builder";
 import { ErrorHandlerType } from "./ErrorHandlerType";
 import { ErrorHandlerAdapter } from "./ErrorHandlerAdapter";
+import { Logger } from "@tomasjs/core";
 
 export class UseErrorHandler implements AppSetupFactory {
   constructor(

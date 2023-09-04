@@ -4,8 +4,7 @@ import { AppSetupType } from "./AppSetupType";
 import { IExpressAppBuilder } from "./IExpressAppBuilder";
 import { AppSetupFunction } from "./AppSetupFunction";
 import { AppSetupFactory, isAppSetupFactory } from "./AppSetupFactory";
-import { Logger } from "@tomasjs/logging";
-import { Container, ServiceContainer } from "@tomasjs/core";
+import { Container, Logger, ServiceContainer } from "@tomasjs/core";
 
 const defaultPort = 3000;
 

@@ -1,5 +1,4 @@
-import { ClassConstructor, Container } from "@tomasjs/core";
-import { Logger } from "@tomasjs/logging";
+import { ClassConstructor, Container, Logger } from "@tomasjs/core";
 import { Express } from "express";
 import { AppSetupFactory } from "@/builder/AppSetupFactory";
 import { AppSetupFunction } from "@/builder/AppSetupFunction";

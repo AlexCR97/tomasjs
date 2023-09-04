@@ -1,27 +1,32 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { Server } from "http";
-import fetch from "node-fetch";
 import { controller } from "./@controller";
 import { headers } from "./@headers";
 import { httpPost } from "./@http";
-import { bootstrapLoggerFactory } from "@tomasjs/logging";
-import { ExpressAppBuilder } from "../builder";
 import { UseControllers } from "./UseControllers";
-import { Headers } from "../core/express";
+import { TestContext } from "@/tests";
+import { Logger } from "@tomasjs/core";
+import { Headers } from "@/core/express";
+import { ExpressAppBuilder } from "@/builder";
+import axios from "axios";
 
-describe("controllers-headersDecorator", () => {
-  let server: Server | undefined;
-  const port = 3006;
-  const serverAddress = `http://localhost:${port}`;
-  const logger = bootstrapLoggerFactory("error");
+const testSuiteName = "controllers/@headers";
+
+describe(testSuiteName, () => {
+  let context: TestContext;
+  let port: number;
+  let address: string;
+  let logger: Logger;
 
   beforeEach(async () => {
-    await disposeAsync();
+    context = await TestContext.new(testSuiteName);
+    port = context.port;
+    address = context.address;
+    logger = context.logger;
   });
 
   afterEach(async () => {
-    await disposeAsync();
+    await context.dispose();
   });
 
   it("The @headers decorator can inject the request headers into the controller's method parameters", (done) => {
@@ -40,18 +45,16 @@ describe("controllers-headersDecorator", () => {
     new ExpressAppBuilder({ port, logger })
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync()
-      .then((expressServer) => {
-        server = expressServer;
+      .then((server) => {
+        context.server = server;
 
-        fetch(serverAddress, {
-          method: "post",
-          body: JSON.stringify({}),
-          headers: { authorization: expectedHeaderValue },
-        });
+        axios.post(
+          address,
+          {},
+          {
+            headers: { authorization: expectedHeaderValue },
+          }
+        );
       });
   });
-
-  async function disposeAsync() {
-    server?.close();
-  }
 });
