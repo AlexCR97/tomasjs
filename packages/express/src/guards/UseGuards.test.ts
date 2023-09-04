@@ -12,6 +12,7 @@ import { ExpressAppBuilder } from "@/builder";
 import axios from "axios";
 import { ForbiddenResponse, OkResponse, UnauthorizedResponse } from "@/responses";
 import { statusCodes } from "@/core";
+import fetch from "node-fetch";
 
 const testSuiteName = "guards/UseGuards";
 
