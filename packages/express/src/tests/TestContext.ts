@@ -20,8 +20,6 @@ export class TestContext {
         return resolve();
       }
 
-      this.server.closeAllConnections();
-
       this.server.close((err) => {
         return err !== undefined ? reject(err) : resolve();
       });
