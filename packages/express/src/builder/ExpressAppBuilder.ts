@@ -5,19 +5,20 @@ import { IExpressAppBuilder } from "./IExpressAppBuilder";
 import { AppSetupFunction } from "./AppSetupFunction";
 import { AppSetupFactory, isAppSetupFactory } from "./AppSetupFactory";
 import { Container, Logger, ServiceContainer } from "@tomasjs/core";
-
-const defaultPort = 3000;
+import { useCorePipeline } from "./useCorePipeline";
 
 export class ExpressAppBuilder implements IExpressAppBuilder {
   private readonly app: Express;
   private readonly port: number;
+  private readonly defaultPort = 3000;
   private readonly container: Container;
   private readonly setups: AppSetupType[] = [];
 
   constructor(options?: { app?: Express; port?: number; container?: Container; logger?: Logger }) {
     this.app = options?.app ?? express();
-    this.port = options?.port ?? defaultPort;
+    this.port = options?.port ?? this.defaultPort;
     this.container = options?.container ?? new ServiceContainer();
+    this.setups.push(useCorePipeline);
   }
 
   use(setup: AppSetupType): IExpressAppBuilder {
