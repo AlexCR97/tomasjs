@@ -10,7 +10,7 @@ import {
 import { MiddlewareType } from "./MiddlewareType";
 import { MiddlewareFactory, isMiddlewareFactory } from "./MiddlewareFactory";
 import { ExpressMiddlewareFunction } from "@/core/express";
-import { HttpContextAdapter } from "@/core";
+import { httpContextFactory } from "@/core";
 
 export class MiddlewareAdapter {
   private readonly container: Container;
@@ -49,21 +49,21 @@ export class MiddlewareAdapter {
 
   private fromFunction(middleware: MiddlewareFunction): ExpressMiddlewareFunction {
     return async (req, res, next) => {
-      const httpContext = new HttpContextAdapter(req, res).adapt();
+      const httpContext = httpContextFactory(req, res);
       await middleware(httpContext, next);
     };
   }
 
   private fromInstance(middleware: Middleware): ExpressMiddlewareFunction {
     return async (req, res, next) => {
-      const httpContext = new HttpContextAdapter(req, res).adapt();
+      const httpContext = httpContextFactory(req, res);
       await middleware.delegate(httpContext, next);
     };
   }
 
   private fromConstructor(middleware: ClassConstructor<Middleware>): ExpressMiddlewareFunction {
     return async (req, res, next) => {
-      const httpContext = new HttpContextAdapter(req, res).adapt();
+      const httpContext = httpContextFactory(req, res);
       const middlewareInstance = this.container.get(middleware);
       await middlewareInstance.delegate(httpContext, next);
     };
