@@ -1,35 +1,25 @@
-import { isMiddleware, Middleware } from "./Middleware";
-import { isMiddlewareFunction, MiddlewareFunction } from "./MiddlewareFunction";
+import { Middleware, isMiddlewareInstance } from "./Middleware";
+import { MiddlewareFunction, isMiddlewareFunction } from "./MiddlewareFunction";
 import {
   ClassConstructor,
   Container,
-  isClassConstructor,
-  Logger,
   NotImplementedError,
+  TomasLogger,
+  isClassConstructor,
 } from "@tomasjs/core";
 import { MiddlewareType } from "./MiddlewareType";
-import { isMiddlewareFactory, MiddlewareFactory } from "./MiddlewareFactory";
+import { MiddlewareFactory, isMiddlewareFactory } from "./MiddlewareFactory";
 import { ExpressMiddlewareFunction } from "@/core/express";
+import { HttpContextAdapter } from "@/core";
 
 export class MiddlewareAdapter {
-  constructor(
-    private readonly options: {
-      container: Container;
-      middleware: MiddlewareType;
-      logger?: Logger;
-    }
-  ) {}
+  private readonly container: Container;
+  private readonly middleware: MiddlewareType;
+  private readonly logger = new TomasLogger(MiddlewareAdapter.name, "debug");
 
-  private get container(): Container {
-    return this.options.container;
-  }
-
-  private get middleware() {
-    return this.options.middleware;
-  }
-
-  private get logger() {
-    return this.options.logger;
+  constructor(options: { container: Container; middleware: MiddlewareType }) {
+    this.container = options.container;
+    this.middleware = options.middleware;
   }
 
   adapt(): ExpressMiddlewareFunction {
@@ -38,7 +28,7 @@ export class MiddlewareAdapter {
       return this.fromFunction(this.middleware);
     }
 
-    if (isMiddleware(this.middleware)) {
+    if (isMiddlewareInstance(this.middleware)) {
       this.logger?.debug("The middleware is a Middleware instance");
       return this.fromInstance(this.middleware);
     }
@@ -59,20 +49,23 @@ export class MiddlewareAdapter {
 
   private fromFunction(middleware: MiddlewareFunction): ExpressMiddlewareFunction {
     return async (req, res, next) => {
-      await middleware(req, res, next);
+      const httpContext = new HttpContextAdapter(req, res).adapt();
+      await middleware(httpContext, next);
     };
   }
 
   private fromInstance(middleware: Middleware): ExpressMiddlewareFunction {
     return async (req, res, next) => {
-      await middleware.handle(req, res, next);
+      const httpContext = new HttpContextAdapter(req, res).adapt();
+      await middleware.delegate(httpContext, next);
     };
   }
 
   private fromConstructor(middleware: ClassConstructor<Middleware>): ExpressMiddlewareFunction {
     return async (req, res, next) => {
+      const httpContext = new HttpContextAdapter(req, res).adapt();
       const middlewareInstance = this.container.get(middleware);
-      await middlewareInstance.handle(req, res, next);
+      await middlewareInstance.delegate(httpContext, next);
     };
   }
 
@@ -82,7 +75,6 @@ export class MiddlewareAdapter {
     const middlewareAdapter = new MiddlewareAdapter({
       container: this.container,
       middleware,
-      logger: this.logger,
     });
 
     return middlewareAdapter.adapt();

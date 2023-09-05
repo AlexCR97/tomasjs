@@ -1,5 +1,10 @@
 export { FunctionChecker } from "./FunctionChecker";
+export { HttpContext } from "./HttpContext";
+export { HttpContextAdapter } from "./HttpContextAdapter";
 export { HttpMethod } from "./HttpMethod";
+export { HttpNextFunction } from "./HttpNextFunction";
+export { HttpRequest } from "./HttpRequest";
+export { HttpResponse } from "./HttpResponse";
 export { HttpUser } from "./HttpUser";
 export { ProblemDetails } from "./ProblemDetails";
 export { UserContext } from "./UserContext";

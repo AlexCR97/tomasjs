@@ -94,7 +94,6 @@ export class ControllerAdapter {
       const adapter = new MiddlewareAdapter({
         container: this.container,
         middleware,
-        logger: this.logger,
       });
 
       return adapter.adapt();
@@ -116,7 +115,6 @@ export class ControllerAdapter {
       const adapter = new MiddlewareAdapter({
         container: this.container,
         middleware,
-        logger: this.logger,
       });
 
       return adapter.adapt();

@@ -1,13 +1,13 @@
 import { ClassConstructor } from "@tomasjs/core";
+import { FunctionChecker } from "@/core";
 import { Middleware } from "./Middleware";
 import { MiddlewareFunction } from "./MiddlewareFunction";
-import { FunctionChecker } from "@/core";
 
 export interface MiddlewareFactory {
   create(): MiddlewareFunction | Middleware | ClassConstructor<Middleware>;
 }
 
-// TODO Write unit test for this function
+// TODO Write unit test for this
 export function isMiddlewareFactory(obj: any): obj is MiddlewareFactory {
   if (obj === undefined || obj === null) {
     return false;

@@ -1,17 +1,18 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { MiddlewareFunction } from "./MiddlewareFunction";
-import { UseMiddlewares } from "./UseMiddlewares";
-import { UseControllers, controller, httpGet } from "@/controllers";
-import { ExpressAppBuilder } from "@/builder";
-import { Middleware } from "./Middleware";
-import { Request, Response, NextFunction } from "express";
 import { ClassConstructor, Logger, ServiceContainerBuilder, injectable } from "@tomasjs/core";
-import { MiddlewareFactory } from "./MiddlewareFactory";
+import { ExpressAppBuilder } from "@/builder";
+import { UseControllers, controller, httpGet } from "@/controllers";
+import { HttpContext, HttpNextFunction } from "@/core";
 import { TestContext } from "@/tests";
 import axios from "axios";
+import { Middleware } from "./Middleware";
+import { MiddlewareFactory } from "./MiddlewareFactory";
+import { MiddlewareFunction } from "./MiddlewareFunction";
+import { MiddlewareResult } from "./MiddlewareResult";
+import { UseMiddlewares } from "./UseMiddlewares";
 
-const testSuiteName = "middleware/UseMiddlewares";
+const testSuiteName = "middleware/v2/UseMiddlewares";
 
 describe(testSuiteName, () => {
   let context: TestContext;
@@ -33,12 +34,12 @@ describe(testSuiteName, () => {
   it("Can bootstrap MiddlewareFunctions", (done) => {
     const collectedData: number[] = [];
 
-    const firstMiddleware: MiddlewareFunction = (req, res, next) => {
+    const firstMiddleware: MiddlewareFunction = (_, next) => {
       collectedData.push(1);
       next();
     };
 
-    const secondMiddleware: MiddlewareFunction = (req, res, next) => {
+    const secondMiddleware: MiddlewareFunction = (_, next) => {
       collectedData.push(2);
       next();
     };
@@ -58,7 +59,6 @@ describe(testSuiteName, () => {
       .use(
         new UseMiddlewares({
           middlewares: [firstMiddleware, secondMiddleware],
-          logger,
         })
       )
       .use(
@@ -78,14 +78,14 @@ describe(testSuiteName, () => {
     const collectedData: number[] = [];
 
     class FirstMiddleware implements Middleware {
-      handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
+      delegate(_: HttpContext, next: HttpNextFunction): MiddlewareResult {
         collectedData.push(1);
         next();
       }
     }
 
     class SecondMiddleware implements Middleware {
-      handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
+      delegate(_: HttpContext, next: HttpNextFunction): MiddlewareResult {
         collectedData.push(2);
         next();
       }
@@ -106,7 +106,6 @@ describe(testSuiteName, () => {
       .use(
         new UseMiddlewares({
           middlewares: [new FirstMiddleware(), new SecondMiddleware()],
-          logger,
         })
       )
       .use(
@@ -127,7 +126,7 @@ describe(testSuiteName, () => {
 
     @injectable()
     class FirstMiddleware implements Middleware {
-      handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
+      delegate(_: HttpContext, next: HttpNextFunction): MiddlewareResult {
         collectedData.push(1);
         next();
       }
@@ -135,7 +134,7 @@ describe(testSuiteName, () => {
 
     @injectable()
     class SecondMiddleware implements Middleware {
-      handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
+      delegate(_: HttpContext, next: HttpNextFunction): MiddlewareResult {
         collectedData.push(2);
         next();
       }
@@ -161,7 +160,6 @@ describe(testSuiteName, () => {
           .use(
             new UseMiddlewares({
               middlewares: [FirstMiddleware, SecondMiddleware],
-              logger,
             })
           )
           .use(
@@ -181,12 +179,12 @@ describe(testSuiteName, () => {
   it("Can bootstrap MiddlewareFactories that return a MiddlewareFunction", (done) => {
     const collectedData: number[] = [];
 
-    const firstMiddleware: MiddlewareFunction = (req, res, next) => {
+    const firstMiddleware: MiddlewareFunction = (_: HttpContext, next) => {
       collectedData.push(1);
       next();
     };
 
-    const secondMiddleware: MiddlewareFunction = (req, res, next) => {
+    const secondMiddleware: MiddlewareFunction = (_: HttpContext, next) => {
       collectedData.push(2);
       next();
     };
@@ -218,7 +216,6 @@ describe(testSuiteName, () => {
       .use(
         new UseMiddlewares({
           middlewares: [new FirstMiddlewareFactory(), new SecondMiddlewareFactory()],
-          logger,
         })
       )
       .use(
@@ -238,14 +235,14 @@ describe(testSuiteName, () => {
     const collectedData: number[] = [];
 
     class FirstMiddleware implements Middleware {
-      handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
+      delegate(context: HttpContext, next: HttpNextFunction): MiddlewareResult {
         collectedData.push(1);
         next();
       }
     }
 
     class SecondMiddleware implements Middleware {
-      handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
+      delegate(context: HttpContext, next: HttpNextFunction): MiddlewareResult {
         collectedData.push(2);
         next();
       }
@@ -278,7 +275,6 @@ describe(testSuiteName, () => {
       .use(
         new UseMiddlewares({
           middlewares: [new FirstMiddlewareFactory(), new SecondMiddlewareFactory()],
-          logger,
         })
       )
       .use(
@@ -299,7 +295,7 @@ describe(testSuiteName, () => {
 
     @injectable()
     class FirstMiddleware implements Middleware {
-      handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
+      delegate(context: HttpContext, next: HttpNextFunction): MiddlewareResult {
         collectedData.push(1);
         next();
       }
@@ -307,7 +303,7 @@ describe(testSuiteName, () => {
 
     @injectable()
     class SecondMiddleware implements Middleware {
-      handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
+      delegate(context: HttpContext, next: HttpNextFunction): MiddlewareResult {
         collectedData.push(2);
         next();
       }
@@ -345,7 +341,6 @@ describe(testSuiteName, () => {
           .use(
             new UseMiddlewares({
               middlewares: [new FirstMiddlewareFactory(), new SecondMiddlewareFactory()],
-              logger,
             })
           )
           .use(
