@@ -3,6 +3,7 @@ import {
   Container,
   Logger,
   NotImplementedError,
+  TomasLogger,
   isClassConstructor,
 } from "@tomasjs/core";
 import { ExpressErrorMiddlewareFunction } from "@/core/express";
@@ -10,26 +11,16 @@ import { ErrorHandler, isErrorHandlerInstance } from "./ErrorHandler";
 import { ErrorHandlerFunction, isErrorHandlerFunction } from "./ErrorHandlerFunction";
 import { ErrorHandlerType } from "./ErrorHandlerType";
 import { ErrorHandlerFactory, isErrorHandlerFactory } from "./ErrorHandlerFactory";
+import { httpContextFactory } from "@/core";
 
 export class ErrorHandlerAdapter {
-  constructor(
-    private readonly options: {
-      container: Container;
-      errorHandler: ErrorHandlerType;
-      logger?: Logger;
-    }
-  ) {}
+  private readonly logger: Logger = new TomasLogger(ErrorHandlerAdapter.name, "error");
+  private readonly container: Container;
+  private readonly errorHandler: ErrorHandlerType;
 
-  private get container(): Container {
-    return this.options.container;
-  }
-
-  private get errorHandler() {
-    return this.options.errorHandler;
-  }
-
-  private get logger() {
-    return this.options.logger;
+  constructor(options: { container: Container; errorHandler: ErrorHandlerType; logger?: Logger }) {
+    this.container = options.container;
+    this.errorHandler = options.errorHandler;
   }
 
   adapt(): ExpressErrorMiddlewareFunction {
@@ -59,13 +50,15 @@ export class ErrorHandlerAdapter {
 
   private fromFunction(errorHandler: ErrorHandlerFunction): ExpressErrorMiddlewareFunction {
     return async (err, req, res, next) => {
-      await errorHandler(err, req, res, next);
+      const httpContext = httpContextFactory(req, res);
+      await errorHandler(err, httpContext, next);
     };
   }
 
   private fromInstance(errorHandler: ErrorHandler): ExpressErrorMiddlewareFunction {
     return async (err, req, res, next) => {
-      await errorHandler.catch(err, req, res, next);
+      const httpContext = httpContextFactory(req, res);
+      await errorHandler.catch(err, httpContext, next);
     };
   }
 
@@ -73,8 +66,9 @@ export class ErrorHandlerAdapter {
     errorHandler: ClassConstructor<ErrorHandler>
   ): ExpressErrorMiddlewareFunction {
     return async (err, req, res, next) => {
+      const httpContext = httpContextFactory(req, res);
       const errorHandlerInstance = this.container.get(errorHandler);
-      await errorHandlerInstance.catch(err, req, res, next);
+      await errorHandlerInstance.catch(err, httpContext, next);
     };
   }
 

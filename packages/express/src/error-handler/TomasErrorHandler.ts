@@ -1,74 +1,71 @@
-import { Logger, TomasError, injectable } from "@tomasjs/core";
-import { NextFunction, Request, Response } from "express";
-import { ProblemDetails, statusCodes } from "@/core";
+import { Logger, TomasError, TomasLogger, injectable } from "@tomasjs/core";
+import {
+  HttpContext,
+  HttpNextFunction,
+  HttpRequest,
+  HttpResponseWriter,
+  ProblemDetails,
+  statusCodes,
+} from "@/core";
 import { ProblemDetailsError, StatusCodeError } from "@/errors";
-import { ProblemDetailsResponse, ResponseAdapter } from "@/responses";
+import { ProblemDetailsResponse } from "@/responses";
 import { ErrorHandler } from "./ErrorHandler";
 
 @injectable()
 export class TomasErrorHandler implements ErrorHandler {
-  private req!: Request;
-  private res!: Response;
-  private next!: NextFunction;
+  private readonly logger: Logger = new TomasLogger(TomasErrorHandler.name, "error");
+  private readonly includeStackTrace: boolean;
 
-  constructor(
-    private readonly options?: {
-      includeStackTrace?: boolean;
-      logger?: Logger;
-    }
-  ) {}
+  private req!: HttpRequest;
+  private res!: HttpResponseWriter;
+  private next!: HttpNextFunction;
 
-  private get includeStackTrace(): boolean {
-    return this.options?.includeStackTrace ?? false;
+  constructor(options?: { includeStackTrace?: boolean }) {
+    this.includeStackTrace = options?.includeStackTrace ?? false;
   }
 
-  private get logger(): Logger | undefined {
-    return this.options?.logger;
-  }
-
-  catch(error: any, req: Request, res: Response, next: NextFunction) {
-    this.req = req;
-    this.res = res;
+  catch(error: any, { request, response }: HttpContext, next: HttpNextFunction) {
+    this.req = request;
+    this.res = response;
     this.next = next;
 
-    this.logger?.error(`Caught error: ${error}`);
+    this.logger.error(`Caught error: ${error}`);
 
     try {
       if (error instanceof ProblemDetailsError) {
-        this.logger?.debug("The error is an instance of ProblemDetailsError");
+        this.logger.debug("The error is an instance of ProblemDetailsError");
         return this.respondWithProblemDetails(error);
       }
 
       if (error instanceof StatusCodeError) {
-        this.logger?.debug("The error is an instance of StatusCodeError");
+        this.logger.debug("The error is an instance of StatusCodeError");
         return this.respondWithStatusCode(error);
       }
 
       if (error instanceof TomasError) {
-        this.logger?.debug("The error is an instance of TomasError");
+        this.logger.debug("The error is an instance of TomasError");
         return this.respondWithTomasError(error);
       }
 
       if (error instanceof Error) {
-        this.logger?.debug("The error is an instance of Error");
+        this.logger.debug("The error is an instance of Error");
         return this.respondWithError(error);
       }
 
-      this.logger?.debug("The error is an unknown error");
+      this.logger.debug("The error is an unknown error");
       return this.respondWithUnknownError(error);
     } catch {
-      this.logger?.debug("An unexpected error ocurred. The express error handler will be used.");
+      this.logger.debug("An unexpected error ocurred. The express error handler will be used.");
       return this.respondWithExpressDefault(error);
     }
   }
 
   private respondWithProblemDetails(error: ProblemDetailsError) {
-    ResponseAdapter.fromThomasToExpress(this.res, new ProblemDetailsResponse(error.problemDetails));
+    this.res.send(new ProblemDetailsResponse(error.problemDetails));
   }
 
   private respondWithStatusCode(error: StatusCodeError) {
-    ResponseAdapter.fromThomasToExpress(
-      this.res,
+    this.res.send(
       new ProblemDetailsResponse(
         new ProblemDetails({
           type: error.name,
@@ -87,8 +84,7 @@ export class TomasErrorHandler implements ErrorHandler {
   }
 
   private respondWithTomasError(error: TomasError) {
-    ResponseAdapter.fromThomasToExpress(
-      this.res,
+    this.res.send(
       new ProblemDetailsResponse(
         new ProblemDetails({
           type: error.name,
@@ -107,8 +103,7 @@ export class TomasErrorHandler implements ErrorHandler {
   }
 
   private respondWithError(error: Error) {
-    ResponseAdapter.fromThomasToExpress(
-      this.res,
+    this.res.send(
       new ProblemDetailsResponse(
         new ProblemDetails({
           type: error.name,
@@ -125,8 +120,7 @@ export class TomasErrorHandler implements ErrorHandler {
   }
 
   private respondWithUnknownError(error: any) {
-    ResponseAdapter.fromThomasToExpress(
-      this.res,
+    this.res.send(
       new ProblemDetailsResponse(
         new ProblemDetails({
           type: "Unknown",

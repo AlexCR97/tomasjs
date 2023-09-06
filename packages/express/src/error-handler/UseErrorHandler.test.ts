@@ -4,9 +4,8 @@ import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { UseControllers, controller, httpGet } from "@/controllers";
 import { Logger, ServiceContainerBuilder, TomasError, injectable } from "@tomasjs/core";
 import { ExpressAppBuilder } from "@/builder";
-import { statusCodes } from "@/core";
+import { HttpContext, HttpNextFunction, statusCodes } from "@/core";
 import { TomasErrorHandlerFactory } from "./TomasErrorHandlerFactory";
-import { Request, Response, NextFunction } from "express";
 import { ErrorHandlerFactory } from "./ErrorHandlerFactory";
 import { TestContext } from "@/tests";
 import fetch from "node-fetch"; // Use node-fetch instead of axios because of error "TypeError: Converting circular structure to JSON"
@@ -14,6 +13,7 @@ import { UseErrorHandler } from "./UseErrorHandler";
 import { TomasErrorHandler } from "./TomasErrorHandler";
 import { ErrorHandlerFunction } from "./ErrorHandlerFunction";
 import { ErrorHandler } from "./ErrorHandler";
+import { InternalServerErrorResponse } from "@/responses";
 
 const testSuiteName = "error-handler/UseErrorHandler";
 
@@ -47,7 +47,7 @@ describe(testSuiteName, () => {
       .use(new UseControllers({ controllers: [TestController], logger }))
       .use(
         new UseErrorHandler({
-          errorHandler: new TomasErrorHandler({ logger }),
+          errorHandler: new TomasErrorHandler({}),
         })
       )
       .buildAsync();
@@ -82,8 +82,8 @@ describe(testSuiteName, () => {
   });
 
   it("Can bootstrap ErrorHandlerFunction", (done) => {
-    const testErrorHandler: ErrorHandlerFunction = (err, req, res, next) => {
-      res.status(500).send();
+    const testErrorHandler: ErrorHandlerFunction = (err, { response }, next) => {
+      response.send(new InternalServerErrorResponse());
       done();
     };
 
@@ -107,8 +107,8 @@ describe(testSuiteName, () => {
 
   it("Can bootstrap ErrorHandler instance", (done) => {
     class TestErrorHandler implements ErrorHandler {
-      catch(error: any, req: Request, res: Response, next: NextFunction) {
-        res.status(500).send();
+      catch(error: any, { response }: HttpContext, next: HttpNextFunction) {
+        response.send(new InternalServerErrorResponse());
         done();
       }
     }
@@ -134,8 +134,8 @@ describe(testSuiteName, () => {
   it("Can bootstrap ErrorHandler class", (done) => {
     @injectable()
     class TestErrorHandler implements ErrorHandler {
-      catch(error: any, req: Request, res: Response, next: NextFunction) {
-        res.status(500).send();
+      catch(error: any, { response }: HttpContext, next: HttpNextFunction) {
+        response.send(new InternalServerErrorResponse());
         done();
       }
     }
@@ -164,8 +164,8 @@ describe(testSuiteName, () => {
   });
 
   it("Can bootstrap ErrorHandlerFactory that returns an ErrorHandlerFunction", (done) => {
-    const testErrorHandler: ErrorHandlerFunction = (err, req, res, next) => {
-      res.status(500).send();
+    const testErrorHandler: ErrorHandlerFunction = (err, { response }, next) => {
+      response.send(new InternalServerErrorResponse());
       done();
     };
 
@@ -195,8 +195,8 @@ describe(testSuiteName, () => {
 
   it("Can bootstrap ErrorHandlerFactory that returns an ErrorHandler instance", (done) => {
     class TestErrorHandler implements ErrorHandler {
-      catch(error: any, req: Request, res: Response, next: NextFunction) {
-        res.status(500).send();
+      catch(error: any, { response }: HttpContext, next: HttpNextFunction) {
+        response.send(new InternalServerErrorResponse());
         done();
       }
     }
@@ -228,8 +228,8 @@ describe(testSuiteName, () => {
   it("Can bootstrap ErrorHandlerFactory that returns an ErrorHandler class", (done) => {
     @injectable()
     class TestErrorHandler implements ErrorHandler {
-      catch(error: any, req: Request, res: Response, next: NextFunction) {
-        res.status(500).send();
+      catch(error: any, { response }: HttpContext, next: HttpNextFunction) {
+        response.send(new InternalServerErrorResponse());
         done();
       }
     }

@@ -1,8 +1,8 @@
-import { FunctionChecker } from "@/core";
-import { NextFunction, Request, Response } from "express";
+import { HttpContext, HttpNextFunction } from "@/core";
+import { FunctionChecker } from "@tomasjs/core";
 
 export interface ErrorHandler {
-  catch(error: any, req: Request, res: Response, next: NextFunction): void | Promise<void>;
+  catch(error: any, context: HttpContext, next: HttpNextFunction): void | Promise<void>;
 }
 
 // TODO Write unit test
@@ -17,6 +17,6 @@ export function isErrorHandlerInstance(obj: any): obj is ErrorHandler {
     .isNotNull()
     .isTypeFunction()
     .isNamed(methodName)
-    .hasArgumentCount(4)
+    .hasArgumentCount(3)
     .check();
 }
