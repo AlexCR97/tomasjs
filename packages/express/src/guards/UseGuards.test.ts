@@ -14,7 +14,7 @@ import { ForbiddenResponse, OkResponse, UnauthorizedResponse } from "@/responses
 import { statusCodes } from "@/core";
 import fetch from "node-fetch";
 
-const testSuiteName = "guards/UseGuards";
+const testSuiteName = "guards/v2/UseGuards";
 
 describe(testSuiteName, () => {
   let context: TestContext;
@@ -61,7 +61,6 @@ describe(testSuiteName, () => {
       .use(
         new UseGuards({
           guards: [firstGuard, secondGuard],
-          logger,
         })
       )
       .use(
@@ -109,7 +108,6 @@ describe(testSuiteName, () => {
       .use(
         new UseGuards({
           guards: [new FirstGuard(), new SecondGuard()],
-          logger,
         })
       )
       .use(
@@ -164,7 +162,6 @@ describe(testSuiteName, () => {
           .use(
             new UseGuards({
               guards: [FirstGuard, SecondGuard],
-              logger,
             })
           )
           .use(
@@ -221,7 +218,6 @@ describe(testSuiteName, () => {
       .use(
         new UseGuards({
           guards: [new FirstGuardFactory(), new SecondGuardFactory()],
-          logger,
         })
       )
       .use(
@@ -281,7 +277,6 @@ describe(testSuiteName, () => {
       .use(
         new UseGuards({
           guards: [new FirstGuardFactory(), new SecondGuardFactory()],
-          logger,
         })
       )
       .use(
@@ -348,7 +343,6 @@ describe(testSuiteName, () => {
           .use(
             new UseGuards({
               guards: [new FirstGuardFactory(), new SecondGuardFactory()],
-              logger,
             })
           )
           .use(
@@ -412,7 +406,6 @@ describe(testSuiteName, () => {
       .use(
         new UseGuards({
           guards: [guard],
-          logger,
         })
       )
       .use(new UseControllers({ controllers: [TestController], logger }))
@@ -443,7 +436,6 @@ describe(testSuiteName, () => {
       .use(
         new UseGuards({
           guards: [guard],
-          logger,
         })
       )
       .use(new UseControllers({ controllers: [TestController], logger }))
@@ -474,7 +466,6 @@ describe(testSuiteName, () => {
       .use(
         new UseGuards({
           guards: [guard],
-          logger,
         })
       )
       .use(new UseControllers({ controllers: [TestController], logger }))
@@ -525,7 +516,6 @@ describe(testSuiteName, () => {
       .use(
         new UseGuards({
           guards: [guard],
-          logger,
         })
       )
       .use(

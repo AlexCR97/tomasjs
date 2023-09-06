@@ -1,9 +1,8 @@
-export { guard } from "./@guard";
-export { Guard } from "./Guard";
+export { Guard, isGuardInstance } from "./Guard";
 export { GuardAdapter } from "./GuardAdapter";
-export { GuardContext } from "./GuardContext";
-export { GuardFactory } from "./GuardFactory";
-export { GuardFunction } from "./GuardFunction";
+export { GuardContext, guardContextFactory } from "./GuardContext";
+export { GuardFactory, isGuardFactory } from "./GuardFactory";
+export { GuardFunction, isGuardFunction } from "./GuardFunction";
 export { GuardResult } from "./GuardResult";
 export { GuardResultResolver } from "./GuardResultResolver";
 export { GuardType } from "./GuardType";

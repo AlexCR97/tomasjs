@@ -1,15 +1,14 @@
-import { Guard, guard, GuardContext } from "@/guards";
+import { Guard, GuardContext } from "@/guards";
 import { ForbiddenResponse } from "@/responses/status-codes";
 import { RequiredClaim } from "./RequiredClaim";
 
-@guard()
 export class RequiredClaimGuard implements Guard {
   constructor(private readonly requiredClaim: RequiredClaim) {}
 
-  isAllowed(context: GuardContext): boolean | ForbiddenResponse {
-    const claims = context.user?.claims;
+  isAllowed({ request, response, user }: GuardContext): boolean | ForbiddenResponse {
+    const claims = user.claims;
 
-    if (claims === undefined || claims === null) {
+    if (claims === null) {
       return new ForbiddenResponse();
     }
 

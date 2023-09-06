@@ -1,50 +1,32 @@
 import { GuardResultResolver } from "./GuardResultResolver";
-import { GuardContextFactory } from "./GuardContextFactory";
 import { GuardType } from "./GuardType";
 import { ExpressMiddlewareFunction } from "@/core/express";
-import { Container, Logger } from "@tomasjs/core";
-import { ResponseAdapter } from "@/responses";
+import { Container } from "@tomasjs/core";
 import { UnauthorizedResponse } from "@/responses/status-codes";
+import { guardContextFactory } from "./GuardContext";
 
 export class GuardAdapter {
-  constructor(
-    private readonly options: {
-      container: Container;
-      guard: GuardType;
-      logger?: Logger;
-    }
-  ) {}
+  private readonly container: Container;
+  private readonly guard: GuardType;
 
-  private get container(): Container {
-    return this.options.container;
-  }
-
-  private get guard(): GuardType {
-    return this.options.guard;
-  }
-
-  private get logger(): Logger | undefined {
-    return this.options.logger;
+  constructor(options: { container: Container; guard: GuardType }) {
+    this.container = options.container;
+    this.guard = options.guard;
   }
 
   adapt(): ExpressMiddlewareFunction {
     return async (req, res, next) => {
-      const guardContext = new GuardContextFactory(req, res).create();
+      const guardContext = guardContextFactory(req, res);
       const guardResultResolver = new GuardResultResolver(this.container, this.guard);
       const guardResult = await guardResultResolver.isAllowedAsync(guardContext);
 
-      if (guardResult === true) {
-        return next();
+      if (typeof guardResult === "boolean") {
+        return guardResult === true
+          ? next()
+          : guardContext.response.send(new UnauthorizedResponse());
       }
 
-      if (guardResult === false) {
-        ResponseAdapter.fromThomasToExpress(res, new UnauthorizedResponse(), {
-          logger: this.logger,
-        });
-        return;
-      }
-
-      ResponseAdapter.fromThomasToExpress(res, guardResult);
+      return guardContext.response.send(guardResult);
     };
   }
 }

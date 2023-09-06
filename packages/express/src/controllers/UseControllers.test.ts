@@ -4,12 +4,12 @@ import axios from "axios";
 import { controller } from "./@controller";
 import { httpGet } from "./@http";
 import { UseControllers } from "./UseControllers";
-import { Logger, ServiceContainerBuilder } from "@tomasjs/core";
+import { Logger, ServiceContainerBuilder, injectable } from "@tomasjs/core";
 import { TestContext } from "@/tests";
 import { OkResponse } from "@/responses";
 import { ExpressAppBuilder } from "@/builder";
 import { statusCodes } from "@/core";
-import { Guard, GuardContext, GuardResult, guard } from "@/guards";
+import { Guard, GuardContext, GuardResult } from "@/guards";
 
 const testSuiteName = "controllers/UseControllers";
 
@@ -91,7 +91,7 @@ describe(testSuiteName, () => {
     const dataFromFirstController = "Data from FirstController";
     const dataFromSecondController = "Data from SecondController";
 
-    @guard()
+    @injectable()
     class TestGuard implements Guard {
       isAllowed(context: GuardContext) {
         collectedData.push(dataFromGuard);
@@ -147,7 +147,7 @@ describe(testSuiteName, () => {
     const dataFromFirstController = "Data from FirstController";
     const dataFromSecondController = "Data from SecondController";
 
-    @guard()
+    @injectable()
     class ControllerGuard implements Guard {
       isAllowed(context: GuardContext) {
         collectedData.push(dataFromControllerGuard);
@@ -155,7 +155,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    @guard()
+    @injectable()
     class MethodGuard implements Guard {
       isAllowed(context: GuardContext): GuardResult {
         collectedData.push(dataFromMethodGuard);
