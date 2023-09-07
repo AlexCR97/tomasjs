@@ -23,3 +23,12 @@ export function httpContextFactory(req: Request, res: Response): HttpContext {
   const user = req.user;
   return new HttpContextImpl(request, response, user);
 }
+
+// TODO Write test
+// TODO Improve type check
+export function isHttpContext(obj: any): obj is HttpContext {
+  const hasRequestInstance = Reflect.has(obj, "request");
+  const hasResponseInstance = Reflect.has(obj, "response");
+  const hasUserInstance = Reflect.has(obj, "user");
+  return hasRequestInstance && hasResponseInstance && hasUserInstance;
+}

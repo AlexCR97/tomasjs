@@ -1,22 +1,27 @@
-import { IncomingHttpHeaders } from "http";
 import { Pipe, TomasError, TransformType } from "@tomasjs/core";
+import { Request } from "express";
 import { TransformResultResolver } from "@/transforms";
 import { HttpMethod } from "./HttpMethod";
-import { Request } from "express";
+import { RequestHeaders } from "./RequestHeaders";
+import { RouteParams } from "./RouteParams";
+import { QueryParams } from "./QueryParams";
+import { RequestBody } from "./RequestBody";
 
 export interface HttpRequest {
   readonly method: HttpMethod;
   readonly path: string;
-  readonly headers: IncomingHttpHeaders;
-  readonly params: Record<string, string | undefined>;
-  readonly query: Record<string, string | string[] | undefined>;
-  readonly body: Record<string, any>;
+  readonly headers: RequestHeaders;
+  readonly params: RouteParams;
+  readonly query: QueryParams;
+  readonly body: RequestBody;
 
   /* #region Headers */
   getHeader(key: string): string;
   getHeaderOrDefault(key: string): string | undefined;
   getHeaders(key: string): string[];
   getHeadersOrDefault(key: string): string[] | undefined;
+  setHeader(key: string, value: string | string[]): HttpRequest;
+  removeHeader(key: string): HttpRequest;
   /* #endregion */
 
   /* #region Params */
@@ -25,6 +30,7 @@ export interface HttpRequest {
     key: string,
     options?: { transform?: TransformType<string, T> }
   ): T | undefined;
+  setParam(key: string, value: string): HttpRequest;
   /* #endregion */
 
   /* #region Query */
@@ -32,12 +38,12 @@ export interface HttpRequest {
   getQueryOrDefault<T = string>(key: string): T | undefined;
   getQueries<T = string>(key: string): T[];
   getQueriesOrDefault<T = string>(key: string): T[] | undefined;
+  setQuery(key: string, value: string | string[]): HttpRequest;
   /* #endregion */
 
   /* #region Body */
-  getBody<T = Record<string, any>>(options?: {
-    transform?: TransformType<Record<string, any>, T>;
-  }): T;
+  getBody<T = RequestBody>(options?: { transform?: TransformType<RequestBody, T> }): T;
+  setBody(body: RequestBody): HttpRequest;
   /* #endregion */
 }
 
@@ -45,10 +51,10 @@ class HttpRequestImpl implements HttpRequest {
   constructor(
     readonly method: HttpMethod,
     readonly path: string,
-    readonly headers: IncomingHttpHeaders,
-    readonly params: Record<string, string | undefined>,
-    readonly query: Record<string, string | string[] | undefined>,
-    readonly body: Record<string, any>
+    readonly headers: RequestHeaders,
+    readonly params: RouteParams,
+    readonly query: QueryParams,
+    readonly body: RequestBody
   ) {}
 
   /* #region Headers */
@@ -99,6 +105,16 @@ class HttpRequestImpl implements HttpRequest {
     );
   }
 
+  setHeader(key: string, value: string | string[]): HttpRequest {
+    this.headers[key] = value;
+    return this;
+  }
+
+  removeHeader(key: string): HttpRequest {
+    this.headers[key] = undefined;
+    return this;
+  }
+
   /* #endregion */
 
   /* #region Params */
@@ -125,6 +141,11 @@ class HttpRequestImpl implements HttpRequest {
         return new TransformResultResolver(options.transform).resolve(param);
       })
       .get();
+  }
+
+  setParam(key: string, value: string): HttpRequest {
+    this.params[key] = value;
+    return this;
   }
 
   /* #endregion */
@@ -197,13 +218,16 @@ class HttpRequestImpl implements HttpRequest {
     );
   }
 
+  setQuery(key: string, value: string | string[]): HttpRequest {
+    this.query[key] = value;
+    return this;
+  }
+
   /* #endregion */
 
   /* #region Body */
 
-  getBody<T = Record<string, any>>(options?: {
-    transform?: TransformType<Record<string, any>, T>;
-  }): T {
+  getBody<T = RequestBody>(options?: { transform?: TransformType<RequestBody, T> }): T {
     return new Pipe(this.body)
       .apply((body) => {
         return options?.transform
@@ -211,6 +235,11 @@ class HttpRequestImpl implements HttpRequest {
           : (body as T);
       })
       .get();
+  }
+
+  setBody(body: RequestBody): HttpRequest {
+    Reflect.set(this, "body", body); // Equivalent to "this.body = body"
+    return this;
   }
 
   /* #endregion */
@@ -222,7 +251,7 @@ export function httpRequestFactory(req: Request): HttpRequest {
     req.path,
     req.headers,
     req.params,
-    req.query as Record<string, string | string[] | undefined>, // TODO Improve typing here
+    req.query as QueryParams, // TODO Improve typing here
     req.body
   );
 }

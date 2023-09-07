@@ -1,10 +1,16 @@
 export { FunctionChecker } from "./FunctionChecker";
-export { HttpContext, httpContextFactory } from "./HttpContext";
+export { HttpContext, httpContextFactory, isHttpContext } from "./HttpContext";
+export { HttpContextWriter, httpContextWriterFactory } from "./HttpContextWriter";
 export { HttpMethod } from "./HttpMethod";
 export { HttpNextFunction } from "./HttpNextFunction";
 export { HttpRequest, httpRequestFactory } from "./HttpRequest";
+export { HttpRequestWriter, httpRequestWriterFactory } from "./HttpRequestWriter";
 export { HttpResponseWriter, httpResponseWriterFactory } from "./HttpResponseWriter";
 export { HttpUser } from "./HttpUser";
 export { ProblemDetails } from "./ProblemDetails";
+export { QueryParams } from "./QueryParams";
+export { RequestBody } from "./RequestBody";
+export { RequestHeaders } from "./RequestHeaders";
+export { RouteParams } from "./RouteParams";
 export { UserContext } from "./UserContext";
 export { statusCodes } from "./statusCodes";
