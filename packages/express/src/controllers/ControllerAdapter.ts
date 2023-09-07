@@ -9,7 +9,7 @@ import { Controller } from "./Controller";
 import { ControllerMetadata, HttpMethodMetadata } from "./metadata";
 import { Container, Logger } from "@tomasjs/core";
 import { GuardAdapter } from "@/guards";
-import { httpResponseWriterFactory } from "@/core";
+import { httpResponseFactory } from "@/core";
 
 /**
  * Adapts a Controller to an Express Router.
@@ -70,8 +70,8 @@ export class ControllerAdapter {
         }
 
         const result = await (this.controller as any)[instanceMethod](req, res);
-        const responseWriter = httpResponseWriterFactory(res);
-        responseWriter.send(result);
+        const response = httpResponseFactory(res);
+        response.send(result);
       };
 
       router[httpMethod](path, [

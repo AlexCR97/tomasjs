@@ -5,6 +5,7 @@ export { HttpMethod } from "./HttpMethod";
 export { HttpNextFunction } from "./HttpNextFunction";
 export { HttpRequest, httpRequestFactory } from "./HttpRequest";
 export { HttpRequestWriter, httpRequestWriterFactory } from "./HttpRequestWriter";
+export { HttpResponse, httpResponseFactory } from "./HttpResponse";
 export { HttpResponseWriter, httpResponseWriterFactory } from "./HttpResponseWriter";
 export { HttpUser } from "./HttpUser";
 export { ProblemDetails } from "./ProblemDetails";

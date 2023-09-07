@@ -3,7 +3,7 @@ import {
   HttpContext,
   HttpNextFunction,
   HttpRequest,
-  HttpResponseWriter,
+  HttpResponse,
   ProblemDetails,
   statusCodes,
 } from "@/core";
@@ -17,7 +17,7 @@ export class TomasErrorHandler implements ErrorHandler {
   private readonly includeStackTrace: boolean;
 
   private req!: HttpRequest;
-  private res!: HttpResponseWriter;
+  private res!: HttpResponse;
   private next!: HttpNextFunction;
 
   constructor(options?: { includeStackTrace?: boolean }) {
