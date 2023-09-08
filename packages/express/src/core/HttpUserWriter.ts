@@ -7,6 +7,7 @@ export interface HttpUserWriter {
   get claims(): IdentityClaim[] | null;
   authenticate(claims?: IdentityClaim[]): HttpUserWriter;
   authorize(): HttpUserWriter;
+  hasClaim(key: string, value?: string, type?: string): boolean;
 }
 
 class HttpUserWriterImpl implements HttpUserWriter {
@@ -33,6 +34,10 @@ class HttpUserWriterImpl implements HttpUserWriter {
   authorize(): HttpUserWriter {
     Reflect.set(this.user, <keyof HttpUser>"authorized", true);
     return this;
+  }
+
+  hasClaim(key: string, value?: string, type?: string): boolean {
+    return this.user.hasClaim(key, value, type);
   }
 }
 

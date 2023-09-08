@@ -1,5 +1,5 @@
 export interface IdentityClaim {
-  name: string;
+  key: string;
   value: string;
-  type: string;
+  type?: string;
 }

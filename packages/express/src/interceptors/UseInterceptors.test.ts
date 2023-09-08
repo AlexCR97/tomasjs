@@ -7,7 +7,9 @@ import { TestContext } from "@/tests";
 import axios from "axios";
 import { InterceptorFunction } from "./InterceptorFunction";
 import { UseInterceptors } from "./UseInterceptors";
-import { RequestHeaders } from "@/core";
+import { IdentityClaim, RequestHeaders } from "@/core";
+import { GuardFunction, UseGuards } from "@/guards";
+import { OkResponse } from "..";
 
 const testSuiteName = "interceptors/UseInterceptors";
 
@@ -64,5 +66,51 @@ describe(testSuiteName, () => {
         context.server = server;
         axios.get(address);
       });
+  });
+
+  it("Can use interceptor to authenticate and authorize", async () => {
+    const claimKey = "id";
+    const claimValue = "someUserId";
+
+    const authInterceptor: InterceptorFunction = ({ request, user }) => {
+      user.authenticate([{ key: claimKey, value: claimValue }]).authorize();
+    };
+
+    const authGuard: GuardFunction = ({ user }) => {
+      expect(user.authenticated).toBeTruthy();
+      expect(user.authorized).toBeTruthy();
+      expect(user.claims).toContainEqual(<IdentityClaim>{ key: claimKey, value: claimValue });
+
+      return user.authenticated && user.authorized && user.hasClaim(claimKey, claimValue);
+    };
+
+    @controller()
+    class TestController {
+      @httpGet()
+      get() {
+        return new OkResponse();
+      }
+    }
+
+    context.server = await new ExpressAppBuilder({ port })
+      .use(
+        new UseInterceptors({
+          interceptors: [authInterceptor],
+        })
+      )
+      .use(
+        new UseGuards({
+          guards: [authGuard],
+        })
+      )
+      .use(
+        new UseControllers({
+          controllers: [TestController],
+          logger,
+        })
+      )
+      .buildAsync();
+
+    await axios.get(address);
   });
 });
