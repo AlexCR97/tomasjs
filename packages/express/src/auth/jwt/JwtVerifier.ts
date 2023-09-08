@@ -1,32 +1,18 @@
-import { JwtPayload, verify } from "jsonwebtoken";
+import { JwtPayload, VerifyErrors, verify } from "jsonwebtoken";
 import { JwtVerifyOptions } from "./JwtVerifyOptions";
+import { Result, ResultFailure, ResultSuccess } from "@tomasjs/core";
 
-type VerifyResult = string | JwtPayload | undefined;
+type VerifyResult = JwtPayload;
 
-export abstract class JwtVerifier {
-  private constructor() {}
+export class JwtVerifier {
+  constructor(private readonly options: JwtVerifyOptions) {}
 
-  static verifyAsync(token: string, options: JwtVerifyOptions): Promise<VerifyResult> {
-    return new Promise<string | JwtPayload | undefined>((resolve, reject) => {
-      verify(token, options?.secret, options, (err, user) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve(user);
-        }
+  verifyAsync(token: string): Promise<ResultFailure<VerifyErrors> | ResultSuccess<VerifyResult>> {
+    return new Promise((resolve) => {
+      verify(token, this.options.secret, this.options, (err, user) => {
+        const result = err !== null ? Result.failure(err) : Result.success(user as VerifyResult);
+        return resolve(result);
       });
     });
-  }
-
-  static async tryVerifyAsync(
-    token: string,
-    options: JwtVerifyOptions
-  ): Promise<{ error?: any; result: VerifyResult }> {
-    try {
-      const result = await this.verifyAsync(token, options);
-      return { error: undefined, result };
-    } catch (error) {
-      return { error, result: undefined };
-    }
   }
 }
