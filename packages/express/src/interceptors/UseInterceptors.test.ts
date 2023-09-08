@@ -29,7 +29,7 @@ describe(testSuiteName, () => {
   });
 
   it("Can bootstrap InterceptorFunctions", (done) => {
-    const firstInterceptor: InterceptorFunction = ({ request }) => {
+    const firstInterceptor: InterceptorFunction = ({ request, user }) => {
       request.setHeader("firstInterceptor", "1");
     };
 

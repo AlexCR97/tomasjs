@@ -29,7 +29,7 @@ export class TomasErrorHandler implements ErrorHandler {
     this.res = response;
     this.next = next;
 
-    this.logger.error(`Caught error: ${error}`);
+    this.logger.error(`${error}`);
 
     try {
       if (error instanceof ProblemDetailsError) {

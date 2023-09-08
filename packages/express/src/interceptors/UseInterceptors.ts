@@ -29,7 +29,9 @@ export class UseInterceptors implements AppSetupFactory {
     container: Container,
     interceptor: InterceptorType
   ) {
-    this.logger.debug(`Bootstrapping interceptor "${interceptor}..."`);
+    const interceptorName = this.getInterceptorName(interceptor);
+
+    this.logger.debug(`Bootstrapping interceptor "${interceptorName}..."`);
 
     const adapter = new InterceptorAdapter(container, interceptor);
 
@@ -37,6 +39,10 @@ export class UseInterceptors implements AppSetupFactory {
 
     app.use(expressMiddlewareFunction);
 
-    this.logger.debug(`Successfully bootstrapped interceptor "${interceptor}"`);
+    this.logger.debug(`Successfully bootstrapped interceptor "${interceptorName}"`);
+  }
+
+  private getInterceptorName(interceptor: InterceptorType): string {
+    return (interceptor as any).name ?? interceptor.toString?.call(interceptor) ?? interceptor;
   }
 }

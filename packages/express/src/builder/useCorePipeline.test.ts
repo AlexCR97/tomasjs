@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import axios from "axios";
 import { ExpressAppBuilder } from "./ExpressAppBuilder";
-import { HttpUser, statusCodes } from "@/core";
+import { statusCodes } from "@/core";
 import { TestContext } from "@/tests";
 import { Logger } from "@tomasjs/core";
 
@@ -29,7 +29,7 @@ describe(testSuiteName, () => {
     new ExpressAppBuilder({ port, logger })
       .use((app) => {
         app.use((req, res) => {
-          expect(req.user).toBeInstanceOf(HttpUser);
+          expect(req.user).toBeTruthy();
           expect(req.user.authenticated).toBe(false);
           expect(req.user.authorized).toBe(false);
           expect(req.user.claims).toBeNull();

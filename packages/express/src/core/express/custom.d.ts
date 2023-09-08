@@ -1,4 +1,4 @@
-import {} from "@/core/HttpUser";
+import { HttpUser } from "@/core";
 
 declare global {
   namespace Express {
