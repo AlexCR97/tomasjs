@@ -1,4 +1,3 @@
-export { FunctionChecker } from "./FunctionChecker";
 export { HttpContext, httpContextFactory, isHttpContext } from "./HttpContext";
 export { HttpContextWriter, httpContextWriterFactory } from "./HttpContextWriter";
 export { HttpMethod } from "./HttpMethod";

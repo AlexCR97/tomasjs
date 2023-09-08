@@ -1,7 +1,6 @@
-import { ClassConstructor } from "@tomasjs/core";
+import { ClassConstructor, FunctionChecker } from "@tomasjs/core";
 import { Guard } from "./Guard";
 import { GuardFunction } from "./GuardFunction";
-import { FunctionChecker } from "@/core";
 
 export interface GuardFactory {
   create(): GuardFunction | Guard | ClassConstructor<Guard>;

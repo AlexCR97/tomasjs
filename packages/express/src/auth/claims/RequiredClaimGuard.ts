@@ -2,6 +2,7 @@ import { Guard, GuardContext } from "@/guards";
 import { ForbiddenResponse } from "@/responses/status-codes";
 import { RequiredClaim } from "./RequiredClaim";
 
+// TODO Fix RequiredClaimGuard
 export class RequiredClaimGuard implements Guard {
   constructor(private readonly requiredClaim: RequiredClaim) {}
 
@@ -22,11 +23,11 @@ export class RequiredClaimGuard implements Guard {
       return true;
     }
 
-    const claimValue = claims[this.requiredClaim.type];
+    // const claimValue = claims[this.requiredClaim.type];
 
-    if (claimValue !== this.requiredClaim.value) {
-      return new ForbiddenResponse();
-    }
+    // if (claimValue !== this.requiredClaim.value) {
+    //   return new ForbiddenResponse();
+    // }
 
     return true;
   }

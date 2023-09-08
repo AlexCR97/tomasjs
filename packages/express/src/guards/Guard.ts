@@ -1,4 +1,4 @@
-import { FunctionChecker } from "@/core";
+import { FunctionChecker } from "@tomasjs/core";
 import { GuardContext } from "./GuardContext";
 import { GuardResult } from "./GuardResult";
 
