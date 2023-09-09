@@ -5,7 +5,7 @@ import { AuthClaim } from "./AuthClaim";
 import { ForbiddenResponse } from "@/responses";
 
 export class AuthorizationGuard implements Guard {
-  private readonly logger: Logger = new TomasLogger(AuthorizationGuard.name, "debug");
+  private readonly logger: Logger = new TomasLogger(AuthorizationGuard.name, "error");
 
   constructor(private readonly claims: AuthClaim[]) {}
 
