@@ -4,7 +4,7 @@ import { Interceptor } from "@/interceptors";
 import { JwtDecoder, JwtDecoderOptions } from "./JwtDecoder";
 
 export class JwtInterceptor implements Interceptor {
-  private readonly logger: Logger = new TomasLogger(JwtInterceptor.name, "debug");
+  private readonly logger: Logger = new TomasLogger(JwtInterceptor.name, "error");
 
   constructor(private readonly options: JwtDecoderOptions) {}
 

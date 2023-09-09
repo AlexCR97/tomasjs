@@ -1,10 +1,10 @@
 import { AppSetupFactory, AppSetupFunction } from "@/builder";
 import { UseGuards } from "@/guards";
 import { AuthorizationGuard } from "./AuthorizationGuard";
-import { IdentityClaim } from "..";
+import { AuthClaim } from "./AuthClaim";
 
 export class UseAuthorization implements AppSetupFactory {
-  constructor(private readonly claims: IdentityClaim[]) {}
+  constructor(private readonly claims: AuthClaim[]) {}
 
   create(): AppSetupFunction {
     return async (app, container) => {

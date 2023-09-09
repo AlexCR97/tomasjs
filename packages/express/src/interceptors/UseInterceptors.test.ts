@@ -81,7 +81,11 @@ describe(testSuiteName, () => {
       expect(user.authorized).toBeTruthy();
       expect(user.claims).toContainEqual(<IdentityClaim>{ key: claimKey, value: claimValue });
 
-      return user.authenticated && user.authorized && user.hasClaim(claimKey, claimValue);
+      return (
+        user.authenticated &&
+        user.authorized &&
+        user.hasClaim((x) => x.key === claimKey && x.value === claimValue)
+      );
     };
 
     @controller()
