@@ -30,7 +30,7 @@ describe(testSuiteName, () => {
 
   it("Can bootstrap authentication", async () => {
     const secret = "superDuperSecretValue";
-    const accessToken = JwtSigner.sign({ foo: "bar" }, secret);
+    const accessToken = new JwtSigner({ secret }).sign({ foo: "bar" });
 
     @controller()
     class TestController {
@@ -44,7 +44,7 @@ describe(testSuiteName, () => {
       .use(
         new UseAuthentication({
           authenticationScheme: "jwt",
-          jwtVerifyOptions: {
+          jwtDecoderOptions: {
             secret,
           },
         })

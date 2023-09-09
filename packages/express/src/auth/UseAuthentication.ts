@@ -3,13 +3,13 @@ import { UseGuards } from "@/guards";
 import { AuthenticationGuard } from "./AuthenticationGuard";
 import { UseInterceptors } from "@/interceptors";
 import { JwtInterceptor } from "./jwt/JwtInterceptor";
-import { JwtVerifyOptions } from "./jwt";
 import { Container, TomasError } from "@tomasjs/core";
 import { Express } from "express";
+import { JwtDecoderOptions } from "./jwt";
 
 export interface UseAuthenticationOptions {
   authenticationScheme: "jwt";
-  jwtVerifyOptions?: JwtVerifyOptions;
+  jwtDecoderOptions?: JwtDecoderOptions;
 }
 
 export class UseAuthentication implements AppSetupFactory {
@@ -31,12 +31,12 @@ export class UseAuthentication implements AppSetupFactory {
   }
 
   private async useJwtAuthScheme(app: Express, container: Container) {
-    if (this.options.jwtVerifyOptions === undefined) {
+    if (this.options.jwtDecoderOptions === undefined) {
       throw new TomasError("Please provider jwtVerifyOptions");
     }
 
     const factory = new UseInterceptors({
-      interceptors: [new JwtInterceptor(this.options.jwtVerifyOptions)],
+      interceptors: [new JwtInterceptor(this.options.jwtDecoderOptions)],
     });
     const func = factory.create();
     await func(app, container);

@@ -1,13 +1,12 @@
-import { HttpContextWriter, IdentityClaim } from "@/core";
-import { Interceptor } from "@/interceptors";
-import { JwtVerifier } from "./JwtVerifier";
-import { JwtVerifyOptions } from "./JwtVerifyOptions";
 import { Logger, TomasLogger } from "@tomasjs/core";
+import { HttpContextWriter } from "@/core";
+import { Interceptor } from "@/interceptors";
+import { JwtDecoder, JwtDecoderOptions } from "./JwtDecoder";
 
 export class JwtInterceptor implements Interceptor {
   private readonly logger: Logger = new TomasLogger(JwtInterceptor.name, "debug");
 
-  constructor(private readonly options: JwtVerifyOptions) {}
+  constructor(private readonly options: JwtDecoderOptions) {}
 
   async intercept({ request, user }: HttpContextWriter) {
     this.logger.debug("Enter");
@@ -30,19 +29,12 @@ export class JwtInterceptor implements Interceptor {
 
     this.logger.debug("Access token is", accessToken);
 
-    const { data, error } = await new JwtVerifier(this.options).verifyAsync(accessToken);
+    const { data: claims, error } = await new JwtDecoder(this.options).decode(accessToken);
 
     if (error) {
-      this.logger.debug(`Could not verify access token: ${error}`);
+      this.logger.debug(`Could not decode access token: ${error}`);
       return;
     }
-
-    this.logger.debug("Decoded token is", data);
-
-    const claims: IdentityClaim[] = Object.keys(data).map((key) => ({
-      key,
-      value: data[key],
-    }));
 
     this.logger.debug("Claims are", claims);
 
