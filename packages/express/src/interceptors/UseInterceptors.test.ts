@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { Logger } from "@tomasjs/core";
-import { ExpressAppBuilder } from "@/builder";
+import { AppBuilder } from "@/builder";
 import { UseControllers, controller, headers, httpGet } from "@/controllers";
 import { TestContext } from "@/tests";
 import axios from "axios";
@@ -49,7 +49,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
+    new AppBuilder({ port, logger })
       .use(
         new UseInterceptors({
           interceptors: [firstInterceptor, secondInterceptor],
@@ -96,7 +96,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new ExpressAppBuilder({ port })
+    context.server = await new AppBuilder({ port })
       .use(
         new UseInterceptors({
           interceptors: [authInterceptor],

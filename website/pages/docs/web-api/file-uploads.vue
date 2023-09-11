@@ -1,19 +1,19 @@
 <script setup lang="ts">
-  import { MenuItem } from "utils";
+import { MenuItem } from "utils";
 
-  const exampleSection: MenuItem = {
-    id: "exampleSection",
-    to: `#exampleSection`,
-    label: "Example",
-  };
+const exampleSection: MenuItem = {
+  id: "exampleSection",
+  to: `#exampleSection`,
+  label: "Example",
+};
 
-  const nextStepsSection: MenuItem = {
-    id: "nextSteps",
-    to: "#nextSteps",
-    label: "Next Steps",
-  };
+const nextStepsSection: MenuItem = {
+  id: "nextSteps",
+  to: "#nextSteps",
+  label: "Next Steps",
+};
 
-  const onThisPageItems: MenuItem[] = [exampleSection, nextStepsSection];
+const onThisPageItems: MenuItem[] = [exampleSection, nextStepsSection];
 </script>
 
 <template>
@@ -25,7 +25,9 @@
     <main class="container py-4">
       <h3 class="mb-5">File Uploads</h3>
 
-      <section :id="exampleSection.id" class="mb-5">
+      <section
+        :id="exampleSection.id"
+        class="mb-5">
         <h4 class="mb-4">{{ exampleSection.label }}</h4>
 
         <Code
@@ -33,7 +35,7 @@
 import "reflect-metadata";
 import fs from "fs";
 import { OkResponse } from "@tomasjs/express";
-import { ExpressAppBuilder } from "@tomasjs/express/builder";
+import { AppBuilder } from "@tomasjs/express/builder";
 import {
   FormFile,
   FormFiles,
@@ -88,7 +90,7 @@ async function main() {
 
   logger.debug("Building app...");
 
-  await new ExpressAppBuilder({ logger: new TomasLogger(ExpressAppBuilder.name, "debug") })
+  await new AppBuilder({ logger: new TomasLogger(AppBuilder.name, "debug") })
     .use(
       new UseFiles({
         options: {},
@@ -107,11 +109,12 @@ async function main() {
 }
 
 main();
-        '
-        />
+        ' />
       </section>
 
-      <section :id="nextStepsSection.id" class="mb-5">
+      <section
+        :id="nextStepsSection.id"
+        class="mb-5">
         <p class="fw-bold">{{ nextStepsSection.label }}</p>
         <ul>
           <li>

@@ -8,7 +8,7 @@ import { Logger, ServiceContainerBuilder, TomasLogger, injectable } from "@tomas
 import { GuardFactory } from "./GuardFactory";
 import { TestContext } from "@/tests";
 import { UseControllers, controller, httpGet } from "@/controllers";
-import { ExpressAppBuilder } from "@/builder";
+import { AppBuilder } from "@/builder";
 import axios from "axios";
 import { ForbiddenResponse, OkResponse, UnauthorizedResponse } from "@/responses";
 import { statusCodes } from "@/core";
@@ -57,7 +57,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
+    new AppBuilder({ port, logger })
       .use(
         new UseGuards({
           guards: [firstGuard, secondGuard],
@@ -104,7 +104,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
+    new AppBuilder({ port, logger })
       .use(
         new UseGuards({
           guards: [new FirstGuard(), new SecondGuard()],
@@ -158,7 +158,7 @@ describe(testSuiteName, () => {
       .addClass(SecondGuard)
       .buildContainerAsync()
       .then((container) => {
-        new ExpressAppBuilder({ port, logger, container })
+        new AppBuilder({ port, logger, container })
           .use(
             new UseGuards({
               guards: [FirstGuard, SecondGuard],
@@ -214,7 +214,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
+    new AppBuilder({ port, logger })
       .use(
         new UseGuards({
           guards: [new FirstGuardFactory(), new SecondGuardFactory()],
@@ -273,7 +273,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
+    new AppBuilder({ port, logger })
       .use(
         new UseGuards({
           guards: [new FirstGuardFactory(), new SecondGuardFactory()],
@@ -339,7 +339,7 @@ describe(testSuiteName, () => {
       .addClass(SecondGuard)
       .buildContainerAsync()
       .then((container) => {
-        new ExpressAppBuilder({ port, logger, container })
+        new AppBuilder({ port, logger, container })
           .use(
             new UseGuards({
               guards: [new FirstGuardFactory(), new SecondGuardFactory()],
@@ -372,7 +372,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new ExpressAppBuilder({ port, logger })
+    context.server = await new AppBuilder({ port, logger })
       .use(
         new UseGuards({
           guards: [guard],
@@ -402,7 +402,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new ExpressAppBuilder({ port, logger })
+    context.server = await new AppBuilder({ port, logger })
       .use(
         new UseGuards({
           guards: [guard],
@@ -432,7 +432,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new ExpressAppBuilder({ port, logger })
+    context.server = await new AppBuilder({ port, logger })
       .use(
         new UseGuards({
           guards: [guard],
@@ -462,7 +462,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new ExpressAppBuilder({ port, logger })
+    context.server = await new AppBuilder({ port, logger })
       .use(
         new UseGuards({
           guards: [guard],
@@ -512,7 +512,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new ExpressAppBuilder({ port, logger })
+    context.server = await new AppBuilder({ port, logger })
       .use(
         new UseGuards({
           guards: [guard],

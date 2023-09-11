@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { controller } from "./@controller";
 import { httpGet } from "./@http";
 import { param } from "./@param";
-import { ExpressAppBuilder } from "../builder";
+import { AppBuilder } from "../builder";
 import { UseControllers } from "./UseControllers";
 import { Logger, numberTransform } from "@tomasjs/core";
 import { TestContext } from "@/tests";
@@ -40,7 +40,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
+    new AppBuilder({ port, logger })
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync()
       .then((server) => {
@@ -61,7 +61,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
+    new AppBuilder({ port, logger })
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync()
       .then((server) => {

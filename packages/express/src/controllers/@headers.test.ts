@@ -7,7 +7,7 @@ import { UseControllers } from "./UseControllers";
 import { TestContext } from "@/tests";
 import { Logger } from "@tomasjs/core";
 import { Headers } from "@/core/express";
-import { ExpressAppBuilder } from "@/builder";
+import { AppBuilder } from "@/builder";
 import axios from "axios";
 
 const testSuiteName = "controllers/@headers";
@@ -42,7 +42,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
+    new AppBuilder({ port, logger })
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync()
       .then((server) => {

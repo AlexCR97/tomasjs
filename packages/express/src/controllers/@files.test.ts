@@ -10,7 +10,7 @@ import { files } from "./@files";
 import { FormFiles } from "./FormFiles";
 import { Logger } from "@tomasjs/core";
 import { TestContext } from "@/tests";
-import { ExpressAppBuilder } from "@/builder";
+import { AppBuilder } from "@/builder";
 
 const testSuiteName = "controllers/@files";
 
@@ -50,7 +50,7 @@ describe("controllers-filesDecorator", () => {
       }
     }
 
-    context.server = await new ExpressAppBuilder({ port, logger })
+    context.server = await new AppBuilder({ port, logger })
       // Order matters! UseFiles must go before UseControllers
       .use(
         new UseFiles({

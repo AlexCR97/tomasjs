@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { ExpressAppBuilder } from "./ExpressAppBuilder";
+import { AppBuilder } from "./AppBuilder";
 import { UseJson } from "./UseJson";
 import { Logger } from "@tomasjs/core";
 import { TestContext } from "@/tests";
@@ -32,7 +32,7 @@ describe(testSuiteName, () => {
       value: "works!",
     };
 
-    context.server = await new ExpressAppBuilder({ port, logger })
+    context.server = await new AppBuilder({ port, logger })
       .use(new UseJson())
       .use((app) => {
         app.post("/", (req, res) => res.json(req.body));

@@ -37,7 +37,7 @@ const webApiItems: MenuItem[] = [
     to: "/docs/web-api/first-app",
   },
   {
-    label: "ExpressAppBuilder",
+    label: "AppBuilder",
     to: "/docs/web-api/app-builder",
   },
   {

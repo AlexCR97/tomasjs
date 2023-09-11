@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { ClassConstructor, Logger, ServiceContainerBuilder, injectable } from "@tomasjs/core";
-import { ExpressAppBuilder } from "@/builder";
+import { AppBuilder } from "@/builder";
 import { UseControllers, controller, httpGet } from "@/controllers";
 import { HttpContext, HttpNextFunction } from "@/core";
 import { TestContext } from "@/tests";
@@ -55,7 +55,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
+    new AppBuilder({ port, logger })
       .use(
         new UseMiddlewares({
           middlewares: [firstMiddleware, secondMiddleware],
@@ -102,7 +102,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
+    new AppBuilder({ port, logger })
       .use(
         new UseMiddlewares({
           middlewares: [new FirstMiddleware(), new SecondMiddleware()],
@@ -156,7 +156,7 @@ describe(testSuiteName, () => {
       .addClass(SecondMiddleware)
       .buildContainerAsync()
       .then((container) => {
-        new ExpressAppBuilder({ port, logger, container })
+        new AppBuilder({ port, logger, container })
           .use(
             new UseMiddlewares({
               middlewares: [FirstMiddleware, SecondMiddleware],
@@ -212,7 +212,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
+    new AppBuilder({ port, logger })
       .use(
         new UseMiddlewares({
           middlewares: [new FirstMiddlewareFactory(), new SecondMiddlewareFactory()],
@@ -271,7 +271,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
+    new AppBuilder({ port, logger })
       .use(
         new UseMiddlewares({
           middlewares: [new FirstMiddlewareFactory(), new SecondMiddlewareFactory()],
@@ -337,7 +337,7 @@ describe(testSuiteName, () => {
       .addClass(SecondMiddleware)
       .buildContainerAsync()
       .then((container) => {
-        new ExpressAppBuilder({ port, logger, container })
+        new AppBuilder({ port, logger, container })
           .use(
             new UseMiddlewares({
               middlewares: [new FirstMiddlewareFactory(), new SecondMiddlewareFactory()],

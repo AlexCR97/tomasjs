@@ -34,7 +34,7 @@ const onThisPageItems: MenuItem[] = [exampleSection, nextStepsSection];
           code='
 import "reflect-metadata";
 import { JsonResponse } from "@tomasjs/express";
-import { ExpressAppBuilder } from "@tomasjs/express/builder";
+import { AppBuilder } from "@tomasjs/express/builder";
 import { UseControllers, controller, httpGet } from "@tomasjs/express/controllers";
 
 @controller("home")
@@ -46,7 +46,7 @@ class HomeController {
 }
 
 async function main() {
-  await new ExpressAppBuilder({ port: 3030 })
+  await new AppBuilder({ port: 3030 })
     .use(
       new UseControllers({
         controllers: [HomeController],
@@ -65,7 +65,7 @@ main();
         <p class="fw-bold">{{ nextStepsSection.label }}</p>
         <ul>
           <li>
-            <NuxtLink to="/docs/web-api/app-builder">ExpressAppBuilder</NuxtLink>
+            <NuxtLink to="/docs/web-api/app-builder">AppBuilder</NuxtLink>
           </li>
         </ul>
       </section>

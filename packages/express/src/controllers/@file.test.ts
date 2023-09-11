@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { controller } from "./@controller";
 import { httpPost } from "./@http";
-import { ExpressAppBuilder } from "../builder";
+import { AppBuilder } from "../builder";
 import { UseControllers } from "./UseControllers";
 import { FormFile } from "./FormFile";
 import axios from "axios";
@@ -43,7 +43,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new ExpressAppBuilder({ port })
+    context.server = await new AppBuilder({ port })
       // Order matters! UseFiles must go before UseControllers
       .use(
         new UseFiles({

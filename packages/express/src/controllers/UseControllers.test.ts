@@ -7,7 +7,7 @@ import { UseControllers } from "./UseControllers";
 import { Logger, ServiceContainerBuilder, injectable } from "@tomasjs/core";
 import { TestContext } from "@/tests";
 import { OkResponse } from "@/responses";
-import { ExpressAppBuilder } from "@/builder";
+import { AppBuilder } from "@/builder";
 import { statusCodes } from "@/core";
 import { Guard, GuardContext, GuardResult } from "@/guards";
 
@@ -39,7 +39,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new ExpressAppBuilder({ port, logger })
+    context.server = await new AppBuilder({ port, logger })
       .use(
         new UseControllers({
           controllers: [TestController],
@@ -72,7 +72,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new ExpressAppBuilder({ port, logger })
+    context.server = await new AppBuilder({ port, logger })
       .use(new UseControllers({ controllers: [UsersController], logger }))
       .buildAsync();
 
@@ -119,7 +119,7 @@ describe(testSuiteName, () => {
 
     const container = await new ServiceContainerBuilder().addClass(TestGuard).buildContainerAsync();
 
-    context.server = await new ExpressAppBuilder({ port, logger, container })
+    context.server = await new AppBuilder({ port, logger, container })
       .use(
         new UseControllers({
           controllers: [FirstController, SecondController],
@@ -186,7 +186,7 @@ describe(testSuiteName, () => {
       .addClass(MethodGuard)
       .buildContainerAsync();
 
-    context.server = await new ExpressAppBuilder({ port, logger, container })
+    context.server = await new AppBuilder({ port, logger, container })
       .use(
         new UseControllers({
           controllers: [FirstController, SecondController],

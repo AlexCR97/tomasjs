@@ -1,13 +1,17 @@
 import express, { Express } from "express";
 import { Server } from "http";
 import { AppSetupType } from "./AppSetupType";
-import { IExpressAppBuilder } from "./IExpressAppBuilder";
 import { AppSetupFunction } from "./AppSetupFunction";
 import { AppSetupFactory, isAppSetupFactory } from "./AppSetupFactory";
 import { Container, Logger, ServiceContainer } from "@tomasjs/core";
 import { useCorePipeline } from "./useCorePipeline";
 
-export class ExpressAppBuilder implements IExpressAppBuilder {
+export interface IAppBuilder {
+  use(setup: AppSetupType): IAppBuilder;
+  buildAsync(): Promise<Server>;
+}
+
+export class AppBuilder implements IAppBuilder {
   private readonly app: Express;
   private readonly port: number;
   private readonly defaultPort = 3000;
@@ -21,7 +25,7 @@ export class ExpressAppBuilder implements IExpressAppBuilder {
     this.setups.push(useCorePipeline);
   }
 
-  use(setup: AppSetupType): IExpressAppBuilder {
+  use(setup: AppSetupType): IAppBuilder {
     this.setups.push(setup);
     return this;
   }

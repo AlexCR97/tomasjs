@@ -2,12 +2,12 @@ import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import axios from "axios";
 import { Server } from "http";
-import { ExpressAppBuilder } from "./ExpressAppBuilder";
+import { AppBuilder } from "./AppBuilder";
 import { statusCodes } from "@/core";
 import { TestContext } from "@/tests";
 import { Logger } from "@tomasjs/core";
 
-const testSuiteName = "builder/ExpressAppBuilder";
+const testSuiteName = "builder/AppBuilder";
 
 describe(testSuiteName, () => {
   let context: TestContext;
@@ -26,13 +26,13 @@ describe(testSuiteName, () => {
     await context.dispose();
   });
 
-  it(`Can create a server using the ${ExpressAppBuilder.name}`, async () => {
-    context.server = await new ExpressAppBuilder({ port, logger }).buildAsync();
+  it(`Can create a server using the ${AppBuilder.name}`, async () => {
+    context.server = await new AppBuilder({ port, logger }).buildAsync();
     expect(context.server).toBeInstanceOf(Server);
   });
 
   it("Can reach the server via http", async () => {
-    context.server = await new ExpressAppBuilder({ port, logger })
+    context.server = await new AppBuilder({ port, logger })
       .use((app) => {
         app.get("/", (_, res) => {
           res.sendStatus(statusCodes.ok);

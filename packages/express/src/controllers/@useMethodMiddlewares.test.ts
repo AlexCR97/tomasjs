@@ -6,7 +6,7 @@ import { UseControllers } from "./UseControllers";
 import { Logger, ServiceContainerBuilder, injectable } from "@tomasjs/core";
 import { TestContext } from "@/tests";
 import { Middleware, MiddlewareResult } from "@/middleware";
-import { ExpressAppBuilder } from "@/builder";
+import { AppBuilder } from "@/builder";
 import axios from "axios";
 import { HttpContext } from "@/core";
 import { NextFunction } from "express";
@@ -67,7 +67,7 @@ describe(testSuiteName, () => {
       .addClass(SecondMiddleware)
       .buildContainerAsync()
       .then((container) => {
-        new ExpressAppBuilder({ port, logger, container })
+        new AppBuilder({ port, logger, container })
           .use(
             new UseControllers({
               controllers: [TestController],

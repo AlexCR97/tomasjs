@@ -7,7 +7,7 @@ import { UseControllers } from "./UseControllers";
 import { Logger, TomasLogger } from "@tomasjs/core";
 import { TestContext } from "@/tests";
 import axios from "axios";
-import { ExpressAppBuilder } from "@/builder";
+import { AppBuilder } from "@/builder";
 
 const testSuiteName = "controllers/@query";
 
@@ -40,7 +40,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
+    new AppBuilder({ port, logger })
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync()
       .then((server) => {
@@ -64,7 +64,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
+    new AppBuilder({ port, logger })
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync()
       .then((server) => {
@@ -93,7 +93,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
+    new AppBuilder({ port, logger })
       .use(new UseControllers({ controllers: [TestController], logger }))
       .buildAsync()
       .then((server) => {

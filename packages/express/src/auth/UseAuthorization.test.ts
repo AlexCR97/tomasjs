@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, it } from "@jest/globals";
 import { Logger } from "@tomasjs/core";
-import { ExpressAppBuilder } from "@/builder";
+import { AppBuilder } from "@/builder";
 import { UseControllers, controller, httpGet } from "@/controllers";
 import { TestContext } from "@/tests";
 import { UseAuthentication } from "./UseAuthentication";
@@ -41,7 +41,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new ExpressAppBuilder({ port, logger })
+    context.server = await new AppBuilder({ port, logger })
       .use(
         new UseAuthentication({
           authenticationScheme: "jwt",
