@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { controller } from "./@controller";
 import { httpGet } from "./@http";
 import { query } from "./@query";
-import { UseControllers } from "./UseControllers";
 import { Logger, TomasLogger } from "@tomasjs/core";
 import { TestContext } from "@/tests";
 import axios from "axios";
@@ -41,7 +40,7 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;
@@ -65,7 +64,7 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;
@@ -94,7 +93,7 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;

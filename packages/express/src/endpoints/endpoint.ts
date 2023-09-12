@@ -13,15 +13,17 @@ export interface EndpointArgs {
 
 export type EndpointFunction = (args: EndpointArgs) => any;
 
+export interface EndpointOptions {
+  middlewares?: MiddlewareType[];
+  interceptors?: InterceptorType[];
+  guards?: GuardType[];
+}
+
 export function endpoint(
   method: HttpMethod,
   path: string,
   func: EndpointFunction,
-  options?: {
-    middlewares?: MiddlewareType[];
-    interceptors?: InterceptorType[];
-    guards?: GuardType[];
-  }
+  options?: EndpointOptions
 ): AppSetupFunction {
   return (app, container) => {
     const expressMiddlewares: ExpressMiddlewareFunction[] = [

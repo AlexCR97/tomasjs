@@ -3,12 +3,62 @@ import { Server } from "http";
 import { AppSetupType } from "./AppSetupType";
 import { AppSetupFunction } from "./AppSetupFunction";
 import { AppSetupFactory, isAppSetupFactory } from "./AppSetupFactory";
-import { Container, Logger, ServiceContainer } from "@tomasjs/core";
+import { ClassConstructor, Container, Logger, ServiceContainer } from "@tomasjs/core";
 import { useCorePipeline } from "./useCorePipeline";
+import { HttpMethod } from "@/core";
+import { EndpointFunction, EndpointOptions, endpoint } from "@/endpoints";
+import { Controller, UseControllers, UseFiles, UseFilesOptions } from "@/controllers";
+import { MiddlewareType, UseMiddlewares } from "@/middleware";
+import { InterceptorType, UseInterceptors } from "@/interceptors";
+import { GuardType, UseGuards } from "@/guards";
+import { AuthClaim, UseAuthentication, UseAuthenticationOptions, UseAuthorization } from "@/auth";
+import { UseJson, UseJsonOptions } from "./UseJson";
+import { ErrorHandlerType, UseErrorHandler } from "@/error-handler";
+import { UseCors, UseCorsOptions } from "./UseCors";
 
 export interface IAppBuilder {
   use(setup: AppSetupType): IAppBuilder;
+
+  useCors(options?: UseCorsOptions): IAppBuilder;
+
+  useJson(options?: UseJsonOptions): IAppBuilder;
+
+  useFiles(options?: UseFilesOptions): IAppBuilder;
+
+  useEndpoint(
+    method: HttpMethod,
+    path: string,
+    func: EndpointFunction,
+    options?: EndpointOptions
+  ): IAppBuilder;
+  useGet(path: string, func: EndpointFunction, options?: EndpointOptions): IAppBuilder;
+  usePost(path: string, func: EndpointFunction, options?: EndpointOptions): IAppBuilder;
+  usePut(path: string, func: EndpointFunction, options?: EndpointOptions): IAppBuilder;
+  useDelete(path: string, func: EndpointFunction, options?: EndpointOptions): IAppBuilder;
+  usePatch(path: string, func: EndpointFunction, options?: EndpointOptions): IAppBuilder;
+
+  useControllers(...controllers: ClassConstructor<Controller>[]): IAppBuilder;
+
+  useMiddlewares(...middlewares: MiddlewareType[]): IAppBuilder;
+
+  useInterceptors(...interceptors: InterceptorType[]): IAppBuilder;
+
+  useGuards(...guards: GuardType[]): IAppBuilder;
+
+  useAuthentication(options: UseAuthenticationOptions): IAppBuilder;
+
+  useAuthorization(claims: AuthClaim[]): IAppBuilder;
+
+  useErrorHandler(errorHandler: ErrorHandlerType): IAppBuilder;
+
   buildAsync(): Promise<Server>;
+}
+
+export interface AppBuilderOptions {
+  app?: Express;
+  port?: number;
+  container?: Container;
+  logger?: Logger;
 }
 
 export class AppBuilder implements IAppBuilder {
@@ -18,16 +68,109 @@ export class AppBuilder implements IAppBuilder {
   private readonly container: Container;
   private readonly setups: AppSetupType[] = [];
 
-  constructor(options?: { app?: Express; port?: number; container?: Container; logger?: Logger }) {
+  constructor(options?: AppBuilderOptions) {
     this.app = options?.app ?? express();
     this.port = options?.port ?? this.defaultPort;
     this.container = options?.container ?? new ServiceContainer();
-    this.setups.push(useCorePipeline);
+    this.use(useCorePipeline);
   }
 
   use(setup: AppSetupType): IAppBuilder {
     this.setups.push(setup);
     return this;
+  }
+
+  useCors(options?: UseCorsOptions): IAppBuilder {
+    return this.use(new UseCors(options));
+  }
+
+  useJson(options?: UseJsonOptions): IAppBuilder {
+    return this.use(new UseJson(options));
+  }
+
+  useFiles(options?: UseFilesOptions): IAppBuilder {
+    return this.use(new UseFiles(options));
+  }
+
+  /* #region Endpoints */
+
+  useEndpoint(
+    method: HttpMethod,
+    path: string,
+    func: EndpointFunction,
+    options?: EndpointOptions
+  ): IAppBuilder {
+    return this.use(endpoint(method, path, func, options));
+  }
+
+  useGet(path: string, func: EndpointFunction, options?: EndpointOptions): IAppBuilder {
+    return this.useEndpoint("get", path, func, options);
+  }
+
+  usePost(path: string, func: EndpointFunction, options?: EndpointOptions): IAppBuilder {
+    return this.useEndpoint("post", path, func, options);
+  }
+
+  usePut(path: string, func: EndpointFunction, options?: EndpointOptions): IAppBuilder {
+    return this.useEndpoint("put", path, func, options);
+  }
+
+  useDelete(path: string, func: EndpointFunction, options?: EndpointOptions): IAppBuilder {
+    return this.useEndpoint("delete", path, func, options);
+  }
+
+  usePatch(path: string, func: EndpointFunction, options?: EndpointOptions): IAppBuilder {
+    return this.useEndpoint("patch", path, func, options);
+  }
+
+  /* #endregion */
+
+  useControllers(...controllers: ClassConstructor<Controller>[]): IAppBuilder {
+    return this.use(
+      new UseControllers({
+        controllers,
+      })
+    );
+  }
+
+  useMiddlewares(...middlewares: MiddlewareType[]): IAppBuilder {
+    return this.use(
+      new UseMiddlewares({
+        middlewares,
+      })
+    );
+  }
+
+  useInterceptors(...interceptors: InterceptorType[]): IAppBuilder {
+    return this.use(
+      new UseInterceptors({
+        interceptors,
+      })
+    );
+  }
+
+  useGuards(...guards: GuardType[]): IAppBuilder {
+    return this.use(
+      new UseGuards({
+        guards,
+      })
+    );
+  }
+
+  useAuthentication(options: UseAuthenticationOptions): IAppBuilder {
+    return this.use(new UseAuthentication(options));
+  }
+
+  useAuthorization(claims: AuthClaim[]): IAppBuilder {
+    return this.use(new UseAuthorization(claims));
+  }
+
+  useErrorHandler(errorHandler: ErrorHandlerType): IAppBuilder {
+    return this.use(
+      new UseErrorHandler({
+        errorHandler,
+      })
+    );
   }
 
   async buildAsync(): Promise<Server> {

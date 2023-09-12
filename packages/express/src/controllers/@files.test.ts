@@ -2,10 +2,8 @@ import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { controller } from "./@controller";
 import { httpPost } from "./@http";
-import { UseControllers } from "./UseControllers";
 import { FormFile } from "./FormFile";
 import axios from "axios";
-import { UseFiles } from "./UseFiles";
 import { files } from "./@files";
 import { FormFiles } from "./FormFiles";
 import { Logger } from "@tomasjs/core";
@@ -51,14 +49,9 @@ describe("controllers-filesDecorator", () => {
     }
 
     context.server = await new AppBuilder({ port, logger })
-      // Order matters! UseFiles must go before UseControllers
-      .use(
-        new UseFiles({
-          options: {},
-          logger,
-        })
-      )
-      .use(new UseControllers({ controllers: [TestController] }))
+      // Order matters! useFiles must go before useControllers
+      .useFiles()
+      .useControllers(TestController)
       .buildAsync();
 
     const formData = new FormData();

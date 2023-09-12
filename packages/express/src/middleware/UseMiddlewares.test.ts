@@ -2,7 +2,7 @@ import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { ClassConstructor, Logger, ServiceContainerBuilder, injectable } from "@tomasjs/core";
 import { AppBuilder } from "@/builder";
-import { UseControllers, controller, httpGet } from "@/controllers";
+import { controller, httpGet } from "@/controllers";
 import { HttpContext, HttpNextFunction } from "@/core";
 import { TestContext } from "@/tests";
 import axios from "axios";
@@ -10,7 +10,6 @@ import { Middleware } from "./Middleware";
 import { MiddlewareFactory } from "./MiddlewareFactory";
 import { MiddlewareFunction } from "./MiddlewareFunction";
 import { MiddlewareResult } from "./MiddlewareResult";
-import { UseMiddlewares } from "./UseMiddlewares";
 
 const testSuiteName = "middleware/v2/UseMiddlewares";
 
@@ -56,17 +55,8 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(
-        new UseMiddlewares({
-          middlewares: [firstMiddleware, secondMiddleware],
-        })
-      )
-      .use(
-        new UseControllers({
-          controllers: [TestController],
-          logger,
-        })
-      )
+      .useMiddlewares(firstMiddleware, secondMiddleware)
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;
@@ -103,17 +93,8 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(
-        new UseMiddlewares({
-          middlewares: [new FirstMiddleware(), new SecondMiddleware()],
-        })
-      )
-      .use(
-        new UseControllers({
-          controllers: [TestController],
-          logger,
-        })
-      )
+      .useMiddlewares(new FirstMiddleware(), new SecondMiddleware())
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;
@@ -157,17 +138,8 @@ describe(testSuiteName, () => {
       .buildContainerAsync()
       .then((container) => {
         new AppBuilder({ port, logger, container })
-          .use(
-            new UseMiddlewares({
-              middlewares: [FirstMiddleware, SecondMiddleware],
-            })
-          )
-          .use(
-            new UseControllers({
-              controllers: [TestController],
-              logger,
-            })
-          )
+          .useMiddlewares(FirstMiddleware, SecondMiddleware)
+          .useControllers(TestController)
           .buildAsync()
           .then((server) => {
             context.server = server;
@@ -213,17 +185,8 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(
-        new UseMiddlewares({
-          middlewares: [new FirstMiddlewareFactory(), new SecondMiddlewareFactory()],
-        })
-      )
-      .use(
-        new UseControllers({
-          controllers: [TestController],
-          logger,
-        })
-      )
+      .useMiddlewares(new FirstMiddlewareFactory(), new SecondMiddlewareFactory())
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;
@@ -272,17 +235,8 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(
-        new UseMiddlewares({
-          middlewares: [new FirstMiddlewareFactory(), new SecondMiddlewareFactory()],
-        })
-      )
-      .use(
-        new UseControllers({
-          controllers: [TestController],
-          logger,
-        })
-      )
+      .useMiddlewares(new FirstMiddlewareFactory(), new SecondMiddlewareFactory())
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;
@@ -338,17 +292,8 @@ describe(testSuiteName, () => {
       .buildContainerAsync()
       .then((container) => {
         new AppBuilder({ port, logger, container })
-          .use(
-            new UseMiddlewares({
-              middlewares: [new FirstMiddlewareFactory(), new SecondMiddlewareFactory()],
-            })
-          )
-          .use(
-            new UseControllers({
-              controllers: [TestController],
-              logger,
-            })
-          )
+          .useMiddlewares(new FirstMiddlewareFactory(), new SecondMiddlewareFactory())
+          .useControllers(TestController)
           .buildAsync()
           .then((server) => {
             context.server = server;

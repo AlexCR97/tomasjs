@@ -2,7 +2,6 @@ import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { controller } from "./@controller";
 import { httpGet } from "./@http";
-import { UseControllers } from "./UseControllers";
 import { Logger, ServiceContainerBuilder, injectable } from "@tomasjs/core";
 import { TestContext } from "@/tests";
 import { Middleware, MiddlewareResult } from "@/middleware";
@@ -68,12 +67,7 @@ describe(testSuiteName, () => {
       .buildContainerAsync()
       .then((container) => {
         new AppBuilder({ port, logger, container })
-          .use(
-            new UseControllers({
-              controllers: [TestController],
-              logger,
-            })
-          )
+          .useControllers(TestController)
           .buildAsync()
           .then((server) => {
             context.server = server;

@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import axios from "axios";
 import { controller } from "./@controller";
 import { httpGet } from "./@http";
-import { UseControllers } from "./UseControllers";
 import { Logger, ServiceContainerBuilder, injectable } from "@tomasjs/core";
 import { TestContext } from "@/tests";
 import { OkResponse } from "@/responses";
@@ -40,12 +39,7 @@ describe(testSuiteName, () => {
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .use(
-        new UseControllers({
-          controllers: [TestController],
-          logger,
-        })
-      )
+      .useControllers(TestController)
       .buildAsync();
 
     const response = await axios.get(`${address}/test`);
@@ -73,7 +67,7 @@ describe(testSuiteName, () => {
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [UsersController], logger }))
+      .useControllers(UsersController)
       .buildAsync();
 
     // Act/Assert
@@ -120,12 +114,7 @@ describe(testSuiteName, () => {
     const container = await new ServiceContainerBuilder().addClass(TestGuard).buildContainerAsync();
 
     context.server = await new AppBuilder({ port, logger, container })
-      .use(
-        new UseControllers({
-          controllers: [FirstController, SecondController],
-          logger,
-        })
-      )
+      .useControllers(FirstController, SecondController)
       .buildAsync();
 
     const secondResponse = await axios.get(`${address}/second`);
@@ -187,12 +176,7 @@ describe(testSuiteName, () => {
       .buildContainerAsync();
 
     context.server = await new AppBuilder({ port, logger, container })
-      .use(
-        new UseControllers({
-          controllers: [FirstController, SecondController],
-          logger,
-        })
-      )
+      .useControllers(FirstController, SecondController)
       .buildAsync();
 
     const secondResponse = await axios.get(`${address}/second`);

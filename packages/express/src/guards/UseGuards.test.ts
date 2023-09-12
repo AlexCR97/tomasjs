@@ -1,20 +1,19 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { GuardFunction } from "./GuardFunction";
-import { UseGuards } from "./UseGuards";
 import { Guard } from "./Guard";
 import { GuardContext } from "./GuardContext";
 import { Logger, ServiceContainerBuilder, TomasLogger, injectable } from "@tomasjs/core";
 import { GuardFactory } from "./GuardFactory";
 import { TestContext } from "@/tests";
-import { UseControllers, controller, httpGet } from "@/controllers";
+import { controller, httpGet } from "@/controllers";
 import { AppBuilder } from "@/builder";
 import axios from "axios";
 import { ForbiddenResponse, OkResponse, UnauthorizedResponse } from "@/responses";
 import { statusCodes } from "@/core";
 import fetch from "node-fetch";
 
-const testSuiteName = "guards/v2/UseGuards";
+const testSuiteName = "guards/UseGuards";
 
 describe(testSuiteName, () => {
   let context: TestContext;
@@ -58,17 +57,8 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(
-        new UseGuards({
-          guards: [firstGuard, secondGuard],
-        })
-      )
-      .use(
-        new UseControllers({
-          controllers: [TestController],
-          logger,
-        })
-      )
+      .useGuards(firstGuard, secondGuard)
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;
@@ -105,17 +95,8 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(
-        new UseGuards({
-          guards: [new FirstGuard(), new SecondGuard()],
-        })
-      )
-      .use(
-        new UseControllers({
-          controllers: [TestController],
-          logger,
-        })
-      )
+      .useGuards(new FirstGuard(), new SecondGuard())
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;
@@ -159,17 +140,8 @@ describe(testSuiteName, () => {
       .buildContainerAsync()
       .then((container) => {
         new AppBuilder({ port, logger, container })
-          .use(
-            new UseGuards({
-              guards: [FirstGuard, SecondGuard],
-            })
-          )
-          .use(
-            new UseControllers({
-              controllers: [TestController],
-              logger,
-            })
-          )
+          .useGuards(FirstGuard, SecondGuard)
+          .useControllers(TestController)
           .buildAsync()
           .then((server) => {
             context.server = server;
@@ -215,17 +187,8 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(
-        new UseGuards({
-          guards: [new FirstGuardFactory(), new SecondGuardFactory()],
-        })
-      )
-      .use(
-        new UseControllers({
-          controllers: [TestController],
-          logger,
-        })
-      )
+      .useGuards(new FirstGuardFactory(), new SecondGuardFactory())
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;
@@ -274,17 +237,8 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(
-        new UseGuards({
-          guards: [new FirstGuardFactory(), new SecondGuardFactory()],
-        })
-      )
-      .use(
-        new UseControllers({
-          controllers: [TestController],
-          logger,
-        })
-      )
+      .useGuards(new FirstGuardFactory(), new SecondGuardFactory())
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;
@@ -340,17 +294,8 @@ describe(testSuiteName, () => {
       .buildContainerAsync()
       .then((container) => {
         new AppBuilder({ port, logger, container })
-          .use(
-            new UseGuards({
-              guards: [new FirstGuardFactory(), new SecondGuardFactory()],
-            })
-          )
-          .use(
-            new UseControllers({
-              controllers: [TestController],
-              logger,
-            })
-          )
+          .useGuards(new FirstGuardFactory(), new SecondGuardFactory())
+          .useControllers(TestController)
           .buildAsync()
           .then((server) => {
             context.server = server;
@@ -373,12 +318,8 @@ describe(testSuiteName, () => {
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .use(
-        new UseGuards({
-          guards: [guard],
-        })
-      )
-      .use(new UseControllers({ controllers: [TestController], logger }))
+      .useGuards(guard)
+      .useControllers(TestController)
       .buildAsync();
 
     const response = await fetch(`${address}`);
@@ -403,12 +344,8 @@ describe(testSuiteName, () => {
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .use(
-        new UseGuards({
-          guards: [guard],
-        })
-      )
-      .use(new UseControllers({ controllers: [TestController], logger }))
+      .useGuards(guard)
+      .useControllers(TestController)
       .buildAsync();
 
     const response = await fetch(`${address}`);
@@ -433,12 +370,8 @@ describe(testSuiteName, () => {
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .use(
-        new UseGuards({
-          guards: [guard],
-        })
-      )
-      .use(new UseControllers({ controllers: [TestController], logger }))
+      .useGuards(guard)
+      .useControllers(TestController)
       .buildAsync();
 
     const response = await fetch(`${address}`);
@@ -463,12 +396,8 @@ describe(testSuiteName, () => {
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .use(
-        new UseGuards({
-          guards: [guard],
-        })
-      )
-      .use(new UseControllers({ controllers: [TestController], logger }))
+      .useGuards(guard)
+      .useControllers(TestController)
       .buildAsync();
 
     const response = await fetch(`${address}`);
@@ -513,17 +442,8 @@ describe(testSuiteName, () => {
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .use(
-        new UseGuards({
-          guards: [guard],
-        })
-      )
-      .use(
-        new UseControllers({
-          controllers: [FirstController, SecondController, ThirdController],
-          logger,
-        })
-      )
+      .useGuards(guard)
+      .useControllers(FirstController, SecondController, ThirdController)
       .buildAsync();
 
     const firstResponse = await fetch(`${address}/first`);

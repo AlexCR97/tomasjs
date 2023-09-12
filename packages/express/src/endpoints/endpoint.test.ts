@@ -5,7 +5,6 @@ import { AppBuilder } from "@/builder";
 import { TestContext } from "@/tests";
 import { OkResponse } from "@/responses";
 import { isHttpContext, statusCodes } from "@/core";
-import { endpoint } from "./endpoint";
 
 const testSuiteName = "endpoints/endpoint";
 
@@ -28,12 +27,10 @@ describe(testSuiteName, () => {
 
   it("Can bootstrap a GET endpoint", async () => {
     context.server = await new AppBuilder({ port, logger })
-      .use(
-        endpoint("get", "/", () => {
-          logger.debug("get!");
-          return new OkResponse();
-        })
-      )
+      .useGet("/", () => {
+        logger.debug("get!");
+        return new OkResponse();
+      })
       .buildAsync();
 
     const response = await fetch(address);
@@ -43,22 +40,19 @@ describe(testSuiteName, () => {
 
   it("Can inject args into an endpoint", async () => {
     context.server = await new AppBuilder({ port, logger })
-      .use(
-        endpoint(
-          "get",
-          "/",
-          ({ httpContext, services }) => {
-            expect(httpContext).toBeTruthy();
-            expect(isHttpContext(httpContext)).toBeTruthy();
-            expect(services).toBeTruthy();
-            return new OkResponse();
-          },
-          {
-            middlewares: [],
-            interceptors: [],
-            guards: [],
-          }
-        )
+      .useGet(
+        "/",
+        ({ httpContext, services }) => {
+          expect(httpContext).toBeTruthy();
+          expect(isHttpContext(httpContext)).toBeTruthy();
+          expect(services).toBeTruthy();
+          return new OkResponse();
+        },
+        {
+          middlewares: [],
+          interceptors: [],
+          guards: [],
+        }
       )
       .buildAsync();
 

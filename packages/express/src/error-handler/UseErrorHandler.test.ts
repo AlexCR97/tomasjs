@@ -1,7 +1,7 @@
 import "express-async-errors";
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { UseControllers, controller, httpGet } from "@/controllers";
+import { controller, httpGet } from "@/controllers";
 import { Logger, ServiceContainerBuilder, TomasError, injectable } from "@tomasjs/core";
 import { AppBuilder } from "@/builder";
 import { HttpContext, HttpNextFunction, statusCodes } from "@/core";
@@ -44,12 +44,8 @@ describe(testSuiteName, () => {
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
-      .use(
-        new UseErrorHandler({
-          errorHandler: new TomasErrorHandler({}),
-        })
-      )
+      .useControllers(TestController)
+      .useErrorHandler(new TomasErrorHandler())
       .buildAsync();
 
     const response = await fetch(`${address}`);
@@ -66,7 +62,7 @@ describe(testSuiteName, () => {
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+      .useControllers(TestController)
       .use(
         new UseErrorHandler({
           errorHandler: new TomasErrorHandlerFactory({
@@ -96,7 +92,7 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+      .useControllers(TestController)
       .use(new UseErrorHandler({ errorHandler: testErrorHandler }))
       .buildAsync()
       .then(async (server) => {
@@ -122,7 +118,7 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+      .useControllers(TestController)
       .use(new UseErrorHandler({ errorHandler: new TestErrorHandler() }))
       .buildAsync()
       .then(async (server) => {
@@ -153,7 +149,7 @@ describe(testSuiteName, () => {
       .buildContainerAsync()
       .then((container) => {
         new AppBuilder({ port, logger, container })
-          .use(new UseControllers({ controllers: [TestController], logger }))
+          .useControllers(TestController)
           .use(new UseErrorHandler({ errorHandler: TestErrorHandler }))
           .buildAsync()
           .then(async (server) => {
@@ -184,7 +180,7 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+      .useControllers(TestController)
       .use(new UseErrorHandler({ errorHandler: new TestErrorHandlerFactory() }))
       .buildAsync()
       .then(async (server) => {
@@ -216,7 +212,7 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+      .useControllers(TestController)
       .use(new UseErrorHandler({ errorHandler: new TestErrorHandlerFactory() }))
       .buildAsync()
       .then(async (server) => {
@@ -253,7 +249,7 @@ describe(testSuiteName, () => {
       .buildContainerAsync()
       .then((container) => {
         new AppBuilder({ port, logger, container })
-          .use(new UseControllers({ controllers: [TestController], logger }))
+          .useControllers(TestController)
           .use(new UseErrorHandler({ errorHandler: new TestErrorHandlerFactory() }))
           .buildAsync()
           .then(async (server) => {

@@ -1,4 +1,4 @@
-import { ClassConstructor, Container, Logger } from "@tomasjs/core";
+import { ClassConstructor, Container, TomasLogger } from "@tomasjs/core";
 import { Express } from "express";
 import { AppSetupFactory } from "@/builder/AppSetupFactory";
 import { AppSetupFunction } from "@/builder/AppSetupFunction";
@@ -9,26 +9,22 @@ import { ExpressPathNormalizer } from "@/core/express";
 
 interface UseControllersOptions {
   controllers?: ClassConstructor<Controller>[];
-  logger?: Logger;
 }
 
 export class UseControllers implements AppSetupFactory {
-  constructor(private readonly options: UseControllersOptions) {}
+  private readonly logger = new TomasLogger(UseControllers.name, "error");
+  private readonly controllers: ClassConstructor<Controller>[];
 
-  private get controllers(): ClassConstructor<Controller>[] {
-    return this.options.controllers ?? [];
-  }
-
-  private get logger(): Logger | undefined {
-    return this.options.logger;
+  constructor(options: UseControllersOptions) {
+    this.controllers = options.controllers ?? [];
   }
 
   create(): AppSetupFunction {
     return (app, container) => {
-      this.logger?.debug("Bootstrapping controllers ...");
+      this.logger.debug("Bootstrapping controllers ...");
 
       if (this.controllers.length === 0) {
-        this.logger?.debug("No controllers to bootstrap.");
+        this.logger.debug("No controllers to bootstrap.");
         return;
       }
 
@@ -36,7 +32,7 @@ export class UseControllers implements AppSetupFactory {
         this.bootstrapController(app, container, controller);
       }
 
-      this.logger?.debug("Controllers bootstrapped.");
+      this.logger.debug("Controllers bootstrapped.");
     };
   }
 
@@ -45,20 +41,20 @@ export class UseControllers implements AppSetupFactory {
     container: Container,
     controller: ClassConstructor<Controller>
   ) {
-    this.logger?.debug(`Bootstrapping controller ${controller.name} ...`);
+    this.logger.debug(`Bootstrapping controller ${controller.name} ...`);
     const resolvedController = this.bootstrapControllerToContainer(container, controller);
     this.bootstrapControllerToHttpPipeline(app, container, resolvedController);
-    this.logger?.debug(`Controller ${controller.name} has been successfully bootstrapped.`);
+    this.logger.debug(`Controller ${controller.name} has been successfully bootstrapped.`);
   }
 
   private bootstrapControllerToContainer(
     container: Container,
     controller: ClassConstructor<Controller>
   ) {
-    this.logger?.debug(`Bootstrapping to container ...`);
+    this.logger.debug(`Bootstrapping to container ...`);
     container.addClass(controller);
     const resolvedController = container.get<Controller>(controller);
-    this.logger?.debug(`Controller successfully bootstrapped to container.`);
+    this.logger.debug(`Controller successfully bootstrapped to container.`);
     return resolvedController;
   }
 
@@ -67,7 +63,7 @@ export class UseControllers implements AppSetupFactory {
     container: Container,
     controller: Controller
   ) {
-    this.logger?.debug(`Bootstrapping to http pipeline ...`);
+    this.logger.debug(`Bootstrapping to http pipeline ...`);
     const controllerMetadata = new ControllerMetadata(controller);
     const expressRouterPath = new ExpressPathNormalizer(controllerMetadata.path).normalize();
     const expressRouter = new ControllerAdapter({
@@ -76,7 +72,7 @@ export class UseControllers implements AppSetupFactory {
       logger: this.logger,
     }).adapt();
     app.use(expressRouterPath, expressRouter);
-    this.logger?.debug(`Controller successfully bootstrapped to http pipeline.`);
+    this.logger.debug(`Controller successfully bootstrapped to http pipeline.`);
     return this;
   }
 }

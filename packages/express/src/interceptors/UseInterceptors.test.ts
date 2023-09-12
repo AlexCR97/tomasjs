@@ -2,14 +2,13 @@ import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { Logger } from "@tomasjs/core";
 import { AppBuilder } from "@/builder";
-import { UseControllers, controller, headers, httpGet } from "@/controllers";
+import { controller, headers, httpGet } from "@/controllers";
 import { TestContext } from "@/tests";
 import axios from "axios";
 import { InterceptorFunction } from "./InterceptorFunction";
-import { UseInterceptors } from "./UseInterceptors";
 import { IdentityClaim, RequestHeaders } from "@/core";
-import { GuardFunction, UseGuards } from "@/guards";
-import { OkResponse } from "..";
+import { GuardFunction } from "@/guards";
+import { OkResponse } from "@/responses";
 
 const testSuiteName = "interceptors/UseInterceptors";
 
@@ -50,17 +49,8 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(
-        new UseInterceptors({
-          interceptors: [firstInterceptor, secondInterceptor],
-        })
-      )
-      .use(
-        new UseControllers({
-          controllers: [TestController],
-          logger,
-        })
-      )
+      .useInterceptors(firstInterceptor, secondInterceptor)
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;
@@ -97,22 +87,9 @@ describe(testSuiteName, () => {
     }
 
     context.server = await new AppBuilder({ port })
-      .use(
-        new UseInterceptors({
-          interceptors: [authInterceptor],
-        })
-      )
-      .use(
-        new UseGuards({
-          guards: [authGuard],
-        })
-      )
-      .use(
-        new UseControllers({
-          controllers: [TestController],
-          logger,
-        })
-      )
+      .useInterceptors(authInterceptor)
+      .useGuards(authGuard)
+      .useControllers(TestController)
       .buildAsync();
 
     await axios.get(address);

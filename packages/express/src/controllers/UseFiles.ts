@@ -1,5 +1,5 @@
 import { AppSetupFactory, AppSetupFunction } from "@/builder";
-import { Logger } from "@tomasjs/core";
+import { TomasLogger } from "@tomasjs/core";
 import { RequestHandler } from "express";
 
 export interface UseFilesOptions {
@@ -37,16 +37,15 @@ export interface UseFilesOptions {
 
 export class UseFiles implements AppSetupFactory {
   private readonly options?: UseFilesOptions;
-  private readonly logger?: Logger;
+  private readonly logger = new TomasLogger(UseFiles.name, "error");
 
-  constructor(options?: { options: UseFilesOptions; logger?: Logger }) {
-    this.options = options?.options;
-    this.logger = options?.logger;
+  constructor(options?: UseFilesOptions) {
+    this.options = options;
   }
 
   create(): AppSetupFunction {
     return async (app) => {
-      this.logger?.debug("Bootstrapping...");
+      this.logger.debug("Bootstrapping...");
 
       const { default: expressFileUpload } = await import("express-fileupload");
 
@@ -60,7 +59,7 @@ export class UseFiles implements AppSetupFactory {
         })
       );
 
-      this.logger?.debug("Bootstrapped!");
+      this.logger.debug("Bootstrapped!");
     };
   }
 }

@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { controller } from "./@controller";
 import { header } from "./@header";
 import { httpPost } from "./@http";
-import { UseControllers } from "./UseControllers";
 import { Logger } from "@tomasjs/core";
 import { TestContext } from "@/tests";
 import { AppBuilder } from "@/builder";
@@ -45,7 +44,7 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;

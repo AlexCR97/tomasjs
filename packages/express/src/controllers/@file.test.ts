@@ -3,10 +3,8 @@ import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { controller } from "./@controller";
 import { httpPost } from "./@http";
 import { AppBuilder } from "../builder";
-import { UseControllers } from "./UseControllers";
 import { FormFile } from "./FormFile";
 import axios from "axios";
-import { UseFiles } from "./UseFiles";
 import { file } from "./@file";
 import { Logger } from "@tomasjs/core";
 import { TestContext } from "@/tests";
@@ -45,13 +43,8 @@ describe(testSuiteName, () => {
 
     context.server = await new AppBuilder({ port })
       // Order matters! UseFiles must go before UseControllers
-      .use(
-        new UseFiles({
-          options: {},
-          logger,
-        })
-      )
-      .use(new UseControllers({ controllers: [TestController] }))
+      .useFiles({})
+      .useControllers(TestController)
       .buildAsync();
 
     const formData = new FormData();

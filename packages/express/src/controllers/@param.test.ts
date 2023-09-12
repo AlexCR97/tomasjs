@@ -4,7 +4,6 @@ import { controller } from "./@controller";
 import { httpGet } from "./@http";
 import { param } from "./@param";
 import { AppBuilder } from "../builder";
-import { UseControllers } from "./UseControllers";
 import { Logger, numberTransform } from "@tomasjs/core";
 import { TestContext } from "@/tests";
 import axios from "axios";
@@ -41,7 +40,7 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;
@@ -62,7 +61,7 @@ describe(testSuiteName, () => {
     }
 
     new AppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;

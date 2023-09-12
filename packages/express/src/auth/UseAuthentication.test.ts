@@ -2,9 +2,8 @@ import "reflect-metadata";
 import { afterEach, beforeEach, describe, it } from "@jest/globals";
 import { Logger } from "@tomasjs/core";
 import { AppBuilder } from "@/builder";
-import { UseControllers, controller, httpGet } from "@/controllers";
+import { controller, httpGet } from "@/controllers";
 import { TestContext } from "@/tests";
-import { UseAuthentication } from "./UseAuthentication";
 import { OkResponse } from "@/responses";
 import { statusCodes } from "@/core";
 import { JwtSigner } from "./jwt";
@@ -41,20 +40,13 @@ describe(testSuiteName, () => {
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .use(
-        new UseAuthentication({
-          authenticationScheme: "jwt",
-          jwtDecoderOptions: {
-            secret,
-          },
-        })
-      )
-      .use(
-        new UseControllers({
-          controllers: [TestController],
-          logger,
-        })
-      )
+      .useAuthentication({
+        authenticationScheme: "jwt",
+        jwtDecoderOptions: {
+          secret,
+        },
+      })
+      .useControllers(TestController)
       .buildAsync();
 
     const response = await fetch(address, {
