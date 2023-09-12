@@ -84,7 +84,7 @@ const onThisPageItems: MenuItem[] = [
 
         <Code
           code="
-await new ExpressAppBuilder()
+await new AppBuilder()
   .use(new UseControllers({
     // The controllers to bind into your http pipeline.
     controllers: [],
@@ -109,7 +109,7 @@ class RootController {}
 @controller('path/to/your/resources')
 class PathController {}
 
-await new ExpressAppBuilder()
+await new AppBuilder()
   .use(new UseControllers({
     controllers: [RootController, PathController],
   }))

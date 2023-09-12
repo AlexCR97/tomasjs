@@ -1,5 +1,3 @@
-export { JwtGuard } from "./JwtGuard";
-export { JwtSignOptions } from "./JwtSignOptions";
-export { JwtSigner } from "./JwtSigner";
-export { JwtVerifier } from "./JwtVerifier";
-export { JwtVerifyOptions } from "./JwtVerifyOptions";
+export { JwtDecoder, JwtDecoderOptions, JwtDecoderResult } from "./JwtDecoder";
+export { JwtInterceptor } from "./JwtInterceptor";
+export { JwtSigner, JwtSignerOptions } from "./JwtSigner";

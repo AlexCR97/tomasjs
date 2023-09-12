@@ -3,8 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { controller } from "./@controller";
 import { httpGet } from "./@http";
 import { param } from "./@param";
-import { ExpressAppBuilder } from "../builder";
-import { UseControllers } from "./UseControllers";
+import { AppBuilder } from "../builder";
 import { Logger, numberTransform } from "@tomasjs/core";
 import { TestContext } from "@/tests";
 import axios from "axios";
@@ -40,8 +39,8 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+    new AppBuilder({ port, logger })
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;
@@ -61,8 +60,8 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+    new AppBuilder({ port, logger })
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;

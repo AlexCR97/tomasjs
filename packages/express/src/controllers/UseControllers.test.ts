@@ -3,13 +3,12 @@ import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import axios from "axios";
 import { controller } from "./@controller";
 import { httpGet } from "./@http";
-import { UseControllers } from "./UseControllers";
-import { Logger, ServiceContainerBuilder } from "@tomasjs/core";
+import { Logger, ServiceContainerBuilder, injectable } from "@tomasjs/core";
 import { TestContext } from "@/tests";
 import { OkResponse } from "@/responses";
-import { ExpressAppBuilder } from "@/builder";
+import { AppBuilder } from "@/builder";
 import { statusCodes } from "@/core";
-import { Guard, GuardContext, GuardResult, guard } from "@/guards";
+import { Guard, GuardContext, GuardResult } from "@/guards";
 
 const testSuiteName = "controllers/UseControllers";
 
@@ -39,13 +38,8 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new ExpressAppBuilder({ port, logger })
-      .use(
-        new UseControllers({
-          controllers: [TestController],
-          logger,
-        })
-      )
+    context.server = await new AppBuilder({ port, logger })
+      .useControllers(TestController)
       .buildAsync();
 
     const response = await axios.get(`${address}/test`);
@@ -72,8 +66,8 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new ExpressAppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [UsersController], logger }))
+    context.server = await new AppBuilder({ port, logger })
+      .useControllers(UsersController)
       .buildAsync();
 
     // Act/Assert
@@ -91,7 +85,7 @@ describe(testSuiteName, () => {
     const dataFromFirstController = "Data from FirstController";
     const dataFromSecondController = "Data from SecondController";
 
-    @guard()
+    @injectable()
     class TestGuard implements Guard {
       isAllowed(context: GuardContext) {
         collectedData.push(dataFromGuard);
@@ -119,13 +113,8 @@ describe(testSuiteName, () => {
 
     const container = await new ServiceContainerBuilder().addClass(TestGuard).buildContainerAsync();
 
-    context.server = await new ExpressAppBuilder({ port, logger, container })
-      .use(
-        new UseControllers({
-          controllers: [FirstController, SecondController],
-          logger,
-        })
-      )
+    context.server = await new AppBuilder({ port, logger, container })
+      .useControllers(FirstController, SecondController)
       .buildAsync();
 
     const secondResponse = await axios.get(`${address}/second`);
@@ -147,7 +136,7 @@ describe(testSuiteName, () => {
     const dataFromFirstController = "Data from FirstController";
     const dataFromSecondController = "Data from SecondController";
 
-    @guard()
+    @injectable()
     class ControllerGuard implements Guard {
       isAllowed(context: GuardContext) {
         collectedData.push(dataFromControllerGuard);
@@ -155,7 +144,7 @@ describe(testSuiteName, () => {
       }
     }
 
-    @guard()
+    @injectable()
     class MethodGuard implements Guard {
       isAllowed(context: GuardContext): GuardResult {
         collectedData.push(dataFromMethodGuard);
@@ -186,13 +175,8 @@ describe(testSuiteName, () => {
       .addClass(MethodGuard)
       .buildContainerAsync();
 
-    context.server = await new ExpressAppBuilder({ port, logger, container })
-      .use(
-        new UseControllers({
-          controllers: [FirstController, SecondController],
-          logger,
-        })
-      )
+    context.server = await new AppBuilder({ port, logger, container })
+      .useControllers(FirstController, SecondController)
       .buildAsync();
 
     const secondResponse = await axios.get(`${address}/second`);

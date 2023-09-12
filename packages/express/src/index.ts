@@ -1,4 +1,22 @@
-export { HttpMethod, ProblemDetails, UserContext, statusCodes } from "./core";
+export {
+  HttpContext,
+  HttpContextWriter,
+  HttpMethod,
+  HttpNextFunction,
+  HttpRequest,
+  HttpRequestWriter,
+  HttpResponse,
+  HttpResponseWriter,
+  HttpUser,
+  HttpUserWriter,
+  IdentityClaim,
+  ProblemDetails,
+  QueryParams,
+  RequestBody,
+  RequestHeaders,
+  RouteParams,
+  statusCodes,
+} from "./core";
 
 export { ProblemDetailsError, StatusCodeError } from "./errors";
 

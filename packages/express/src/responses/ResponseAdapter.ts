@@ -3,6 +3,7 @@ import { statusCodes } from "@/core";
 import { BaseResponse, JsonResponse, PlainTextResponse, StatusCodeResponse } from "@/responses";
 import { Logger } from "@tomasjs/core";
 
+// TODO Delete this and use HttpResponseWriter instead
 export abstract class ResponseAdapter {
   private constructor() {}
 

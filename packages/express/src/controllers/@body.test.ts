@@ -2,11 +2,10 @@ import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { body } from "./@body";
 import { controller } from "./@controller";
-import { UseControllers } from "./UseControllers";
 import { httpPost } from "./@http";
 import { Logger } from "@tomasjs/core";
 import { TestContext } from "@/tests";
-import { ExpressAppBuilder, UseJson } from "@/builder";
+import { AppBuilder } from "@/builder";
 import axios from "axios";
 
 const testSuiteName = "controllers/@body";
@@ -43,14 +42,9 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
-      .use(new UseJson())
-      .use(
-        new UseControllers({
-          controllers: [TestController],
-          logger,
-        })
-      )
+    new AppBuilder({ port, logger })
+      .useJson()
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;

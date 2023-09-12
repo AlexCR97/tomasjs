@@ -3,10 +3,9 @@ import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { controller } from "./@controller";
 import { header } from "./@header";
 import { httpPost } from "./@http";
-import { UseControllers } from "./UseControllers";
 import { Logger } from "@tomasjs/core";
 import { TestContext } from "@/tests";
-import { ExpressAppBuilder } from "@/builder";
+import { AppBuilder } from "@/builder";
 import axios from "axios";
 
 const testSuiteName = "controllers/@header";
@@ -44,8 +43,8 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+    new AppBuilder({ port, logger })
+      .useControllers(TestController)
       .buildAsync()
       .then((server) => {
         context.server = server;

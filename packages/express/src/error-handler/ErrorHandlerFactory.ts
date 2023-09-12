@@ -1,5 +1,4 @@
-import { ClassConstructor } from "@tomasjs/core";
-import { FunctionChecker } from "@/core";
+import { ClassConstructor, FunctionChecker } from "@tomasjs/core";
 import { ErrorHandlerFunction } from "./ErrorHandlerFunction";
 import { ErrorHandler } from "./ErrorHandler";
 

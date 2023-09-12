@@ -4,12 +4,12 @@ import {
   ExpressRequestHandler,
 } from "@/core/express";
 import { MiddlewareAdapter } from "@/middleware";
-import { ResponseAdapter } from "@/responses";
 import { Router } from "express";
 import { Controller } from "./Controller";
 import { ControllerMetadata, HttpMethodMetadata } from "./metadata";
 import { Container, Logger } from "@tomasjs/core";
 import { GuardAdapter } from "@/guards";
+import { httpResponseFactory } from "@/core";
 
 /**
  * Adapts a Controller to an Express Router.
@@ -70,7 +70,8 @@ export class ControllerAdapter {
         }
 
         const result = await (this.controller as any)[instanceMethod](req, res);
-        ResponseAdapter.fromThomasToExpress(res, result);
+        const response = httpResponseFactory(res);
+        response.send(result);
       };
 
       router[httpMethod](path, [
@@ -94,7 +95,6 @@ export class ControllerAdapter {
       const adapter = new MiddlewareAdapter({
         container: this.container,
         middleware,
-        logger: this.logger,
       });
 
       return adapter.adapt();
@@ -116,7 +116,6 @@ export class ControllerAdapter {
       const adapter = new MiddlewareAdapter({
         container: this.container,
         middleware,
-        logger: this.logger,
       });
 
       return adapter.adapt();

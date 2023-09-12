@@ -2,13 +2,13 @@ import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
 import { controller } from "./@controller";
 import { httpGet } from "./@http";
-import { UseControllers } from "./UseControllers";
 import { Logger, ServiceContainerBuilder, injectable } from "@tomasjs/core";
-import { Request, Response, NextFunction } from "express";
 import { TestContext } from "@/tests";
-import { Middleware } from "@/middleware";
-import { ExpressAppBuilder } from "@/builder";
+import { Middleware, MiddlewareResult } from "@/middleware";
+import { AppBuilder } from "@/builder";
 import axios from "axios";
+import { HttpContext } from "@/core";
+import { NextFunction } from "express";
 
 const testSuiteName = "controllers/methodLevelMiddlewares";
 
@@ -34,7 +34,7 @@ describe(testSuiteName, () => {
 
     @injectable()
     class FirstMiddleware implements Middleware {
-      handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
+      delegate(context: HttpContext, next: NextFunction): MiddlewareResult {
         logger.debug("first middleware!");
         collectedData.push(1);
         next();
@@ -43,7 +43,7 @@ describe(testSuiteName, () => {
 
     @injectable()
     class SecondMiddleware implements Middleware {
-      handle(req: Request, res: Response, next: NextFunction): void | Promise<void> {
+      delegate(context: HttpContext, next: NextFunction): MiddlewareResult {
         logger.debug("second middleware!");
         collectedData.push(2);
         next();
@@ -66,13 +66,8 @@ describe(testSuiteName, () => {
       .addClass(SecondMiddleware)
       .buildContainerAsync()
       .then((container) => {
-        new ExpressAppBuilder({ port, logger, container })
-          .use(
-            new UseControllers({
-              controllers: [TestController],
-              logger,
-            })
-          )
+        new AppBuilder({ port, logger, container })
+          .useControllers(TestController)
           .buildAsync()
           .then((server) => {
             context.server = server;

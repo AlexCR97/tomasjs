@@ -47,7 +47,7 @@ const onThisPageItems: MenuItem[] = [
     </template>
 
     <main class="container py-4">
-      <h3 class="mb-5">ExpressAppBuilder</h3>
+      <h3 class="mb-5">AppBuilder</h3>
 
       <section
         :id="optionsSection.id"
@@ -56,7 +56,7 @@ const onThisPageItems: MenuItem[] = [
 
         <Code
           code="
-await new ExpressAppBuilder({
+await new AppBuilder({
   // The underlying express app that will be used by TomasJS.
   // If undefined, TomasJS will build the app itself.
   app: undefined,
@@ -67,7 +67,7 @@ await new ExpressAppBuilder({
   container: undefined,
 
   // A logger that you can use to debug the bootstrapping process.
-  logger: new TomasLogger(ExpressAppBuilder.name, 'debug'),
+  logger: new TomasLogger(AppBuilder.name, 'debug'),
 
   // The port where your app will listen for requests.
   // The default is 3000.
@@ -86,7 +86,7 @@ await new ExpressAppBuilder({
 
         <Code
           code="
-await new ExpressAppBuilder()
+await new AppBuilder()
   .use(new UseJson({
     // json options
   }))
@@ -106,7 +106,7 @@ const myAppSetup: AppSetupFunction = (app, container) => {
   // Use 'container' to configure the underlying DI container
 };
 
-await new ExpressAppBuilder()
+await new AppBuilder()
   .use(myAppSetup)
   .buildAsync();
           " />
@@ -128,7 +128,7 @@ class MyAppSetup implements AppSetupFactory {
   }
 }
 
-await new ExpressAppBuilder()
+await new AppBuilder()
   .use(new MyAppSetup())
   .buildAsync();
           " />

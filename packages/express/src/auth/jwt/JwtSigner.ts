@@ -1,10 +1,15 @@
-import { sign } from "jsonwebtoken";
-import { JwtSignOptions } from "./JwtSignOptions";
+import { SignOptions, sign as jsonWebTokenSign } from "jsonwebtoken";
+import { removeKey } from "@/common";
 
-export abstract class JwtSigner {
-  private constructor() {}
+export type JwtSignerOptions = {
+  secret: string;
+} & SignOptions;
 
-  static sign(claims: string | Buffer | object, secret: string, options?: JwtSignOptions): string {
-    return sign(claims, secret, options);
+export class JwtSigner {
+  constructor(private readonly options: JwtSignerOptions) {}
+
+  sign(claims: string | Buffer | object): string {
+    const optionsWithoutSecret = removeKey(this.options, "secret");
+    return jsonWebTokenSign(claims, this.options.secret, optionsWithoutSecret);
   }
 }

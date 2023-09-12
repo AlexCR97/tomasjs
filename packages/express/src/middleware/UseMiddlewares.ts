@@ -1,30 +1,26 @@
-import { Express } from "express";
+import { Container, TomasLogger } from "@tomasjs/core";
 import { AppSetupFactory, AppSetupFunction } from "@/builder";
-import { MiddlewareType } from "./MiddlewareType";
-import { Container, Logger } from "@tomasjs/core";
+import { Express } from "express";
 import { MiddlewareAdapter } from "./MiddlewareAdapter";
+import { MiddlewareType } from "./MiddlewareType";
 
 export class UseMiddlewares implements AppSetupFactory {
-  constructor(
-    private readonly options: {
-      middlewares?: MiddlewareType[];
-      logger?: Logger;
-    }
-  ) {}
+  private readonly middlewares: MiddlewareType[];
+  private readonly logger = new TomasLogger(UseMiddlewares.name, "debug");
 
-  private get middlewares(): MiddlewareType[] {
-    return this.options.middlewares ?? [];
-  }
-
-  private get logger(): Logger | undefined {
-    return this.options.logger;
+  constructor(options: { middlewares?: MiddlewareType[] }) {
+    this.middlewares = options.middlewares ?? [];
   }
 
   create(): AppSetupFunction {
     return (app, container) => {
+      this.logger.debug("Bootstrapping middlewares...");
+
       for (const middleware of this.middlewares) {
         this.bootstrapIntoHttpPipeline(app, container, middleware);
       }
+
+      this.logger.debug("Successfully bootstrapped middlewares");
     };
   }
 
@@ -33,14 +29,17 @@ export class UseMiddlewares implements AppSetupFactory {
     container: Container,
     middleware: MiddlewareType
   ) {
+    this.logger.debug(`Bootstrapping middleware "${middleware}..."`);
+
     const adapter = new MiddlewareAdapter({
       container,
       middleware,
-      logger: this.logger,
     });
 
-    const middlewareFunction = adapter.adapt();
+    const expressMiddlewareFunction = adapter.adapt();
 
-    app.use(middlewareFunction);
+    app.use(expressMiddlewareFunction);
+
+    this.logger.debug(`Successfully bootstrapped middleware "${middleware}"`);
   }
 }

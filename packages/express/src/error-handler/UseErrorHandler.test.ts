@@ -1,12 +1,11 @@
 import "express-async-errors";
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, expect, it } from "@jest/globals";
-import { UseControllers, controller, httpGet } from "@/controllers";
+import { controller, httpGet } from "@/controllers";
 import { Logger, ServiceContainerBuilder, TomasError, injectable } from "@tomasjs/core";
-import { ExpressAppBuilder } from "@/builder";
-import { statusCodes } from "@/core";
+import { AppBuilder } from "@/builder";
+import { HttpContext, HttpNextFunction, statusCodes } from "@/core";
 import { TomasErrorHandlerFactory } from "./TomasErrorHandlerFactory";
-import { Request, Response, NextFunction } from "express";
 import { ErrorHandlerFactory } from "./ErrorHandlerFactory";
 import { TestContext } from "@/tests";
 import fetch from "node-fetch"; // Use node-fetch instead of axios because of error "TypeError: Converting circular structure to JSON"
@@ -14,6 +13,7 @@ import { UseErrorHandler } from "./UseErrorHandler";
 import { TomasErrorHandler } from "./TomasErrorHandler";
 import { ErrorHandlerFunction } from "./ErrorHandlerFunction";
 import { ErrorHandler } from "./ErrorHandler";
+import { InternalServerErrorResponse } from "@/responses";
 
 const testSuiteName = "error-handler/UseErrorHandler";
 
@@ -43,13 +43,9 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new ExpressAppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
-      .use(
-        new UseErrorHandler({
-          errorHandler: new TomasErrorHandler({ logger }),
-        })
-      )
+    context.server = await new AppBuilder({ port, logger })
+      .useControllers(TestController)
+      .useErrorHandler(new TomasErrorHandler())
       .buildAsync();
 
     const response = await fetch(`${address}`);
@@ -65,8 +61,8 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new ExpressAppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+    context.server = await new AppBuilder({ port, logger })
+      .useControllers(TestController)
       .use(
         new UseErrorHandler({
           errorHandler: new TomasErrorHandlerFactory({
@@ -82,8 +78,8 @@ describe(testSuiteName, () => {
   });
 
   it("Can bootstrap ErrorHandlerFunction", (done) => {
-    const testErrorHandler: ErrorHandlerFunction = (err, req, res, next) => {
-      res.status(500).send();
+    const testErrorHandler: ErrorHandlerFunction = (err, { response }, next) => {
+      response.send(new InternalServerErrorResponse());
       done();
     };
 
@@ -95,8 +91,8 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+    new AppBuilder({ port, logger })
+      .useControllers(TestController)
       .use(new UseErrorHandler({ errorHandler: testErrorHandler }))
       .buildAsync()
       .then(async (server) => {
@@ -107,8 +103,8 @@ describe(testSuiteName, () => {
 
   it("Can bootstrap ErrorHandler instance", (done) => {
     class TestErrorHandler implements ErrorHandler {
-      catch(error: any, req: Request, res: Response, next: NextFunction) {
-        res.status(500).send();
+      catch(error: any, { response }: HttpContext, next: HttpNextFunction) {
+        response.send(new InternalServerErrorResponse());
         done();
       }
     }
@@ -121,8 +117,8 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+    new AppBuilder({ port, logger })
+      .useControllers(TestController)
       .use(new UseErrorHandler({ errorHandler: new TestErrorHandler() }))
       .buildAsync()
       .then(async (server) => {
@@ -134,8 +130,8 @@ describe(testSuiteName, () => {
   it("Can bootstrap ErrorHandler class", (done) => {
     @injectable()
     class TestErrorHandler implements ErrorHandler {
-      catch(error: any, req: Request, res: Response, next: NextFunction) {
-        res.status(500).send();
+      catch(error: any, { response }: HttpContext, next: HttpNextFunction) {
+        response.send(new InternalServerErrorResponse());
         done();
       }
     }
@@ -152,8 +148,8 @@ describe(testSuiteName, () => {
       .addClass(TestErrorHandler)
       .buildContainerAsync()
       .then((container) => {
-        new ExpressAppBuilder({ port, logger, container })
-          .use(new UseControllers({ controllers: [TestController], logger }))
+        new AppBuilder({ port, logger, container })
+          .useControllers(TestController)
           .use(new UseErrorHandler({ errorHandler: TestErrorHandler }))
           .buildAsync()
           .then(async (server) => {
@@ -164,8 +160,8 @@ describe(testSuiteName, () => {
   });
 
   it("Can bootstrap ErrorHandlerFactory that returns an ErrorHandlerFunction", (done) => {
-    const testErrorHandler: ErrorHandlerFunction = (err, req, res, next) => {
-      res.status(500).send();
+    const testErrorHandler: ErrorHandlerFunction = (err, { response }, next) => {
+      response.send(new InternalServerErrorResponse());
       done();
     };
 
@@ -183,8 +179,8 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+    new AppBuilder({ port, logger })
+      .useControllers(TestController)
       .use(new UseErrorHandler({ errorHandler: new TestErrorHandlerFactory() }))
       .buildAsync()
       .then(async (server) => {
@@ -195,8 +191,8 @@ describe(testSuiteName, () => {
 
   it("Can bootstrap ErrorHandlerFactory that returns an ErrorHandler instance", (done) => {
     class TestErrorHandler implements ErrorHandler {
-      catch(error: any, req: Request, res: Response, next: NextFunction) {
-        res.status(500).send();
+      catch(error: any, { response }: HttpContext, next: HttpNextFunction) {
+        response.send(new InternalServerErrorResponse());
         done();
       }
     }
@@ -215,8 +211,8 @@ describe(testSuiteName, () => {
       }
     }
 
-    new ExpressAppBuilder({ port, logger })
-      .use(new UseControllers({ controllers: [TestController], logger }))
+    new AppBuilder({ port, logger })
+      .useControllers(TestController)
       .use(new UseErrorHandler({ errorHandler: new TestErrorHandlerFactory() }))
       .buildAsync()
       .then(async (server) => {
@@ -228,8 +224,8 @@ describe(testSuiteName, () => {
   it("Can bootstrap ErrorHandlerFactory that returns an ErrorHandler class", (done) => {
     @injectable()
     class TestErrorHandler implements ErrorHandler {
-      catch(error: any, req: Request, res: Response, next: NextFunction) {
-        res.status(500).send();
+      catch(error: any, { response }: HttpContext, next: HttpNextFunction) {
+        response.send(new InternalServerErrorResponse());
         done();
       }
     }
@@ -252,8 +248,8 @@ describe(testSuiteName, () => {
       .addClass(TestErrorHandler)
       .buildContainerAsync()
       .then((container) => {
-        new ExpressAppBuilder({ port, logger, container })
-          .use(new UseControllers({ controllers: [TestController], logger }))
+        new AppBuilder({ port, logger, container })
+          .useControllers(TestController)
           .use(new UseErrorHandler({ errorHandler: new TestErrorHandlerFactory() }))
           .buildAsync()
           .then(async (server) => {

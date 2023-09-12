@@ -1,13 +1,10 @@
-import { FunctionChecker } from "@/core";
-import { NextFunction, Request, Response } from "express";
+import { HttpContext, HttpNextFunction } from "@/core";
+import { MiddlewareResult } from "./MiddlewareResult";
+import { FunctionChecker } from "@tomasjs/core";
 
-export type MiddlewareFunction = (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => void | Promise<void>;
+export type MiddlewareFunction = (context: HttpContext, next: HttpNextFunction) => MiddlewareResult;
 
 // TODO Write unit test for this
 export function isMiddlewareFunction(obj: any): obj is MiddlewareFunction {
-  return new FunctionChecker(obj).isNotNull().isTypeFunction().hasArgumentCount(3).check();
+  return new FunctionChecker(obj).isNotNull().isTypeFunction().hasArgumentCount(2).check();
 }
