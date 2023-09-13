@@ -64,15 +64,14 @@ export class UseControllers implements AppSetupFactory {
     controller: Controller
   ) {
     this.logger.debug(`Bootstrapping to http pipeline ...`);
+
     const controllerMetadata = new ControllerMetadata(controller);
     const expressRouterPath = new ExpressPathNormalizer(controllerMetadata.path).normalize();
-    const expressRouter = new ControllerAdapter({
-      container,
-      controller,
-      logger: this.logger,
-    }).adapt();
+    const expressRouter = new ControllerAdapter(controller, container).adapt();
     app.use(expressRouterPath, expressRouter);
+
     this.logger.debug(`Controller successfully bootstrapped to http pipeline.`);
+
     return this;
   }
 }

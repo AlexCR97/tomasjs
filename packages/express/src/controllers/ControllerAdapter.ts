@@ -7,38 +7,24 @@ import { MiddlewareAdapter } from "@/middleware";
 import { Router } from "express";
 import { Controller } from "./Controller";
 import { ControllerMetadata, HttpMethodMetadata } from "./metadata";
-import { Container, Logger } from "@tomasjs/core";
+import { Container, TomasError, TomasLogger } from "@tomasjs/core";
 import { GuardAdapter } from "@/guards";
-import { httpResponseFactory } from "@/core";
+import { HttpMethod, httpResponseFactory } from "@/core";
+import { InterceptorAdapter } from "@/interceptors";
 
 /**
  * Adapts a Controller to an Express Router.
  */
 export class ControllerAdapter {
-  constructor(
-    private readonly options: {
-      container: Container;
-      controller: Controller;
-      logger?: Logger;
-    }
-  ) {}
+  private readonly logger = new TomasLogger(ControllerAdapter.name, "error");
 
-  private get container(): Container {
-    return this.options.container;
-  }
-
-  private get controller(): Controller {
-    return this.options.controller;
-  }
-
-  private get logger(): Logger | undefined {
-    return this.options.logger;
-  }
+  constructor(private readonly controller: Controller, private readonly container: Container) {}
 
   adapt(): Router {
     const router = Router();
     const controllerMetadata = new ControllerMetadata(this.controller);
     const controllerLevelMiddlewares = this.getControllerLevelMiddlewares(controllerMetadata);
+    const controllerLevelInterceptors = this.getControllerLevelInterceptors(controllerMetadata);
     const controllerLevelGuards = this.getControllerLevelGuards(controllerMetadata);
 
     for (const httpMethodMetadata of controllerMetadata.httpMethods) {
@@ -52,6 +38,7 @@ export class ControllerAdapter {
       this.logger?.debug(`path: ${path}`);
 
       const methodLevelMiddlewares = this.getMethodLevelMiddlewares(httpMethodMetadata);
+      const methodLevelInterceptors = this.getMethodLevelInterceptors(httpMethodMetadata);
       const methodLevelGuards = this.getMethodLevelGuards(httpMethodMetadata);
 
       const expressRequestHandler: ExpressRequestHandler = async (req, res) => {
@@ -74,10 +61,12 @@ export class ControllerAdapter {
         response.send(result);
       };
 
-      router[httpMethod](path, [
+      this.bindRequestHandlers(router, httpMethod, path, [
         ...controllerLevelMiddlewares,
+        ...controllerLevelInterceptors,
         ...controllerLevelGuards,
         ...methodLevelMiddlewares,
+        ...methodLevelInterceptors,
         ...methodLevelGuards,
         expressRequestHandler,
       ]);
@@ -97,6 +86,17 @@ export class ControllerAdapter {
         middleware,
       });
 
+      return adapter.adapt();
+    });
+  }
+
+  private getControllerLevelInterceptors(
+    metadata: ControllerMetadata<Controller>
+  ): ExpressMiddlewareFunction[] {
+    const interceptors = metadata.interceptors ?? [];
+
+    return interceptors.map((interceptor) => {
+      const adapter = new InterceptorAdapter(this.container, interceptor);
       return adapter.adapt();
     });
   }
@@ -122,9 +122,47 @@ export class ControllerAdapter {
     });
   }
 
+  private getMethodLevelInterceptors(metadata: HttpMethodMetadata): ExpressMiddlewareFunction[] {
+    const interceptors = metadata.interceptors ?? [];
+
+    return interceptors.map((interceptor) => {
+      const adapter = new InterceptorAdapter(this.container, interceptor);
+      return adapter.adapt();
+    });
+  }
+
   private getMethodLevelGuards(metadata: HttpMethodMetadata): ExpressMiddlewareFunction[] {
     return (metadata.guards ?? []).map((guard) => {
       return new GuardAdapter({ container: this.container, guard }).adapt();
     });
+  }
+
+  private bindRequestHandlers(
+    router: Router,
+    method: HttpMethod,
+    path: string,
+    handlers: ExpressMiddlewareFunction[]
+  ) {
+    if (method === "get") {
+      return router.get(path, ...handlers);
+    }
+
+    if (method === "post") {
+      return router.post(path, ...handlers);
+    }
+
+    if (method === "put") {
+      return router.put(path, ...handlers);
+    }
+
+    if (method === "patch") {
+      return router.patch(path, ...handlers);
+    }
+
+    if (method === "delete") {
+      return router.delete(path, ...handlers);
+    }
+
+    throw new TomasError(`Unknown HttpMethod "${method}"`, { data: { method } });
   }
 }

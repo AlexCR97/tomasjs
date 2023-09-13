@@ -1,6 +1,7 @@
 import { HttpMethod } from "@/core";
 import { ClassMethodMetadata } from "@/core/metadata";
 import { GuardType } from "@/guards";
+import { InterceptorType } from "@/interceptors";
 import { MiddlewareType } from "@/middleware";
 import { RequiredArgumentError } from "@tomasjs/core";
 
@@ -73,6 +74,28 @@ export class HttpMethodMetadata {
     }
 
     this.middlewares.push(...value);
+  }
+
+  /* #endregion */
+
+  /* #region Interceptors */
+
+  private readonly interceptorsKey = "tomasjs:controller:method:interceptors";
+
+  get interceptors(): InterceptorType[] | undefined {
+    return this.metadata.get<InterceptorType[] | undefined>(this.interceptorsKey);
+  }
+
+  set interceptors(value: InterceptorType[] | undefined) {
+    this.metadata.set(this.interceptorsKey, value);
+  }
+
+  addInterceptor(...value: InterceptorType[]) {
+    if (this.interceptors === undefined) {
+      this.interceptors = [];
+    }
+
+    this.interceptors.push(...value);
   }
 
   /* #endregion */

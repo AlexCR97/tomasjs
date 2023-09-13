@@ -16,9 +16,11 @@ import { filesMetadataKey } from "./@files";
 import { FormFilesBuilder } from "./FormFilesBuilder";
 import { UploadedFile } from "express-fileupload";
 import { UseFilesError } from "./UseFilesError";
+import { InterceptorType } from "@/interceptors";
 
 interface HttpOptions {
   middlewares?: MiddlewareType[];
+  interceptors?: InterceptorType[];
   guards?: GuardType[];
 }
 
@@ -29,6 +31,7 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
     metadata.httpMethod = method;
     metadata.path = path;
     metadata.addMiddleware(...(options?.middlewares ?? []));
+    metadata.addInterceptor(...(options?.interceptors ?? []));
     metadata.addGuard(...(options?.guards ?? []));
 
     const originalFunction: Function = descriptor.value;
@@ -39,7 +42,6 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
 
       const controllerMethodArgs: any[] = [];
 
-      req.files;
       tryInjectHeadersArg();
       tryInjectHeaderArgs();
       tryInjectParamsArg();

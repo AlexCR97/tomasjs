@@ -1,7 +1,5 @@
-import { globalLoggingOptions } from "@tomasjs/core";
-globalLoggingOptions.minimumLevel.override("MiddlewareAdapter", "error");
-globalLoggingOptions.minimumLevel.override("UseMiddlewares", "error");
-globalLoggingOptions.minimumLevel.override("UseInterceptors", "error");
+// Import global logging options for tests
+import "./globalLoggingOptions";
 
 export { TestContext } from "./TestContext";
 export { tick } from "./tick";

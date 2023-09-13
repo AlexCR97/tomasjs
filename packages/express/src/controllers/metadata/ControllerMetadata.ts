@@ -3,8 +3,9 @@ import { Controller } from "../Controller";
 import { ControllerType } from "../ControllerType";
 import { isController } from "../isController";
 import { HttpMethodMetadata } from "./HttpMethodMetadata";
-import { TomasError } from "@tomasjs/core";
+import { Pipe, TomasError } from "@tomasjs/core";
 import { MiddlewareType } from "@/middleware";
+import { InterceptorType } from "@/interceptors";
 
 export class ControllerMetadata<TController extends Controller> {
   constructor(private readonly controller: ControllerType<TController>) {}
@@ -45,6 +46,28 @@ export class ControllerMetadata<TController extends Controller> {
 
   /* #endregion */
 
+  /* #region Interceptors */
+
+  private readonly interceptorsKey = "tomasjs:controller:interceptors";
+
+  get interceptors(): InterceptorType[] | undefined {
+    return this.getMetadata<InterceptorType[] | undefined>(this.interceptorsKey);
+  }
+
+  set interceptors(value: InterceptorType[] | undefined) {
+    this.setMetadata(this.interceptorsKey, value);
+  }
+
+  addInterceptor(...value: InterceptorType[]) {
+    if (this.interceptors === undefined) {
+      this.interceptors = [];
+    }
+
+    this.interceptors.push(...value);
+  }
+
+  /* #endregion */
+
   /* #region Guards */
 
   private readonly guardsKey = "tomasjs:controller:guards";
@@ -75,6 +98,35 @@ export class ControllerMetadata<TController extends Controller> {
         'The method "get httpMethods" is only supported for Controller instances.'
       );
     }
+
+    return (
+      new Pipe({
+        controller: this.controller,
+        invalidKeys: [this.pathKey, this.middlewaresKey, this.interceptorsKey, this.guardsKey],
+      })
+        // Get decorated properties of controller
+        .apply(({ controller, invalidKeys }) => {
+          return {
+            controller,
+            invalidKeys,
+            decoratedProperties: Reflect.getMetadataKeys(controller),
+          };
+        })
+        // Keep only valid decorated properties
+        .apply(({ controller, invalidKeys, decoratedProperties }) => {
+          return {
+            controller,
+            validDecoratedProperties: decoratedProperties.filter(
+              (key) => !invalidKeys.includes(key)
+            ),
+          };
+        })
+        // Convert the decorated properties into a strongly typed HttpMethodMetadata facade
+        .apply(({ controller, validDecoratedProperties }) => {
+          return validDecoratedProperties.map((key) => new HttpMethodMetadata(controller, key));
+        })
+        .get()
+    );
 
     // Get the decorated properties
     const result1 = Reflect.getMetadataKeys(this.controller);
