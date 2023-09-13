@@ -2,6 +2,8 @@ import { Pipe } from "@/pipes";
 import { Transform } from "@/transforms";
 import { KeyConfiguration } from "./KeyConfiguration";
 import { KeyTransform } from "./KeyTransform";
+import { getOrDefault } from "@/reflection/get";
+import { set } from "@/reflection/set";
 
 export class KeyConfigTransform<T extends Record<string, any>> implements Transform<T, T> {
   constructor(private readonly keyConfigs: KeyConfiguration<T>[]) {}
@@ -10,7 +12,9 @@ export class KeyConfigTransform<T extends Record<string, any>> implements Transf
     const output = this.shallowCopy(input);
 
     for (const keyConfig of this.keyConfigs) {
-      const oldValue = output[keyConfig.key];
+      const oldValue = getOrDefault<string>(output, keyConfig.key as string, {
+        notation: keyConfig.keyNotation,
+      });
 
       const newValue = new Pipe(oldValue)
         .apply((value) => this.tryOverrideWithEnvironmentVariable(keyConfig, value))
@@ -18,7 +22,7 @@ export class KeyConfigTransform<T extends Record<string, any>> implements Transf
         .apply((value) => value as T[keyof T])
         .get();
 
-      output[keyConfig.key] = newValue;
+      set(output, keyConfig.key as string, newValue, { notation: keyConfig.keyNotation });
     }
 
     return output;
@@ -30,8 +34,8 @@ export class KeyConfigTransform<T extends Record<string, any>> implements Transf
 
   private tryOverrideWithEnvironmentVariable<T extends Record<string, any>>(
     { key, overrideFromEnvironment }: KeyConfiguration<T>,
-    value: T[keyof T]
-  ) {
+    value: string | undefined
+  ): string | undefined {
     if (!overrideFromEnvironment) {
       return value;
     }

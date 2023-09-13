@@ -1,10 +1,18 @@
-import { KeyConfiguration } from "./KeyConfiguration";
 import { Transform, booleanTransform } from "@/transforms";
+import { KeyConfiguration } from "./KeyConfiguration";
 
-export class KeyTransform<T extends object> implements Transform<string, any> {
+export class KeyTransform<T extends object> implements Transform<string | undefined, any> {
   constructor(private readonly keyConfiguration: KeyConfiguration<T>) {}
 
-  transform(input: string) {
+  transform(input: string | undefined) {
+    if (this.keyConfiguration.value !== undefined) {
+      return this.keyConfiguration.value;
+    }
+
+    if (input === undefined) {
+      return undefined;
+    }
+
     if (this.keyConfiguration.type === "string") {
       return input;
     }
@@ -14,7 +22,7 @@ export class KeyTransform<T extends object> implements Transform<string, any> {
     }
 
     if (this.keyConfiguration.type === "boolean") {
-      return booleanTransform(input as string);
+      return booleanTransform(input);
     }
 
     return input;
