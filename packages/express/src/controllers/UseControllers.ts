@@ -7,7 +7,7 @@ import { ControllerMetadata } from "./metadata";
 import { ControllerAdapter } from "./ControllerAdapter";
 import { ExpressPathNormalizer } from "@/core/express";
 
-interface UseControllersOptions {
+export interface UseControllersOptions {
   controllers?: ClassConstructor<Controller>[];
 }
 

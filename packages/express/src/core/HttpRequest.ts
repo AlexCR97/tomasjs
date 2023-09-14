@@ -6,6 +6,8 @@ import { RequestHeaders } from "./RequestHeaders";
 import { RouteParams } from "./RouteParams";
 import { QueryParams } from "./QueryParams";
 import { RequestBody } from "./RequestBody";
+import { FormFiles } from "@/controllers";
+import { formFilesFactory } from "@/controllers/formFilesFactory";
 
 export interface HttpRequest {
   readonly method: HttpMethod;
@@ -14,6 +16,7 @@ export interface HttpRequest {
   readonly params: RouteParams;
   readonly query: QueryParams;
   readonly body: RequestBody;
+  readonly files: FormFiles | undefined;
 
   /* #region Headers */
   getHeader(key: string): string;
@@ -54,7 +57,8 @@ class HttpRequestImpl implements HttpRequest {
     readonly headers: RequestHeaders,
     readonly params: RouteParams,
     readonly query: QueryParams,
-    readonly body: RequestBody
+    readonly body: RequestBody,
+    readonly files: FormFiles | undefined
   ) {}
 
   /* #region Headers */
@@ -252,7 +256,8 @@ export function httpRequestFactory(req: Request): HttpRequest {
     req.headers,
     req.params,
     req.query as QueryParams, // TODO Improve typing here
-    req.body
+    req.body,
+    req.files !== undefined && req.files !== null ? formFilesFactory(req.files) : undefined
   );
 }
 

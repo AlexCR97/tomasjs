@@ -1,4 +1,4 @@
-import { HttpMethod } from "@/core";
+import { HttpMethod, httpContextFactory } from "@/core";
 import { Request, Response } from "express";
 import { BodyMetadataKey } from "./@body";
 import { HeaderMetadata, HeaderMetadataKey } from "./@header";
@@ -11,13 +11,12 @@ import { MiddlewareType } from "@/middleware";
 import { GuardType } from "@/guards";
 import { TransformResultResolver } from "@/transforms";
 import { FileMetadata, fileMetadataKey } from "./@file";
-import { FormFile } from "./FormFile";
 import { filesMetadataKey } from "./@files";
-import { FormFilesBuilder } from "./FormFilesBuilder";
-import { UploadedFile } from "express-fileupload";
 import { UseFilesError } from "./UseFilesError";
 import { InterceptorType } from "@/interceptors";
 import { AuthClaim, UseAuthenticationOptions } from "@/auth";
+import { contextMetadataKey } from "./@context";
+import { formFileFactory, formFilesFactory } from "./formFilesFactory";
 
 interface HttpOptions {
   middlewares?: MiddlewareType[];
@@ -46,6 +45,7 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
 
       const controllerMethodArgs: any[] = [];
 
+      tryInjectContextArg();
       tryInjectHeadersArg();
       tryInjectHeaderArgs();
       tryInjectParamsArg();
@@ -55,6 +55,16 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
       tryInjectFileArgs();
 
       return originalFunction.apply(this, controllerMethodArgs);
+
+      function tryInjectContextArg() {
+        const paramIndex = Reflect.getOwnMetadata(contextMetadataKey, target, propertyKey);
+
+        if (typeof paramIndex !== "number") {
+          return;
+        }
+
+        controllerMethodArgs[paramIndex] = httpContextFactory(req, res);
+      }
 
       function tryInjectHeadersArg() {
         const paramIndex = Reflect.getOwnMetadata(HeadersMetadataKey, target, propertyKey);
@@ -143,15 +153,7 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
           throw new UseFilesError();
         }
 
-        const formFilesBuilder = new FormFilesBuilder();
-
-        for (const formField of Object.keys(req.files)) {
-          const file = req.files[formField];
-          const formFile = toFormFileOrFormFileArray(file);
-          formFilesBuilder.with(formField, formFile);
-        }
-
-        controllerMethodArgs[paramIndex] = formFilesBuilder.build();
+        controllerMethodArgs[paramIndex] = formFilesFactory(req.files);
       }
 
       function tryInjectFileArgs() {
@@ -178,28 +180,8 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
             );
           }
 
-          controllerMethodArgs[parameterIndex] = toFormFile(file);
+          controllerMethodArgs[parameterIndex] = formFileFactory(file);
         }
-      }
-
-      function toFormFile(file: UploadedFile): FormFile {
-        return new FormFile(
-          file.name,
-          file.encoding,
-          file.mimetype,
-          file.data,
-          file.truncated,
-          file.size,
-          file.md5
-        );
-      }
-
-      function toFormFileOrFormFileArray(
-        fileOrFileArray: UploadedFile | UploadedFile[]
-      ): FormFile | FormFile[] {
-        return Array.isArray(fileOrFileArray)
-          ? fileOrFileArray.map((x) => toFormFile(x))
-          : toFormFile(fileOrFileArray);
       }
     };
 

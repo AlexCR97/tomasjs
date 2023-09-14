@@ -21,7 +21,6 @@ export function controller(path?: string, options?: ControllerOptions) {
     metadata.addMiddleware(...(options?.middlewares ?? []));
     metadata.addInterceptor(...(options?.interceptors ?? []));
     metadata.addGuard(...(options?.guards ?? []));
-    // TODO Add auth metadata
     return constructor;
   };
 }

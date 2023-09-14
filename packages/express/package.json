@@ -1,6 +1,6 @@
 {
   "name": "@tomasjs/express",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "Support for express in a TomasJS infrastructure.",
   "author": "viex",
   "license": "ISC",
