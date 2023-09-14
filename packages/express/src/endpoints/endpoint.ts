@@ -1,6 +1,13 @@
+import {
+  UseAuthenticationOptions,
+  AuthClaim,
+  AuthenticationGuard,
+  AuthorizationGuard,
+} from "@/auth";
+import { authenticationInterceptorStrategy } from "@/auth/authenticationInterceptorStrategy";
 import { AppSetupFunction } from "@/builder";
 import { HttpContext, HttpMethod, httpContextFactory } from "@/core";
-import { ExpressMiddlewareFunction } from "@/core/express";
+import { ExpressMiddlewareFunction, ExpressRequestHandler } from "@/core/express";
 import { GuardAdapter, GuardType } from "@/guards";
 import { InterceptorAdapter, InterceptorType } from "@/interceptors";
 import { MiddlewareAdapter, MiddlewareType } from "@/middleware";
@@ -17,6 +24,8 @@ export interface EndpointOptions {
   middlewares?: MiddlewareType[];
   interceptors?: InterceptorType[];
   guards?: GuardType[];
+  authentication?: UseAuthenticationOptions;
+  authorization?: AuthClaim[];
 }
 
 export function endpoint(
@@ -26,25 +35,71 @@ export function endpoint(
   options?: EndpointOptions
 ): AppSetupFunction {
   return (app, container) => {
-    const expressMiddlewares: ExpressMiddlewareFunction[] = [
-      ...(options?.middlewares ?? []).map((middleware) =>
-        new MiddlewareAdapter({ container, middleware }).adapt()
-      ),
-      ...(options?.interceptors ?? []).map((interceptor) =>
-        new InterceptorAdapter(container, interceptor).adapt()
-      ),
-      ...(options?.guards ?? []).map((guard) => new GuardAdapter({ container, guard }).adapt()),
+    const expressHandlers = [
+      ...getAuthHandlers(),
+      ...getMiddlewareHandlers(),
+      ...getInterceptorHandlers(),
+      ...getGuardHandlers(),
+      getCustomEndpointHandler(),
     ];
 
-    app[method](path, ...expressMiddlewares, async (req, res) => {
-      const httpContext = httpContextFactory(req, res);
+    app[method](path, ...expressHandlers);
 
-      const result = await func({
-        httpContext,
-        services: container,
-      });
+    function getAuthHandlers(): ExpressMiddlewareFunction[] {
+      const expressMiddlewares: ExpressMiddlewareFunction[] = [];
 
-      return httpContext.response.send(result);
-    });
+      if (options?.authentication !== undefined) {
+        expressMiddlewares.push(
+          new InterceptorAdapter(
+            container,
+            authenticationInterceptorStrategy(options.authentication)
+          ).adapt(),
+          new GuardAdapter({
+            container,
+            guard: new AuthenticationGuard(),
+          }).adapt()
+        );
+      }
+
+      if (options?.authorization !== undefined) {
+        expressMiddlewares.push(
+          new GuardAdapter({
+            container,
+            guard: new AuthorizationGuard(options.authorization),
+          }).adapt()
+        );
+      }
+
+      return expressMiddlewares;
+    }
+
+    function getMiddlewareHandlers(): ExpressMiddlewareFunction[] {
+      return (options?.middlewares ?? []).map((middleware) =>
+        new MiddlewareAdapter({ container, middleware }).adapt()
+      );
+    }
+
+    function getInterceptorHandlers(): ExpressMiddlewareFunction[] {
+      return (options?.interceptors ?? []).map((interceptor) =>
+        new InterceptorAdapter(container, interceptor).adapt()
+      );
+    }
+
+    function getGuardHandlers(): ExpressMiddlewareFunction[] {
+      return (options?.guards ?? []).map((guard) => new GuardAdapter({ container, guard }).adapt());
+    }
+
+    function getCustomEndpointHandler(): ExpressRequestHandler {
+      return async (req, res) => {
+        const httpContext = httpContextFactory(req, res);
+
+        const result = await func({
+          httpContext,
+          services: container,
+        });
+
+        return httpContext.response.send(result);
+      };
+    }
   };
 }

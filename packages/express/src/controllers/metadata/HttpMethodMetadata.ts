@@ -1,3 +1,4 @@
+import { AuthClaim, UseAuthenticationOptions } from "@/auth";
 import { HttpMethod } from "@/core";
 import { ClassMethodMetadata } from "@/core/metadata";
 import { GuardType } from "@/guards";
@@ -118,6 +119,34 @@ export class HttpMethodMetadata {
     }
 
     this.guards.push(...value);
+  }
+
+  /* #endregion */
+
+  /* #region Authentication */
+
+  private readonly authenticationKey = "tomasjs:controller:method:authentication";
+
+  get authentication(): UseAuthenticationOptions {
+    return this.metadata.get(this.authenticationKey);
+  }
+
+  set authentication(value: UseAuthenticationOptions) {
+    this.metadata.set(this.authenticationKey, value);
+  }
+
+  /* #endregion */
+
+  /* #region Authorization */
+
+  private readonly authorizationKey = "tomasjs:controller:method:authorization";
+
+  get authorization(): AuthClaim[] {
+    return this.metadata.get(this.authorizationKey);
+  }
+
+  set authorization(value: AuthClaim[]) {
+    this.metadata.set(this.authorizationKey, value);
   }
 
   /* #endregion */

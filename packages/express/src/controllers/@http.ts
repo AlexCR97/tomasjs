@@ -17,11 +17,14 @@ import { FormFilesBuilder } from "./FormFilesBuilder";
 import { UploadedFile } from "express-fileupload";
 import { UseFilesError } from "./UseFilesError";
 import { InterceptorType } from "@/interceptors";
+import { AuthClaim, UseAuthenticationOptions } from "@/auth";
 
 interface HttpOptions {
   middlewares?: MiddlewareType[];
   interceptors?: InterceptorType[];
   guards?: GuardType[];
+  authentication?: UseAuthenticationOptions;
+  authorization?: AuthClaim[];
 }
 
 export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
@@ -33,6 +36,7 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
     metadata.addMiddleware(...(options?.middlewares ?? []));
     metadata.addInterceptor(...(options?.interceptors ?? []));
     metadata.addGuard(...(options?.guards ?? []));
+    // TODO Add auth metadata
 
     const originalFunction: Function = descriptor.value;
 

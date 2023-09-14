@@ -11,6 +11,8 @@ import { Container, TomasError, TomasLogger } from "@tomasjs/core";
 import { GuardAdapter } from "@/guards";
 import { HttpMethod, httpResponseFactory } from "@/core";
 import { InterceptorAdapter } from "@/interceptors";
+import { authenticationInterceptorStrategy } from "@/auth/authenticationInterceptorStrategy";
+import { AuthenticationGuard, AuthorizationGuard } from "@/auth";
 
 /**
  * Adapts a Controller to an Express Router.
@@ -23,6 +25,7 @@ export class ControllerAdapter {
   adapt(): Router {
     const router = Router();
     const controllerMetadata = new ControllerMetadata(this.controller);
+    const controllerLevelAuth = this.getControllerLevelAuth(controllerMetadata);
     const controllerLevelMiddlewares = this.getControllerLevelMiddlewares(controllerMetadata);
     const controllerLevelInterceptors = this.getControllerLevelInterceptors(controllerMetadata);
     const controllerLevelGuards = this.getControllerLevelGuards(controllerMetadata);
@@ -37,6 +40,7 @@ export class ControllerAdapter {
       const path = new ExpressPathNormalizer(httpMethodMetadata.path).normalize();
       this.logger?.debug(`path: ${path}`);
 
+      const methodLevelAuth = this.getMethodLevelAuth(httpMethodMetadata);
       const methodLevelMiddlewares = this.getMethodLevelMiddlewares(httpMethodMetadata);
       const methodLevelInterceptors = this.getMethodLevelInterceptors(httpMethodMetadata);
       const methodLevelGuards = this.getMethodLevelGuards(httpMethodMetadata);
@@ -62,9 +66,11 @@ export class ControllerAdapter {
       };
 
       this.bindRequestHandlers(router, httpMethod, path, [
+        ...controllerLevelAuth,
         ...controllerLevelMiddlewares,
         ...controllerLevelInterceptors,
         ...controllerLevelGuards,
+        ...methodLevelAuth,
         ...methodLevelMiddlewares,
         ...methodLevelInterceptors,
         ...methodLevelGuards,
@@ -73,6 +79,36 @@ export class ControllerAdapter {
     }
 
     return router;
+  }
+
+  private getControllerLevelAuth(
+    metadata: ControllerMetadata<Controller>
+  ): ExpressMiddlewareFunction[] {
+    const expressMiddlewares: ExpressMiddlewareFunction[] = [];
+
+    if (metadata.authentication !== undefined) {
+      expressMiddlewares.push(
+        new InterceptorAdapter(
+          this.container,
+          authenticationInterceptorStrategy(metadata.authentication)
+        ).adapt(),
+        new GuardAdapter({
+          container: this.container,
+          guard: new AuthenticationGuard(),
+        }).adapt()
+      );
+    }
+
+    if (metadata.authorization !== undefined) {
+      expressMiddlewares.push(
+        new GuardAdapter({
+          container: this.container,
+          guard: new AuthorizationGuard(metadata.authorization),
+        }).adapt()
+      );
+    }
+
+    return expressMiddlewares;
   }
 
   private getControllerLevelMiddlewares(
@@ -107,6 +143,34 @@ export class ControllerAdapter {
     return (metadata.guards ?? []).map((guard) => {
       return new GuardAdapter({ container: this.container, guard }).adapt();
     });
+  }
+
+  private getMethodLevelAuth(metadata: HttpMethodMetadata): ExpressMiddlewareFunction[] {
+    const expressMiddlewares: ExpressMiddlewareFunction[] = [];
+
+    if (metadata.authentication !== undefined) {
+      expressMiddlewares.push(
+        new InterceptorAdapter(
+          this.container,
+          authenticationInterceptorStrategy(metadata.authentication)
+        ).adapt(),
+        new GuardAdapter({
+          container: this.container,
+          guard: new AuthenticationGuard(),
+        }).adapt()
+      );
+    }
+
+    if (metadata.authorization !== undefined) {
+      expressMiddlewares.push(
+        new GuardAdapter({
+          container: this.container,
+          guard: new AuthorizationGuard(metadata.authorization),
+        }).adapt()
+      );
+    }
+
+    return expressMiddlewares;
   }
 
   private getMethodLevelMiddlewares(metadata: HttpMethodMetadata): ExpressMiddlewareFunction[] {

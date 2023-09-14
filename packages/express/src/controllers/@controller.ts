@@ -3,11 +3,14 @@ import { ControllerMetadata } from "./metadata/ControllerMetadata";
 import { MiddlewareType } from "@/middleware";
 import { GuardType } from "@/guards";
 import { InterceptorType } from "@/interceptors";
+import { AuthClaim, UseAuthenticationOptions } from "@/auth";
 
 interface ControllerOptions {
   middlewares?: MiddlewareType[];
   interceptors?: InterceptorType[];
   guards?: GuardType[];
+  authentication?: UseAuthenticationOptions;
+  authorization?: AuthClaim[];
 }
 
 export function controller(path?: string, options?: ControllerOptions) {
@@ -18,6 +21,7 @@ export function controller(path?: string, options?: ControllerOptions) {
     metadata.addMiddleware(...(options?.middlewares ?? []));
     metadata.addInterceptor(...(options?.interceptors ?? []));
     metadata.addGuard(...(options?.guards ?? []));
+    // TODO Add auth metadata
     return constructor;
   };
 }
