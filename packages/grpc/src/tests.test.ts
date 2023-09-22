@@ -1,47 +1,59 @@
-import { Server, ServerCredentials, handleUnaryCall, loadPackageDefinition } from "@grpc/grpc-js";
-import { loadSync } from "@grpc/proto-loader";
+import {
+  Server,
+  ServerCredentials,
+  credentials,
+  ServerUnaryCall,
+  sendUnaryData,
+} from "@grpc/grpc-js";
 import { describe, it } from "@jest/globals";
-import path from "path";
-import { env } from "./env";
+import { greeter } from "@/proto/greeter";
 
 describe("tests", () => {
-  it("Can create a server", (done) => {
-    const protoPath = path.join(env.host.proto.path, "greeter.proto");
+  let server: Server | undefined;
 
-    const packageDefinition = loadSync(protoPath, {
-      keepCase: true,
-      longs: String,
-      enums: String,
-      defaults: true,
-      oneofs: true,
-    });
+  afterEach(() => {
+    server?.forceShutdown();
+  });
 
-    const grpcObject = loadPackageDefinition(packageDefinition);
+  it("Can create server and client", (done) => {
+    class GreeterService extends greeter.UnimplementedGreeterService {
+      greet(
+        call: ServerUnaryCall<greeter.GreetRequest, greeter.GreetResponse>,
+        callback: sendUnaryData<greeter.GreetResponse>
+      ): void {
+        return callback(
+          null,
+          new greeter.GreetResponse({
+            message: `Hello ${call.request.name}`,
+          })
+        );
+      }
+    }
 
-    const $package = grpcObject.greeter;
-
-    const server = new Server();
-
-    const greet: handleUnaryCall<any, any> = (call, callback) => {
-      callback(null, { message: `Hello ${call.request.name}` });
-    };
-
-    server.addService(($package as any).Greeter.service, {
-      greet,
-    });
-
-    server.bindAsync("0.0.0.0:50050", ServerCredentials.createInsecure(), (err, port) => {
+    server = new Server();
+    server.addService(GreeterService.definition, new GreeterService());
+    server.bindAsync("0.0.0.0:50051", ServerCredentials.createInsecure(), (err, port) => {
       if (err) {
         throw err;
       }
 
-      server.start();
+      server!.start();
       console.log(`Server started on port ${port}`);
 
-      server.forceShutdown();
-      console.log("Server shutdown");
+      const client = new greeter.GreeterClient(`localhost:${port}`, credentials.createInsecure());
 
-      done();
+      client.greet(new greeter.GreetRequest({ name: "TomasJS" }), (err, response) => {
+        console.log("err", err);
+
+        if (err) {
+          done(err);
+          throw err;
+        }
+
+        console.log("response", response);
+
+        done();
+      });
     });
   });
 });
