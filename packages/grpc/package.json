@@ -20,10 +20,12 @@
   },
   "dependencies": {
     "@grpc/grpc-js": "^1.9.3",
+    "@tomasjs/core": "^1.8.0",
     "google-protobuf": "^3.21.2"
   },
   "peerDependencies": {
     "@grpc/grpc-js": "^1.9.3",
+    "@tomasjs/core": "^1.8.0",
     "google-protobuf": "^3.21.2"
   },
   "devDependencies": {
