@@ -183,8 +183,17 @@ export namespace greeter {
         constructor(address: string, credentials: grpc_1.ChannelCredentials, options?: Partial<grpc_1.ChannelOptions>) {
             super(address, credentials, options);
         }
-        greet: GrpcUnaryServiceInterface<GreetRequest, GreetResponse> = (message: GreetRequest, metadata: grpc_1.Metadata | grpc_1.CallOptions | grpc_1.requestCallback<GreetResponse>, options?: grpc_1.CallOptions | grpc_1.requestCallback<GreetResponse>, callback?: grpc_1.requestCallback<GreetResponse>): grpc_1.ClientUnaryCall => {
-            return super.greet(message, metadata, options, callback);
-        };
+        greet: GrpcPromiseServiceInterface<GreetRequest, GreetResponse> = (message: GreetRequest, metadata?: grpc_1.Metadata | grpc_1.CallOptions, options?: grpc_1.CallOptions): Promise<GreetResponse> => { if (!metadata) {
+            metadata = new grpc_1.Metadata;
+        } if (!options) {
+            options = {};
+        } return new Promise((resolve, reject) => super.greet(message, metadata, options, (error: grpc_1.ServiceError, response: GreetResponse) => {
+            if (error) {
+                reject(error);
+            }
+            else {
+                resolve(response);
+            }
+        })); };
     }
 }

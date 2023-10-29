@@ -13,8 +13,8 @@
     "PACKAGE_NAME"
   ],
   "scripts": {
-    "protoc": "protoc -I=src/proto greeter.proto --ts_out=src/proto greeter.proto",
-    "test": "npm run protoc && jest",
+    "protoc": "protoc -I=src/proto greeter.proto --ts_out=src/proto greeter.proto --ts_opt=unary_rpc_promise=true",
+    "test": "jest",
     "build": "del dist /s /q && tsc -b && tsc-alias && node ./dist/SetupPackage.js",
     "publish": "cd ./dist && npm publish --access public"
   },

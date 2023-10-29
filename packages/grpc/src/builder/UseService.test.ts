@@ -33,26 +33,19 @@ describe(testSuiteName, () => {
     expect(typeof service.greet === "function").toBeTruthy();
   });
 
-  it("Can use a service", (done) => {
+  it("Can use a service", async () => {
     const port = 50053;
     const address = `0.0.0.0:${port}`;
 
-    new AppBuilder({ address, container })
+    server = await new AppBuilder({ address, container })
       .useService(GreeterService.definition, GreeterService)
-      .buildAsync()
-      .then(($server) => {
-        logger.debug("server built");
+      .buildAsync();
+    logger.debug("server built");
 
-        server = $server;
+    const client = new greeter.GreeterClient(`localhost:${port}`, credentials.createInsecure());
+    logger.debug("client built");
 
-        const client = new greeter.GreeterClient(`localhost:${port}`, credentials.createInsecure());
-        logger.debug("client built");
-
-        client.greet(new greeter.GreetRequest({ name: "TomasJS" }), (err, response) => {
-          logger.debug("err", err);
-          logger.debug("response", response);
-          return err ? done(err) : done();
-        });
-      });
+    const response = await client.greet(new greeter.GreetRequest({ name: "TomasJS" }));
+    logger.debug("response", response);
   });
 });
