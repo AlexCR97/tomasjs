@@ -9,7 +9,7 @@ import { statusCodes } from "@/core";
 import { JwtInterceptor, JwtSigner } from "./jwt";
 import { Authentication, AuthenticationOptions } from "./Authentication";
 
-const testSuiteName = "auth/UseAuthentication";
+const testSuiteName = "auth/Authentication";
 
 describe(testSuiteName, () => {
   let context: TestContext;
