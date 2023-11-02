@@ -1,4 +1,4 @@
-import { AuthorizationMetadata, UseAuthenticationOptions } from "@/auth";
+import { AuthenticationMetadata, AuthorizationMetadata } from "@/auth";
 import { HttpMethod } from "@/core";
 import { ClassMethodMetadata } from "@/core/metadata";
 import { GuardType } from "@/guards";
@@ -125,14 +125,14 @@ export class HttpMethodMetadata {
 
   /* #region Authentication */
 
-  private readonly authenticationKey = "tomasjs:controller:method:authentication";
+  private readonly authenticateKey = "tomasjs:controller:method:authenticate";
 
-  get authentication(): UseAuthenticationOptions {
-    return this.metadata.get(this.authenticationKey);
+  get authenticate(): AuthenticationMetadata | undefined {
+    return this.metadata.get(this.authenticateKey);
   }
 
-  set authentication(value: UseAuthenticationOptions) {
-    this.metadata.set(this.authenticationKey, value);
+  set authenticate(value: AuthenticationMetadata | undefined) {
+    this.metadata.set(this.authenticateKey, value);
   }
 
   /* #endregion */

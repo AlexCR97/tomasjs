@@ -97,7 +97,7 @@ export class AuthorizationOptions {
     const policy = this.policies.find((x) => x.name === name);
 
     if (policy === undefined) {
-      throw new TomasError(`No such policy "${name}".`, { data: { policyName: name } });
+      throw new TomasError(`No such policy "${name}".`, { data: { policy: name } });
     }
 
     return policy;

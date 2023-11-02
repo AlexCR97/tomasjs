@@ -12,6 +12,7 @@ import { MiddlewareType, UseMiddlewares } from "@/middleware";
 import { InterceptorType, UseInterceptors } from "@/interceptors";
 import { GuardType, UseGuards } from "@/guards";
 import {
+  AuthenticationOptions,
   AuthorizationOptions,
   UseAuthentication,
   UseAuthenticationOptions,
@@ -164,6 +165,14 @@ export class AppBuilder implements IAppBuilder {
   }
 
   useAuthentication(options: UseAuthenticationOptions): IAppBuilder {
+    if (Array.isArray(options)) {
+      return this.use(new UseAuthentication(options));
+    }
+
+    if (options instanceof AuthenticationOptions) {
+      return this.use(new UseAuthentication(options));
+    }
+
     return this.use(new UseAuthentication(options));
   }
 

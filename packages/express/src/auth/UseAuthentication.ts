@@ -1,39 +1,80 @@
 import { AppSetupFactory, AppSetupFunction } from "@/builder";
-import { UseGuards } from "@/guards";
-import { AuthenticationGuard } from "./AuthenticationGuard";
-import { UseInterceptors } from "@/interceptors";
-import { Container } from "@tomasjs/core";
-import { Express } from "express";
-import { JwtDecoderOptions } from "./jwt";
-import { authenticationInterceptorStrategy } from "./authenticationInterceptorStrategy";
-
-export interface UseAuthenticationOptions {
-  authenticationScheme: "jwt";
-  jwtDecoderOptions?: JwtDecoderOptions;
-}
+import { Interceptor } from "@/interceptors";
+import { TomasError } from "@tomasjs/core";
+import { JwtDecoderOptions, JwtInterceptor } from "./jwt";
 
 export class UseAuthentication implements AppSetupFactory {
+  constructor(options: AuthenticationSchemeEntry[]);
+  constructor(options: AuthenticationOptions);
+  constructor(options: AuthenticationOptionsConfiguration);
   constructor(private readonly options: UseAuthenticationOptions) {}
 
   create(): AppSetupFunction {
     return async (app, container) => {
-      await this.useAuthSchemeInterceptor(app, container);
-      await this.useAuthGuard(app, container);
+      const options = this.getAuthenticationOptions();
+      container.addInstance(options, AuthenticationOptions);
+      // await this.useAuthSchemeInterceptor(app, container);
+      // await this.useAuthGuard(app, container);
     };
   }
 
-  private async useAuthSchemeInterceptor(app: Express, container: Container) {
-    const authenticationInterceptor = authenticationInterceptorStrategy(this.options);
-    const factory = new UseInterceptors({
-      interceptors: [authenticationInterceptor],
-    });
-    const func = factory.create();
-    await func(app, container);
+  private getAuthenticationOptions() {
+    if (Array.isArray(this.options)) {
+      return new AuthenticationOptions(this.options);
+    }
+
+    if (this.options instanceof AuthenticationOptions) {
+      return this.options;
+    }
+
+    return this.buildAuthenticationOptions(this.options);
   }
 
-  private async useAuthGuard(app: Express, container: Container) {
-    const factory = new UseGuards({ guards: [new AuthenticationGuard()] });
-    const func = factory.create();
-    await func(app, container);
+  private buildAuthenticationOptions(
+    configure: AuthenticationOptionsConfiguration
+  ): AuthenticationOptions {
+    const options = new AuthenticationOptions([]);
+    configure(options);
+    return options;
   }
 }
+
+export type UseAuthenticationOptions =
+  | AuthenticationSchemeEntry[]
+  | AuthenticationOptions
+  | AuthenticationOptionsConfiguration;
+
+export class AuthenticationOptions {
+  constructor(private readonly _schemes: AuthenticationSchemeEntry[]) {}
+
+  get schemes(): ReadonlyArray<AuthenticationSchemeEntry> {
+    return this._schemes;
+  }
+
+  addScheme(scheme: AuthenticationScheme, interceptor: Interceptor): AuthenticationOptions {
+    this._schemes.push(new AuthenticationSchemeEntry(scheme, interceptor));
+    return this;
+  }
+
+  addJwtScheme(options: JwtDecoderOptions): AuthenticationOptions {
+    return this.addScheme("jwt", new JwtInterceptor(options));
+  }
+
+  getScheme(scheme: AuthenticationScheme): Interceptor {
+    const entry = this.schemes.find((x) => x.scheme === scheme);
+
+    if (entry === undefined) {
+      throw new TomasError(`No such scheme "${scheme}"`, { data: { scheme } });
+    }
+
+    return entry.interceptor;
+  }
+}
+
+export class AuthenticationSchemeEntry {
+  constructor(readonly scheme: AuthenticationScheme, readonly interceptor: Interceptor) {}
+}
+
+export type AuthenticationScheme = "jwt" | (string & {});
+
+export type AuthenticationOptionsConfiguration = (options: AuthenticationOptions) => void;

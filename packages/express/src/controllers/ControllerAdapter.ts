@@ -11,8 +11,7 @@ import { Container, TomasError, TomasLogger } from "@tomasjs/core";
 import { GuardAdapter } from "@/guards";
 import { HttpMethod, httpResponseFactory } from "@/core";
 import { InterceptorAdapter } from "@/interceptors";
-import { authenticationInterceptorStrategy } from "@/auth/authenticationInterceptorStrategy";
-import { AuthenticationGuard, AuthorizationOptions } from "@/auth";
+import { AuthenticationGuard, AuthenticationOptions, AuthorizationOptions } from "@/auth";
 import { AuthenticatedRequirement } from "@/auth/policies";
 
 /**
@@ -87,12 +86,11 @@ export class ControllerAdapter {
   ): ExpressMiddlewareFunction[] {
     const expressMiddlewares: ExpressMiddlewareFunction[] = [];
 
-    if (metadata.authentication !== undefined) {
+    if (metadata.authenticate !== undefined && metadata.authenticate.scheme) {
+      const authenticationOptions = this.container.get(AuthenticationOptions);
+      const schemeInterceptor = authenticationOptions.getScheme(metadata.authenticate.scheme);
       expressMiddlewares.push(
-        new InterceptorAdapter(
-          this.container,
-          authenticationInterceptorStrategy(metadata.authentication)
-        ).adapt(),
+        new InterceptorAdapter(this.container, schemeInterceptor).adapt(),
         new GuardAdapter({
           container: this.container,
           guard: new AuthenticationGuard(),
@@ -149,12 +147,11 @@ export class ControllerAdapter {
   private getMethodLevelAuth(metadata: HttpMethodMetadata): ExpressMiddlewareFunction[] {
     const expressMiddlewares: ExpressMiddlewareFunction[] = [];
 
-    if (metadata.authentication !== undefined) {
+    if (metadata.authenticate !== undefined && metadata.authenticate.scheme) {
+      const authenticationOptions = this.container.get(AuthenticationOptions);
+      const schemeInterceptor = authenticationOptions.getScheme(metadata.authenticate.scheme);
       expressMiddlewares.push(
-        new InterceptorAdapter(
-          this.container,
-          authenticationInterceptorStrategy(metadata.authentication)
-        ).adapt(),
+        new InterceptorAdapter(this.container, schemeInterceptor).adapt(),
         new GuardAdapter({
           container: this.container,
           guard: new AuthenticationGuard(),

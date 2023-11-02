@@ -1,10 +1,10 @@
 import {
-  UseAuthenticationOptions,
   AuthenticationGuard,
   AuthorizationMetadata,
   AuthorizationOptions,
+  AuthenticationOptions,
+  AuthenticationMetadata,
 } from "@/auth";
-import { authenticationInterceptorStrategy } from "@/auth/authenticationInterceptorStrategy";
 import { AuthenticatedRequirement } from "@/auth/policies";
 import { AppSetupFunction } from "@/builder";
 import { HttpContext, HttpMethod, httpContextFactory } from "@/core";
@@ -29,7 +29,7 @@ export interface EndpointOptions {
   middlewares?: MiddlewareType[];
   interceptors?: InterceptorType[];
   guards?: GuardType[];
-  authentication?: UseAuthenticationOptions;
+  authenticate?: AuthenticationMetadata;
   authorize?: AuthorizationMetadata;
 }
 
@@ -54,12 +54,11 @@ export function endpoint(
     function getAuthHandlers(): ExpressMiddlewareFunction[] {
       const expressMiddlewares: ExpressMiddlewareFunction[] = [];
 
-      if (options?.authentication !== undefined) {
+      if (options?.authenticate !== undefined && options.authenticate.scheme) {
+        const authenticationOptions = container.get(AuthenticationOptions);
+        const schemeInterceptor = authenticationOptions.getScheme(options.authenticate.scheme);
         expressMiddlewares.push(
-          new InterceptorAdapter(
-            container,
-            authenticationInterceptorStrategy(options.authentication)
-          ).adapt(),
+          new InterceptorAdapter(container, schemeInterceptor).adapt(),
           new GuardAdapter({
             container,
             guard: new AuthenticationGuard(),

@@ -39,6 +39,7 @@ describe(testSuiteName, () => {
     const accessToken = new JwtSigner({ secret }).sign({ role: role });
 
     @controller("/", {
+      authenticate: { scheme: "jwt" },
       authorize: { policy },
     })
     class TestController {
@@ -49,12 +50,7 @@ describe(testSuiteName, () => {
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .useAuthentication({
-        authenticationScheme: "jwt",
-        jwtDecoderOptions: {
-          secret,
-        },
-      })
+      .useAuthentication((options) => options.addJwtScheme({ secret }))
       .useAuthorization(new AuthorizationOptions([new Policy(policy, [new RoleRequirement(role)])]))
       .useControllers(TestController)
       .buildAsync();
@@ -80,6 +76,7 @@ describe(testSuiteName, () => {
     const accessToken = new JwtSigner({ secret }).sign({ role: role });
 
     @controller("/", {
+      authenticate: { scheme: "jwt" },
       authorize: { policy },
     })
     class TestController {
@@ -90,12 +87,7 @@ describe(testSuiteName, () => {
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .useAuthentication({
-        authenticationScheme: "jwt",
-        jwtDecoderOptions: {
-          secret,
-        },
-      })
+      .useAuthentication((options) => options.addJwtScheme({ secret }))
       .useAuthorization([new Policy(policy, [new RoleRequirement(role)])])
       .useControllers(TestController)
       .buildAsync();
@@ -121,6 +113,7 @@ describe(testSuiteName, () => {
     const accessToken = new JwtSigner({ secret }).sign({ role: role });
 
     @controller("/", {
+      authenticate: { scheme: "jwt" },
       authorize: { policy },
     })
     class TestController {
@@ -131,12 +124,7 @@ describe(testSuiteName, () => {
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .useAuthentication({
-        authenticationScheme: "jwt",
-        jwtDecoderOptions: {
-          secret,
-        },
-      })
+      .useAuthentication((options) => options.addJwtScheme({ secret }))
       .useAuthorization((options) => options.addPolicy(policy, [new RoleRequirement(role)]))
       .useControllers(TestController)
       .buildAsync();
@@ -162,6 +150,7 @@ describe(testSuiteName, () => {
     const accessToken = new JwtSigner({ secret }).sign({ role: role });
 
     @controller("/", {
+      authenticate: { scheme: "jwt" },
       authorize: { policy },
     })
     class TestController {
@@ -172,12 +161,7 @@ describe(testSuiteName, () => {
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .useAuthentication({
-        authenticationScheme: "jwt",
-        jwtDecoderOptions: {
-          secret,
-        },
-      })
+      .useAuthentication((options) => options.addJwtScheme({ secret }))
       .useAuthorization((options) => options.addPolicy(policy, (rules) => rules.requireRole(role)))
       .useControllers(TestController)
       .buildAsync();
@@ -208,19 +192,14 @@ describe(testSuiteName, () => {
 
     @controller()
     class TestController {
-      @httpGet("method", { authorize: { policy } })
+      @httpGet("method", { authenticate: { scheme: "jwt" }, authorize: { policy } })
       get() {
         return new OkResponse();
       }
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .useAuthentication({
-        authenticationScheme: "jwt",
-        jwtDecoderOptions: {
-          secret,
-        },
-      })
+      .useAuthentication((options) => options.addJwtScheme({ secret }))
       .useAuthorization(new AuthorizationOptions([new Policy(policy, [new RoleRequirement(role)])]))
       .useControllers(TestController)
       .buildAsync();
@@ -247,19 +226,14 @@ describe(testSuiteName, () => {
 
     @controller()
     class TestController {
-      @httpGet("method", { authorize: { policy } })
+      @httpGet("method", { authenticate: { scheme: "jwt" }, authorize: { policy } })
       get() {
         return new OkResponse();
       }
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .useAuthentication({
-        authenticationScheme: "jwt",
-        jwtDecoderOptions: {
-          secret,
-        },
-      })
+      .useAuthentication((options) => options.addJwtScheme({ secret }))
       .useAuthorization([new Policy(policy, [new RoleRequirement(role)])])
       .useControllers(TestController)
       .buildAsync();
@@ -286,19 +260,14 @@ describe(testSuiteName, () => {
 
     @controller()
     class TestController {
-      @httpGet("method", { authorize: { policy } })
+      @httpGet("method", { authenticate: { scheme: "jwt" }, authorize: { policy } })
       get() {
         return new OkResponse();
       }
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .useAuthentication({
-        authenticationScheme: "jwt",
-        jwtDecoderOptions: {
-          secret,
-        },
-      })
+      .useAuthentication((options) => options.addJwtScheme({ secret }))
       .useAuthorization((options) => options.addPolicy(policy, [new RoleRequirement(role)]))
       .useControllers(TestController)
       .buildAsync();
@@ -325,19 +294,14 @@ describe(testSuiteName, () => {
 
     @controller()
     class TestController {
-      @httpGet("method", { authorize: { policy } })
+      @httpGet("method", { authenticate: { scheme: "jwt" }, authorize: { policy } })
       get() {
         return new OkResponse();
       }
     }
 
     context.server = await new AppBuilder({ port, logger })
-      .useAuthentication({
-        authenticationScheme: "jwt",
-        jwtDecoderOptions: {
-          secret,
-        },
-      })
+      .useAuthentication((options) => options.addJwtScheme({ secret }))
       .useAuthorization((options) => options.addPolicy(policy, (rules) => rules.requireRole(role)))
       .useControllers(TestController)
       .buildAsync();
@@ -367,14 +331,12 @@ describe(testSuiteName, () => {
     const accessToken = new JwtSigner({ secret }).sign({ role: role });
 
     context.server = await new AppBuilder({ port, logger })
-      .useAuthentication({
-        authenticationScheme: "jwt",
-        jwtDecoderOptions: {
-          secret,
-        },
-      })
+      .useAuthentication((options) => options.addJwtScheme({ secret }))
       .useAuthorization(new AuthorizationOptions([new Policy(policy, [new RoleRequirement(role)])]))
-      .useGet("endpoint", () => new OkResponse(), { authorize: { policy } })
+      .useGet("endpoint", () => new OkResponse(), {
+        authenticate: { scheme: "jwt" },
+        authorize: { policy },
+      })
       .buildAsync();
 
     const unauthorizedResponse = await fetch(`${address}/endpoint`);
@@ -398,14 +360,12 @@ describe(testSuiteName, () => {
     const accessToken = new JwtSigner({ secret }).sign({ role: role });
 
     context.server = await new AppBuilder({ port, logger })
-      .useAuthentication({
-        authenticationScheme: "jwt",
-        jwtDecoderOptions: {
-          secret,
-        },
-      })
+      .useAuthentication((options) => options.addJwtScheme({ secret }))
       .useAuthorization([new Policy(policy, [new RoleRequirement(role)])])
-      .useGet("endpoint", () => new OkResponse(), { authorize: { policy } })
+      .useGet("endpoint", () => new OkResponse(), {
+        authenticate: { scheme: "jwt" },
+        authorize: { policy },
+      })
       .buildAsync();
 
     const unauthorizedResponse = await fetch(`${address}/endpoint`);
@@ -429,14 +389,12 @@ describe(testSuiteName, () => {
     const accessToken = new JwtSigner({ secret }).sign({ role: role });
 
     context.server = await new AppBuilder({ port, logger })
-      .useAuthentication({
-        authenticationScheme: "jwt",
-        jwtDecoderOptions: {
-          secret,
-        },
-      })
+      .useAuthentication((options) => options.addJwtScheme({ secret }))
       .useAuthorization((options) => options.addPolicy(policy, [new RoleRequirement(role)]))
-      .useGet("endpoint", () => new OkResponse(), { authorize: { policy } })
+      .useGet("endpoint", () => new OkResponse(), {
+        authenticate: { scheme: "jwt" },
+        authorize: { policy },
+      })
       .buildAsync();
 
     const unauthorizedResponse = await fetch(`${address}/endpoint`);
@@ -460,14 +418,12 @@ describe(testSuiteName, () => {
     const accessToken = new JwtSigner({ secret }).sign({ role: role });
 
     context.server = await new AppBuilder({ port, logger })
-      .useAuthentication({
-        authenticationScheme: "jwt",
-        jwtDecoderOptions: {
-          secret,
-        },
-      })
+      .useAuthentication((options) => options.addJwtScheme({ secret }))
       .useAuthorization((options) => options.addPolicy(policy, (rules) => rules.requireRole(role)))
-      .useGet("endpoint", () => new OkResponse(), { authorize: { policy } })
+      .useGet("endpoint", () => new OkResponse(), {
+        authenticate: { scheme: "jwt" },
+        authorize: { policy },
+      })
       .buildAsync();
 
     const unauthorizedResponse = await fetch(`${address}/endpoint`);

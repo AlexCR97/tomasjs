@@ -6,7 +6,7 @@ import { HttpMethodMetadata } from "./HttpMethodMetadata";
 import { Pipe, TomasError } from "@tomasjs/core";
 import { MiddlewareType } from "@/middleware";
 import { InterceptorType } from "@/interceptors";
-import { AuthorizationMetadata, UseAuthenticationOptions } from "@/auth";
+import { AuthenticationMetadata, AuthorizationMetadata } from "@/auth";
 
 export class ControllerMetadata<TController extends Controller> {
   constructor(private readonly controller: ControllerType<TController>) {}
@@ -93,14 +93,14 @@ export class ControllerMetadata<TController extends Controller> {
 
   /* #region Authentication */
 
-  private readonly authenticationKey = "tomasjs:controller:authentication";
+  private readonly authenticateKey = "tomasjs:controller:authenticate";
 
-  get authentication(): UseAuthenticationOptions | undefined {
-    return this.getMetadata(this.authenticationKey);
+  get authenticate(): AuthenticationMetadata | undefined {
+    return this.getMetadata(this.authenticateKey);
   }
 
-  set authentication(value: UseAuthenticationOptions | undefined) {
-    this.setMetadata(this.authenticationKey, value);
+  set authenticate(value: AuthenticationMetadata | undefined) {
+    this.setMetadata(this.authenticateKey, value);
   }
 
   /* #endregion */
@@ -136,7 +136,7 @@ export class ControllerMetadata<TController extends Controller> {
           this.middlewaresKey,
           this.interceptorsKey,
           this.guardsKey,
-          this.authenticationKey,
+          this.authenticateKey,
           this.authorizeKey,
         ],
       })
