@@ -1,20 +1,17 @@
-import { AppSetupFactory, AppSetupFunction } from "@/builder";
 import { Interceptor } from "@/interceptors";
-import { TomasError } from "@tomasjs/core";
+import { ContainerSetupFactory, ContainerSetupFunction, TomasError } from "@tomasjs/core";
 import { JwtDecoderOptions, JwtInterceptor } from "./jwt";
 
-export class UseAuthentication implements AppSetupFactory {
+export class Authentication implements ContainerSetupFactory {
   constructor(schemes: AuthenticationSchemeEntry[]);
   constructor(options: AuthenticationOptions);
   constructor(configure: AuthenticationOptionsConfiguration);
-  constructor(private readonly options: UseAuthenticationOptions) {}
+  constructor(private readonly options: AuthenticationParam) {}
 
-  create(): AppSetupFunction {
-    return async (app, container) => {
+  create(): ContainerSetupFunction {
+    return async (container) => {
       const options = this.getAuthenticationOptions();
       container.addInstance(options, AuthenticationOptions);
-      // await this.useAuthSchemeInterceptor(app, container);
-      // await this.useAuthGuard(app, container);
     };
   }
 
@@ -39,7 +36,7 @@ export class UseAuthentication implements AppSetupFactory {
   }
 }
 
-export type UseAuthenticationOptions =
+type AuthenticationParam =
   | AuthenticationSchemeEntry[]
   | AuthenticationOptions
   | AuthenticationOptionsConfiguration;

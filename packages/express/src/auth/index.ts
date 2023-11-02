@@ -1,15 +1,14 @@
 export { AuthClaim } from "./AuthClaim";
-export { AuthenticationGuard } from "./AuthenticationGuard";
-export { AuthenticationMetadata } from "./AuthenticationMetadata";
-export { AuthorizationMetadata } from "./AuthorizationMetadata";
 export {
+  Authentication,
   AuthenticationOptions,
   AuthenticationOptionsConfiguration,
   AuthenticationScheme,
   AuthenticationSchemeEntry,
-  UseAuthentication,
-  UseAuthenticationOptions,
-} from "./UseAuthentication";
+} from "./Authentication";
+export { AuthenticationGuard } from "./AuthenticationGuard";
+export { AuthenticationMetadata } from "./AuthenticationMetadata";
+export { AuthorizationMetadata } from "./AuthorizationMetadata";
 export {
   AuthorizationOptions,
   AuthorizationOptionsConfiguration,

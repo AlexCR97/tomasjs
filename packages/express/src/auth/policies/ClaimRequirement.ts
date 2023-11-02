@@ -2,7 +2,7 @@ import { Guard, GuardContext, GuardResult } from "@/guards";
 import { Logger, TomasError, TomasLogger } from "@tomasjs/core";
 import { ForbiddenResponse } from "@/responses";
 import { AuthClaim } from "../AuthClaim";
-import { UseAuthentication } from "../UseAuthentication";
+import { Authentication } from "../Authentication";
 
 export class ClaimRequirement implements Guard {
   private readonly logger: Logger = new TomasLogger(ClaimRequirement.name, "error");
@@ -20,7 +20,7 @@ export class ClaimRequirement implements Guard {
       this.logger.debug("User is not authenticated");
 
       throw new TomasError(
-        `Cannot use authorization if user is not authenticated first. Did you forget to use ${UseAuthentication.name}?`
+        `Cannot use authorization if user is not authenticated first. Did you forget to use ${Authentication.name}?`
       );
     }
 

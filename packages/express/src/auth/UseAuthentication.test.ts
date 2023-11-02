@@ -1,13 +1,13 @@
 import "reflect-metadata";
 import { afterEach, beforeEach, describe, it } from "@jest/globals";
-import { Logger } from "@tomasjs/core";
+import { Logger, ServiceContainerBuilder } from "@tomasjs/core";
 import { AppBuilder } from "@/builder";
 import { controller, httpGet } from "@/controllers";
 import { TestContext } from "@/tests";
 import { OkResponse } from "@/responses";
 import { statusCodes } from "@/core";
 import { JwtInterceptor, JwtSigner } from "./jwt";
-import { AuthenticationOptions } from "./UseAuthentication";
+import { Authentication, AuthenticationOptions } from "./Authentication";
 
 const testSuiteName = "auth/UseAuthentication";
 
@@ -30,7 +30,7 @@ describe(testSuiteName, () => {
 
   /* #region Controllers */
 
-  it("Can bootstrap authentication into controller using options", async () => {
+  it("Can bootstrap authentication into controller using schemes", async () => {
     const secret = "superDuperSecretValue";
     const accessToken = new JwtSigner({ secret }).sign({ foo: "bar" });
 
@@ -42,10 +42,11 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new AppBuilder({ port, logger })
-      .useAuthentication(
-        new AuthenticationOptions([{ scheme: "jwt", interceptor: new JwtInterceptor({ secret }) }])
-      )
+    const container = await new ServiceContainerBuilder()
+      .setup(new Authentication([{ scheme: "jwt", interceptor: new JwtInterceptor({ secret }) }]))
+      .buildContainerAsync();
+
+    context.server = await new AppBuilder({ port, logger, container })
       .useControllers(TestController)
       .buildAsync();
 
@@ -62,7 +63,7 @@ describe(testSuiteName, () => {
     expect(authenticatedResponse.status).toBe(statusCodes.ok);
   });
 
-  it("Can bootstrap authentication into controller using schemes", async () => {
+  it("Can bootstrap authentication into controller using options", async () => {
     const secret = "superDuperSecretValue";
     const accessToken = new JwtSigner({ secret }).sign({ foo: "bar" });
 
@@ -74,8 +75,17 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new AppBuilder({ port, logger })
-      .useAuthentication([{ scheme: "jwt", interceptor: new JwtInterceptor({ secret }) }])
+    const container = await new ServiceContainerBuilder()
+      .setup(
+        new Authentication(
+          new AuthenticationOptions([
+            { scheme: "jwt", interceptor: new JwtInterceptor({ secret }) },
+          ])
+        )
+      )
+      .buildContainerAsync();
+
+    context.server = await new AppBuilder({ port, logger, container })
       .useControllers(TestController)
       .buildAsync();
 
@@ -104,8 +114,11 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new AppBuilder({ port, logger })
-      .useAuthentication((options) => options.addJwtScheme({ secret }))
+    const container = await new ServiceContainerBuilder()
+      .setup(new Authentication((options) => options.addJwtScheme({ secret })))
+      .buildContainerAsync();
+
+    context.server = await new AppBuilder({ port, logger, container })
       .useControllers(TestController)
       .buildAsync();
 
@@ -126,7 +139,7 @@ describe(testSuiteName, () => {
 
   /* #region Controller Methods */
 
-  it("Can bootstrap authentication into controller method using options", async () => {
+  it("Can bootstrap authentication into controller method using schemes", async () => {
     const secret = "superDuperSecretValue";
     const accessToken = new JwtSigner({ secret }).sign({ foo: "bar" });
 
@@ -138,10 +151,11 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new AppBuilder({ port, logger })
-      .useAuthentication(
-        new AuthenticationOptions([{ scheme: "jwt", interceptor: new JwtInterceptor({ secret }) }])
-      )
+    const container = await new ServiceContainerBuilder()
+      .setup(new Authentication([{ scheme: "jwt", interceptor: new JwtInterceptor({ secret }) }]))
+      .buildContainerAsync();
+
+    context.server = await new AppBuilder({ port, logger, container })
       .useControllers(TestController)
       .buildAsync();
 
@@ -158,7 +172,7 @@ describe(testSuiteName, () => {
     expect(authenticatedResponse.status).toBe(statusCodes.ok);
   });
 
-  it("Can bootstrap authentication into controller method using schemes", async () => {
+  it("Can bootstrap authentication into controller method using options", async () => {
     const secret = "superDuperSecretValue";
     const accessToken = new JwtSigner({ secret }).sign({ foo: "bar" });
 
@@ -170,8 +184,17 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new AppBuilder({ port, logger })
-      .useAuthentication([{ scheme: "jwt", interceptor: new JwtInterceptor({ secret }) }])
+    const container = await new ServiceContainerBuilder()
+      .setup(
+        new Authentication(
+          new AuthenticationOptions([
+            { scheme: "jwt", interceptor: new JwtInterceptor({ secret }) },
+          ])
+        )
+      )
+      .buildContainerAsync();
+
+    context.server = await new AppBuilder({ port, logger, container })
       .useControllers(TestController)
       .buildAsync();
 
@@ -200,8 +223,11 @@ describe(testSuiteName, () => {
       }
     }
 
-    context.server = await new AppBuilder({ port, logger })
-      .useAuthentication((options) => options.addJwtScheme({ secret }))
+    const container = await new ServiceContainerBuilder()
+      .setup(new Authentication((options) => options.addJwtScheme({ secret })))
+      .buildContainerAsync();
+
+    context.server = await new AppBuilder({ port, logger, container })
       .useControllers(TestController)
       .buildAsync();
 
@@ -222,14 +248,15 @@ describe(testSuiteName, () => {
 
   /* #region Endpoints */
 
-  it("Can bootstrap authentication into endpoint using options", async () => {
+  it("Can bootstrap authentication into endpoint using schemes", async () => {
     const secret = "superDuperSecretValue";
     const accessToken = new JwtSigner({ secret }).sign({ foo: "bar" });
 
-    context.server = await new AppBuilder({ port, logger })
-      .useAuthentication(
-        new AuthenticationOptions([{ scheme: "jwt", interceptor: new JwtInterceptor({ secret }) }])
-      )
+    const container = await new ServiceContainerBuilder()
+      .setup(new Authentication([{ scheme: "jwt", interceptor: new JwtInterceptor({ secret }) }]))
+      .buildContainerAsync();
+
+    context.server = await new AppBuilder({ port, logger, container })
       .useGet("endpoint", () => new OkResponse(), { authenticate: { scheme: "jwt" } })
       .buildAsync();
 
@@ -246,12 +273,21 @@ describe(testSuiteName, () => {
     expect(authenticatedResponse.status).toBe(statusCodes.ok);
   });
 
-  it("Can bootstrap authentication into endpoint using schemes", async () => {
+  it("Can bootstrap authentication into endpoint using options", async () => {
     const secret = "superDuperSecretValue";
     const accessToken = new JwtSigner({ secret }).sign({ foo: "bar" });
 
-    context.server = await new AppBuilder({ port, logger })
-      .useAuthentication([{ scheme: "jwt", interceptor: new JwtInterceptor({ secret }) }])
+    const container = await new ServiceContainerBuilder()
+      .setup(
+        new Authentication(
+          new AuthenticationOptions([
+            { scheme: "jwt", interceptor: new JwtInterceptor({ secret }) },
+          ])
+        )
+      )
+      .buildContainerAsync();
+
+    context.server = await new AppBuilder({ port, logger, container })
       .useGet("endpoint", () => new OkResponse(), { authenticate: { scheme: "jwt" } })
       .buildAsync();
 
@@ -272,8 +308,11 @@ describe(testSuiteName, () => {
     const secret = "superDuperSecretValue";
     const accessToken = new JwtSigner({ secret }).sign({ foo: "bar" });
 
-    context.server = await new AppBuilder({ port, logger })
-      .useAuthentication((options) => options.addJwtScheme({ secret }))
+    const container = await new ServiceContainerBuilder()
+      .setup(new Authentication((options) => options.addJwtScheme({ secret })))
+      .buildContainerAsync();
+
+    context.server = await new AppBuilder({ port, logger, container })
       .useGet("endpoint", () => new OkResponse(), { authenticate: { scheme: "jwt" } })
       .buildAsync();
 

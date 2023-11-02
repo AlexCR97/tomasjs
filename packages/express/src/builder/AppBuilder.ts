@@ -12,13 +12,8 @@ import { MiddlewareType, UseMiddlewares } from "@/middleware";
 import { InterceptorType, UseInterceptors } from "@/interceptors";
 import { GuardType, UseGuards } from "@/guards";
 import {
-  AuthenticationOptions,
-  AuthenticationOptionsConfiguration,
-  AuthenticationSchemeEntry,
   AuthorizationOptions,
   AuthorizationOptionsConfiguration,
-  UseAuthentication,
-  UseAuthenticationOptions,
   UseAuthorization,
   UseAuthorizationOptions,
 } from "@/auth";
@@ -55,11 +50,6 @@ export interface IAppBuilder {
   useInterceptors(...interceptors: InterceptorType[]): IAppBuilder;
 
   useGuards(...guards: GuardType[]): IAppBuilder;
-
-  useAuthentication(schemes: AuthenticationSchemeEntry[]): IAppBuilder;
-  useAuthentication(options: AuthenticationOptions): IAppBuilder;
-  useAuthentication(configure: AuthenticationOptionsConfiguration): IAppBuilder;
-  useAuthentication(options: UseAuthenticationOptions): IAppBuilder;
 
   useAuthorization(policies: Policy[]): IAppBuilder;
   useAuthorization(options: AuthorizationOptions): IAppBuilder;
@@ -172,14 +162,6 @@ export class AppBuilder implements IAppBuilder {
         guards,
       })
     );
-  }
-
-  useAuthentication(schemes: AuthenticationSchemeEntry[]): IAppBuilder;
-  useAuthentication(options: AuthenticationOptions): IAppBuilder;
-  useAuthentication(configure: AuthenticationOptionsConfiguration): IAppBuilder;
-  useAuthentication(options: UseAuthenticationOptions): IAppBuilder;
-  useAuthentication(arg1: any): IAppBuilder {
-    return this.use(new UseAuthentication(arg1));
   }
 
   useAuthorization(policies: Policy[]): IAppBuilder;
