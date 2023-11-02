@@ -6,13 +6,14 @@ export {
   AuthenticationScheme,
   AuthenticationSchemeEntry,
 } from "./Authentication";
+
 export { AuthenticationGuard } from "./AuthenticationGuard";
 export { AuthenticationMetadata } from "./AuthenticationMetadata";
-export { AuthorizationMetadata } from "./AuthorizationMetadata";
 export {
   Authorization,
   AuthorizationOptions,
   AuthorizationOptionsConfiguration,
+  AuthorizationParam,
   PolicyRules,
-  UseAuthorizationOptions,
-} from "./UseAuthorization";
+} from "./Authorization";
+export { AuthorizationMetadata } from "./AuthorizationMetadata";

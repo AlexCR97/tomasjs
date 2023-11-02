@@ -13,7 +13,7 @@ export class Authorization implements ContainerSetupFactory {
   constructor(policies: Policy[]);
   constructor(options: AuthorizationOptions);
   constructor(configure: AuthorizationOptionsConfiguration);
-  constructor(private readonly options: UseAuthorizationOptions) {}
+  constructor(private readonly options: AuthorizationParam) {}
 
   create(): ContainerSetupFunction {
     return async (container) => {
@@ -43,7 +43,7 @@ export class Authorization implements ContainerSetupFactory {
   }
 }
 
-export type UseAuthorizationOptions =
+export type AuthorizationParam =
   | Policy[]
   | AuthorizationOptions
   | AuthorizationOptionsConfiguration;

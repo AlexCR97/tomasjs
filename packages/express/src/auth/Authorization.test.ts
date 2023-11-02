@@ -7,7 +7,7 @@ import { TestContext } from "@/tests";
 import { OkResponse } from "@/responses";
 import { statusCodes } from "@/core";
 import { JwtSigner } from "./jwt";
-import { Authorization, AuthorizationOptions } from "./UseAuthorization";
+import { Authorization, AuthorizationOptions } from "./Authorization";
 import { Policy, RoleRequirement } from "./policies";
 import { Authentication } from "./Authentication";
 
