@@ -10,9 +10,9 @@ export { AuthenticationGuard } from "./AuthenticationGuard";
 export { AuthenticationMetadata } from "./AuthenticationMetadata";
 export { AuthorizationMetadata } from "./AuthorizationMetadata";
 export {
+  Authorization,
   AuthorizationOptions,
   AuthorizationOptionsConfiguration,
   PolicyRules,
-  UseAuthorization,
   UseAuthorizationOptions,
 } from "./UseAuthorization";

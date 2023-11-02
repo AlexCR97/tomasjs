@@ -7,7 +7,7 @@ import { TestContext } from "@/tests";
 import { OkResponse } from "@/responses";
 import { statusCodes } from "@/core";
 import { JwtSigner } from "./jwt";
-import { AuthorizationOptions } from "./UseAuthorization";
+import { Authorization, AuthorizationOptions } from "./UseAuthorization";
 import { Policy, RoleRequirement } from "./policies";
 import { Authentication } from "./Authentication";
 
@@ -52,10 +52,14 @@ describe(testSuiteName, () => {
 
     const container = await new ServiceContainerBuilder()
       .setup(new Authentication((options) => options.addJwtScheme({ secret })))
+      .setup(
+        new Authorization(
+          new AuthorizationOptions([new Policy(policy, [new RoleRequirement(role)])])
+        )
+      )
       .buildContainerAsync();
 
     context.server = await new AppBuilder({ port, logger, container })
-      .useAuthorization(new AuthorizationOptions([new Policy(policy, [new RoleRequirement(role)])]))
       .useControllers(TestController)
       .buildAsync();
 
@@ -92,10 +96,10 @@ describe(testSuiteName, () => {
 
     const container = await new ServiceContainerBuilder()
       .setup(new Authentication((options) => options.addJwtScheme({ secret })))
+      .setup(new Authorization([new Policy(policy, [new RoleRequirement(role)])]))
       .buildContainerAsync();
 
     context.server = await new AppBuilder({ port, logger, container })
-      .useAuthorization([new Policy(policy, [new RoleRequirement(role)])])
       .useControllers(TestController)
       .buildAsync();
 
@@ -132,10 +136,10 @@ describe(testSuiteName, () => {
 
     const container = await new ServiceContainerBuilder()
       .setup(new Authentication((options) => options.addJwtScheme({ secret })))
+      .setup(new Authorization((options) => options.addPolicy(policy, [new RoleRequirement(role)])))
       .buildContainerAsync();
 
     context.server = await new AppBuilder({ port, logger, container })
-      .useAuthorization((options) => options.addPolicy(policy, [new RoleRequirement(role)]))
       .useControllers(TestController)
       .buildAsync();
 
@@ -172,10 +176,10 @@ describe(testSuiteName, () => {
 
     const container = await new ServiceContainerBuilder()
       .setup(new Authentication((options) => options.addJwtScheme({ secret })))
+      .setup(new Authorization((o) => o.addPolicy(policy, (r) => r.requireRole(role))))
       .buildContainerAsync();
 
     context.server = await new AppBuilder({ port, logger, container })
-      .useAuthorization((options) => options.addPolicy(policy, (rules) => rules.requireRole(role)))
       .useControllers(TestController)
       .buildAsync();
 
@@ -213,10 +217,14 @@ describe(testSuiteName, () => {
 
     const container = await new ServiceContainerBuilder()
       .setup(new Authentication((options) => options.addJwtScheme({ secret })))
+      .setup(
+        new Authorization(
+          new AuthorizationOptions([new Policy(policy, [new RoleRequirement(role)])])
+        )
+      )
       .buildContainerAsync();
 
     context.server = await new AppBuilder({ port, logger, container })
-      .useAuthorization(new AuthorizationOptions([new Policy(policy, [new RoleRequirement(role)])]))
       .useControllers(TestController)
       .buildAsync();
 
@@ -250,10 +258,10 @@ describe(testSuiteName, () => {
 
     const container = await new ServiceContainerBuilder()
       .setup(new Authentication((options) => options.addJwtScheme({ secret })))
+      .setup(new Authorization([new Policy(policy, [new RoleRequirement(role)])]))
       .buildContainerAsync();
 
     context.server = await new AppBuilder({ port, logger, container })
-      .useAuthorization([new Policy(policy, [new RoleRequirement(role)])])
       .useControllers(TestController)
       .buildAsync();
 
@@ -287,10 +295,10 @@ describe(testSuiteName, () => {
 
     const container = await new ServiceContainerBuilder()
       .setup(new Authentication((options) => options.addJwtScheme({ secret })))
+      .setup(new Authorization((options) => options.addPolicy(policy, [new RoleRequirement(role)])))
       .buildContainerAsync();
 
     context.server = await new AppBuilder({ port, logger, container })
-      .useAuthorization((options) => options.addPolicy(policy, [new RoleRequirement(role)]))
       .useControllers(TestController)
       .buildAsync();
 
@@ -324,10 +332,10 @@ describe(testSuiteName, () => {
 
     const container = await new ServiceContainerBuilder()
       .setup(new Authentication((options) => options.addJwtScheme({ secret })))
+      .setup(new Authorization((o) => o.addPolicy(policy, (r) => r.requireRole(role))))
       .buildContainerAsync();
 
     context.server = await new AppBuilder({ port, logger, container })
-      .useAuthorization((options) => options.addPolicy(policy, (rules) => rules.requireRole(role)))
       .useControllers(TestController)
       .buildAsync();
 
@@ -357,10 +365,14 @@ describe(testSuiteName, () => {
 
     const container = await new ServiceContainerBuilder()
       .setup(new Authentication((options) => options.addJwtScheme({ secret })))
+      .setup(
+        new Authorization(
+          new AuthorizationOptions([new Policy(policy, [new RoleRequirement(role)])])
+        )
+      )
       .buildContainerAsync();
 
     context.server = await new AppBuilder({ port, logger, container })
-      .useAuthorization(new AuthorizationOptions([new Policy(policy, [new RoleRequirement(role)])]))
       .useGet("endpoint", () => new OkResponse(), {
         authenticate: { scheme: "jwt" },
         authorize: { policy },
@@ -389,10 +401,10 @@ describe(testSuiteName, () => {
 
     const container = await new ServiceContainerBuilder()
       .setup(new Authentication((options) => options.addJwtScheme({ secret })))
+      .setup(new Authorization([new Policy(policy, [new RoleRequirement(role)])]))
       .buildContainerAsync();
 
     context.server = await new AppBuilder({ port, logger, container })
-      .useAuthorization([new Policy(policy, [new RoleRequirement(role)])])
       .useGet("endpoint", () => new OkResponse(), {
         authenticate: { scheme: "jwt" },
         authorize: { policy },
@@ -421,10 +433,10 @@ describe(testSuiteName, () => {
 
     const container = await new ServiceContainerBuilder()
       .setup(new Authentication((options) => options.addJwtScheme({ secret })))
+      .setup(new Authorization((options) => options.addPolicy(policy, [new RoleRequirement(role)])))
       .buildContainerAsync();
 
     context.server = await new AppBuilder({ port, logger, container })
-      .useAuthorization((options) => options.addPolicy(policy, [new RoleRequirement(role)]))
       .useGet("endpoint", () => new OkResponse(), {
         authenticate: { scheme: "jwt" },
         authorize: { policy },
@@ -453,10 +465,10 @@ describe(testSuiteName, () => {
 
     const container = await new ServiceContainerBuilder()
       .setup(new Authentication((options) => options.addJwtScheme({ secret })))
+      .setup(new Authorization((o) => o.addPolicy(policy, (r) => r.requireRole(role))))
       .buildContainerAsync();
 
     context.server = await new AppBuilder({ port, logger, container })
-      .useAuthorization((options) => options.addPolicy(policy, (rules) => rules.requireRole(role)))
       .useGet("endpoint", () => new OkResponse(), {
         authenticate: { scheme: "jwt" },
         authorize: { policy },

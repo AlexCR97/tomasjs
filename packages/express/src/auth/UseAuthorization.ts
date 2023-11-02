@@ -1,18 +1,22 @@
-import { AppSetupFactory, AppSetupFunction } from "@/builder";
 import { AuthClaim } from "./AuthClaim";
-import { NotImplementedError, TomasError } from "@tomasjs/core";
+import {
+  ContainerSetupFactory,
+  ContainerSetupFunction,
+  NotImplementedError,
+  TomasError,
+} from "@tomasjs/core";
 import { Policy, PolicyRequirement } from "./policies/Policy";
 import { ClaimRequirement } from "./policies/ClaimRequirement";
 import { RoleRequirement } from "./policies";
 
-export class UseAuthorization implements AppSetupFactory {
+export class Authorization implements ContainerSetupFactory {
   constructor(policies: Policy[]);
   constructor(options: AuthorizationOptions);
   constructor(configure: AuthorizationOptionsConfiguration);
   constructor(private readonly options: UseAuthorizationOptions) {}
 
-  create(): AppSetupFunction {
-    return async (_, container) => {
+  create(): ContainerSetupFunction {
+    return async (container) => {
       const options = this.getAuthorizationOptions();
       container.addInstance(options, AuthorizationOptions);
     };
