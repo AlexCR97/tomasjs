@@ -20,6 +20,7 @@
     "pack": "cd ./dist && npm pack",
     "link": "cd ./dist && npm link",
     "test": "jest",
+    "test-auth": "jest --testNamePattern auth --verbose",
     "test-builder": "jest --testNamePattern builder --verbose",
     "test-controllers": "jest --testNamePattern controllers --verbose",
     "test-error-handler": "jest --testNamePattern error-handler --verbose",

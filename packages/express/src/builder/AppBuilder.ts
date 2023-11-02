@@ -11,7 +11,13 @@ import { Controller, UseControllers, UseFiles, UseFilesOptions } from "@/control
 import { MiddlewareType, UseMiddlewares } from "@/middleware";
 import { InterceptorType, UseInterceptors } from "@/interceptors";
 import { GuardType, UseGuards } from "@/guards";
-import { AuthClaim, UseAuthentication, UseAuthenticationOptions, UseAuthorization } from "@/auth";
+import {
+  AuthorizationOptions,
+  UseAuthentication,
+  UseAuthenticationOptions,
+  UseAuthorization,
+  UseAuthorizationOptions,
+} from "@/auth";
 import { UseJson, UseJsonOptions } from "./UseJson";
 import { ErrorHandlerType, UseErrorHandler } from "@/error-handler";
 import { UseCors, UseCorsOptions } from "./UseCors";
@@ -47,7 +53,7 @@ export interface IAppBuilder {
 
   useAuthentication(options: UseAuthenticationOptions): IAppBuilder;
 
-  useAuthorization(claims: AuthClaim[]): IAppBuilder;
+  useAuthorization(options: UseAuthorizationOptions): IAppBuilder;
 
   useErrorHandler(errorHandler: ErrorHandlerType): IAppBuilder;
 
@@ -161,8 +167,16 @@ export class AppBuilder implements IAppBuilder {
     return this.use(new UseAuthentication(options));
   }
 
-  useAuthorization(claims: AuthClaim[]): IAppBuilder {
-    return this.use(new UseAuthorization(claims));
+  useAuthorization(options: UseAuthorizationOptions): IAppBuilder {
+    if (Array.isArray(options)) {
+      return this.use(new UseAuthorization(options));
+    }
+
+    if (options instanceof AuthorizationOptions) {
+      return this.use(new UseAuthorization(options));
+    }
+
+    return this.use(new UseAuthorization(options));
   }
 
   useErrorHandler(errorHandler: ErrorHandlerType): IAppBuilder {

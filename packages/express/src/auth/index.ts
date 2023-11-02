@@ -1,5 +1,11 @@
 export { AuthClaim } from "./AuthClaim";
 export { AuthenticationGuard } from "./AuthenticationGuard";
-export { AuthorizationGuard } from "./AuthorizationGuard";
+export { AuthorizationMetadata } from "./AuthorizationMetadata";
 export { UseAuthentication, UseAuthenticationOptions } from "./UseAuthentication";
-export { UseAuthorization } from "./UseAuthorization";
+export {
+  AuthorizationOptions,
+  AuthorizationOptionsConfiguration,
+  PolicyRules,
+  UseAuthorization,
+  UseAuthorizationOptions,
+} from "./UseAuthorization";

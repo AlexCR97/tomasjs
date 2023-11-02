@@ -1,13 +1,16 @@
 import { Guard, GuardContext, GuardResult } from "@/guards";
 import { Logger, TomasError, TomasLogger } from "@tomasjs/core";
-import { UseAuthentication } from "./UseAuthentication";
-import { AuthClaim } from "./AuthClaim";
 import { ForbiddenResponse } from "@/responses";
+import { AuthClaim } from "../AuthClaim";
+import { UseAuthentication } from "../UseAuthentication";
 
-export class AuthorizationGuard implements Guard {
-  private readonly logger: Logger = new TomasLogger(AuthorizationGuard.name, "error");
+export class ClaimRequirement implements Guard {
+  private readonly logger: Logger = new TomasLogger(ClaimRequirement.name, "error");
+  private readonly claims: ReadonlyArray<AuthClaim>;
 
-  constructor(private readonly claims: AuthClaim[]) {}
+  constructor(...claims: AuthClaim[]) {
+    this.claims = claims;
+  }
 
   isAllowed({ user }: GuardContext): GuardResult {
     this.logger.debug("Enter");

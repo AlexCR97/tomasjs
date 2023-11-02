@@ -6,7 +6,7 @@ import { HttpMethodMetadata } from "./HttpMethodMetadata";
 import { Pipe, TomasError } from "@tomasjs/core";
 import { MiddlewareType } from "@/middleware";
 import { InterceptorType } from "@/interceptors";
-import { AuthClaim, UseAuthenticationOptions } from "@/auth";
+import { AuthorizationMetadata, UseAuthenticationOptions } from "@/auth";
 
 export class ControllerMetadata<TController extends Controller> {
   constructor(private readonly controller: ControllerType<TController>) {}
@@ -107,14 +107,14 @@ export class ControllerMetadata<TController extends Controller> {
 
   /* #region Authorization */
 
-  private readonly authorizationKey = "tomasjs:controller:authorization";
+  private readonly authorizeKey = "tomasjs:controller:authorize";
 
-  get authorization(): AuthClaim[] | undefined {
-    return this.getMetadata(this.authorizationKey);
+  get authorize(): AuthorizationMetadata | undefined {
+    return this.getMetadata(this.authorizeKey);
   }
 
-  set authorization(value: AuthClaim[] | undefined) {
-    this.setMetadata(this.authorizationKey, value);
+  set authorize(value: AuthorizationMetadata | undefined) {
+    this.setMetadata(this.authorizeKey, value);
   }
 
   /* #endregion */
@@ -137,7 +137,7 @@ export class ControllerMetadata<TController extends Controller> {
           this.interceptorsKey,
           this.guardsKey,
           this.authenticationKey,
-          this.authorizationKey,
+          this.authorizeKey,
         ],
       })
         // Get decorated properties of controller

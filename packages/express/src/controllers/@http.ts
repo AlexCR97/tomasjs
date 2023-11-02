@@ -14,7 +14,7 @@ import { FileMetadata, fileMetadataKey } from "./@file";
 import { filesMetadataKey } from "./@files";
 import { UseFilesError } from "./UseFilesError";
 import { InterceptorType } from "@/interceptors";
-import { AuthClaim, UseAuthenticationOptions } from "@/auth";
+import { AuthorizationMetadata, UseAuthenticationOptions } from "@/auth";
 import { contextMetadataKey } from "./@context";
 import { formFileFactory, formFilesFactory } from "./formFilesFactory";
 
@@ -23,7 +23,7 @@ interface HttpOptions {
   interceptors?: InterceptorType[];
   guards?: GuardType[];
   authentication?: UseAuthenticationOptions;
-  authorization?: AuthClaim[];
+  authorize?: AuthorizationMetadata;
 }
 
 export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
@@ -35,7 +35,7 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
     metadata.addMiddleware(...(options?.middlewares ?? []));
     metadata.addInterceptor(...(options?.interceptors ?? []));
     metadata.addGuard(...(options?.guards ?? []));
-    // TODO Add auth metadata
+    metadata.authorize = options?.authorize;
 
     const originalFunction: Function = descriptor.value;
 

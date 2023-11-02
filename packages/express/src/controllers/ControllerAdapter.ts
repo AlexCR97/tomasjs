@@ -12,7 +12,8 @@ import { GuardAdapter } from "@/guards";
 import { HttpMethod, httpResponseFactory } from "@/core";
 import { InterceptorAdapter } from "@/interceptors";
 import { authenticationInterceptorStrategy } from "@/auth/authenticationInterceptorStrategy";
-import { AuthenticationGuard, AuthorizationGuard } from "@/auth";
+import { AuthenticationGuard, AuthorizationOptions } from "@/auth";
+import { AuthenticatedRequirement } from "@/auth/policies";
 
 /**
  * Adapts a Controller to an Express Router.
@@ -99,13 +100,13 @@ export class ControllerAdapter {
       );
     }
 
-    if (metadata.authorization !== undefined) {
-      expressMiddlewares.push(
-        new GuardAdapter({
-          container: this.container,
-          guard: new AuthorizationGuard(metadata.authorization),
-        }).adapt()
+    if (metadata.authorize !== undefined && metadata.authorize.policy) {
+      const authorizationOptions = this.container.get(AuthorizationOptions);
+      const policy = authorizationOptions.getPolicy(metadata.authorize.policy);
+      const guardMiddlewares = [new AuthenticatedRequirement(), ...policy.requirements].map(
+        (requirement) => new GuardAdapter({ container: this.container, guard: requirement }).adapt()
       );
+      expressMiddlewares.push(...guardMiddlewares);
     }
 
     return expressMiddlewares;
@@ -161,13 +162,13 @@ export class ControllerAdapter {
       );
     }
 
-    if (metadata.authorization !== undefined) {
-      expressMiddlewares.push(
-        new GuardAdapter({
-          container: this.container,
-          guard: new AuthorizationGuard(metadata.authorization),
-        }).adapt()
+    if (metadata.authorize !== undefined && metadata.authorize.policy) {
+      const authorizationOptions = this.container.get(AuthorizationOptions);
+      const policy = authorizationOptions.getPolicy(metadata.authorize.policy);
+      const guardMiddlewares = [new AuthenticatedRequirement(), ...policy.requirements].map(
+        (guard) => new GuardAdapter({ container: this.container, guard }).adapt()
       );
+      expressMiddlewares.push(...guardMiddlewares);
     }
 
     return expressMiddlewares;
