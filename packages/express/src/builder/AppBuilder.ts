@@ -13,7 +13,10 @@ import { InterceptorType, UseInterceptors } from "@/interceptors";
 import { GuardType, UseGuards } from "@/guards";
 import {
   AuthenticationOptions,
+  AuthenticationOptionsConfiguration,
+  AuthenticationSchemeEntry,
   AuthorizationOptions,
+  AuthorizationOptionsConfiguration,
   UseAuthentication,
   UseAuthenticationOptions,
   UseAuthorization,
@@ -22,6 +25,7 @@ import {
 import { UseJson, UseJsonOptions } from "./UseJson";
 import { ErrorHandlerType, UseErrorHandler } from "@/error-handler";
 import { UseCors, UseCorsOptions } from "./UseCors";
+import { Policy } from "@/auth/policies";
 
 export interface IAppBuilder {
   use(setup: AppSetupType): IAppBuilder;
@@ -52,8 +56,14 @@ export interface IAppBuilder {
 
   useGuards(...guards: GuardType[]): IAppBuilder;
 
+  useAuthentication(schemes: AuthenticationSchemeEntry[]): IAppBuilder;
+  useAuthentication(options: AuthenticationOptions): IAppBuilder;
+  useAuthentication(configure: AuthenticationOptionsConfiguration): IAppBuilder;
   useAuthentication(options: UseAuthenticationOptions): IAppBuilder;
 
+  useAuthorization(policies: Policy[]): IAppBuilder;
+  useAuthorization(options: AuthorizationOptions): IAppBuilder;
+  useAuthorization(configure: AuthorizationOptionsConfiguration): IAppBuilder;
   useAuthorization(options: UseAuthorizationOptions): IAppBuilder;
 
   useErrorHandler(errorHandler: ErrorHandlerType): IAppBuilder;
@@ -164,28 +174,20 @@ export class AppBuilder implements IAppBuilder {
     );
   }
 
-  useAuthentication(options: UseAuthenticationOptions): IAppBuilder {
-    if (Array.isArray(options)) {
-      return this.use(new UseAuthentication(options));
-    }
-
-    if (options instanceof AuthenticationOptions) {
-      return this.use(new UseAuthentication(options));
-    }
-
-    return this.use(new UseAuthentication(options));
+  useAuthentication(schemes: AuthenticationSchemeEntry[]): IAppBuilder;
+  useAuthentication(options: AuthenticationOptions): IAppBuilder;
+  useAuthentication(configure: AuthenticationOptionsConfiguration): IAppBuilder;
+  useAuthentication(options: UseAuthenticationOptions): IAppBuilder;
+  useAuthentication(arg1: any): IAppBuilder {
+    return this.use(new UseAuthentication(arg1));
   }
 
-  useAuthorization(options: UseAuthorizationOptions): IAppBuilder {
-    if (Array.isArray(options)) {
-      return this.use(new UseAuthorization(options));
-    }
-
-    if (options instanceof AuthorizationOptions) {
-      return this.use(new UseAuthorization(options));
-    }
-
-    return this.use(new UseAuthorization(options));
+  useAuthorization(policies: Policy[]): IAppBuilder;
+  useAuthorization(options: AuthorizationOptions): IAppBuilder;
+  useAuthorization(configure: AuthorizationOptionsConfiguration): IAppBuilder;
+  useAuthorization(options: UseAuthorizationOptions): IAppBuilder;
+  useAuthorization(arg1: any): IAppBuilder {
+    return this.use(new UseAuthorization(arg1));
   }
 
   useErrorHandler(errorHandler: ErrorHandlerType): IAppBuilder {

@@ -4,9 +4,9 @@ import { TomasError } from "@tomasjs/core";
 import { JwtDecoderOptions, JwtInterceptor } from "./jwt";
 
 export class UseAuthentication implements AppSetupFactory {
-  constructor(options: AuthenticationSchemeEntry[]);
+  constructor(schemes: AuthenticationSchemeEntry[]);
   constructor(options: AuthenticationOptions);
-  constructor(options: AuthenticationOptionsConfiguration);
+  constructor(configure: AuthenticationOptionsConfiguration);
   constructor(private readonly options: UseAuthenticationOptions) {}
 
   create(): AppSetupFunction {
