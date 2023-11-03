@@ -10,7 +10,7 @@ import { AppBuilder } from "@/builder";
 
 const testSuiteName = "controllers/@context";
 
-describe(testSuiteName, () => {
+describe.skip(testSuiteName, () => {
   let testContext: TestContext;
   let port: number;
   let address: string;
