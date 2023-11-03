@@ -1,6 +1,6 @@
 {
   "name": "@tomasjs/express",
-  "version": "1.11.0",
+  "version": "1.12.0",
   "description": "Support for express in a TomasJS infrastructure.",
   "author": "viex",
   "license": "ISC",
@@ -20,6 +20,7 @@
     "pack": "cd ./dist && npm pack",
     "link": "cd ./dist && npm link",
     "test": "jest",
+    "test-auth": "jest --testNamePattern auth --verbose",
     "test-builder": "jest --testNamePattern builder --verbose",
     "test-controllers": "jest --testNamePattern controllers --verbose",
     "test-error-handler": "jest --testNamePattern error-handler --verbose",

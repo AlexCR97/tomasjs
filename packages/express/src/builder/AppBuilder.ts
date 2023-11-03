@@ -11,10 +11,10 @@ import { Controller, UseControllers, UseFiles, UseFilesOptions } from "@/control
 import { MiddlewareType, UseMiddlewares } from "@/middleware";
 import { InterceptorType, UseInterceptors } from "@/interceptors";
 import { GuardType, UseGuards } from "@/guards";
-import { AuthClaim, UseAuthentication, UseAuthenticationOptions, UseAuthorization } from "@/auth";
 import { UseJson, UseJsonOptions } from "./UseJson";
 import { ErrorHandlerType, UseErrorHandler } from "@/error-handler";
 import { UseCors, UseCorsOptions } from "./UseCors";
+import { Policy } from "@/auth/policies";
 
 export interface IAppBuilder {
   use(setup: AppSetupType): IAppBuilder;
@@ -44,10 +44,6 @@ export interface IAppBuilder {
   useInterceptors(...interceptors: InterceptorType[]): IAppBuilder;
 
   useGuards(...guards: GuardType[]): IAppBuilder;
-
-  useAuthentication(options: UseAuthenticationOptions): IAppBuilder;
-
-  useAuthorization(claims: AuthClaim[]): IAppBuilder;
 
   useErrorHandler(errorHandler: ErrorHandlerType): IAppBuilder;
 
@@ -155,14 +151,6 @@ export class AppBuilder implements IAppBuilder {
         guards,
       })
     );
-  }
-
-  useAuthentication(options: UseAuthenticationOptions): IAppBuilder {
-    return this.use(new UseAuthentication(options));
-  }
-
-  useAuthorization(claims: AuthClaim[]): IAppBuilder {
-    return this.use(new UseAuthorization(claims));
   }
 
   useErrorHandler(errorHandler: ErrorHandlerType): IAppBuilder {

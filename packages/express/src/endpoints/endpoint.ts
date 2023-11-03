@@ -1,13 +1,18 @@
 import {
-  UseAuthenticationOptions,
-  AuthClaim,
   AuthenticationGuard,
-  AuthorizationGuard,
+  AuthorizationMetadata,
+  AuthorizationOptions,
+  AuthenticationOptions,
+  AuthenticationMetadata,
 } from "@/auth";
-import { authenticationInterceptorStrategy } from "@/auth/authenticationInterceptorStrategy";
+import { AuthenticatedRequirement } from "@/auth/policies";
 import { AppSetupFunction } from "@/builder";
 import { HttpContext, HttpMethod, httpContextFactory } from "@/core";
-import { ExpressMiddlewareFunction, ExpressRequestHandler } from "@/core/express";
+import {
+  ExpressMiddlewareFunction,
+  ExpressPathNormalizer,
+  ExpressRequestHandler,
+} from "@/core/express";
 import { GuardAdapter, GuardType } from "@/guards";
 import { InterceptorAdapter, InterceptorType } from "@/interceptors";
 import { MiddlewareAdapter, MiddlewareType } from "@/middleware";
@@ -24,8 +29,8 @@ export interface EndpointOptions {
   middlewares?: MiddlewareType[];
   interceptors?: InterceptorType[];
   guards?: GuardType[];
-  authentication?: UseAuthenticationOptions;
-  authorization?: AuthClaim[];
+  authenticate?: AuthenticationMetadata;
+  authorize?: AuthorizationMetadata;
 }
 
 export function endpoint(
@@ -43,17 +48,17 @@ export function endpoint(
       getCustomEndpointHandler(),
     ];
 
-    app[method](path, ...expressHandlers);
+    const normalizedPath = new ExpressPathNormalizer(path).normalize();
+    app[method](normalizedPath, ...expressHandlers);
 
     function getAuthHandlers(): ExpressMiddlewareFunction[] {
       const expressMiddlewares: ExpressMiddlewareFunction[] = [];
 
-      if (options?.authentication !== undefined) {
+      if (options?.authenticate !== undefined && options.authenticate.scheme) {
+        const authenticationOptions = container.get(AuthenticationOptions);
+        const schemeInterceptor = authenticationOptions.getScheme(options.authenticate.scheme);
         expressMiddlewares.push(
-          new InterceptorAdapter(
-            container,
-            authenticationInterceptorStrategy(options.authentication)
-          ).adapt(),
+          new InterceptorAdapter(container, schemeInterceptor).adapt(),
           new GuardAdapter({
             container,
             guard: new AuthenticationGuard(),
@@ -61,13 +66,13 @@ export function endpoint(
         );
       }
 
-      if (options?.authorization !== undefined) {
-        expressMiddlewares.push(
-          new GuardAdapter({
-            container,
-            guard: new AuthorizationGuard(options.authorization),
-          }).adapt()
+      if (options?.authorize !== undefined && options.authorize.policy) {
+        const authorizationOptions = container.get(AuthorizationOptions);
+        const policy = authorizationOptions.getPolicy(options.authorize.policy);
+        const guardMiddlewares = [new AuthenticatedRequirement(), ...policy.requirements].map(
+          (guard) => new GuardAdapter({ container, guard }).adapt()
         );
+        expressMiddlewares.push(...guardMiddlewares);
       }
 
       return expressMiddlewares;

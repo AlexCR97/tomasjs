@@ -11,7 +11,6 @@
     "noImplicitAny": true,
     "noImplicitReturns": true,
     "noImplicitThis": true,
-    "noUnusedLocals": true,
     "noFallthroughCasesInSwitch": true,
     "module": "CommonJS",
     "moduleResolution": "Node",
