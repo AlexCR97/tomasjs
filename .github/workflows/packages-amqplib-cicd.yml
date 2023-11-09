@@ -1,19 +1,19 @@
-name: Publish @tomasjs/amqplib to NPM
+name: Publish @tomasjs/amqplib
 
 on:
   push:
     branches:
-      - dev
+      - main
     paths:
-      - .github/workflows/packages-amqplib-npm-publish.yml
-      - packages/amqplib/src
+      - .github/workflows/packages-amqplib-cicd.yml
+      - packages/amqplib/src/**
       - packages/amqplib/package.json
 
 jobs:
-  build-and-publish:
+  cicd:
     runs-on: windows-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v3
 
       - name: Setup node
@@ -23,17 +23,17 @@ jobs:
           registry-url: https://registry.npmjs.org/
           token: ${{secrets.NPM_ACCESS_TOKEN}}
 
-      - name: Install dependencies
+      - name: Install modules
         run: |
           cd ./packages/amqplib
           npm install
 
-      - name: Build source code
+      - name: Build
         run: |
           cd ./packages/amqplib
           npm run compile
 
-      - name: Publish build to NPM
+      - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{secrets.NPM_ACCESS_TOKEN}}
         run: |
