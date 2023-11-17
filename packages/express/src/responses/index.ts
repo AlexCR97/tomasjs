@@ -14,8 +14,8 @@ export {
 } from "./status-codes";
 
 export { BaseResponse } from "./BaseResponse";
+export { FileResponse } from "./FileResponse";
 export { JsonResponse } from "./JsonResponse";
 export { PlainTextResponse } from "./PlainTextResponse";
 export { ProblemDetailsResponse } from "./ProblemDetailsResponse";
-export { ResponseAdapter } from "./ResponseAdapter";
 export { ResponseOptions } from "./ResponseOptions";
