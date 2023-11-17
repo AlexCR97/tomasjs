@@ -1,5 +1,11 @@
 import { Logger, TomasError, TomasLogger } from "@tomasjs/core";
-import { BaseResponse, JsonResponse, PlainTextResponse, StatusCodeResponse } from "@/responses";
+import {
+  BaseResponse,
+  FileResponse,
+  JsonResponse,
+  PlainTextResponse,
+  StatusCodeResponse,
+} from "@/responses";
 import { Response } from "express";
 import { statusCodes } from "./statusCodes";
 
@@ -50,6 +56,10 @@ class HttpResponseImpl implements HttpResponse {
   }
 
   private sendBaseResponse(response: BaseResponse): void {
+    if (response instanceof FileResponse) {
+      return this.sendFileResponse(response);
+    }
+
     if (response instanceof JsonResponse) {
       return this.sendJsonResponse(response);
     }
@@ -63,6 +73,12 @@ class HttpResponseImpl implements HttpResponse {
     }
 
     throw new TomasError("Unknown BaseResponse type", { data: { response } });
+  }
+
+  private sendFileResponse(response: FileResponse): void {
+    this.logger.debug("The response is a FileResponse");
+
+    this.res.status(response.status ?? this.defaultStatusCode).sendFile(response.path);
   }
 
   private sendJsonResponse(response: JsonResponse): void {
