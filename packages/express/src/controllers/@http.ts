@@ -94,23 +94,25 @@ export function http(method: HttpMethod, path?: string, options?: HttpOptions) {
       }
 
       function tryInjectParamsArg() {
-        const paramMetadata: ParamMetadata = Reflect.getOwnMetadata(
+        const paramMetadatas: ParamMetadata[] = Reflect.getOwnMetadata(
           ParamMetadataKey,
           target,
           propertyKey
         );
 
-        if (!paramMetadata) {
+        if (!paramMetadatas || paramMetadatas.length === 0) {
           return;
         }
 
-        if (paramMetadata.transform) {
-          req.params[paramMetadata.paramKey] = new TransformResultResolver(
-            paramMetadata.transform
-          ).resolve(req.params[paramMetadata.paramKey]);
-        }
+        for (const paramMetadata of paramMetadatas) {
+          if (paramMetadata.transform) {
+            req.params[paramMetadata.paramKey] = new TransformResultResolver(
+              paramMetadata.transform
+            ).resolve(req.params[paramMetadata.paramKey]);
+          }
 
-        controllerMethodArgs[paramMetadata.parameterIndex] = req.params[paramMetadata.paramKey];
+          controllerMethodArgs[paramMetadata.parameterIndex] = req.params[paramMetadata.paramKey];
+        }
       }
 
       function tryInjectQueryArgs() {
