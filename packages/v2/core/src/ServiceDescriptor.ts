@@ -1,9 +1,9 @@
 import { Constructor } from "./Constructor";
 import { Scope } from "./Scope";
 import { ServiceFactory } from "./ServiceFactory";
-import { ConstructorToken, ServiceFactoryToken, ValueToken } from "./Token";
+import { ConstructorToken, ServiceFactoryToken, Token, ValueToken } from "./Token";
 
-export interface ServiceDescriptor<TToken, TService> {
+export interface ServiceDescriptor<TToken extends Token<any>, TService> {
   type: ServiceDescriptorType;
   scope: Scope;
   token: TToken;

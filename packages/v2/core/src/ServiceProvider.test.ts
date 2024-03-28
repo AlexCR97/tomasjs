@@ -43,4 +43,68 @@ describe("ServiceProvider", () => {
     expect(myResolvedService).toBeInstanceOf(TestService);
     expect(myResolvedService.foo()).toMatch("bar");
   });
+
+  it("Can resolve a scoped service", async () => {
+    class Counter {
+      private _count = 0;
+
+      get count(): number {
+        return this._count;
+      }
+
+      increment() {
+        this._count += 1;
+      }
+    }
+
+    const services = await new ContainerBuilder().add("scoped", Counter).buildServiceProvider();
+
+    const counterA = services.getOrThrow(Counter);
+    counterA.increment();
+    counterA.increment();
+    counterA.increment();
+    expect(counterA.count).toBe(3);
+
+    const counterB = services.getOrThrow(Counter);
+    counterB.increment();
+    counterB.increment();
+    counterB.increment();
+    counterB.increment();
+    counterB.increment();
+    expect(counterB.count).toBe(5);
+
+    expect(counterB).not.toBe(counterA);
+  });
+
+  it("Can resolve a singleton service", async () => {
+    class Counter {
+      private _count = 0;
+
+      get count(): number {
+        return this._count;
+      }
+
+      increment() {
+        this._count += 1;
+      }
+    }
+
+    const services = await new ContainerBuilder().add("singleton", Counter).buildServiceProvider();
+
+    const counterA = services.getOrThrow(Counter);
+    counterA.increment();
+    counterA.increment();
+    counterA.increment();
+    expect(counterA.count).toBe(3);
+
+    const counterB = services.getOrThrow(Counter);
+    counterB.increment();
+    counterB.increment();
+    counterB.increment();
+    counterB.increment();
+    counterB.increment();
+    expect(counterB.count).toBe(8);
+
+    expect(counterB).toBe(counterA);
+  });
 });

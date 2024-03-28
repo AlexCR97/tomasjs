@@ -7,6 +7,7 @@ import {
 import { Token } from "./Token";
 import { NotImplementedError } from "./NotImplementedError";
 import { ServiceNotFoundError } from "./ServiceNotFoundError";
+import { Scope } from "./Scope";
 
 export interface IServiceProvider {
   get count(): number;
@@ -16,6 +17,8 @@ export interface IServiceProvider {
 }
 
 export class ServiceProvider implements IServiceProvider {
+  private readonly resolvedServices = new Map<Token<any>, any>();
+
   constructor(private readonly serviceDescriptors: readonly ServiceDescriptor<any, any>[]) {}
 
   get count(): number {
@@ -68,15 +71,44 @@ export class ServiceProvider implements IServiceProvider {
   }
 
   private resolveConstructorService<T>(serviceDescriptor: ConstructorServiceDescriptor<T>): T {
-    // TODO Inject dependencies
-    return new serviceDescriptor.service();
+    return this.resolveService(serviceDescriptor.scope, serviceDescriptor.token, () => {
+      // TODO Inject dependencies
+      return new serviceDescriptor.service();
+    });
   }
 
   private resolveFactoryService<T>(serviceDescriptor: FactoryServiceDescriptor<T>): T {
-    return serviceDescriptor.service(this);
+    return this.resolveService(serviceDescriptor.scope, serviceDescriptor.token, () => {
+      return serviceDescriptor.service(this);
+    });
   }
 
   private resolveValueService<T>(serviceDescriptor: ValueServiceDescriptor<T>): T {
-    return serviceDescriptor.service;
+    return this.resolveService(serviceDescriptor.scope, serviceDescriptor.token, () => {
+      return serviceDescriptor.service;
+    });
+  }
+
+  private resolveService<TToken extends Token<any>, TService>(
+    scope: Scope,
+    token: TToken,
+    resolver: () => TService
+  ): TService {
+    if (scope === "scoped") {
+      return resolver();
+    }
+
+    if (scope === "singleton") {
+      let resolvedService = this.resolvedServices.get(token);
+
+      if (resolvedService === undefined || resolvedService === null) {
+        resolvedService = resolver();
+        this.resolvedServices.set(token, resolvedService);
+      }
+
+      return resolvedService;
+    }
+
+    throw new NotImplementedError();
   }
 }
