@@ -1,6 +1,6 @@
-import { Container, ContainerBuilder, TomasContainer } from "./Container";
+import { IContainer, ContainerBuilder, Container } from "./Container";
 import { ContainerSetupFunction } from "./ContainerSetup";
-import { TomasServiceProvider } from "./ServiceProvider";
+import { ServiceProvider } from "./ServiceProvider";
 import { Token } from "./Token";
 
 describe("Container", () => {
@@ -11,12 +11,12 @@ describe("Container", () => {
 
   it(`Can build a Container`, async () => {
     const container = await new ContainerBuilder().buildContainer();
-    expect(container).toBeInstanceOf(TomasContainer);
+    expect(container).toBeInstanceOf(Container);
   });
 
   it(`Can build a ServiceProvider`, async () => {
     const services = await new ContainerBuilder().buildServiceProvider();
-    expect(services).toBeInstanceOf(TomasServiceProvider);
+    expect(services).toBeInstanceOf(ServiceProvider);
   });
 
   it("Can add a ConstructorService", async () => {
@@ -122,7 +122,7 @@ describe("Container", () => {
 
   it("Can build a service provider from a container", async () => {
     const services = await new ContainerBuilder().buildServiceProvider();
-    expect(services).toBeInstanceOf(TomasServiceProvider);
+    expect(services).toBeInstanceOf(ServiceProvider);
   });
 
   it("Can setup a Container", async () => {
@@ -134,7 +134,7 @@ describe("Container", () => {
       c.add("singleton", "b", "b");
     };
 
-    function setupC(c: Container) {
+    function setupC(c: IContainer) {
       c.add("singleton", "c", "c");
     }
 

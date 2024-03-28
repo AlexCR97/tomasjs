@@ -8,14 +8,14 @@ import { Token } from "./Token";
 import { NotImplementedError } from "./NotImplementedError";
 import { ServiceNotFoundError } from "./ServiceNotFoundError";
 
-export interface ServiceProvider {
+export interface IServiceProvider {
   get count(): number;
   find<T>(token: Token<T>): readonly T[];
   get<T>(token: Token<T>): T | undefined;
   getOrThrow<T>(token: Token<T>): T;
 }
 
-export class TomasServiceProvider implements ServiceProvider {
+export class ServiceProvider implements IServiceProvider {
   constructor(private readonly serviceDescriptors: readonly ServiceDescriptor<any, any>[]) {}
 
   get count(): number {

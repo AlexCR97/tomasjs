@@ -1,7 +1,7 @@
-import { Container } from "./Container";
+import { IContainer } from "./Container";
 
 export type ContainerSetup = ContainerSetupFunction | ContainerSetupFunctionAsync;
 
-export type ContainerSetupFunction = (container: Container) => void;
+export type ContainerSetupFunction = (container: IContainer) => void;
 
-export type ContainerSetupFunctionAsync = (container: Container) => Promise<void>;
+export type ContainerSetupFunctionAsync = (container: IContainer) => Promise<void>;

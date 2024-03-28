@@ -5,7 +5,7 @@ export type Token<T> = ConstructorToken<T> | ServiceFactoryToken<T> | ValueToken
 
 export type ConstructorToken<T> = Constructor<T>;
 
-export type ServiceFactoryToken<T> = ServiceFactory<T> | ValueToken;
+export type ServiceFactoryToken<T> = ServiceFactory<T>;
 
 export type ValueToken = string;
 
@@ -18,7 +18,7 @@ export function isConstructorToken<T>(obj: any): obj is ConstructorToken<T> {
 }
 
 export function isServiceFactoryToken<T>(obj: any): obj is ServiceFactoryToken<T> {
-  return isServiceFactory<T>(obj) || isValueToken(obj);
+  return isServiceFactory<T>(obj);
 }
 
 export function isValueToken(obj: any): obj is ValueToken {

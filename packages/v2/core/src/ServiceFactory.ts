@@ -1,6 +1,6 @@
-import { ServiceProvider } from "./ServiceProvider";
+import { IServiceProvider } from "./ServiceProvider";
 
-export type ServiceFactory<T> = (provider: ServiceProvider) => T;
+export type ServiceFactory<T> = (provider: IServiceProvider) => T;
 
 export function isServiceFactory<T>(obj: any): obj is ServiceFactory<T> {
   if (obj === undefined || obj === null) {
