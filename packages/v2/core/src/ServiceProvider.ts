@@ -8,6 +8,7 @@ import { Token } from "./Token";
 import { NotImplementedError } from "./NotImplementedError";
 import { ServiceNotFoundError } from "./ServiceNotFoundError";
 import { Scope } from "./Scope";
+import { InjectDecoratorMetadata } from "./@inject";
 
 export interface IServiceProvider {
   get count(): number;
@@ -72,8 +73,17 @@ export class ServiceProvider implements IServiceProvider {
 
   private resolveConstructorService<T>(serviceDescriptor: ConstructorServiceDescriptor<T>): T {
     return this.resolveService(serviceDescriptor.scope, serviceDescriptor.token, () => {
-      // TODO Inject dependencies
-      return new serviceDescriptor.service();
+      const constructorParameters: any[] | undefined = Reflect.getOwnMetadata(
+        "design:paramtypes",
+        serviceDescriptor.service
+      );
+
+      const dependencies = (constructorParameters ?? []).map((_, paramIndex) => {
+        const metadata = new InjectDecoratorMetadata<T>(serviceDescriptor.service, paramIndex);
+        return this.getOrThrow(metadata.value.token);
+      });
+
+      return new serviceDescriptor.service(...dependencies);
     });
   }
 
