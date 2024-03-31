@@ -1,5 +1,5 @@
+import { TomasError } from "@/errors/TomasError";
 import { Token } from "./Token";
-import { TomasError } from "./TomasError";
 
 export class ServiceNotFoundError<T> extends TomasError {
   constructor(token: Token<T>) {

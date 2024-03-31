@@ -1,4 +1,4 @@
-import { TomasError } from "./TomasError";
+import { TomasError } from "@/errors/TomasError";
 
 export class NotImplementedError extends TomasError {
   constructor() {
