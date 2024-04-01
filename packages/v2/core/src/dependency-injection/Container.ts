@@ -16,6 +16,7 @@ import {
   ContainerSetupFunctionAsync,
 } from "./ContainerSetup";
 import { ConfigurationSetup } from "@/configuration/ConfigurationSetup";
+import { loggerSetup } from "@/logging/loggerSetup";
 
 export interface IContainer {
   get count(): number;
@@ -157,6 +158,7 @@ export interface IContainerBuilder {
   add<T>(scope: Scope, token: ValueToken, factory: ServiceFactory<T>): IContainerBuilder;
   add<T>(scope: Scope, token: ValueToken, value: T): IContainerBuilder;
   addConfiguration(setup: (builder: ConfigurationSetup) => void): ContainerBuilder;
+  addLogging(): ContainerBuilder;
   use(setup: ContainerSetupFunction): ContainerBuilder;
   use(setup: ContainerSetupFunctionAsync): ContainerBuilder;
   buildContainer(): Promise<IContainer>;
@@ -204,10 +206,20 @@ export class ContainerBuilder implements IContainerBuilder {
     throw new NotImplementedError();
   }
 
-  addConfiguration(setup: (builder: ConfigurationSetup) => void): ContainerBuilder {
+  addConfiguration(setup?: (builder: ConfigurationSetup) => void): ContainerBuilder {
     const configurationSetup = new ConfigurationSetup();
-    setup(configurationSetup);
+
+    if (setup !== null && setup !== undefined) {
+      setup(configurationSetup);
+    }
+
     this.setups.push(configurationSetup.build());
+
+    return this;
+  }
+
+  addLogging(): ContainerBuilder {
+    this.setups.push(loggerSetup);
     return this;
   }
 

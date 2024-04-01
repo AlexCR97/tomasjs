@@ -1,3 +1,4 @@
+import "reflect-metadata";
 import { IContainer, ContainerBuilder, Container } from "./Container";
 import { ContainerSetupFunction } from "./ContainerSetup";
 import { ServiceProvider } from "./ServiceProvider";
