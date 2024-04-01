@@ -15,6 +15,7 @@ import {
   ContainerSetupFunction,
   ContainerSetupFunctionAsync,
 } from "./ContainerSetup";
+import { ConfigurationSetup } from "@/configuration/ConfigurationSetup";
 
 export interface IContainer {
   get count(): number;
@@ -155,6 +156,7 @@ export interface IContainerBuilder {
   add<T>(scope: Scope, token: ValueToken, constructor: ConstructorToken<T>): IContainerBuilder;
   add<T>(scope: Scope, token: ValueToken, factory: ServiceFactory<T>): IContainerBuilder;
   add<T>(scope: Scope, token: ValueToken, value: T): IContainerBuilder;
+  addConfiguration(setup: (builder: ConfigurationSetup) => void): ContainerBuilder;
   use(setup: ContainerSetupFunction): ContainerBuilder;
   use(setup: ContainerSetupFunctionAsync): ContainerBuilder;
   buildContainer(): Promise<IContainer>;
@@ -200,6 +202,13 @@ export class ContainerBuilder implements IContainerBuilder {
     }
 
     throw new NotImplementedError();
+  }
+
+  addConfiguration(setup: (builder: ConfigurationSetup) => void): ContainerBuilder {
+    const configurationSetup = new ConfigurationSetup();
+    setup(configurationSetup);
+    this.setups.push(configurationSetup.build());
+    return this;
   }
 
   use(setup: ContainerSetupFunction): ContainerBuilder;
