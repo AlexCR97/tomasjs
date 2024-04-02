@@ -5,7 +5,7 @@ import {
   transports as winstonTransport,
 } from "winston";
 import { SPLAT } from "triple-beam";
-import { Pipe } from "@/Pipe";
+import { pipe } from "@/pipe";
 import { Configuration } from "@/configuration/Configuration";
 
 export interface ILogger {
@@ -35,10 +35,10 @@ const customMessageFormat = winstonFormat.printf((context: any) => {
   const splat = context[SPLAT];
 
   if (splat && splat.length > 0) {
-    const splatToken = new Pipe(splat)
-      .apply((splat) => (splat.length === 1 ? splat[0] : splat))
-      .apply((splat) => JSON.stringify(splat))
-      .apply((json) => `\x1B[35m${json}\x1B[39m`)
+    const splatToken = pipe(splat)
+      .pipe((splat) => (splat.length === 1 ? splat[0] : splat))
+      .pipe((splat) => JSON.stringify(splat))
+      .pipe((json) => `\x1B[35m${json}\x1B[39m`)
       .get();
 
     messageTokens.push(splatToken);
