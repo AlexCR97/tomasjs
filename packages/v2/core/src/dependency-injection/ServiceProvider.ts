@@ -9,6 +9,7 @@ import { NotImplementedError } from "./NotImplementedError";
 import { ServiceNotFoundError } from "./ServiceNotFoundError";
 import { Scope } from "./Scope";
 import { InjectDecoratorMetadata } from "./@inject";
+import { flatten } from "./flatten";
 
 export interface IServiceProvider {
   get count(): number;
@@ -80,7 +81,12 @@ export class ServiceProvider implements IServiceProvider {
 
       const dependencies = (constructorParameters ?? []).map((_, paramIndex) => {
         const metadata = new InjectDecoratorMetadata<T>(serviceDescriptor.service, paramIndex);
-        return this.getOrThrow(metadata.value.token);
+
+        if (metadata.value.multiple === true) {
+          return this.find(metadata.value.token);
+        } else {
+          return this.getOrThrow(metadata.value.token);
+        }
       });
 
       return new serviceDescriptor.service(...dependencies);

@@ -17,6 +17,7 @@ import {
 } from "./ContainerSetup";
 import { ConfigurationSetup } from "@/configuration/ConfigurationSetup";
 import { loggerSetup } from "@/logging/loggerSetup";
+import { BusSetup } from "@/cqrs/BusSetup";
 
 export interface IContainer {
   get count(): number;
@@ -157,7 +158,8 @@ export interface IContainerBuilder {
   add<T>(scope: Scope, token: ValueToken, constructor: ConstructorToken<T>): IContainerBuilder;
   add<T>(scope: Scope, token: ValueToken, factory: ServiceFactory<T>): IContainerBuilder;
   add<T>(scope: Scope, token: ValueToken, value: T): IContainerBuilder;
-  addConfiguration(setup: (builder: ConfigurationSetup) => void): ContainerBuilder;
+  addBus(setup?: (builder: BusSetup) => void): ContainerBuilder;
+  addConfiguration(setup?: (builder: ConfigurationSetup) => void): ContainerBuilder;
   addLogging(): ContainerBuilder;
   use(setup: ContainerSetupFunction): ContainerBuilder;
   use(setup: ContainerSetupFunctionAsync): ContainerBuilder;
@@ -204,6 +206,18 @@ export class ContainerBuilder implements IContainerBuilder {
     }
 
     throw new NotImplementedError();
+  }
+
+  addBus(setup?: (builder: BusSetup) => void): ContainerBuilder {
+    const busSetup = new BusSetup();
+
+    if (setup !== null && setup !== undefined) {
+      setup(busSetup);
+    }
+
+    this.setups.push(busSetup.build());
+
+    return this;
   }
 
   addConfiguration(setup?: (builder: ConfigurationSetup) => void): ContainerBuilder {
