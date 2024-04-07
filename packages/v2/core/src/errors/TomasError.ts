@@ -3,10 +3,15 @@ export class TomasError extends Error {
   readonly innerError?: any;
   readonly data?: any;
 
-  constructor(code: string, message: string, options?: { innerError?: any; data?: any }) {
+  constructor(code: string, message: string, options?: ErrorOptions) {
     super(`${code}: ${message}`);
     this.code = code;
     this.innerError = options?.innerError;
     this.data = options?.data;
   }
 }
+
+export type ErrorOptions = {
+  innerError?: any;
+  data?: any;
+};
