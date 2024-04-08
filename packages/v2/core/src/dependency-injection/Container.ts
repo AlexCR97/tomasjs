@@ -18,6 +18,7 @@ import {
 import { ConfigurationSetup } from "@/configuration/ConfigurationSetup";
 import { loggerSetup } from "@/logging/loggerSetup";
 import { BusSetup } from "@/cqrs/BusSetup";
+import { HttpClientSetup } from "@/http/HttpClientSetup";
 
 export interface IContainer {
   get count(): number;
@@ -160,6 +161,7 @@ export interface IContainerBuilder {
   add<T>(scope: Scope, token: ValueToken, value: T): IContainerBuilder;
   addBus(setup?: (builder: BusSetup) => void): ContainerBuilder;
   addConfiguration(setup?: (builder: ConfigurationSetup) => void): ContainerBuilder;
+  addHttpClient(token: string, setup?: (builder: HttpClientSetup) => void): ContainerBuilder;
   addLogging(): ContainerBuilder;
   use(setup: ContainerSetupFunction): ContainerBuilder;
   use(setup: ContainerSetupFunctionAsync): ContainerBuilder;
@@ -228,6 +230,18 @@ export class ContainerBuilder implements IContainerBuilder {
     }
 
     this.setups.push(configurationSetup.build());
+
+    return this;
+  }
+
+  addHttpClient(token: string, setup?: (builder: HttpClientSetup) => void): ContainerBuilder {
+    const httpClientSetup = new HttpClientSetup(token);
+
+    if (setup !== undefined) {
+      setup(httpClientSetup);
+    }
+
+    this.setups.push(httpClientSetup.build());
 
     return this;
   }
