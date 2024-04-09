@@ -5,11 +5,9 @@ import {
   ValueServiceDescriptor,
 } from "./ServiceDescriptor";
 import { Token } from "./Token";
-import { NotImplementedError } from "./NotImplementedError";
-import { ServiceNotFoundError } from "./ServiceNotFoundError";
 import { Scope } from "./Scope";
 import { InjectDecoratorMetadata } from "./@inject";
-import { flatten } from "./flatten";
+import { InvalidOperationError, TomasError } from "@/errors";
 
 export interface IServiceProvider {
   get count(): number;
@@ -69,7 +67,7 @@ export class ServiceProvider implements IServiceProvider {
       return this.resolveValueService(arg);
     }
 
-    throw new NotImplementedError();
+    throw new InvalidOperationError();
   }
 
   private resolveConstructorService<T>(serviceDescriptor: ConstructorServiceDescriptor<T>): T {
@@ -125,6 +123,14 @@ export class ServiceProvider implements IServiceProvider {
       return resolvedService;
     }
 
-    throw new NotImplementedError();
+    throw new InvalidOperationError();
+  }
+}
+
+export class ServiceNotFoundError<T> extends TomasError {
+  constructor(token: Token<T>) {
+    super("core/di/ServiceNotFound", `No such service found with token ${token}`, {
+      data: { token },
+    });
   }
 }

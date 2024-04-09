@@ -1,6 +1,6 @@
-import { ContainerSetup } from "@/dependency-injection/ContainerSetup";
+import { ContainerSetup } from "@/dependency-injection";
 import { LoggerFactory } from "./LoggerFactory";
-import { IServiceProvider } from "@/dependency-injection/ServiceProvider";
+import { IServiceProvider } from "@/dependency-injection";
 import { GLOBAL_LOGGER } from "./tokens";
 
 export const loggerSetup: ContainerSetup = (container) => {

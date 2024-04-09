@@ -5,8 +5,8 @@ import {
   transports as winstonTransport,
 } from "winston";
 import { SPLAT } from "triple-beam";
-import { pipe } from "@/pipe";
-import { Configuration } from "@/configuration/Configuration";
+import { pipe } from "@/system";
+import { Configuration } from "@/configuration";
 
 export interface ILogger {
   log(level: LogLevel, message: any, ...params: any[]): void;

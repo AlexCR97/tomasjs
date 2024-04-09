@@ -1,4 +1,4 @@
-export const scopes = ["singleton", "scoped"] as const;
+const scopes = ["singleton", "scoped"] as const;
 
 export type Scope = (typeof scopes)[number];
 

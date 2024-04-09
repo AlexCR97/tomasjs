@@ -5,7 +5,7 @@ import { Token } from "./Token";
 import { inject } from "./@inject";
 import { ServiceA } from "./ServiceA_test";
 import { ServiceB } from "./ServiceB_test";
-import { ServiceNotFoundError } from "./ServiceNotFoundError";
+import { ServiceNotFoundError } from "./ServiceProvider";
 
 describe("ServiceProvider", () => {
   it("Can get value service", async () => {

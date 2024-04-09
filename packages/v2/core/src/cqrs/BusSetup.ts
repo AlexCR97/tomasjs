@@ -1,6 +1,6 @@
-import { ContainerSetup } from "@/dependency-injection/ContainerSetup";
+import { ContainerSetup } from "@/dependency-injection";
 import { Bus } from "./Bus";
-import { Constructor } from "@/dependency-injection/Constructor";
+import { Constructor } from "@/system";
 import { REQUEST_HANDLERS } from "./RequestHandler";
 import { EVENT_HANDLERS } from "./EventHandler";
 

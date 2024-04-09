@@ -1,4 +1,4 @@
-import { Constructor } from "@/dependency-injection/Constructor";
+import { Constructor } from "@/system";
 import { EVENT_HANDLERS, EventHandler, isEventHandler } from "./EventHandler";
 
 export function eventHandler<TEvent>(eventConstructor: Constructor<TEvent>) {

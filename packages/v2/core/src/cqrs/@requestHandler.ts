@@ -1,4 +1,4 @@
-import { Constructor } from "@/dependency-injection/Constructor";
+import { Constructor } from "@/system";
 import { IRequest } from "./IRequest";
 import { REQUEST_HANDLERS, RequestHandler, isRequestHandler } from "./RequestHandler";
 

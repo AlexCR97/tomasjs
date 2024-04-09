@@ -1,7 +1,10 @@
-import { ConfigurationValueError } from "./ConfigurationValueError";
-import { ConfigurationSectionError } from "./ConfigurationSectionError";
-import { dot } from "./dot";
-import { ConfigurationValueTypeError } from "./ConfigurationValueTypeError";
+import { TomasError } from "@/errors";
+import { dot } from "@/system";
+import {
+  ConfigurationValueNotFoundError,
+  ConfigurationValueType,
+  ConfigurationValueTypeError,
+} from "./ConfigurationValue";
 
 export interface IConfigurationSection {
   section(path: string): IConfigurationSection | null;
@@ -10,13 +13,13 @@ export interface IConfigurationSection {
   valueOrThrow<T>(type: ConfigurationValueType): T;
 }
 
-export type ConfigurationValueType = "boolean" | "number" | "string" | "object";
-
 export class ConfigurationSection implements IConfigurationSection {
+  static readonly root = "$(root)";
+
   constructor(private readonly rootPath: string, private readonly root: Record<any, any>) {}
 
   static fromRoot(root: Record<any, any>): ConfigurationSection {
-    return new ConfigurationSection("$(root)", root);
+    return new ConfigurationSection(ConfigurationSection.root, root);
   }
 
   section(path: string): IConfigurationSection | null {
@@ -33,7 +36,7 @@ export class ConfigurationSection implements IConfigurationSection {
     const section = this.section(path);
 
     if (section === null) {
-      throw new ConfigurationSectionError(this.rootPath, path);
+      throw new ConfigurationSectionNotFoundError(this.rootPath, path);
     }
 
     return section;
@@ -113,9 +116,20 @@ export class ConfigurationSection implements IConfigurationSection {
     const value = this.value<T>(type);
 
     if (value === null) {
-      throw new ConfigurationValueError(this.rootPath);
+      throw new ConfigurationValueNotFoundError(this.rootPath);
     }
 
     return value;
+  }
+}
+
+export class ConfigurationSectionNotFoundError extends TomasError {
+  constructor(rootPath: string, sectionPath: string) {
+    super("core/conf/SectionNotFound", `No such configuration section in path "${sectionPath}"`, {
+      data: {
+        rootPath,
+        sectionPath,
+      },
+    });
   }
 }

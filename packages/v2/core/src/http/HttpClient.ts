@@ -11,7 +11,7 @@ import {
   isResponseInterceptorInstance,
 } from "./Interceptor";
 import { InvalidOperationError } from "@/errors";
-import { JsonError } from "./JsonError";
+import { JsonSerializationError } from "./JsonSerializationError";
 
 interface IHttpClient {
   send(request: PlainHttpRequest): Promise<HttpResponse>;
@@ -329,7 +329,7 @@ export class HttpClient implements IHttpClient {
 
   private async readJsonResponse<T>(response: HttpResponse): Promise<T> {
     if (!response.ok) {
-      throw JsonError.cannotDeserialize(response);
+      throw JsonSerializationError.cannotDeserialize(response);
     }
 
     const json = await response.json();

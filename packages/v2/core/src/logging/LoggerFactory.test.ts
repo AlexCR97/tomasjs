@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { ContainerBuilder } from "@/dependency-injection/Container";
+import { ContainerBuilder } from "@/dependency-injection";
 import { LoggerFactory } from "./LoggerFactory";
 import { Logger } from "./Logger";
 

@@ -1,4 +1,4 @@
-import { ContainerSetup, ContainerSetupFunction } from "@/dependency-injection/ContainerSetup";
+import { ContainerSetup } from "@/dependency-injection";
 import { Configuration } from "./Configuration";
 import { ConfigurationSection } from "./ConfigurationSection";
 import {
@@ -40,8 +40,5 @@ export class ConfigurationSetup {
   }
 }
 
-export type ConfigurationOptions = {
-  sources?: ConfigurationSource[];
-};
-
+// TODO Change for Symbol
 export const configurationToken = "@tomasjs/core/Configuration";

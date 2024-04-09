@@ -1,11 +1,11 @@
-import { TomasError } from "@/errors/TomasError";
+import { TomasError } from "@/errors";
 import { readFileSync } from "fs";
 
 export function readFile(path: string, encoding?: BufferEncoding): string | Buffer {
   try {
     return readFileSync(path, encoding);
   } catch (err) {
-    throw new TomasError("core/files/readFile", `No such file "${path}"`, {
+    throw new TomasError("core/files/FileNotFound", `No such file at path "${path}"`, {
       data: { path },
       innerError: err,
     });

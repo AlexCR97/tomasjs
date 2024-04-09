@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { ContainerBuilder } from "@/dependency-injection/Container";
+import { ContainerBuilder } from "@/dependency-injection";
 import { configurationToken } from "./ConfigurationSetup";
 import { Configuration } from "./Configuration";
 

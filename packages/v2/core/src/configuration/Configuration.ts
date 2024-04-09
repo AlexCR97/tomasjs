@@ -1,11 +1,10 @@
+import { merge } from "@/system";
 import {
   ConfigurationSection,
-  ConfigurationValueType,
+  ConfigurationSectionNotFoundError,
   IConfigurationSection,
 } from "./ConfigurationSection";
-import { ConfigurationSectionError } from "./ConfigurationSectionError";
-import { ConfigurationValueError } from "./ConfigurationValueError";
-import { merge } from "./merge";
+import { ConfigurationValueNotFoundError, ConfigurationValueType } from "./ConfigurationValue";
 
 export interface IConfiguration extends IConfigurationSection {}
 
@@ -28,7 +27,7 @@ export class Configuration implements IConfiguration {
     const section = this.section(path);
 
     if (section === null) {
-      throw new ConfigurationSectionError("$(root)", path);
+      throw new ConfigurationSectionNotFoundError(ConfigurationSection.root, path);
     }
 
     return section;
@@ -43,7 +42,7 @@ export class Configuration implements IConfiguration {
     const value = this.value<T>(type);
 
     if (value === null) {
-      throw new ConfigurationValueError("$(root)");
+      throw new ConfigurationValueNotFoundError(ConfigurationSection.root);
     }
 
     return value;

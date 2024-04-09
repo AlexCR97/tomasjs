@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { ContainerBuilder } from "@/dependency-injection/Container";
+import { ContainerBuilder } from "@/dependency-injection";
 import { Bus } from "./Bus";
 import { requestHandler } from "./@requestHandler";
 import { RequestHandler } from "./RequestHandler";

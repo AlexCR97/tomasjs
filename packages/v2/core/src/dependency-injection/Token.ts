@@ -1,6 +1,7 @@
-import { Constructor, isConstructor } from "./Constructor";
+import { Constructor, isConstructor } from "@/system";
 import { ServiceFactory, isServiceFactory } from "./ServiceFactory";
 
+// TODO Support symbol
 export type Token<T> = ConstructorToken<T> | ServiceFactoryToken<T> | ValueToken;
 
 export type ConstructorToken<T> = Constructor<T>;

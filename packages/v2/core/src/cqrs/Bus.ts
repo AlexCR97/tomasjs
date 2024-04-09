@@ -1,10 +1,10 @@
-import { inject } from "@/dependency-injection/@inject";
+import { inject } from "@/dependency-injection";
 import { REQUEST_HANDLERS, RequestHandler } from "./RequestHandler";
 import { EVENT_HANDLERS, EventHandler } from "./EventHandler";
-import { constructorOf } from "./constructorOf";
-import { Constructor } from "@/dependency-injection/Constructor";
+import { constructorOf } from "../system/constructorOf";
+import { Constructor } from "@/system";
 import { RequestHandlerMetadata } from "./@requestHandler";
-import { TomasError } from "@/errors/TomasError";
+import { TomasError } from "@/errors";
 import { IRequest } from "./IRequest";
 import { EventHandlerMetadata } from "./@eventHandler";
 
@@ -38,7 +38,7 @@ export class Bus implements IBus {
 
     if (matchingHandler === undefined) {
       throw new TomasError(
-        "NO_SUCH_REQUEST_HANDLER",
+        "core/cqrs/RequestHandlerNotFound",
         "Could not find a RequestHandler for the dispatched request.",
         {
           data: { requestConstructor },
@@ -63,7 +63,7 @@ export class Bus implements IBus {
 
     if (matchingHandler === undefined) {
       throw new TomasError(
-        "NO_SUCH_EVENT_HANDLER",
+        "core/cqrs/EventHandlerNotFound",
         "Could not find an EventHandler for the emitted event.",
         {
           data: { eventConstructor },

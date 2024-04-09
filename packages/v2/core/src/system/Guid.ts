@@ -1,5 +1,5 @@
 import { randomUUID } from "crypto";
-import { TomasError } from "./errors/TomasError";
+import { TomasError } from "@/errors";
 
 export class Guid {
   private readonly value: string;
@@ -44,6 +44,6 @@ export class Guid {
 
 export class InvalidGuidError extends TomasError {
   constructor(value: string) {
-    super(`INVALID_GUID`, `The value "${value}" is not a valid Guid`, { data: { value } });
+    super(`core/InvalidGuid`, `The value "${value}" is not a valid Guid`, { data: { value } });
   }
 }

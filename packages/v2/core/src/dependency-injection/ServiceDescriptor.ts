@@ -1,4 +1,4 @@
-import { Constructor } from "./Constructor";
+import { Constructor } from "@/system";
 import { Scope } from "./Scope";
 import { ServiceFactory } from "./ServiceFactory";
 import { ConstructorToken, ServiceFactoryToken, Token, ValueToken } from "./Token";

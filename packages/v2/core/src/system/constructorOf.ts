@@ -1,5 +1,5 @@
-import { Constructor } from "@/dependency-injection/Constructor";
-import { TomasError } from "@/errors/TomasError";
+import { TomasError } from "@/errors";
+import { Constructor } from "./Constructor";
 
 export function constructorOf<T>(source: unknown): Constructor<T> {
   const sourcePrototype = Object.getPrototypeOf(source);
@@ -7,9 +7,13 @@ export function constructorOf<T>(source: unknown): Constructor<T> {
   const sourceConstructor: Constructor<T> = sourcePrototype?.constructor;
 
   if (sourceConstructor === null || sourceConstructor === undefined) {
-    throw new TomasError("NO_CONSTRUCTOR", "The provided source does not have a constructor.", {
-      data: { source },
-    });
+    throw new TomasError(
+      "core/system/NoConstructor",
+      "The provided source does not have a constructor.",
+      {
+        data: { source },
+      }
+    );
   }
 
   return sourceConstructor;

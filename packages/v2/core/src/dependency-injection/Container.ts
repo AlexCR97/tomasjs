@@ -1,4 +1,4 @@
-import { isConstructor } from "./Constructor";
+import { isConstructor } from "@/system";
 import { Scope, isScope } from "./Scope";
 import {
   ConstructorServiceDescriptor,
@@ -9,15 +9,15 @@ import {
 import { ServiceFactory, isServiceFactory } from "./ServiceFactory";
 import { IServiceProvider, ServiceProvider } from "./ServiceProvider";
 import { ConstructorToken, Token, ValueToken, isConstructorToken, isValueToken } from "./Token";
-import { NotImplementedError } from "./NotImplementedError";
 import {
   ContainerSetup,
   ContainerSetupFunction,
   ContainerSetupFunctionAsync,
 } from "./ContainerSetup";
-import { ConfigurationSetup } from "@/configuration/ConfigurationSetup";
-import { loggerSetup } from "@/logging/loggerSetup";
-import { BusSetup } from "@/cqrs/BusSetup";
+import { ConfigurationSetup } from "@/configuration";
+import { loggerSetup } from "@/logging";
+import { BusSetup } from "@/cqrs";
+import { InvalidOperationError } from "@/errors";
 
 export interface IContainer {
   get count(): number;
@@ -74,7 +74,7 @@ export class Container implements IContainer {
       }
     }
 
-    throw new NotImplementedError();
+    throw new InvalidOperationError();
   }
 
   private addConstructor<T>(scope: Scope, constructor: ConstructorToken<T>): Container;
@@ -98,7 +98,7 @@ export class Container implements IContainer {
       return this;
     }
 
-    throw new NotImplementedError();
+    throw new InvalidOperationError();
   }
 
   private addFactory<T>(scope: Scope, factory: ServiceFactory<T>): Container;
@@ -116,7 +116,7 @@ export class Container implements IContainer {
       return this;
     }
 
-    throw new NotImplementedError();
+    throw new InvalidOperationError();
   }
 
   private addValue<T>(scope: Scope, token: ValueToken, value: T): Container {
@@ -205,7 +205,7 @@ export class ContainerBuilder implements IContainerBuilder {
       }
     }
 
-    throw new NotImplementedError();
+    throw new InvalidOperationError();
   }
 
   addBus(setup?: (builder: BusSetup) => void): ContainerBuilder {

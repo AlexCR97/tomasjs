@@ -1,6 +1,5 @@
-import { ConfigurationSection } from "./ConfigurationSection";
-import { ConfigurationValueTypeError } from "./ConfigurationValueTypeError";
-import { ConfigurationSectionError } from "./ConfigurationSectionError";
+import { ConfigurationSection, ConfigurationSectionNotFoundError } from "./ConfigurationSection";
+import { ConfigurationValueTypeError } from "./ConfigurationValue";
 
 describe("ConfigurationSection", () => {
   const root = {
@@ -43,7 +42,7 @@ describe("ConfigurationSection", () => {
     try {
       rootSection.section("baz");
     } catch (err) {
-      expect(err).toBeInstanceOf(ConfigurationSectionError);
+      expect(err).toBeInstanceOf(ConfigurationSectionNotFoundError);
     }
   });
 

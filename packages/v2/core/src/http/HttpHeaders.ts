@@ -1,4 +1,4 @@
-import { NotImplementedError } from "@/dependency-injection/NotImplementedError";
+import { InvalidOperationError } from "@/errors";
 
 export type HttpHeader = { key: HttpHeaderKey; value: HttpHeaderValue };
 
@@ -30,7 +30,7 @@ export class HttpHeaders {
       return this.addHeader({ key, value });
     }
 
-    throw new NotImplementedError();
+    throw new InvalidOperationError();
   }
 
   private addHeader(header: HttpHeader): HttpHeaders {

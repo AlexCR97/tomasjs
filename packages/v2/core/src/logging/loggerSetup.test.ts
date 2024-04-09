@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { ContainerBuilder } from "@/dependency-injection/Container";
+import { ContainerBuilder } from "@/dependency-injection";
 import { Logger } from "./Logger";
 import { GLOBAL_LOGGER } from "./tokens";
 

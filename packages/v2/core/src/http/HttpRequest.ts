@@ -1,7 +1,6 @@
-import { NotImplementedError } from "@/dependency-injection/NotImplementedError";
 import { HttpHeaders, PlainHttpHeaders } from "./HttpHeaders";
-import { merge } from "@/configuration/merge";
-import { REQUEST_HANDLERS } from "@/cqrs/RequestHandler";
+import { merge } from "@/system";
+import { InvalidOperationError } from "@/errors";
 
 export type HttpMethod = "get" | "post" | "put" | "patch" | "delete" | "head" | "options";
 
@@ -66,7 +65,7 @@ export class HttpRequest {
       return this.addHeaders(plainHeaders);
     }
 
-    throw new NotImplementedError();
+    throw new InvalidOperationError();
   }
 
   private addHeaders(headers: PlainHttpHeaders): HttpRequest {

@@ -6,7 +6,6 @@ import {
   IResponseInterceptor,
   RequestInterceptorFunction,
   RequestInterceptorResult,
-  ResponseInterceptor,
   ResponseInterceptorFunction,
 } from "./Interceptor";
 

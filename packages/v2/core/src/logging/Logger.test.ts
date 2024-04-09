@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { ILogger, LogLevel, Logger } from "./Logger";
-import { ContainerBuilder } from "@/dependency-injection/Container";
+import { ContainerBuilder } from "@/dependency-injection";
 import { GLOBAL_LOGGER } from "./tokens";
 import { LoggerFactory } from "./LoggerFactory";
 
