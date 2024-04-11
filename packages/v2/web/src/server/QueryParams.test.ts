@@ -8,7 +8,7 @@ describe("QueryParams", () => {
     param3: undefined,
   };
 
-  const queryParams = new QueryParams(query);
+  const queryParams = QueryParams.from(query);
 
   it("should correctly initialize with query data", () => {
     expect(queryParams.keys).toEqual(["param1", "param2", "param3"]);

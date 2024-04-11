@@ -18,12 +18,14 @@ export class QueryParams implements IQueryParams {
   private readonly query: PlainQueryParams;
   private readonly queryKeys: keyof PlainQueryParams[];
 
-  constructor(query: ParsedUrlQuery) {
-    const plainQueryParams = QueryParams.toPlainQueryParams(query);
-    this.query = plainQueryParams;
+  constructor(query: PlainQueryParams) {
+    this.query = query;
+    this.queryKeys = Object.keys(query) as unknown as keyof PlainQueryParams[]; // TODO Avoid using "as"
+  }
 
-    // TODO Avoid using "as"
-    this.queryKeys = Object.keys(plainQueryParams) as unknown as keyof PlainQueryParams[];
+  static from(query: ParsedUrlQuery): QueryParams {
+    const plainQueryParams = this.toPlainQueryParams(query);
+    return new QueryParams(plainQueryParams);
   }
 
   private static toPlainQueryParams(query: ParsedUrlQuery): PlainQueryParams {
