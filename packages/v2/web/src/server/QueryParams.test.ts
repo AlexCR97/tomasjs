@@ -50,4 +50,33 @@ describe("QueryParams", () => {
       param3: null,
     });
   });
+
+  describe("toString", () => {
+    const queryData = {
+      param1: "value 1",
+      param2: ["value&2", "value=3"],
+    };
+
+    const queryParams = new QueryParams(queryData);
+
+    it("should return a query string without URL encoding by default", () => {
+      const expectedQueryString = "param1=value 1&param2=value&2&param2=value=3";
+      expect(queryParams.toString()).toBe(expectedQueryString);
+    });
+
+    it("should return a URL-encoded query string when urlEncode option is true", () => {
+      const expectedEncodedQueryString = "param1=value%201&param2=value%262&param2=value%3D3";
+      expect(queryParams.toString({ urlEncode: true })).toBe(expectedEncodedQueryString);
+    });
+
+    it("should return the same query string when urlEncode option is false", () => {
+      const expectedQueryString = "param1=value 1&param2=value&2&param2=value=3";
+      expect(queryParams.toString({ urlEncode: false })).toBe(expectedQueryString);
+    });
+
+    it("should return the same query string when urlEncode option is not provided", () => {
+      const expectedQueryString = "param1=value 1&param2=value&2&param2=value=3";
+      expect(queryParams.toString({})).toBe(expectedQueryString);
+    });
+  });
 });

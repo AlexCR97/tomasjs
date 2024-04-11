@@ -5,22 +5,23 @@ type MutablePlainQueryParams = Record<string, string | string[] | null>;
 export type PlainQueryParams = Readonly<MutablePlainQueryParams>;
 
 export interface IQueryParams {
-  get keys(): keyof PlainQueryParams[];
+  get keys(): (keyof PlainQueryParams)[];
   all(key: string): string[];
   first(key: string): string | null;
   firstOrThrow(key: string): string;
   get(key: string): string | string[] | null;
   getOrThrow(key: string): string | string[];
   toPlain(): PlainQueryParams;
+  toString(options?: { urlEncode?: boolean }): string;
 }
 
 export class QueryParams implements IQueryParams {
   private readonly query: PlainQueryParams;
-  private readonly queryKeys: keyof PlainQueryParams[];
+  private readonly queryKeys: (keyof PlainQueryParams)[];
 
   constructor(query: PlainQueryParams) {
     this.query = query;
-    this.queryKeys = Object.keys(query) as unknown as keyof PlainQueryParams[]; // TODO Avoid using "as"
+    this.queryKeys = Object.keys(query) as unknown as (keyof PlainQueryParams)[]; // TODO Avoid using "as"
   }
 
   static from(query: ParsedUrlQuery): QueryParams {
@@ -40,7 +41,11 @@ export class QueryParams implements IQueryParams {
     return plainQueryParams;
   }
 
-  get keys(): keyof PlainQueryParams[] {
+  static empty(): QueryParams {
+    return new QueryParams({});
+  }
+
+  get keys(): (keyof PlainQueryParams)[] {
     return this.queryKeys;
   }
 
@@ -98,6 +103,32 @@ export class QueryParams implements IQueryParams {
 
   toPlain(): PlainQueryParams {
     return this.query;
+  }
+
+  toString(options?: { urlEncode?: boolean }): string {
+    const parts: string[] = [];
+
+    for (const key of this.keys) {
+      const value = this.getOrThrow(key);
+
+      if (typeof value === "string") {
+        if (options?.urlEncode === true) {
+          parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
+        } else {
+          parts.push(`${key}=${value}`);
+        }
+      } else {
+        for (const v of value) {
+          if (options?.urlEncode === true) {
+            parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(v)}`);
+          } else {
+            parts.push(`${key}=${v}`);
+          }
+        }
+      }
+    }
+
+    return parts.join("&");
   }
 }
 

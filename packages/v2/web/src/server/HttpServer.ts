@@ -1,9 +1,11 @@
 import { IncomingMessage, Server, createServer } from "http";
-import { Endpoint, EndpointHandler, isEndpoint } from "./Endpoint";
+import { Endpoint, EndpointContext, EndpointHandler, isEndpoint } from "./Endpoint";
 import { ResponseWriter } from "./ResponseWriter";
 import { EndpointResponse, statusCodes } from "@/response";
 import { HttpMethod } from "@tomasjs/core/http";
 import { InvalidOperationError } from "@tomasjs/core/errors";
+import { QueryParams } from "./QueryParams";
+import { parse } from "url";
 
 interface IHttpServer {
   map(endpoint: Endpoint): this;
@@ -31,17 +33,36 @@ export class HttpServer implements IHttpServer {
   }
 
   private async handleRequest(req: IncomingMessage): Promise<EndpointResponse> {
+    const url = parse(req.url ?? "/", false);
+    const path = url.pathname ?? "/";
+
     const endpoint = this.endpoints.find(
-      (x) => x.method.toUpperCase() === req.method && x.path === req.url
+      (x) => x.method.toUpperCase() === req.method && x.path === path
     );
 
     if (endpoint) {
-      return await endpoint.handler();
+      const context = this.buildEndpointContext(req);
+      return await endpoint.handler(context);
     } else {
       return new EndpointResponse({
         status: statusCodes.notFound,
       });
     }
+  }
+
+  private buildEndpointContext(req: IncomingMessage): EndpointContext {
+    // TODO Implement builder pattern for EndpointContext
+
+    let query = QueryParams.empty();
+
+    if (req.url !== undefined) {
+      const url = parse(req.url, true);
+      query = QueryParams.from(url.query);
+    }
+
+    return {
+      query,
+    };
   }
 
   map(endpoint: Endpoint): this;
