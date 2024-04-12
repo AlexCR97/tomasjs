@@ -1,7 +1,8 @@
-import { HttpClient } from "@tomasjs/core/http";
+import { HttpClient, HttpHeaders } from "@tomasjs/core/http";
 import { HttpServer } from "./HttpServer";
 import { EndpointResponse, JsonContent, PlainTextContent, statusCodes } from "@/response";
 import { QueryParams } from "./QueryParams";
+import { JsonBody } from "./RequestBody";
 
 describe("Server", () => {
   const client = new HttpClient();
@@ -24,7 +25,7 @@ describe("Server", () => {
     const port = 8081;
 
     const server = await new HttpServer({ port })
-      .map("get", "/path/to/resource", async () => {
+      .map("get", "/path/to/resource", () => {
         return new EndpointResponse({
           status: statusCodes.ok,
           content: new PlainTextContent("Hooray!"),
@@ -52,7 +53,7 @@ describe("Server", () => {
     });
 
     const server = await new HttpServer({ port })
-      .map("get", "/", async ({ query }) => {
+      .map("get", "/", ({ query }) => {
         return new EndpointResponse({
           status: statusCodes.ok,
           content: new JsonContent(query.toPlain()),
@@ -69,5 +70,45 @@ describe("Server", () => {
     const responseJson = await response.json();
 
     expect(responseJson).toMatchObject(queryParams.toPlain());
+  });
+
+  it("should provide a json request body", async () => {
+    const port = 8083;
+
+    const expectedBodyContent = {
+      foo: "bar",
+      fizz: "buzz",
+    } as const;
+
+    const server = await new HttpServer({ port })
+      .map("post", "/", ({ body }) => {
+        const jsonBody = body.asJson<typeof expectedBodyContent>();
+        expect(jsonBody).toBeInstanceOf(JsonBody);
+
+        const jsonBodyContent = jsonBody.readContent();
+        expect(jsonBodyContent).toMatchObject(expectedBodyContent);
+
+        return new EndpointResponse({
+          status: statusCodes.ok,
+          content: new JsonContent(jsonBodyContent),
+        });
+      })
+      .start();
+
+    const response = await client.post(
+      `http://localhost:${port}`,
+      JSON.stringify(expectedBodyContent),
+      {
+        headers: new HttpHeaders().add("Content-Type", "application/json"),
+      }
+    );
+
+    await server.stop();
+
+    expect(response.ok).toBe(true);
+
+    const responseJson = await response.json();
+
+    expect(responseJson).toMatchObject(expectedBodyContent);
   });
 });
