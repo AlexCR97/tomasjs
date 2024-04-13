@@ -1,4 +1,4 @@
-import { ResponseContent } from "@/response";
+import { Content } from "@/content";
 import { HttpHeader, HttpHeaders, PlainHttpHeaders } from "@tomasjs/core/http";
 import { ServerResponse } from "http";
 
@@ -47,13 +47,13 @@ export class ResponseWriter {
     return this;
   }
 
-  withContent(content: ResponseContent<unknown> | null): this {
+  withContent(content: Content<unknown> | null): this {
     if (content === null) {
       return this;
     }
 
-    this.withHeaders({ "Content-Type": content.contentType });
-    this.res.write(content.readContent());
+    this.withHeaders({ "content-type": content.type });
+    this.res.write(content.data);
     return this;
   }
 

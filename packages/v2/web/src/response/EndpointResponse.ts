@@ -1,8 +1,9 @@
+import { Content } from "@/content";
 import { HttpHeader, HttpHeaders, PlainHttpHeaders } from "@tomasjs/core/http";
 
 export class EndpointResponse {
   readonly status: number | null;
-  readonly content: ResponseContent<unknown> | null;
+  readonly content: Content<unknown> | null;
   readonly headers: HttpHeader[] | PlainHttpHeaders | HttpHeaders | null;
 
   constructor(options?: EndpointResponseOptions) {
@@ -14,14 +15,6 @@ export class EndpointResponse {
 
 export type EndpointResponseOptions = {
   status?: number;
-  content?: ResponseContent<unknown>;
+  content?: Content<unknown>;
   headers?: HttpHeader[] | PlainHttpHeaders | HttpHeaders;
 };
-
-export abstract class ResponseContent<T> {
-  abstract readonly contentType: string;
-
-  constructor(readonly data: T) {}
-
-  abstract readContent(): string | Buffer | Uint8Array;
-}

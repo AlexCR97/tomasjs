@@ -1,3 +1,12 @@
+export type ProblemDetailsOptions = {
+  type: string;
+  status: number;
+  title: string;
+  details?: string;
+  instance: string;
+  extensions?: Record<string, any>;
+};
+
 /**
  * A machine-readable format for specifying errors in HTTP API responses based on https://tools.ietf.org/html/rfc7807.
  */
@@ -40,14 +49,7 @@ export class ProblemDetails {
    */
   readonly extensions: Record<string, any>;
 
-  constructor(options: {
-    type: string;
-    status: number;
-    title: string;
-    details?: string;
-    instance: string;
-    extensions?: Record<string, any>;
-  }) {
+  constructor(options: ProblemDetailsOptions) {
     this.type = options.type;
     this.status = options.status;
     this.title = options.title;

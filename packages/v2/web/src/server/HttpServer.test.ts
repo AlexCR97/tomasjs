@@ -1,8 +1,9 @@
 import { HttpClient, HttpHeaders } from "@tomasjs/core/http";
 import { HttpServer } from "./HttpServer";
-import { EndpointResponse, JsonContent, PlainTextContent, statusCodes } from "@/response";
+import { EndpointResponse, statusCodes } from "@/response";
 import { QueryParams } from "./QueryParams";
 import { JsonBody } from "./RequestBody";
+import { JsonContent, PlainTextContent } from "@/content";
 
 describe("Server", () => {
   const client = new HttpClient();
@@ -28,7 +29,7 @@ describe("Server", () => {
       .map("get", "/path/to/resource", () => {
         return new EndpointResponse({
           status: statusCodes.ok,
-          content: new PlainTextContent("Hooray!"),
+          content: PlainTextContent.from("Hooray!"),
         });
       })
       .start();
@@ -56,7 +57,7 @@ describe("Server", () => {
       .map("get", "/", ({ query }) => {
         return new EndpointResponse({
           status: statusCodes.ok,
-          content: new JsonContent(query.toPlain()),
+          content: JsonContent.from(query.toPlain()),
         });
       })
       .start();
@@ -90,7 +91,7 @@ describe("Server", () => {
 
         return new EndpointResponse({
           status: statusCodes.ok,
-          content: new JsonContent(jsonBodyContent),
+          content: JsonContent.from(jsonBodyContent),
         });
       })
       .start();
@@ -99,7 +100,7 @@ describe("Server", () => {
       `http://localhost:${port}`,
       JSON.stringify(expectedBodyContent),
       {
-        headers: new HttpHeaders().add("Content-Type", "application/json"),
+        headers: new HttpHeaders().add("content-type", "application/json"),
       }
     );
 

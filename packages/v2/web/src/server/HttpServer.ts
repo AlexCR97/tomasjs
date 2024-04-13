@@ -1,12 +1,13 @@
 import { IncomingMessage, Server, createServer } from "http";
 import { Endpoint, EndpointContext, EndpointHandler, isEndpoint } from "./Endpoint";
 import { ResponseWriter } from "./ResponseWriter";
-import { EndpointResponse, PlainTextContent, statusCodes } from "@/response";
+import { EndpointResponse, statusCodes } from "@/response";
 import { HttpMethod } from "@tomasjs/core/http";
 import { InvalidOperationError } from "@tomasjs/core/errors";
 import { QueryParams } from "./QueryParams";
 import { parse } from "url";
 import { RequestBody } from "./RequestBody";
+import { PlainTextContent } from "@/content";
 
 interface IHttpServer {
   map(endpoint: Endpoint): this;
@@ -54,7 +55,7 @@ export class HttpServer implements IHttpServer {
     } catch (err) {
       return new EndpointResponse({
         status: statusCodes.internalServerError,
-        content: new PlainTextContent("An unexpected error occurred on the server"),
+        content: PlainTextContent.from("An unexpected error occurred on the server"),
       });
     }
   }
