@@ -1,8 +1,8 @@
-import { EndpointResponse } from "@/response";
-import { HttpMethod, PlainHttpHeaders } from "@tomasjs/core/http";
+import { HttpHeader, HttpHeaders, HttpMethod, PlainHttpHeaders } from "@tomasjs/core/http";
 import { IQueryParams } from "./QueryParams";
 import { RequestBody } from "./RequestBody";
 import { IRouteParams } from "./RouteParams";
+import { Content } from "@/content";
 
 export type Endpoint = {
   method: HttpMethod;
@@ -21,6 +21,24 @@ export type EndpointContext = {
   params: IRouteParams;
   query: IQueryParams;
   body: RequestBody<unknown>;
+};
+
+export class EndpointResponse {
+  readonly status: number | null;
+  readonly content: Content<unknown> | null;
+  readonly headers: HttpHeader[] | PlainHttpHeaders | HttpHeaders | null;
+
+  constructor(options?: EndpointResponseOptions) {
+    this.status = options?.status ?? null;
+    this.content = options?.content ?? null;
+    this.headers = options?.headers ?? null;
+  }
+}
+
+export type EndpointResponseOptions = {
+  status?: number;
+  content?: Content<unknown>;
+  headers?: HttpHeader[] | PlainHttpHeaders | HttpHeaders;
 };
 
 export function isEndpoint(obj: any): obj is Endpoint {

@@ -1,13 +1,19 @@
 import { IncomingMessage, Server, createServer } from "http";
-import { Endpoint, EndpointContext, EndpointHandler, isEndpoint } from "./Endpoint";
+import {
+  Endpoint,
+  EndpointContext,
+  EndpointHandler,
+  EndpointResponse,
+  isEndpoint,
+} from "./Endpoint";
 import { ResponseWriter } from "./ResponseWriter";
-import { EndpointResponse, statusCodes } from "@/response";
 import { HttpHeader, HttpHeaders, HttpMethod } from "@tomasjs/core/http";
 import { InvalidOperationError } from "@tomasjs/core/errors";
 import { pipe } from "@tomasjs/core/system";
 import { RequestBody } from "./RequestBody";
 import { PlainTextContent } from "@/content";
 import { UrlParser } from "./UrlParser";
+import { statusCodes } from "@/statusCodes";
 
 interface IHttpServer {
   map(endpoint: Endpoint): this;

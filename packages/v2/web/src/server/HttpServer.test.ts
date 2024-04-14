@@ -1,10 +1,11 @@
 import { HttpClient, HttpHeaders } from "@tomasjs/core/http";
 import { HttpServer } from "./HttpServer";
-import { EndpointResponse, statusCodes } from "@/response";
 import { QueryParams } from "./QueryParams";
 import { JsonBody } from "./RequestBody";
 import { JsonContent, PlainTextContent } from "@/content";
 import { RouteParams } from "./RouteParams";
+import { EndpointResponse } from "./Endpoint";
+import { statusCodes } from "@/statusCodes";
 
 describe("Server", () => {
   const client = new HttpClient();
