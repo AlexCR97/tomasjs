@@ -2,8 +2,9 @@ import { IncomingMessage, Server, createServer } from "http";
 import { Endpoint, EndpointContext, EndpointHandler, isEndpoint } from "./Endpoint";
 import { ResponseWriter } from "./ResponseWriter";
 import { EndpointResponse, statusCodes } from "@/response";
-import { HttpMethod } from "@tomasjs/core/http";
+import { HttpHeader, HttpHeaders, HttpMethod } from "@tomasjs/core/http";
 import { InvalidOperationError } from "@tomasjs/core/errors";
+import { pipe } from "@tomasjs/core/system";
 import { RequestBody } from "./RequestBody";
 import { PlainTextContent } from "@/content";
 import { UrlParser } from "./UrlParser";
@@ -49,6 +50,16 @@ export class HttpServer implements IHttpServer {
       }
 
       const context: EndpointContext = {
+        method: endpoint.method,
+        path: urlParser.path(),
+        headers: pipe(req.headers)
+          .pipe((headers) =>
+            Object.keys(headers)
+              .map((key) => <HttpHeader>{ key, value: headers[key] })
+              .filter((header) => header.value !== null && header.value !== undefined)
+          )
+          .pipe((headers) => new HttpHeaders().add(headers).toPlain())
+          .get(),
         params: urlParser.routeParams(endpoint.path),
         query: urlParser.queryParams(),
         body: await RequestBody.from(req),

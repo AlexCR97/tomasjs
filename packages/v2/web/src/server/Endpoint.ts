@@ -1,5 +1,5 @@
 import { EndpointResponse } from "@/response";
-import { HttpMethod } from "@tomasjs/core/http";
+import { HttpMethod, PlainHttpHeaders } from "@tomasjs/core/http";
 import { IQueryParams } from "./QueryParams";
 import { RequestBody } from "./RequestBody";
 import { IRouteParams } from "./RouteParams";
@@ -15,6 +15,9 @@ export type EndpointHandler = (
 ) => EndpointResponse | Promise<EndpointResponse>;
 
 export type EndpointContext = {
+  method: HttpMethod;
+  path: string;
+  headers: Readonly<PlainHttpHeaders>;
   params: IRouteParams;
   query: IQueryParams;
   body: RequestBody<unknown>;
