@@ -4,10 +4,9 @@ import { ResponseWriter } from "./ResponseWriter";
 import { EndpointResponse, statusCodes } from "@/response";
 import { HttpMethod } from "@tomasjs/core/http";
 import { InvalidOperationError } from "@tomasjs/core/errors";
-import { QueryParams } from "./QueryParams";
-import { parse } from "url";
 import { RequestBody } from "./RequestBody";
 import { PlainTextContent } from "@/content";
+import { UrlParser } from "./UrlParser";
 
 interface IHttpServer {
   map(endpoint: Endpoint): this;
@@ -37,44 +36,31 @@ export class HttpServer implements IHttpServer {
 
   private async handleRequest(req: IncomingMessage): Promise<EndpointResponse> {
     try {
-      const url = parse(req.url ?? "/", false);
-      const path = url.pathname ?? "/";
+      const urlParser = UrlParser.from(req);
 
-      const endpoint = this.endpoints.find(
-        (x) => x.method.toUpperCase() === req.method && x.path === path
-      );
+      const endpoint = this.endpoints.find(({ method, path }) => {
+        return method.toUpperCase() === req.method && urlParser.matches(path);
+      });
 
-      if (endpoint) {
-        const context = await this.buildEndpointContext(req);
-        return await endpoint.handler(context);
-      } else {
+      if (endpoint === undefined) {
         return new EndpointResponse({
           status: statusCodes.notFound,
         });
       }
+
+      const context: EndpointContext = {
+        params: urlParser.routeParams(endpoint.path),
+        query: urlParser.queryParams(),
+        body: await RequestBody.from(req),
+      };
+
+      return await endpoint.handler(context);
     } catch (err) {
       return new EndpointResponse({
         status: statusCodes.internalServerError,
         content: PlainTextContent.from("An unexpected error occurred on the server"),
       });
     }
-  }
-
-  private async buildEndpointContext(req: IncomingMessage): Promise<EndpointContext> {
-    // TODO Implement builder pattern for EndpointContext
-    return {
-      body: await RequestBody.from(req),
-      query: this.buildQueryParams(req),
-    };
-  }
-
-  private buildQueryParams(req: IncomingMessage): QueryParams {
-    if (req.url === undefined) {
-      return QueryParams.empty();
-    }
-
-    const url = parse(req.url, true);
-    return QueryParams.from(url.query);
   }
 
   map(endpoint: Endpoint): this;

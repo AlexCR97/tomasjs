@@ -4,6 +4,7 @@ import { EndpointResponse, statusCodes } from "@/response";
 import { QueryParams } from "./QueryParams";
 import { JsonBody } from "./RequestBody";
 import { JsonContent, PlainTextContent } from "@/content";
+import { RouteParams } from "./RouteParams";
 
 describe("Server", () => {
   const client = new HttpClient();
@@ -111,5 +112,32 @@ describe("Server", () => {
     const responseJson = await response.json();
 
     expect(responseJson).toMatchObject(expectedBodyContent);
+  });
+
+  it("should provide route params", async () => {
+    const port = 8084;
+
+    const server = await new HttpServer({ port })
+      .map("get", "/path/to/:resource", ({ params }) => {
+        expect(params).toBeInstanceOf(RouteParams);
+
+        return new EndpointResponse({
+          status: statusCodes.ok,
+          content: JsonContent.from(params.toPlain()),
+        });
+      })
+      .start();
+
+    const response = await client.get(`http://localhost:${port}/path/to/1`);
+
+    await server.stop();
+
+    expect(response.ok).toBe(true);
+
+    const responseJson = await response.json();
+
+    expect(responseJson).toMatchObject({
+      resource: "1",
+    });
   });
 });

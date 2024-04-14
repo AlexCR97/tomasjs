@@ -23,6 +23,7 @@
   "dependencies": {
     "reflect-metadata": "^0.2.1",
     "triple-beam": "^1.4.1",
+    "url-pattern": "^1.0.3",
     "winston": "^3.13.0"
   },
   "peerDependencies": {

@@ -1,7 +1,8 @@
 import { EndpointResponse } from "@/response";
 import { HttpMethod } from "@tomasjs/core/http";
-import { QueryParams } from "./QueryParams";
+import { IQueryParams } from "./QueryParams";
 import { RequestBody } from "./RequestBody";
+import { IRouteParams } from "./RouteParams";
 
 export type Endpoint = {
   method: HttpMethod;
@@ -14,8 +15,9 @@ export type EndpointHandler = (
 ) => EndpointResponse | Promise<EndpointResponse>;
 
 export type EndpointContext = {
+  params: IRouteParams;
+  query: IQueryParams;
   body: RequestBody<unknown>;
-  query: QueryParams;
 };
 
 export function isEndpoint(obj: any): obj is Endpoint {
