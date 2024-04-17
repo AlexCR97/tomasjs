@@ -6,6 +6,8 @@ import { JsonContent, PlainTextContent } from "@/content";
 import { RouteParams } from "./RouteParams";
 import { EndpointResponse } from "./Endpoint";
 import { statusCodes } from "@/statusCodes";
+import { RequestContext } from "./RequestContext";
+import { ResponseWriter } from "./ResponseWriter";
 
 describe("Server", () => {
   const client = new HttpClient();
@@ -144,22 +146,52 @@ describe("Server", () => {
 
   it("should use middlewares", async () => {
     const port = 8085;
+    let counterForBefore = 0;
+    let counterForAfter = 0;
 
     const server = await new HttpServer({ port, middlewares: true })
       .use(async (req, res, next) => {
-        console.log("1. before");
+        counterForBefore++;
         await next();
-        console.log("1. after");
+        counterForAfter++;
       })
       .use(async (req, res, next) => {
-        console.log("2. before");
+        counterForBefore++;
         await next();
-        console.log("2. after");
+        counterForAfter++;
       })
       .use(async (req, res, next) => {
-        console.log("3. before");
+        counterForBefore++;
         await next();
-        console.log("3. after");
+        counterForAfter++;
+      })
+      .start();
+
+    await client.get(`http://localhost:${port}`);
+
+    await server.stop();
+
+    expect(counterForBefore).toBe(3);
+    expect(counterForAfter).toBe(3);
+  });
+
+  it("should fallback to a terminal middleware", async () => {
+    const port = 8086;
+
+    const server = await new HttpServer({ port, middlewares: true }).start();
+
+    await client.get(`http://localhost:${port}`);
+
+    await server.stop();
+  });
+
+  it("should provide RequestContext in the middleware", async () => {
+    const port = 8087;
+
+    const server = await new HttpServer({ port, middlewares: true })
+      .use((req, _, next) => {
+        expect(req).toBeInstanceOf(RequestContext);
+        return next();
       })
       .start();
 
@@ -168,10 +200,15 @@ describe("Server", () => {
     await server.stop();
   });
 
-  it("should fallback to a terminal middleware", async () => {
-    const port = 8086;
+  it("should provide ResponseWriter in the middleware", async () => {
+    const port = 8088;
 
-    const server = await new HttpServer({ port, middlewares: true }).start();
+    const server = await new HttpServer({ port, middlewares: true })
+      .use((_, res, next) => {
+        expect(res).toBeInstanceOf(ResponseWriter);
+        return next();
+      })
+      .start();
 
     await client.get(`http://localhost:${port}`);
 

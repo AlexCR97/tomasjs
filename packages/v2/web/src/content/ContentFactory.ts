@@ -1,3 +1,4 @@
+import { IncomingMessage } from "http";
 import { Content } from "./Content";
 import { ContentType } from "./ContentType";
 import { HtmlContent } from "./HtmlContent";
@@ -27,5 +28,31 @@ export class ContentFactory {
     }
 
     return new RawContent(this.data);
+  }
+
+  static async from(req: IncomingMessage): Promise<ContentFactory> {
+    const contentType = this.getContentType(req);
+    const data = await this.readData(req);
+    return new ContentFactory(contentType, data);
+  }
+
+  private static getContentType(req: IncomingMessage): ContentType {
+    const contentType = req.headers["content-type"];
+    return contentType === undefined ? "application/octet-stream" : (contentType as ContentType);
+  }
+
+  private static async readData(req: IncomingMessage): Promise<Buffer> {
+    return new Promise((resolve) => {
+      const parts: Uint8Array[] = [];
+
+      req.on("data", (bytes: Uint8Array) => {
+        parts.push(bytes);
+      });
+
+      req.on("end", () => {
+        const buffer = Buffer.concat(parts);
+        return resolve(buffer);
+      });
+    });
   }
 }

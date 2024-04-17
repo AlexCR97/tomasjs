@@ -2,15 +2,23 @@ import { Content } from "@/content";
 import { HttpHeader, HttpHeaders, PlainHttpHeaders } from "@tomasjs/core/http";
 import { ServerResponse } from "http";
 
-export class ResponseWriter {
+export interface IResponseWriter {
+  withContent(content: Content<unknown> | null): this;
+  withHeaders(headers: HttpHeader[] | PlainHttpHeaders | HttpHeaders | null): this;
+  withStatus(status: number | null): this;
+  send(): Promise<void>;
+}
+
+export class ResponseWriter implements IResponseWriter {
   constructor(private readonly res: ServerResponse) {}
 
-  withStatus(status: number | null): this {
-    if (status === null) {
+  withContent(content: Content<unknown> | null): this {
+    if (content === null) {
       return this;
     }
 
-    this.res.statusCode = status;
+    this.withHeaders({ "content-type": content.type });
+    this.res.write(content.data);
     return this;
   }
 
@@ -47,13 +55,12 @@ export class ResponseWriter {
     return this;
   }
 
-  withContent(content: Content<unknown> | null): this {
-    if (content === null) {
+  withStatus(status: number | null): this {
+    if (status === null) {
       return this;
     }
 
-    this.withHeaders({ "content-type": content.type });
-    this.res.write(content.data);
+    this.res.statusCode = status;
     return this;
   }
 

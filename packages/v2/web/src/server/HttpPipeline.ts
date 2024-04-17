@@ -1,9 +1,9 @@
-import { IncomingMessage, ServerResponse } from "http";
 import { ResponseWriter } from "./ResponseWriter";
-import { Middleware } from "./HttpServer";
+import { Middleware } from "./Middleware";
+import { RequestContext } from "./RequestContext";
 
 interface IHttpPipeline {
-  run(req: IncomingMessage, res: ServerResponse): Promise<void>;
+  run(request: RequestContext, response: ResponseWriter): Promise<void>;
 }
 
 class RecursiveHttpPipeline implements IHttpPipeline {
@@ -13,25 +13,25 @@ class RecursiveHttpPipeline implements IHttpPipeline {
   constructor(middlewares: Middleware[]) {
     this.middlewares = middlewares;
 
-    this.terminalMiddleware = (_, res) => {
-      return new ResponseWriter(res).send();
+    this.terminalMiddleware = async (_, response) => {
+      await response.send();
     };
   }
 
-  async run(req: IncomingMessage, res: ServerResponse): Promise<void> {
+  async run(request: RequestContext, response: ResponseWriter): Promise<void> {
     const current = this.middlewares.length === 0 ? this.terminalMiddleware : this.middlewares[0];
-    return await this.runPipeline(req, res, current, 1);
+    return await this.runPipeline(request, response, current, 1);
   }
 
   private async runPipeline(
-    req: IncomingMessage,
-    res: ServerResponse,
+    request: RequestContext,
+    response: ResponseWriter,
     current: Middleware,
     nextIndex: number
   ): Promise<void> {
-    return await current(req, res, async () => {
+    return await current(request, response, async () => {
       const next = this.middlewares.at(nextIndex) ?? this.terminalMiddleware;
-      return await this.runPipeline(req, res, next, nextIndex + 1);
+      return await this.runPipeline(request, response, next, nextIndex + 1);
     });
   }
 }

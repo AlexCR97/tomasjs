@@ -1,4 +1,4 @@
-import { IncomingMessage, Server, ServerResponse, createServer } from "http";
+import { IncomingMessage, Server, createServer } from "http";
 import {
   Endpoint,
   EndpointContext,
@@ -15,6 +15,8 @@ import { PlainTextContent } from "@/content";
 import { UrlParser } from "./UrlParser";
 import { statusCodes } from "@/statusCodes";
 import { HttpPipeline } from "./HttpPipeline";
+import { Middleware } from "./Middleware";
+import { RequestContext } from "./RequestContext";
 
 interface IHttpServer {
   map(endpoint: Endpoint): this;
@@ -23,12 +25,6 @@ interface IHttpServer {
   start(): Promise<this>;
   stop(): Promise<void>;
 }
-
-export type Middleware = (
-  req: IncomingMessage,
-  res: ServerResponse,
-  next: () => Promise<void>
-) => void | Promise<void>;
 
 export class HttpServer implements IHttpServer {
   private readonly port: number;
@@ -43,7 +39,9 @@ export class HttpServer implements IHttpServer {
 
     this.server = createServer(async (req, res) => {
       if (options?.middlewares === true) {
-        return await new HttpPipeline(this.middlewares).run(req, res);
+        const request = await RequestContext.from(req);
+        const response = new ResponseWriter(res);
+        return await new HttpPipeline(this.middlewares).run(request, response);
       } else {
         const response = await this.handleRequest(req);
 
