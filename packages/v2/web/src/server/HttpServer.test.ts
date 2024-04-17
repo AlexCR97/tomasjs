@@ -141,4 +141,40 @@ describe("Server", () => {
       resource: "1",
     });
   });
+
+  it("should use middlewares", async () => {
+    const port = 8085;
+
+    const server = await new HttpServer({ port, middlewares: true })
+      .use(async (req, res, next) => {
+        console.log("1. before");
+        await next();
+        console.log("1. after");
+      })
+      .use(async (req, res, next) => {
+        console.log("2. before");
+        await next();
+        console.log("2. after");
+      })
+      .use(async (req, res, next) => {
+        console.log("3. before");
+        await next();
+        console.log("3. after");
+      })
+      .start();
+
+    await client.get(`http://localhost:${port}`);
+
+    await server.stop();
+  });
+
+  it("should fallback to a terminal middleware", async () => {
+    const port = 8086;
+
+    const server = await new HttpServer({ port, middlewares: true }).start();
+
+    await client.get(`http://localhost:${port}`);
+
+    await server.stop();
+  });
 });

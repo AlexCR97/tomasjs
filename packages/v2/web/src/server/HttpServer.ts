@@ -1,4 +1,4 @@
-import { IncomingMessage, Server, createServer } from "http";
+import { IncomingMessage, Server, ServerResponse, createServer } from "http";
 import {
   Endpoint,
   EndpointContext,
@@ -14,30 +14,44 @@ import { RequestBody } from "./RequestBody";
 import { PlainTextContent } from "@/content";
 import { UrlParser } from "./UrlParser";
 import { statusCodes } from "@/statusCodes";
+import { HttpPipeline } from "./HttpPipeline";
 
 interface IHttpServer {
   map(endpoint: Endpoint): this;
   map(method: HttpMethod, path: string, handler: EndpointHandler): this;
+  use(middleware: Middleware): this;
   start(): Promise<this>;
   stop(): Promise<void>;
 }
 
+export type Middleware = (
+  req: IncomingMessage,
+  res: ServerResponse,
+  next: () => Promise<void>
+) => void | Promise<void>;
+
 export class HttpServer implements IHttpServer {
   private readonly port: number;
   private readonly endpoints: Endpoint[];
+  private readonly middlewares: Middleware[];
   private readonly server: Server;
 
-  constructor(options?: { port: number }) {
+  constructor(options?: { port?: number; middlewares?: boolean }) {
     this.port = options?.port ?? 8080; // TODO Fallback to a random number
+    this.middlewares = [];
     this.endpoints = [];
 
     this.server = createServer(async (req, res) => {
-      const response = await this.handleRequest(req);
+      if (options?.middlewares === true) {
+        return await new HttpPipeline(this.middlewares).run(req, res);
+      } else {
+        const response = await this.handleRequest(req);
 
-      await new ResponseWriter(res)
-        .withStatus(response.status)
-        .withContent(response.content)
-        .send();
+        await new ResponseWriter(res)
+          .withStatus(response.status)
+          .withContent(response.content)
+          .send();
+      }
     });
   }
 
@@ -99,6 +113,11 @@ export class HttpServer implements IHttpServer {
 
   private mapEndpoint(endpoint: Endpoint): this {
     this.endpoints.push(endpoint);
+    return this;
+  }
+
+  use(middleware: Middleware): this {
+    this.middlewares.push(middleware);
     return this;
   }
 
