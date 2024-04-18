@@ -1,13 +1,13 @@
 import { HttpClient, HttpHeaders } from "@tomasjs/core/http";
 import { HttpServer } from "./HttpServer";
 import { QueryParams } from "./QueryParams";
-import { JsonBody } from "./RequestBody";
 import { JsonContent, PlainTextContent } from "@/content";
 import { RouteParams } from "./RouteParams";
 import { EndpointResponse } from "./Endpoint";
 import { statusCodes } from "@/statusCodes";
 import { RequestContext } from "./RequestContext";
 import { ResponseWriter } from "./ResponseWriter";
+import { endpointsMiddleware } from "./EndpointMiddleware";
 
 describe("Server", () => {
   const client = new HttpClient();
@@ -87,10 +87,10 @@ describe("Server", () => {
 
     const server = await new HttpServer({ port })
       .map("post", "/", ({ body }) => {
-        const jsonBody = body.asJson<typeof expectedBodyContent>();
-        expect(jsonBody).toBeInstanceOf(JsonBody);
+        expect(body).toBeInstanceOf(JsonContent);
 
-        const jsonBodyContent = jsonBody.readContent();
+        const jsonBody = body as JsonContent<typeof expectedBodyContent>;
+        const jsonBodyContent = jsonBody.readData();
         expect(jsonBodyContent).toMatchObject(expectedBodyContent);
 
         return new EndpointResponse({
@@ -208,6 +208,30 @@ describe("Server", () => {
         expect(res).toBeInstanceOf(ResponseWriter);
         return next();
       })
+      .start();
+
+    await client.get(`http://localhost:${port}`);
+
+    await server.stop();
+  });
+
+  it("should use endpoints middleware", async () => {
+    const port = 8089;
+
+    const server = await new HttpServer({ port, middlewares: true })
+      .use(
+        endpointsMiddleware([
+          {
+            method: "get",
+            path: "/",
+            handler: () => {
+              return new EndpointResponse({
+                status: statusCodes.ok,
+              });
+            },
+          },
+        ])
+      )
       .start();
 
     await client.get(`http://localhost:${port}`);

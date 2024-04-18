@@ -8,6 +8,7 @@ import { pipe } from "@tomasjs/core/system";
 
 export interface IRequestContext {
   method: HttpMethod;
+  url: string;
   path: string;
   headers: Readonly<PlainHttpHeaders>;
   query: IQueryParams;
@@ -17,6 +18,7 @@ export interface IRequestContext {
 export class RequestContext implements IRequestContext {
   constructor(
     readonly method: HttpMethod,
+    readonly url: string,
     readonly path: string,
     readonly headers: Readonly<PlainHttpHeaders>,
     readonly query: IQueryParams,
@@ -28,6 +30,7 @@ export class RequestContext implements IRequestContext {
 
     return new RequestContext(
       this.getHttpMethod(req),
+      req.url ?? "/",
       urlParser.path(),
       this.getHeaders(req),
       urlParser.queryParams(),

@@ -1,8 +1,9 @@
 import { HttpHeader, HttpHeaders, HttpMethod, PlainHttpHeaders } from "@tomasjs/core/http";
 import { IQueryParams } from "./QueryParams";
-import { RequestBody } from "./RequestBody";
 import { IRouteParams } from "./RouteParams";
 import { Content } from "@/content";
+import { RequestContext } from "./RequestContext";
+import { UrlParser } from "./UrlParser";
 
 export type Endpoint = {
   method: HttpMethod;
@@ -11,17 +12,38 @@ export type Endpoint = {
 };
 
 export type EndpointHandler = (
-  context: EndpointContext
+  context: IEndpointContext
 ) => EndpointResponse | Promise<EndpointResponse>;
 
-export type EndpointContext = {
-  method: HttpMethod;
-  path: string;
-  headers: Readonly<PlainHttpHeaders>;
+export interface IEndpointContext extends RequestContext {
   params: IRouteParams;
-  query: IQueryParams;
-  body: RequestBody<unknown>;
-};
+}
+
+export class EndpointContext implements IEndpointContext {
+  constructor(
+    readonly method: HttpMethod,
+    readonly url: string,
+    readonly path: string,
+    readonly headers: Readonly<PlainHttpHeaders>,
+    readonly params: IRouteParams,
+    readonly query: IQueryParams,
+    readonly body: Content<unknown>
+  ) {}
+
+  static from(endpoint: Endpoint, req: RequestContext): EndpointContext {
+    const urlParser = new UrlParser(req.url);
+
+    return new EndpointContext(
+      req.method,
+      req.url,
+      req.path,
+      req.headers,
+      urlParser.routeParams(endpoint.path),
+      req.query,
+      req.body
+    );
+  }
+}
 
 export class EndpointResponse {
   readonly status: number | null;
