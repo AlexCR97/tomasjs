@@ -21,7 +21,7 @@ export function endpointsMiddleware(endpoints: Endpoint[]): Middleware {
     const urlParser = new UrlParser(req.url);
 
     const endpoint = endpoints.find(({ method, path }) => {
-      return method.toUpperCase() === req.method && urlParser.matches(path);
+      return method === req.method && urlParser.matches(path);
     });
 
     if (endpoint === undefined) {

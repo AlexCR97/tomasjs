@@ -1,79 +1,42 @@
-import { IncomingMessage, Server, createServer } from "http";
-import {
-  Endpoint,
-  EndpointContext,
-  EndpointHandler,
-  EndpointResponse,
-  isEndpoint,
-} from "./Endpoint";
+import { Server, createServer } from "http";
+import { Endpoint, EndpointHandler, isEndpoint } from "./Endpoint";
 import { ResponseWriter } from "./ResponseWriter";
 import { HttpMethod } from "@tomasjs/core/http";
 import { InvalidOperationError } from "@tomasjs/core/errors";
-import { PlainTextContent } from "@/content";
-import { UrlParser } from "./UrlParser";
-import { statusCodes } from "@/statusCodes";
 import { HttpPipeline } from "./HttpPipeline";
 import { Middleware } from "./Middleware";
 import { RequestContext } from "./RequestContext";
+import { endpointsMiddleware } from "./EndpointMiddleware";
 
 interface IHttpServer {
+  use(middleware: Middleware): this;
   map(endpoint: Endpoint): this;
   map(method: HttpMethod, path: string, handler: EndpointHandler): this;
-  use(middleware: Middleware): this;
   start(): Promise<this>;
   stop(): Promise<void>;
 }
 
 export class HttpServer implements IHttpServer {
   private readonly port: number;
-  private readonly endpoints: Endpoint[];
   private readonly middlewares: Middleware[];
+  private readonly endpoints: Endpoint[];
   private readonly server: Server;
 
-  constructor(options?: { port?: number; middlewares?: boolean }) {
+  constructor(options?: { port?: number }) {
     this.port = options?.port ?? 8080; // TODO Fallback to a random number
     this.middlewares = [];
     this.endpoints = [];
-
     this.server = createServer(async (req, res) => {
-      if (options?.middlewares === true) {
-        const request = await RequestContext.from(req);
-        const response = new ResponseWriter(res);
-        return await new HttpPipeline(this.middlewares).run(request, response);
-      } else {
-        const response = await this.handleRequest(req);
-
-        await new ResponseWriter(res)
-          .withStatus(response.status)
-          .withContent(response.content)
-          .send();
-      }
+      const middlewares = [...this.middlewares, endpointsMiddleware(this.endpoints)];
+      const request = await RequestContext.from(req);
+      const response = new ResponseWriter(res);
+      return await new HttpPipeline(middlewares).run(request, response);
     });
   }
 
-  private async handleRequest(req: IncomingMessage): Promise<EndpointResponse> {
-    try {
-      const urlParser = UrlParser.from(req);
-
-      const endpoint = this.endpoints.find(({ method, path }) => {
-        return method.toUpperCase() === req.method && urlParser.matches(path);
-      });
-
-      if (endpoint === undefined) {
-        return new EndpointResponse({
-          status: statusCodes.notFound,
-        });
-      }
-
-      const requestContext = await RequestContext.from(req);
-      const endpointContext = EndpointContext.from(endpoint, requestContext);
-      return await endpoint.handler(endpointContext);
-    } catch (err) {
-      return new EndpointResponse({
-        status: statusCodes.internalServerError,
-        content: PlainTextContent.from("An unexpected error occurred on the server"),
-      });
-    }
+  use(middleware: Middleware): this {
+    this.middlewares.push(middleware);
+    return this;
   }
 
   map(endpoint: Endpoint): this;
@@ -95,11 +58,6 @@ export class HttpServer implements IHttpServer {
 
   private mapEndpoint(endpoint: Endpoint): this {
     this.endpoints.push(endpoint);
-    return this;
-  }
-
-  use(middleware: Middleware): this {
-    this.middlewares.push(middleware);
     return this;
   }
 

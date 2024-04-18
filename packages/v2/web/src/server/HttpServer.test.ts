@@ -149,7 +149,7 @@ describe("Server", () => {
     let counterForBefore = 0;
     let counterForAfter = 0;
 
-    const server = await new HttpServer({ port, middlewares: true })
+    const server = await new HttpServer({ port })
       .use(async (req, res, next) => {
         counterForBefore++;
         await next();
@@ -178,7 +178,7 @@ describe("Server", () => {
   it("should fallback to a terminal middleware", async () => {
     const port = 8086;
 
-    const server = await new HttpServer({ port, middlewares: true }).start();
+    const server = await new HttpServer({ port }).start();
 
     await client.get(`http://localhost:${port}`);
 
@@ -188,7 +188,7 @@ describe("Server", () => {
   it("should provide RequestContext in the middleware", async () => {
     const port = 8087;
 
-    const server = await new HttpServer({ port, middlewares: true })
+    const server = await new HttpServer({ port })
       .use((req, _, next) => {
         expect(req).toBeInstanceOf(RequestContext);
         return next();
@@ -203,7 +203,7 @@ describe("Server", () => {
   it("should provide ResponseWriter in the middleware", async () => {
     const port = 8088;
 
-    const server = await new HttpServer({ port, middlewares: true })
+    const server = await new HttpServer({ port })
       .use((_, res, next) => {
         expect(res).toBeInstanceOf(ResponseWriter);
         return next();
@@ -218,7 +218,7 @@ describe("Server", () => {
   it("should use endpoints middleware", async () => {
     const port = 8089;
 
-    const server = await new HttpServer({ port, middlewares: true })
+    const server = await new HttpServer({ port })
       .use(
         endpointsMiddleware([
           {
