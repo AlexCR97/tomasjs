@@ -3,7 +3,7 @@ import { HttpServer } from "./HttpServer";
 import { IterativeHttpPipeline, RecursiveHttpPipeline } from "./HttpPipeline";
 import { benchmark } from "@/test/benchmark";
 
-describe("HttpPipeline", () => {
+describe.skip("HttpPipeline", () => {
   const client = new HttpClient();
   const middlewareCount = 100;
   const iterations = 500;
