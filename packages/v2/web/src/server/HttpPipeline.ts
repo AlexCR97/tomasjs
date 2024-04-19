@@ -2,11 +2,11 @@ import { ResponseWriter } from "./ResponseWriter";
 import { Middleware } from "./Middleware";
 import { RequestContext } from "./RequestContext";
 
-interface IHttpPipeline {
+export interface IHttpPipeline {
   run(request: RequestContext, response: ResponseWriter): Promise<void>;
 }
 
-class RecursiveHttpPipeline implements IHttpPipeline {
+export class RecursiveHttpPipeline implements IHttpPipeline {
   private readonly middlewares: Middleware[];
   private readonly terminalMiddleware: Middleware;
 
@@ -40,7 +40,7 @@ class RecursiveHttpPipeline implements IHttpPipeline {
   }
 }
 
-class NonRecursiveHttpPipeline implements IHttpPipeline {
+export class IterativeHttpPipeline implements IHttpPipeline {
   private readonly middlewares: Middleware[];
   private readonly terminalMiddleware: Middleware;
 
@@ -70,4 +70,4 @@ class NonRecursiveHttpPipeline implements IHttpPipeline {
   }
 }
 
-export { RecursiveHttpPipeline as HttpPipeline };
+export { IterativeHttpPipeline as HttpPipeline };

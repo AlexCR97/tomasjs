@@ -3,7 +3,12 @@ import { Endpoint, EndpointHandler, EndpointResponse, isEndpoint } from "./Endpo
 import { ResponseWriter } from "./ResponseWriter";
 import { HttpMethod } from "@tomasjs/core/http";
 import { InvalidOperationError } from "@tomasjs/core/errors";
-import { HttpPipeline } from "./HttpPipeline";
+import {
+  HttpPipeline,
+  IHttpPipeline,
+  IterativeHttpPipeline,
+  RecursiveHttpPipeline,
+} from "./HttpPipeline";
 import { Middleware } from "./Middleware";
 import { RequestContext } from "./RequestContext";
 import { endpointsMiddleware } from "./EndpointMiddleware";
@@ -21,7 +26,7 @@ interface IHttpServer {
 }
 
 export class HttpServer implements IHttpServer {
-  private readonly port: number;
+  readonly port: number;
   private readonly middlewares: Middleware[];
   private readonly endpoints: Endpoint[];
   private errorHandler: ErrorHandler | undefined;
@@ -40,7 +45,7 @@ export class HttpServer implements IHttpServer {
       .send();
   };
 
-  constructor(options?: { port?: number }) {
+  constructor(options?: { port?: number; pipelineMode?: "recursive" | "iterative" }) {
     this.port = options?.port ?? 8080; // TODO Fallback to a random number
     this.middlewares = [];
     this.endpoints = [];
@@ -50,9 +55,18 @@ export class HttpServer implements IHttpServer {
         ...this.middlewares,
         endpointsMiddleware(this.endpoints),
       ];
+
+      const httpPipeline: IHttpPipeline =
+        options?.pipelineMode === "recursive"
+          ? new RecursiveHttpPipeline(middlewares)
+          : options?.pipelineMode === "iterative"
+          ? new IterativeHttpPipeline(middlewares)
+          : new HttpPipeline(middlewares);
+
       const request = await RequestContext.from(req);
       const response = new ResponseWriter(res);
-      return await new HttpPipeline(middlewares).run(request, response);
+
+      return await httpPipeline.run(request, response);
     });
   }
 
