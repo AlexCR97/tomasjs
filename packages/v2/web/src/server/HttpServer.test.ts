@@ -18,7 +18,7 @@ describe("Server", () => {
     const port = 8080;
 
     const server = await new HttpServer({ port })
-      .map("get", "/", () => new EndpointResponse({ status: statusCodes.ok }))
+      .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }))
       .start();
 
     const response = await client.get(`http://localhost:${port}`);
@@ -32,7 +32,7 @@ describe("Server", () => {
     const port = 8081;
 
     const server = await new HttpServer({ port })
-      .map("get", "/path/to/resource", () => {
+      .useEndpoint("get", "/path/to/resource", () => {
         return new EndpointResponse({
           status: statusCodes.ok,
           content: PlainTextContent.from("Hooray!"),
@@ -60,7 +60,7 @@ describe("Server", () => {
     });
 
     const server = await new HttpServer({ port })
-      .map("get", "/", ({ query }) => {
+      .useEndpoint("get", "/", ({ query }) => {
         return new EndpointResponse({
           status: statusCodes.ok,
           content: JsonContent.from(query.toPlain()),
@@ -88,7 +88,7 @@ describe("Server", () => {
     } as const;
 
     const server = await new HttpServer({ port })
-      .map("post", "/", ({ body }) => {
+      .useEndpoint("post", "/", ({ body }) => {
         expect(body).toBeInstanceOf(JsonContent);
 
         const jsonBody = body as JsonContent<typeof expectedBodyContent>;
@@ -123,7 +123,7 @@ describe("Server", () => {
     const port = 8084;
 
     const server = await new HttpServer({ port })
-      .map("get", "/path/to/:resource", ({ params }) => {
+      .useEndpoint("get", "/path/to/:resource", ({ params }) => {
         expect(params).toBeInstanceOf(RouteParams);
 
         return new EndpointResponse({
@@ -245,7 +245,7 @@ describe("Server", () => {
     const port = 8090;
 
     const server = await new HttpServer({ port })
-      .map("get", "/", () => {
+      .useEndpoint("get", "/", () => {
         throw new Error("This is a custom error!");
       })
       .start();
@@ -263,7 +263,7 @@ describe("Server", () => {
     type ErrorResponse = { type: string; message: string };
 
     const server = await new HttpServer({ port })
-      .map("get", "/", () => {
+      .useEndpoint("get", "/", () => {
         throw new Error("This is a custom error!");
       })
       .useErrorHandler(async (req, res, err) => {
@@ -297,7 +297,7 @@ describe("Server", () => {
     const port = 8091;
 
     const server = await new HttpServer({ port })
-      .map("get", "/", () => {
+      .useEndpoint("get", "/", () => {
         throw new TomasError("custom/error", "This is a custom error!", {
           data: { foo: "bar" },
           innerError: new TomasError("custom/innerError", "This is an inner error!", {

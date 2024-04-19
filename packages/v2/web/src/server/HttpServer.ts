@@ -18,8 +18,8 @@ import { PlainTextContent } from "@/content";
 
 interface IHttpServer {
   use(middleware: Middleware): this;
-  map(endpoint: Endpoint): this;
-  map(method: HttpMethod, path: string, handler: EndpointHandler): this;
+  useEndpoint(endpoint: Endpoint): this;
+  useEndpoint(method: HttpMethod, path: string, handler: EndpointHandler): this;
   useErrorHandler(handler: ErrorHandler): this;
   start(): Promise<this>;
   stop(): Promise<void>;
@@ -75,9 +75,9 @@ export class HttpServer implements IHttpServer {
     return this;
   }
 
-  map(endpoint: Endpoint): this;
-  map(method: HttpMethod, path: string, handler: EndpointHandler): this;
-  map(...args: any[]): this {
+  useEndpoint(endpoint: Endpoint): this;
+  useEndpoint(method: HttpMethod, path: string, handler: EndpointHandler): this;
+  useEndpoint(...args: any[]): this {
     if (args.length === 1) {
       if (isEndpoint(args[0])) {
         return this.mapEndpoint(args[0]);
