@@ -8,6 +8,8 @@ import { statusCodes } from "@/statusCodes";
 import { RequestContext } from "./RequestContext";
 import { ResponseWriter } from "./ResponseWriter";
 import { endpointsMiddleware } from "./EndpointMiddleware";
+import { problemDetailsErrorHandler } from "./ProblemDetailsErrorHandler";
+import { TomasError } from "@tomasjs/core/errors";
 
 describe("Server", () => {
   const client = new HttpClient();
@@ -289,5 +291,33 @@ describe("Server", () => {
 
     expect(responseJson.type).toMatch(Error.name);
     expect(responseJson.message).toMatch("This is a custom error!");
+  });
+
+  it("should use Problem Details error handler", async () => {
+    const port = 8091;
+
+    const server = await new HttpServer({ port })
+      .map("get", "/", () => {
+        throw new TomasError("custom/error", "This is a custom error!", {
+          data: { foo: "bar" },
+          innerError: new TomasError("custom/innerError", "This is an inner error!", {
+            data: { fizz: "buzz" },
+            innerError: "some random value",
+          }),
+        });
+      })
+      .useErrorHandler(problemDetailsErrorHandler({ includeError: true }))
+      .start();
+
+    const response = await client.get(`http://localhost:${port}`);
+
+    await server.stop();
+
+    expect(response.status).toBe(statusCodes.internalServerError);
+
+    const responseJson = await response.json();
+
+    // expect(responseJson.type).toMatch(Error.name);
+    // expect(responseJson.message).toMatch("This is a custom error!");
   });
 });

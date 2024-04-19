@@ -62,4 +62,20 @@ export class ProblemDetails {
     this.extensions[key] = value;
     return this;
   }
+
+  toPlain(): Record<string, any> {
+    const plain: Record<string, any> = {
+      type: this.type,
+      status: this.status,
+      title: this.title,
+      details: this.details,
+      instance: this.instance,
+    };
+
+    for (const key of Object.keys(this.extensions)) {
+      plain[key] = this.extensions[key];
+    }
+
+    return plain;
+  }
 }
