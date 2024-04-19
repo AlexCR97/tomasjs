@@ -14,7 +14,11 @@ class RecursiveHttpPipeline implements IHttpPipeline {
     this.middlewares = middlewares;
 
     this.terminalMiddleware = async (_, response) => {
-      await response.send();
+      if (response.sent) {
+        return;
+      }
+
+      return await response.send();
     };
   }
 
@@ -36,6 +40,34 @@ class RecursiveHttpPipeline implements IHttpPipeline {
   }
 }
 
-// TODO Implement non-recursive IHttpPipeline
+class NonRecursiveHttpPipeline implements IHttpPipeline {
+  private readonly middlewares: Middleware[];
+  private readonly terminalMiddleware: Middleware;
+
+  constructor(middlewares: Middleware[]) {
+    this.middlewares = middlewares;
+
+    this.terminalMiddleware = async (_, response) => {
+      if (!response.sent) {
+        return await response.send();
+      }
+    };
+  }
+
+  async run(request: RequestContext, response: ResponseWriter): Promise<void> {
+    let currentIndex = 0;
+
+    const next = async () => {
+      if (currentIndex < this.middlewares.length) {
+        const current = this.middlewares[currentIndex++];
+        await current(request, response, next);
+      } else {
+        await this.terminalMiddleware(request, response, async () => {});
+      }
+    };
+
+    await next();
+  }
+}
 
 export { RecursiveHttpPipeline as HttpPipeline };
