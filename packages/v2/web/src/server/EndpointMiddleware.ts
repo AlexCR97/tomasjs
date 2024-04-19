@@ -8,11 +8,10 @@ export function endpointsMiddleware(endpoints: Endpoint[]): Middleware {
   return async (req, res, next) => {
     const endpointResponse = await handleRequest(req);
 
-    await res
+    res
       .withContent(endpointResponse.content)
       .withHeaders(endpointResponse.headers)
-      .withStatus(endpointResponse.status)
-      .send();
+      .withStatus(endpointResponse.status);
 
     return await next();
   };

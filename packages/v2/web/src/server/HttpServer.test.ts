@@ -238,4 +238,56 @@ describe("Server", () => {
 
     await server.stop();
   });
+
+  it("should use the default error handler", async () => {
+    const port = 8090;
+
+    const server = await new HttpServer({ port })
+      .map("get", "/", () => {
+        throw new Error("This is a custom error!");
+      })
+      .start();
+
+    const response = await client.get(`http://localhost:${port}`);
+
+    await server.stop();
+
+    expect(response.status).toBe(statusCodes.internalServerError);
+  });
+
+  it("should use a custom error handler", async () => {
+    const port = 8090;
+
+    type ErrorResponse = { type: string; message: string };
+
+    const server = await new HttpServer({ port })
+      .map("get", "/", () => {
+        throw new Error("This is a custom error!");
+      })
+      .useErrorHandler(async (req, res, err) => {
+        const error = err as Error;
+
+        const errorResponse: ErrorResponse = {
+          type: error.name,
+          message: error.message,
+        };
+
+        return await res
+          .withStatus(statusCodes.internalServerError)
+          .withContent(JsonContent.from(errorResponse))
+          .send();
+      })
+      .start();
+
+    const response = await client.get(`http://localhost:${port}`);
+
+    await server.stop();
+
+    expect(response.status).toBe(statusCodes.internalServerError);
+
+    const responseJson = (await response.json()) as ErrorResponse;
+
+    expect(responseJson.type).toMatch(Error.name);
+    expect(responseJson.message).toMatch("This is a custom error!");
+  });
 });
