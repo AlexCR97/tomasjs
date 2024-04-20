@@ -2,6 +2,7 @@ import { HttpClient } from "@tomasjs/core/http";
 import { HttpServer } from "./HttpServer";
 import { IterativeHttpPipeline, RecursiveHttpPipeline } from "./HttpPipeline";
 import { benchmark } from "@/test/benchmark";
+import { testHttpServer } from "@/test";
 
 describe.skip("HttpPipeline", () => {
   const client = new HttpClient();
@@ -9,8 +10,8 @@ describe.skip("HttpPipeline", () => {
   const iterations = 500;
 
   it("`should benchmark HttpPipeline", async () => {
-    const recursiveServer = buildHttpServer(9090, "recursive");
-    const iterativeServer = buildHttpServer(9091, "iterative");
+    const recursiveServer = await buildHttpServer("recursive");
+    const iterativeServer = await buildHttpServer("iterative");
 
     await recursiveServer.start();
     await iterativeServer.start();
@@ -39,8 +40,8 @@ describe.skip("HttpPipeline", () => {
     let breakpoint = "stop here";
   });
 
-  function buildHttpServer(port: number, pipelineMode: "recursive" | "iterative"): HttpServer {
-    const server = new HttpServer({ port, pipelineMode });
+  async function buildHttpServer(pipelineMode: "recursive" | "iterative"): Promise<HttpServer> {
+    const server = await testHttpServer();
 
     for (let i = 0; i < middlewareCount; i++) {
       server.use(async (req, res, next) => await next());

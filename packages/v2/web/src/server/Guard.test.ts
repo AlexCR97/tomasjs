@@ -3,6 +3,7 @@ import { HttpServer } from "./HttpServer";
 import { EndpointResponse } from "./Endpoint";
 import { statusCodes } from "@/statusCodes";
 import { Guard, guard } from "./Guard";
+import { testHttpServer } from "@/test";
 
 describe("Guard", () => {
   const client = new HttpClient();
@@ -14,61 +15,59 @@ describe("Guard", () => {
     return apiKey === apiKeyValue;
   };
 
-  it("should use guard middleware", async () => {
-    const port = 7070;
+  let server: HttpServer;
 
-    const server = await new HttpServer({ port })
+  beforeEach(async () => {
+    server = await testHttpServer();
+  });
+
+  afterEach(async () => {
+    if (server) {
+      await server.stop();
+    }
+  });
+
+  it("should use guard middleware", async () => {
+    await server
       .use(guard(myGuardFunction))
       .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }))
       .start();
 
-    const response = await client.get(`http://localhost:${port}`, {
+    const response = await client.get(`http://localhost:${server.port}`, {
       headers: new HttpHeaders().add(apiKeyHeader, apiKeyValue),
     });
 
     expect(response.ok).toBe(true);
-
-    await server.stop();
   });
 
   it("should use guard middleware shorthand", async () => {
-    const port = 7071;
-
-    const server = await new HttpServer({ port })
+    await server
       .useGuard(myGuardFunction)
       .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }))
       .start();
 
-    const response = await client.get(`http://localhost:${port}`, {
+    const response = await client.get(`http://localhost:${server.port}`, {
       headers: new HttpHeaders().add(apiKeyHeader, apiKeyValue),
     });
 
     expect(response.ok).toBe(true);
-
-    await server.stop();
   });
 
   it("should deny unauthorized requests", async () => {
-    const port = 7072;
-
-    const server = await new HttpServer({ port })
+    await server
       .useGuard(myGuardFunction)
       .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }))
       .start();
 
-    const response = await client.get(`http://localhost:${port}`);
+    const response = await client.get(`http://localhost:${server.port}`);
 
     expect(response.status).toBe(statusCodes.unauthorized);
-
-    await server.stop();
 
     const responseJson = await response.json();
   });
 
   it("should apply multiple guards", async () => {
-    const port = 7073;
-
-    const server = await new HttpServer({ port })
+    await server
       .useGuard(() => {
         return true;
       })
@@ -81,10 +80,8 @@ describe("Guard", () => {
       .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }))
       .start();
 
-    const response = await client.get(`http://localhost:${port}`);
+    const response = await client.get(`http://localhost:${server.port}`);
 
     expect(response.status).toBe(statusCodes.ok);
-
-    await server.stop();
   });
 });

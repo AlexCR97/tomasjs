@@ -5,6 +5,7 @@ import { Claims } from "@/auth";
 import { jwtGuard } from "./JwtGuard";
 import { HttpServer } from "@/server/HttpServer";
 import { EndpointResponse } from "@/server/Endpoint";
+import { testHttpServer } from "@/test";
 
 describe("JwtGuard", () => {
   const client = new HttpClient();
@@ -13,35 +14,39 @@ describe("JwtGuard", () => {
   const token = new JwtSigner({ secret }).sign(claims);
   const myJwtGuard = jwtGuard({ secret });
 
-  it("should be denied by jwt guard", async () => {
-    const port = 6060;
+  let server: HttpServer;
 
-    const server = await new HttpServer({ port })
+  beforeEach(async () => {
+    server = await testHttpServer();
+  });
+
+  afterEach(async () => {
+    if (server) {
+      await server.stop();
+    }
+  });
+
+  it("should be denied by jwt guard", async () => {
+    await server
       .useGuard(myJwtGuard)
       .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }))
       .start();
 
-    const response = await client.get(`http://localhost:${port}`);
+    const response = await client.get(`http://localhost:${server.port}`);
 
     expect(response.status).toBe(statusCodes.unauthorized);
-
-    await server.stop();
   });
 
   it("should be authorized by jwt guard", async () => {
-    const port = 6061;
-
-    const server = await new HttpServer({ port })
+    await server
       .useGuard(myJwtGuard)
       .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }))
       .start();
 
-    const response = await client.get(`http://localhost:${port}`, {
+    const response = await client.get(`http://localhost:${server.port}`, {
       headers: new HttpHeaders().add("authorization", `Bearer ${token}`),
     });
 
     expect(response.ok).toBe(true);
-
-    await server.stop();
   });
 });

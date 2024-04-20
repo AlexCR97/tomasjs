@@ -10,28 +10,35 @@ import { ResponseWriter } from "./ResponseWriter";
 import { endpointsMiddleware } from "./EndpointMiddleware";
 import { problemDetailsErrorHandler } from "./ProblemDetailsErrorHandler";
 import { TomasError } from "@tomasjs/core/errors";
+import { testHttpServer } from "@/test";
 
 describe("Server", () => {
   const client = new HttpClient();
 
-  it("should accept connections", async () => {
-    const port = 8080;
+  let server: HttpServer;
 
-    const server = await new HttpServer({ port })
+  beforeEach(async () => {
+    server = await testHttpServer();
+  });
+
+  afterEach(async () => {
+    if (server) {
+      await server.stop();
+    }
+  });
+
+  it("should accept connections", async () => {
+    await server
       .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }))
       .start();
 
-    const response = await client.get(`http://localhost:${port}`);
+    const response = await client.get(`http://localhost:${server.port}`);
 
     expect(response.ok).toBe(true);
-
-    await server.stop();
   });
 
   it("should route requests", async () => {
-    const port = 8081;
-
-    const server = await new HttpServer({ port })
+    await server
       .useEndpoint("get", "/path/to/resource", () => {
         return new EndpointResponse({
           status: statusCodes.ok,
@@ -40,26 +47,22 @@ describe("Server", () => {
       })
       .start();
 
-    const response = await client.get(`http://localhost:${port}/path/to/resource`);
+    const response = await client.get(`http://localhost:${server.port}/path/to/resource`);
 
     expect(response.ok).toBe(true);
 
     const responseText = await response.text();
 
     expect(responseText).toMatch("Hooray!");
-
-    await server.stop();
   });
 
   it("should provide query params", async () => {
-    const port = 8082;
-
     const queryParams = new QueryParams({
       offset: "10",
       limit: "25",
     });
 
-    const server = await new HttpServer({ port })
+    await server
       .useEndpoint("get", "/", ({ query }) => {
         return new EndpointResponse({
           status: statusCodes.ok,
@@ -68,9 +71,7 @@ describe("Server", () => {
       })
       .start();
 
-    const response = await client.get(`http://localhost:${port}?${queryParams.toString()}`);
-
-    await server.stop();
+    const response = await client.get(`http://localhost:${server.port}?${queryParams.toString()}`);
 
     expect(response.ok).toBe(true);
 
@@ -80,14 +81,12 @@ describe("Server", () => {
   });
 
   it("should provide a json request body", async () => {
-    const port = 8083;
-
     const expectedBodyContent = {
       foo: "bar",
       fizz: "buzz",
     } as const;
 
-    const server = await new HttpServer({ port })
+    await server
       .useEndpoint("post", "/", ({ body }) => {
         expect(body).toBeInstanceOf(JsonContent);
 
@@ -103,14 +102,12 @@ describe("Server", () => {
       .start();
 
     const response = await client.post(
-      `http://localhost:${port}`,
+      `http://localhost:${server.port}`,
       JSON.stringify(expectedBodyContent),
       {
         headers: new HttpHeaders().add("content-type", "application/json"),
       }
     );
-
-    await server.stop();
 
     expect(response.ok).toBe(true);
 
@@ -120,9 +117,7 @@ describe("Server", () => {
   });
 
   it("should provide route params", async () => {
-    const port = 8084;
-
-    const server = await new HttpServer({ port })
+    await server
       .useEndpoint("get", "/path/to/:resource", ({ params }) => {
         expect(params).toBeInstanceOf(RouteParams);
 
@@ -133,9 +128,7 @@ describe("Server", () => {
       })
       .start();
 
-    const response = await client.get(`http://localhost:${port}/path/to/1`);
-
-    await server.stop();
+    const response = await client.get(`http://localhost:${server.port}/path/to/1`);
 
     expect(response.ok).toBe(true);
 
@@ -147,11 +140,10 @@ describe("Server", () => {
   });
 
   it("should use middlewares", async () => {
-    const port = 8085;
     let counterForBefore = 0;
     let counterForAfter = 0;
 
-    const server = await new HttpServer({ port })
+    await server
       .use(async (req, res, next) => {
         counterForBefore++;
         await next();
@@ -169,58 +161,42 @@ describe("Server", () => {
       })
       .start();
 
-    await client.get(`http://localhost:${port}`);
-
-    await server.stop();
+    await client.get(`http://localhost:${server.port}`);
 
     expect(counterForBefore).toBe(3);
     expect(counterForAfter).toBe(3);
   });
 
   it("should fallback to a terminal middleware", async () => {
-    const port = 8086;
+    await server.start();
 
-    const server = await new HttpServer({ port }).start();
-
-    await client.get(`http://localhost:${port}`);
-
-    await server.stop();
+    await client.get(`http://localhost:${server.port}`);
   });
 
   it("should provide RequestContext in the middleware", async () => {
-    const port = 8087;
-
-    const server = await new HttpServer({ port })
+    await server
       .use((req, _, next) => {
         expect(req).toBeInstanceOf(RequestContext);
         return next();
       })
       .start();
 
-    await client.get(`http://localhost:${port}`);
-
-    await server.stop();
+    await client.get(`http://localhost:${server.port}`);
   });
 
   it("should provide ResponseWriter in the middleware", async () => {
-    const port = 8088;
-
-    const server = await new HttpServer({ port })
+    await server
       .use((_, res, next) => {
         expect(res).toBeInstanceOf(ResponseWriter);
         return next();
       })
       .start();
 
-    await client.get(`http://localhost:${port}`);
-
-    await server.stop();
+    await client.get(`http://localhost:${server.port}`);
   });
 
   it("should use endpoints middleware", async () => {
-    const port = 8089;
-
-    const server = await new HttpServer({ port })
+    await server
       .use(
         endpointsMiddleware([
           {
@@ -236,33 +212,25 @@ describe("Server", () => {
       )
       .start();
 
-    await client.get(`http://localhost:${port}`);
-
-    await server.stop();
+    await client.get(`http://localhost:${server.port}`);
   });
 
   it("should use the default error handler", async () => {
-    const port = 8090;
-
-    const server = await new HttpServer({ port })
+    await server
       .useEndpoint("get", "/", () => {
         throw new Error("This is a custom error!");
       })
       .start();
 
-    const response = await client.get(`http://localhost:${port}`);
-
-    await server.stop();
+    const response = await client.get(`http://localhost:${server.port}`);
 
     expect(response.status).toBe(statusCodes.internalServerError);
   });
 
   it("should use a custom error handler", async () => {
-    const port = 8090;
-
     type ErrorResponse = { type: string; message: string };
 
-    const server = await new HttpServer({ port })
+    await server
       .useEndpoint("get", "/", () => {
         throw new Error("This is a custom error!");
       })
@@ -281,9 +249,7 @@ describe("Server", () => {
       })
       .start();
 
-    const response = await client.get(`http://localhost:${port}`);
-
-    await server.stop();
+    const response = await client.get(`http://localhost:${server.port}`);
 
     expect(response.status).toBe(statusCodes.internalServerError);
 
@@ -294,9 +260,7 @@ describe("Server", () => {
   });
 
   it("should use Problem Details error handler", async () => {
-    const port = 8091;
-
-    const server = await new HttpServer({ port })
+    await server
       .useEndpoint("get", "/", () => {
         throw new TomasError("custom/error", "This is a custom error!", {
           data: { foo: "bar" },
@@ -309,9 +273,7 @@ describe("Server", () => {
       .useErrorHandler(problemDetailsErrorHandler({ includeError: true }))
       .start();
 
-    const response = await client.get(`http://localhost:${port}`);
-
-    await server.stop();
+    const response = await client.get(`http://localhost:${server.port}`);
 
     expect(response.status).toBe(statusCodes.internalServerError);
 

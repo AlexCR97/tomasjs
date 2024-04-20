@@ -27,6 +27,11 @@ interface IHttpServer {
   stop(): Promise<void>;
 }
 
+export type HttpServerOptions = {
+  port?: number;
+  pipelineMode?: "recursive" | "iterative";
+};
+
 export class HttpServer implements IHttpServer {
   readonly port: number;
   private readonly middlewares: Middleware[];
@@ -48,7 +53,7 @@ export class HttpServer implements IHttpServer {
       .send();
   };
 
-  constructor(options?: { port?: number; pipelineMode?: "recursive" | "iterative" }) {
+  constructor(options?: HttpServerOptions) {
     this.port = options?.port ?? 8080; // TODO Fallback to a random number
     this.middlewares = [];
     this.guards = [];
