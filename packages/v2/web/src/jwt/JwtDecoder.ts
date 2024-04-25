@@ -1,9 +1,9 @@
+import { Claims, IClaims } from "@/auth";
 import { ErrorOptions, TomasError } from "@tomasjs/core/errors";
 import { ResultFailure, ResultSuccess, Result } from "@tomasjs/core/system";
 import { VerifyOptions, verify } from "jsonwebtoken";
-import { Claims } from "../auth";
 
-export type JwtDecoderResult = ResultFailure<TomasError> | ResultSuccess<Claims>;
+export type JwtDecoderResult = ResultFailure<TomasError> | ResultSuccess<IClaims>;
 
 export type JwtDecoderOptions = {
   secret: string;
@@ -38,7 +38,8 @@ export class JwtDecoder {
           return resolve(result);
         }
 
-        return resolve(Result.success(decodedToken));
+        const claims = new Claims(decodedToken);
+        return resolve(Result.success(claims));
       });
     });
   }

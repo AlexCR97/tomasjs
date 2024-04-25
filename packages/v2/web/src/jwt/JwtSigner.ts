@@ -1,4 +1,4 @@
-import { Claims } from "@/auth";
+import { IClaims } from "@/auth";
 import { SignOptions, sign } from "jsonwebtoken";
 
 export type JwtSignerOptions = {
@@ -8,9 +8,10 @@ export type JwtSignerOptions = {
 export class JwtSigner {
   constructor(private readonly options: JwtSignerOptions) {}
 
-  sign(claims: Claims): string {
+  sign(claims: IClaims): string {
     const optionsWithoutSecret = this.removeKey(this.options, "secret");
-    return sign(claims, this.options.secret, optionsWithoutSecret);
+    const plainClaims = claims.toPlain();
+    return sign(plainClaims, this.options.secret, optionsWithoutSecret);
   }
 
   private removeKey<TObj extends object, TKey extends keyof TObj>(

@@ -1,16 +1,16 @@
 import { HttpClient, HttpHeaders } from "@tomasjs/core/http";
 import { statusCodes } from "@/statusCodes";
 import { JwtSigner } from "./JwtSigner";
-import { Claims } from "@/auth";
 import { jwtGuard } from "./JwtGuard";
 import { HttpServer } from "@/server/HttpServer";
 import { EndpointResponse } from "@/server/Endpoint";
 import { testHttpServer } from "@/test";
+import { Claims } from "@/auth";
 
 describe("JwtGuard", () => {
   const client = new HttpClient();
   const secret = "foo bar fizz buzz";
-  const claims: Claims = { foo: "bar", fizz: "buzz" } as const;
+  const claims = new Claims({ foo: "bar", fizz: "buzz" });
   const token = new JwtSigner({ secret }).sign(claims);
   const myJwtGuard = jwtGuard({ secret });
 

@@ -1,4 +1,4 @@
-import { IdentityClaims } from "./IdentityClaims";
+import { Claims } from "./Claims";
 import { IUser, IUserReader, User, UserReader } from "./User";
 
 describe("User", () => {
@@ -7,7 +7,7 @@ describe("User", () => {
     fizz: "buzz",
   } as const;
 
-  const claims = new IdentityClaims(plainClaims);
+  const claims = new Claims(plainClaims);
 
   let user: IUser;
   let userReader: IUserReader;
