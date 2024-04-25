@@ -16,9 +16,11 @@ import { ErrorHandler, errorHandlerMiddleware } from "./ErrorHandler";
 import { statusCodes } from "@/statusCodes";
 import { PlainTextContent } from "@/content";
 import { Guard, guard } from "./Guard";
+import { Interceptor, interceptor } from "./Interceptor";
 
 interface IHttpServer {
   use(middleware: Middleware): this;
+  useInterceptor(interceptor: Interceptor): this;
   useGuard(guard: Guard): this;
   useEndpoint(endpoint: Endpoint): this;
   useEndpoint(method: HttpMethod, path: string, handler: EndpointHandler): this;
@@ -35,6 +37,7 @@ export type HttpServerOptions = {
 export class HttpServer implements IHttpServer {
   readonly port: number;
   private readonly middlewares: Middleware[];
+  private readonly interceptors: Interceptor[];
   private readonly guards: Guard[];
   private readonly endpoints: Endpoint[];
   private errorHandler: ErrorHandler | undefined;
@@ -56,12 +59,14 @@ export class HttpServer implements IHttpServer {
   constructor(options?: HttpServerOptions) {
     this.port = options?.port ?? 8080; // TODO Fallback to a random number
     this.middlewares = [];
+    this.interceptors = [];
     this.guards = [];
     this.endpoints = [];
     this.server = createServer(async (req, res) => {
       const middlewares = [
         errorHandlerMiddleware(this.errorHandler ?? this.defaultErrorHandler),
         ...this.middlewares,
+        ...this.interceptors.map(interceptor),
         ...this.guards.map(guard),
         endpointsMiddleware(this.endpoints),
       ];
@@ -82,6 +87,11 @@ export class HttpServer implements IHttpServer {
 
   use(middleware: Middleware): this {
     this.middlewares.push(middleware);
+    return this;
+  }
+
+  useInterceptor(interceptor: Interceptor): this {
+    this.interceptors.push(interceptor);
     return this;
   }
 

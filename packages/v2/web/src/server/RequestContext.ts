@@ -5,14 +5,26 @@ import { IncomingMessage } from "http";
 import { UrlParser } from "./UrlParser";
 import { InvalidOperationError } from "@tomasjs/core/errors";
 import { pipe } from "@tomasjs/core/system";
+import { IUser, IUserReader, User, UserReader } from "@/auth";
 
 export interface IRequestContext {
-  method: HttpMethod;
-  url: string;
-  path: string;
-  headers: Readonly<PlainHttpHeaders>;
-  query: IQueryParams;
-  body: Content<unknown>;
+  readonly method: HttpMethod;
+  readonly url: string;
+  readonly path: string;
+  readonly headers: Readonly<PlainHttpHeaders>;
+  readonly query: IQueryParams;
+  readonly body: Content<unknown>;
+  readonly user: IUser;
+}
+
+export interface IRequestContextReader {
+  readonly method: HttpMethod;
+  readonly url: string;
+  readonly path: string;
+  readonly headers: Readonly<PlainHttpHeaders>;
+  readonly query: IQueryParams;
+  readonly body: Content<unknown>;
+  readonly user: IUserReader;
 }
 
 export class RequestContext implements IRequestContext {
@@ -22,7 +34,8 @@ export class RequestContext implements IRequestContext {
     readonly path: string,
     readonly headers: Readonly<PlainHttpHeaders>,
     readonly query: IQueryParams,
-    readonly body: Content<unknown>
+    readonly body: Content<unknown>,
+    readonly user: IUser
   ) {}
 
   static async from(req: IncomingMessage): Promise<RequestContext> {
@@ -34,7 +47,8 @@ export class RequestContext implements IRequestContext {
       urlParser.path(),
       this.getHeaders(req),
       urlParser.queryParams(),
-      await this.getRequestBody(req)
+      await this.getRequestBody(req),
+      new User()
     );
   }
 
@@ -84,5 +98,29 @@ export class RequestContext implements IRequestContext {
   private static async getRequestBody(req: IncomingMessage): Promise<Content<unknown>> {
     const factory = await ContentFactory.from(req);
     return factory.createContent();
+  }
+}
+
+export class RequestContextReader implements IRequestContextReader {
+  constructor(
+    readonly method: HttpMethod,
+    readonly url: string,
+    readonly path: string,
+    readonly headers: Readonly<PlainHttpHeaders>,
+    readonly query: IQueryParams,
+    readonly body: Content<unknown>,
+    readonly user: IUserReader
+  ) {}
+
+  static from(context: IRequestContext): RequestContextReader {
+    return new RequestContextReader(
+      context.method,
+      context.url,
+      context.path,
+      context.headers,
+      context.query,
+      context.body,
+      new UserReader(context.user)
+    );
   }
 }

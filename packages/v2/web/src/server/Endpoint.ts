@@ -2,8 +2,9 @@ import { HttpHeader, HttpHeaders, HttpMethod, PlainHttpHeaders } from "@tomasjs/
 import { IQueryParams } from "./QueryParams";
 import { IRouteParams } from "./RouteParams";
 import { Content } from "@/content";
-import { RequestContext } from "./RequestContext";
+import { IRequestContextReader, RequestContext } from "./RequestContext";
 import { UrlParser } from "./UrlParser";
+import { IUserReader } from "@/auth";
 
 export type Endpoint = {
   method: HttpMethod;
@@ -15,7 +16,7 @@ export type EndpointHandler = (
   context: IEndpointContext
 ) => EndpointResponse | Promise<EndpointResponse>;
 
-export interface IEndpointContext extends RequestContext {
+export interface IEndpointContext extends IRequestContextReader {
   params: IRouteParams;
 }
 
@@ -27,7 +28,8 @@ export class EndpointContext implements IEndpointContext {
     readonly headers: Readonly<PlainHttpHeaders>,
     readonly params: IRouteParams,
     readonly query: IQueryParams,
-    readonly body: Content<unknown>
+    readonly body: Content<unknown>,
+    readonly user: IUserReader
   ) {}
 
   static from(endpoint: Endpoint, req: RequestContext): EndpointContext {
@@ -40,7 +42,8 @@ export class EndpointContext implements IEndpointContext {
       req.headers,
       urlParser.routeParams(endpoint.path),
       req.query,
-      req.body
+      req.body,
+      req.user
     );
   }
 }
