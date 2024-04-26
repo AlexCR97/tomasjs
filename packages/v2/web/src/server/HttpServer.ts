@@ -23,13 +23,14 @@ import { PlainTextContent } from "@/content";
 import { Guard } from "./Guard";
 import { Interceptor } from "./Interceptor";
 import { MiddlewareAggregate } from "./MiddlewareAggregate";
-import { AuthenticationPolicy } from "@/auth";
+import { AuthenticationPolicy, AuthorizationPolicy } from "@/auth";
 
 interface IHttpServer {
   use(middleware: Middleware): this;
   useInterceptor(interceptor: Interceptor): this;
   useGuard(guard: Guard): this;
   useAuthentication(policy: AuthenticationPolicy): this;
+  useAuthorization(policy: AuthorizationPolicy): this;
   useEndpoint(endpoint: Endpoint): this;
   useEndpoint(
     method: HttpMethod,
@@ -53,6 +54,7 @@ export class HttpServer implements IHttpServer {
   private readonly interceptors: Interceptor[];
   private readonly guards: Guard[];
   private readonly authenticationPolicies: AuthenticationPolicy[];
+  private readonly authorizationPolicies: AuthorizationPolicy[];
   private readonly endpoints: Endpoint[];
   private errorHandler: ErrorHandler | undefined;
   private readonly server: Server;
@@ -84,6 +86,7 @@ export class HttpServer implements IHttpServer {
     this.interceptors = [];
     this.guards = [];
     this.authenticationPolicies = [];
+    this.authorizationPolicies = [];
     this.endpoints = [];
     this.server = createServer(async (req, res) => {
       const middlewares = new MiddlewareAggregate()
@@ -92,6 +95,7 @@ export class HttpServer implements IHttpServer {
         .addInterceptor(...this.interceptors)
         .addGuard(...this.guards)
         .addAuthentication(...this.authenticationPolicies)
+        .addAuthorization(...this.authorizationPolicies)
         .addEndpoint(...this.endpoints)
         .addMiddleware(this.terminalMiddleware)
         .get();
@@ -127,6 +131,11 @@ export class HttpServer implements IHttpServer {
 
   useAuthentication(policy: AuthenticationPolicy): this {
     this.authenticationPolicies.push(policy);
+    return this;
+  }
+
+  useAuthorization(policy: AuthorizationPolicy): this {
+    this.authorizationPolicies.push(policy);
     return this;
   }
 

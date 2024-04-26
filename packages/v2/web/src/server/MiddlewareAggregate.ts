@@ -1,4 +1,4 @@
-import { AuthenticationPolicy, authentication } from "@/auth";
+import { AuthenticationPolicy, AuthorizationPolicy, authentication, authorization } from "@/auth";
 import { Endpoint } from "./Endpoint";
 import { endpointsMiddleware } from "./EndpointMiddleware";
 import { ErrorHandler, ErrorHandlerFunction, errorHandlerMiddleware } from "./ErrorHandler";
@@ -12,6 +12,7 @@ interface IMiddlewareAggregate {
   addInterceptor(...interceptors: Interceptor[]): this;
   addGuard(...guards: Guard[]): this;
   addAuthentication(...policies: AuthenticationPolicy[]): this;
+  addAuthorization(...policies: AuthorizationPolicy[]): this;
   addEndpoint(...endpoints: Endpoint[]): this;
   get(): Middleware[];
 }
@@ -39,6 +40,15 @@ export class MiddlewareAggregate implements IMiddlewareAggregate {
   addAuthentication(...policies: AuthenticationPolicy[]): this {
     for (const policy of policies) {
       const middlewares = authentication(policy);
+      this.addMiddleware(...middlewares);
+    }
+
+    return this;
+  }
+
+  addAuthorization(...policies: AuthorizationPolicy[]): this {
+    for (const policy of policies) {
+      const middlewares = authorization(policy);
       this.addMiddleware(...middlewares);
     }
 

@@ -2,21 +2,29 @@ import { IClaims, Claims } from "./Claims";
 
 export interface IUser {
   get authenticated(): boolean;
+  get authorized(): boolean;
   get claims(): IClaims;
   authenticate(claims?: IClaims): boolean;
+  authorize(): boolean;
 }
 
 export interface IUserReader {
   get authenticated(): boolean;
+  get authorized(): boolean;
   get claims(): IClaims;
 }
 
 export class User implements IUser {
   private _authenticated = false;
+  private _authorized = false;
   private _claims: IClaims = new Claims({});
 
   get authenticated(): boolean {
     return this._authenticated;
+  }
+
+  get authorized(): boolean {
+    return this._authorized;
   }
 
   get claims(): IClaims {
@@ -33,6 +41,15 @@ export class User implements IUser {
 
     return true;
   }
+
+  authorize(): boolean {
+    if (this._authorized) {
+      return false;
+    }
+
+    this._authorized = true;
+    return true;
+  }
 }
 
 export class UserReader implements IUserReader {
@@ -40,6 +57,10 @@ export class UserReader implements IUserReader {
 
   get authenticated(): boolean {
     return this.user.authenticated;
+  }
+
+  get authorized(): boolean {
+    return this.user.authorized;
   }
 
   get claims(): IClaims {

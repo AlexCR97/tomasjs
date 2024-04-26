@@ -30,7 +30,7 @@ export function authentication(policy: AuthenticationPolicy): Middleware[] {
       }
     })
     .addGuard((req) => {
-      return req.user.authenticated;
+      return req.user.authenticated ? true : 401;
     })
     .get();
 }
