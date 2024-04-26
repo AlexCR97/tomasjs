@@ -1,6 +1,6 @@
 import { HttpClient } from "@tomasjs/core/http";
-import { HttpServer } from "./HttpServer";
-import { EndpointResponse } from "./Endpoint";
+import { HttpServer } from "@/server";
+import { EndpointResponse } from "@/endpoint";
 import { statusCodes } from "@/statusCodes";
 import { testHttpServer } from "@/test";
 import { Interceptor, interceptor } from "./Interceptor";

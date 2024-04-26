@@ -3,12 +3,11 @@ import { HttpServer } from "./HttpServer";
 import { QueryParams } from "./QueryParams";
 import { JsonContent, PlainTextContent } from "@/content";
 import { RouteParams } from "./RouteParams";
-import { EndpointResponse } from "./Endpoint";
+import { EndpointResponse, endpoints } from "@/endpoint";
 import { statusCodes } from "@/statusCodes";
 import { RequestContext } from "./RequestContext";
 import { ResponseWriter } from "./ResponseWriter";
-import { endpointsMiddleware } from "./EndpointMiddleware";
-import { problemDetailsErrorHandler } from "./ProblemDetailsErrorHandler";
+import { problemDetailsErrorHandler } from "@/error-handler";
 import { TomasError } from "@tomasjs/core/errors";
 import { testHttpServer } from "@/test";
 
@@ -198,7 +197,7 @@ describe("Server", () => {
   it("should use endpoints middleware", async () => {
     await server
       .use(
-        endpointsMiddleware([
+        endpoints([
           {
             method: "get",
             path: "/",

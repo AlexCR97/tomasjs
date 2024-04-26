@@ -1,14 +1,12 @@
 import { statusCodes } from "@/statusCodes";
-import { EndpointResponse } from "./Endpoint";
-import { Middleware } from "./Middleware";
-import { IRequestContext } from "./RequestContext";
+import { EndpointResponse } from "@/endpoint";
+import { Middleware } from "@/middleware";
 import { ProblemDetailsContent } from "@/content";
 import { ProblemDetails } from "@/ProblemDetails";
-import { IResponseWriter } from "./ResponseWriter";
+import { IRequestContext, IResponseWriter } from "@/server";
 import { InvalidOperationError } from "@tomasjs/core/errors";
 
-export type Guard = GuardFunction;
-export type GuardFunction = (request: IRequestContext) => GuardResult | Promise<GuardResult>;
+export type Guard = (request: IRequestContext) => GuardResult | Promise<GuardResult>;
 export type GuardResult = boolean | 401 | 403;
 
 export function guard(guard: Guard): Middleware {

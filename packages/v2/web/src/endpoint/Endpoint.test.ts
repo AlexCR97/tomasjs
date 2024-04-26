@@ -1,11 +1,11 @@
 import { HttpClient } from "@tomasjs/core/http";
-import { HttpServer } from "./HttpServer";
+import { HttpServer } from "@/server";
 import { EndpointResponse } from "./Endpoint";
 import { statusCodes } from "@/statusCodes";
 import { testHttpServer } from "@/test";
-import { Middleware } from "./Middleware";
-import { Interceptor } from "./Interceptor";
-import { Guard } from "./Guard";
+import { Middleware } from "@/middleware";
+import { Interceptor } from "@/interceptor";
+import { Guard } from "@/guard";
 import { JsonContent } from "@/content";
 
 describe("Endpoint", () => {

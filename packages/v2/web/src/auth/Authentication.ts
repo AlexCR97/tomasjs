@@ -1,6 +1,5 @@
-import { Middleware } from "@/server/Middleware";
-import { MiddlewareAggregate } from "@/server/MiddlewareAggregate";
-import { IRequestContext } from "@/server/RequestContext";
+import { Middleware, MiddlewareAggregate } from "@/middleware";
+import { IRequestContext } from "@/server";
 import { IClaims } from "./Claims";
 
 export type AuthenticationPolicy = (

@@ -1,6 +1,5 @@
-import { Middleware } from "@/server/Middleware";
-import { MiddlewareAggregate } from "@/server/MiddlewareAggregate";
-import { IRequestContextReader, RequestContextReader } from "@/server/RequestContext";
+import { Middleware, MiddlewareAggregate } from "@/middleware";
+import { IRequestContextReader, RequestContextReader } from "@/server";
 
 export type AuthorizationPolicy = (request: IRequestContextReader) => boolean | Promise<boolean>;
 

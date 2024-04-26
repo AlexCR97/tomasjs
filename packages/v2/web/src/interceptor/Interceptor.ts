@@ -1,5 +1,5 @@
-import { Middleware } from "./Middleware";
-import { IRequestContext } from "./RequestContext";
+import { Middleware } from "@/middleware";
+import { IRequestContext } from "@/server";
 
 export type Interceptor = (request: IRequestContext) => void | Promise<void>;
 

@@ -1,10 +1,9 @@
 import { AuthenticationPolicy, AuthorizationPolicy, authentication, authorization } from "@/auth";
-import { Endpoint } from "./Endpoint";
-import { endpointsMiddleware } from "./EndpointMiddleware";
-import { ErrorHandler, ErrorHandlerFunction, errorHandlerMiddleware } from "./ErrorHandler";
-import { Guard, GuardFunction, guard } from "./Guard";
-import { Interceptor, interceptor } from "./Interceptor";
-import { Middleware, MiddlewareFunction } from "./Middleware";
+import { ErrorHandler, errorHandler } from "@/error-handler";
+import { Guard, guard } from "@/guard";
+import { Interceptor, interceptor } from "@/interceptor";
+import { Middleware } from "./Middleware";
+import { Endpoint, endpoints as endpointsMiddleware } from "@/endpoint";
 
 interface IMiddlewareAggregate {
   addErrorHandler(...errorHandlers: ErrorHandler[]): this;
@@ -20,11 +19,11 @@ interface IMiddlewareAggregate {
 export class MiddlewareAggregate implements IMiddlewareAggregate {
   private readonly middlewares: Middleware[] = [];
 
-  addErrorHandler(...errorHandlers: ErrorHandlerFunction[]): this {
-    return this.addMiddleware(...errorHandlers.map(errorHandlerMiddleware));
+  addErrorHandler(...errorHandlers: ErrorHandler[]): this {
+    return this.addMiddleware(...errorHandlers.map(errorHandler));
   }
 
-  addMiddleware(...middlewares: MiddlewareFunction[]): this {
+  addMiddleware(...middlewares: Middleware[]): this {
     this.middlewares.push(...middlewares);
     return this;
   }
@@ -33,7 +32,7 @@ export class MiddlewareAggregate implements IMiddlewareAggregate {
     return this.addMiddleware(...interceptors.map(interceptor));
   }
 
-  addGuard(...guards: GuardFunction[]): this {
+  addGuard(...guards: Guard[]): this {
     return this.addMiddleware(...guards.map(guard));
   }
 
@@ -59,7 +58,7 @@ export class MiddlewareAggregate implements IMiddlewareAggregate {
     return this.addMiddleware(endpointsMiddleware(endpoints));
   }
 
-  get(): MiddlewareFunction[] {
+  get(): Middleware[] {
     return this.middlewares;
   }
 }

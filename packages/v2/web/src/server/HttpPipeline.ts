@@ -1,4 +1,4 @@
-import { Middleware } from "./Middleware";
+import { Middleware } from "@/middleware";
 import { IRequestContext } from "./RequestContext";
 import { IResponseWriter } from "./ResponseWriter";
 

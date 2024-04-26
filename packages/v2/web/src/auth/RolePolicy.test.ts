@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from "@tomasjs/core/http";
 import { statusCodes } from "@/statusCodes";
-import { HttpServer } from "@/server/HttpServer";
-import { EndpointResponse } from "@/server/Endpoint";
+import { HttpServer } from "@/server";
+import { EndpointResponse } from "@/endpoint";
 import { testHttpServer } from "@/test";
 import { Claims } from "@/auth";
 import { JwtSigner, jwtPolicy } from "@/jwt";

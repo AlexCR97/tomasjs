@@ -1,8 +1,8 @@
 import { ProblemDetailsContent } from "@/content";
-import { ErrorHandler } from "./ErrorHandler";
+import { ErrorHandler } from "./ErrorHandlerMiddleware";
 import { ProblemDetails } from "@/ProblemDetails";
 import { statusCodes } from "@/statusCodes";
-import { IRequestContext } from "./RequestContext";
+import { IRequestContext } from "@/server";
 import { TomasError } from "@tomasjs/core/errors";
 
 export function problemDetailsErrorHandler(options?: { includeError?: boolean }): ErrorHandler {

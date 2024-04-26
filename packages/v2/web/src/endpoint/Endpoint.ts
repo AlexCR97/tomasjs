@@ -1,13 +1,16 @@
 import { HttpHeader, HttpHeaders, HttpMethod, PlainHttpHeaders } from "@tomasjs/core/http";
-import { IQueryParams } from "./QueryParams";
-import { IRouteParams } from "./RouteParams";
 import { Content } from "@/content";
-import { IRequestContextReader, RequestContext } from "./RequestContext";
-import { UrlParser } from "./UrlParser";
 import { AuthenticationPolicy, AuthorizationPolicy, IUserReader } from "@/auth";
-import { Middleware } from "./Middleware";
-import { Interceptor } from "./Interceptor";
-import { Guard } from "./Guard";
+import { Middleware } from "@/middleware";
+import { Interceptor } from "@/interceptor";
+import { Guard } from "@/guard";
+import {
+  IRequestContextReader,
+  IRouteParams,
+  IQueryParams,
+  RequestContext,
+  UrlParser,
+} from "@/server";
 
 export type Endpoint = {
   method: HttpMethod;

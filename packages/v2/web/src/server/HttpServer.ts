@@ -5,7 +5,7 @@ import {
   EndpointOptions,
   EndpointResponse,
   isEndpoint,
-} from "./Endpoint";
+} from "@/endpoint";
 import { ResponseWriter } from "./ResponseWriter";
 import { HttpMethod } from "@tomasjs/core/http";
 import { InvalidOperationError } from "@tomasjs/core/errors";
@@ -15,14 +15,13 @@ import {
   IterativeHttpPipeline,
   RecursiveHttpPipeline,
 } from "./HttpPipeline";
-import { Middleware } from "./Middleware";
+import { Middleware, MiddlewareAggregate } from "@/middleware";
 import { RequestContext } from "./RequestContext";
-import { ErrorHandler } from "./ErrorHandler";
+import { ErrorHandler } from "@/error-handler";
 import { statusCodes } from "@/statusCodes";
 import { PlainTextContent } from "@/content";
-import { Guard } from "./Guard";
-import { Interceptor } from "./Interceptor";
-import { MiddlewareAggregate } from "./MiddlewareAggregate";
+import { Guard } from "@/guard";
+import { Interceptor } from "@/interceptor";
 import { AuthenticationPolicy, AuthorizationPolicy } from "@/auth";
 
 interface IHttpServer {
