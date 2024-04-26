@@ -1,9 +1,9 @@
-import { ResponseWriter } from "./ResponseWriter";
 import { Middleware } from "./Middleware";
-import { RequestContext } from "./RequestContext";
+import { IRequestContext } from "./RequestContext";
+import { IResponseWriter } from "./ResponseWriter";
 
 export interface IHttpPipeline {
-  run(request: RequestContext, response: ResponseWriter): Promise<void>;
+  run(request: IRequestContext, response: IResponseWriter): Promise<void>;
 }
 
 export class RecursiveHttpPipeline implements IHttpPipeline {
@@ -13,23 +13,19 @@ export class RecursiveHttpPipeline implements IHttpPipeline {
   constructor(middlewares: Middleware[]) {
     this.middlewares = middlewares;
 
-    this.terminalMiddleware = async (_, response) => {
-      if (response.sent) {
-        return;
-      }
-
-      return await response.send();
+    this.terminalMiddleware = async () => {
+      // pipeline ends here
     };
   }
 
-  async run(request: RequestContext, response: ResponseWriter): Promise<void> {
+  async run(request: IRequestContext, response: IResponseWriter): Promise<void> {
     const current = this.middlewares.length === 0 ? this.terminalMiddleware : this.middlewares[0];
     return await this.runPipeline(request, response, current, 1);
   }
 
   private async runPipeline(
-    request: RequestContext,
-    response: ResponseWriter,
+    request: IRequestContext,
+    response: IResponseWriter,
     current: Middleware,
     nextIndex: number
   ): Promise<void> {
@@ -47,14 +43,12 @@ export class IterativeHttpPipeline implements IHttpPipeline {
   constructor(middlewares: Middleware[]) {
     this.middlewares = middlewares;
 
-    this.terminalMiddleware = async (_, response) => {
-      if (!response.sent) {
-        return await response.send();
-      }
+    this.terminalMiddleware = async () => {
+      // pipeline ends here
     };
   }
 
-  async run(request: RequestContext, response: ResponseWriter): Promise<void> {
+  async run(request: IRequestContext, response: IResponseWriter): Promise<void> {
     let currentIndex = 0;
 
     const next = async () => {

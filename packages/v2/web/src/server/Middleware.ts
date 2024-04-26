@@ -8,5 +8,3 @@ export type MiddlewareFunction = (
   response: IResponseWriter,
   next: () => Promise<void>
 ) => void | Promise<void>;
-
-// TODO Create MiddlewareInstance type

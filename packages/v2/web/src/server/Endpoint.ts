@@ -5,11 +5,15 @@ import { Content } from "@/content";
 import { IRequestContextReader, RequestContext } from "./RequestContext";
 import { UrlParser } from "./UrlParser";
 import { IUserReader } from "@/auth";
+import { Middleware } from "./Middleware";
+import { Interceptor } from "./Interceptor";
+import { Guard } from "./Guard";
 
 export type Endpoint = {
   method: HttpMethod;
   path: string;
   handler: EndpointHandler;
+  options?: EndpointOptions;
 };
 
 export type EndpointHandler = (
@@ -64,6 +68,12 @@ export type EndpointResponseOptions = {
   status?: number;
   content?: Content<unknown>;
   headers?: HttpHeader[] | PlainHttpHeaders | HttpHeaders;
+};
+
+export type EndpointOptions = {
+  middlewares?: Middleware[];
+  interceptors?: Interceptor[];
+  guards?: Guard[];
 };
 
 export function isEndpoint(obj: any): obj is Endpoint {

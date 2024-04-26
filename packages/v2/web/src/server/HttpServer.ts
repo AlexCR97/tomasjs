@@ -1,5 +1,11 @@
 import { Server, createServer } from "http";
-import { Endpoint, EndpointHandler, EndpointResponse, isEndpoint } from "./Endpoint";
+import {
+  Endpoint,
+  EndpointHandler,
+  EndpointOptions,
+  EndpointResponse,
+  isEndpoint,
+} from "./Endpoint";
 import { ResponseWriter } from "./ResponseWriter";
 import { HttpMethod } from "@tomasjs/core/http";
 import { InvalidOperationError } from "@tomasjs/core/errors";
@@ -17,13 +23,19 @@ import { statusCodes } from "@/statusCodes";
 import { PlainTextContent } from "@/content";
 import { Guard, guard } from "./Guard";
 import { Interceptor, interceptor } from "./Interceptor";
+import { MiddlewareAggregate } from "./MiddlewareAggregate";
 
 interface IHttpServer {
   use(middleware: Middleware): this;
   useInterceptor(interceptor: Interceptor): this;
   useGuard(guard: Guard): this;
   useEndpoint(endpoint: Endpoint): this;
-  useEndpoint(method: HttpMethod, path: string, handler: EndpointHandler): this;
+  useEndpoint(
+    method: HttpMethod,
+    path: string,
+    handler: EndpointHandler,
+    options?: EndpointOptions
+  ): this;
   useErrorHandler(handler: ErrorHandler): this;
   start(): Promise<this>;
   stop(): Promise<void>;
@@ -56,6 +68,14 @@ export class HttpServer implements IHttpServer {
       .send();
   };
 
+  private readonly terminalMiddleware: Middleware = async (_, res) => {
+    if (res.sent) {
+      return;
+    }
+
+    return await res.send();
+  };
+
   constructor(options?: HttpServerOptions) {
     this.port = options?.port ?? 8080; // TODO Fallback to a random number
     this.middlewares = [];
@@ -63,13 +83,14 @@ export class HttpServer implements IHttpServer {
     this.guards = [];
     this.endpoints = [];
     this.server = createServer(async (req, res) => {
-      const middlewares = [
-        errorHandlerMiddleware(this.errorHandler ?? this.defaultErrorHandler),
-        ...this.middlewares,
-        ...this.interceptors.map(interceptor),
-        ...this.guards.map(guard),
-        endpointsMiddleware(this.endpoints),
-      ];
+      const middlewares = new MiddlewareAggregate()
+        .addErrorHandler(this.errorHandler ?? this.defaultErrorHandler)
+        .addMiddleware(...this.middlewares)
+        .addInterceptor(...this.interceptors)
+        .addGuard(...this.guards)
+        .addEndpoint(...this.endpoints)
+        .addMiddleware(this.terminalMiddleware)
+        .get();
 
       const httpPipeline: IHttpPipeline =
         options?.pipelineMode === "recursive"
@@ -101,7 +122,12 @@ export class HttpServer implements IHttpServer {
   }
 
   useEndpoint(endpoint: Endpoint): this;
-  useEndpoint(method: HttpMethod, path: string, handler: EndpointHandler): this;
+  useEndpoint(
+    method: HttpMethod,
+    path: string,
+    handler: EndpointHandler,
+    options?: EndpointOptions
+  ): this;
   useEndpoint(...args: any[]): this {
     if (args.length === 1) {
       if (isEndpoint(args[0])) {
@@ -109,9 +135,9 @@ export class HttpServer implements IHttpServer {
       }
     }
 
-    if (args.length === 3) {
-      const [method, path, handler] = args;
-      return this.mapEndpoint({ method, path, handler });
+    if (args.length === 3 || args.length === 4) {
+      const [method, path, handler, options] = args;
+      return this.mapEndpoint({ method, path, handler, options });
     }
 
     throw new InvalidOperationError();
