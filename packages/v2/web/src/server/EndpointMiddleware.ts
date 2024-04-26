@@ -46,6 +46,10 @@ export function endpointsMiddleware(endpoints: Endpoint[]): Middleware {
       middlewareAggregate.addAuthentication(endpoint.options.authentication);
     }
 
+    if (endpoint.options?.authorization) {
+      middlewareAggregate.addAuthorization(endpoint.options.authorization);
+    }
+
     await new HttpPipeline(middlewareAggregate.get()).run(req, res);
 
     if (res.sent) {

@@ -20,7 +20,12 @@ describe("RolePolicy", () => {
   const readerRole = "reader";
   const readerClaims = new Claims({ role: readerRole });
   const readerToken = new JwtSigner({ secret }).sign(readerClaims);
-  const readerRolePolicy = rolePolicy(readerRole);
+
+  const adminOrReaderRolesPolicy = rolePolicy([adminRole, readerRole], { check: "any" });
+
+  const adminAndReaderClaims = new Claims({ role: `${adminRole} ${readerRole}` });
+  const adminAndReaderToken = new JwtSigner({ secret }).sign(adminAndReaderClaims);
+  const adminAndReaderRolesPolicy = rolePolicy([adminRole, readerRole], { check: "all" });
 
   let server: HttpServer;
 
@@ -48,72 +53,115 @@ describe("RolePolicy", () => {
     expect(response.status).toBe(statusCodes.forbidden);
   });
 
-  // it("should be authorized by jwt policy at global level", async () => {
-  //   await server
-  //     .useAuthentication(myJwtPolicy)
-  //     .useEndpoint("get", "/", ({ user }) => {
-  //       expect(user.authenticated).toBe(true);
-  //       expect(user.claims.toPlain()).toMatchObject(adminClaims.toPlain());
-  //       return new EndpointResponse({ status: statusCodes.ok });
-  //     })
-  //     .start();
+  it("should be authorized by admin role policy at global level", async () => {
+    await server
+      .useAuthentication(myJwtPolicy)
+      .useAuthorization(adminRolePolicy)
+      .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }))
+      .start();
 
-  //   const response = await client.get(`http://localhost:${server.port}`, {
-  //     headers: new HttpHeaders().add("authorization", `Bearer ${adminToken}`),
-  //   });
+    const response = await client.get(`http://localhost:${server.port}`, {
+      headers: new HttpHeaders().add("authorization", `Bearer ${adminToken}`),
+    });
 
-  //   expect(response.ok).toBe(true);
-  // });
+    expect(response.status).toBe(statusCodes.ok);
+  });
 
-  // it("should be denied by jwt policy at endpoint level", async () => {
-  //   let counter = 0;
+  it("should be unauthorized by admin role policy at endpoint level", async () => {
+    let counter = 0;
 
-  //   await server
-  //     .useEndpoint(
-  //       "get",
-  //       "/",
-  //       () => {
-  //         counter += 1; // this should not be reached!
-  //         return new EndpointResponse({ status: statusCodes.ok });
-  //       },
-  //       {
-  //         authentication: myJwtPolicy,
-  //       }
-  //     )
-  //     .start();
+    await server
+      .useEndpoint(
+        "get",
+        "/",
+        () => {
+          counter += 1; // this should not be reached!
+          return new EndpointResponse({ status: statusCodes.ok });
+        },
+        {
+          authentication: myJwtPolicy,
+          authorization: adminRolePolicy,
+        }
+      )
+      .start();
 
-  //   const response = await client.get(`http://localhost:${server.port}`);
+    const response = await client.get(`http://localhost:${server.port}`, {
+      headers: new HttpHeaders().add("authorization", `Bearer ${readerToken}`),
+    });
 
-  //   expect(response.status).toBe(statusCodes.unauthorized);
+    expect(response.status).toBe(statusCodes.forbidden);
+    expect(counter).toBe(0);
+  });
 
-  //   expect(counter).toBe(0);
-  // });
+  it("should be authorized by admin role policy at endpoint level", async () => {
+    let counter = 0;
 
-  // it("should be authorized by jwt policy at endpoint level", async () => {
-  //   let counter = 0;
+    await server
+      .useEndpoint(
+        "get",
+        "/",
+        ({ user }) => {
+          expect(user.authorized).toBe(true);
+          counter += 1;
+          return new EndpointResponse({ status: statusCodes.ok });
+        },
+        {
+          authentication: myJwtPolicy,
+          authorization: adminRolePolicy,
+        }
+      )
+      .start();
 
-  //   await server
-  //     .useEndpoint(
-  //       "get",
-  //       "/",
-  //       ({ user }) => {
-  //         expect(user.authenticated).toBe(true);
-  //         expect(user.claims.toPlain()).toMatchObject(adminClaims.toPlain());
-  //         counter += 1;
-  //         return new EndpointResponse({ status: statusCodes.ok });
-  //       },
-  //       {
-  //         authentication: myJwtPolicy,
-  //       }
-  //     )
-  //     .start();
+    const response = await client.get(`http://localhost:${server.port}`, {
+      headers: new HttpHeaders().add("authorization", `Bearer ${adminToken}`),
+    });
 
-  //   const response = await client.get(`http://localhost:${server.port}`, {
-  //     headers: new HttpHeaders().add("authorization", `Bearer ${adminToken}`),
-  //   });
+    expect(response.status).toBe(statusCodes.ok);
+    expect(counter).toBe(1);
+  });
 
-  //   expect(response.status).toBe(statusCodes.ok);
+  it("should be authorized by admin OR reader role policy at endpoint level", async () => {
+    await server
+      .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }), {
+        authentication: myJwtPolicy,
+        authorization: adminOrReaderRolesPolicy,
+      })
+      .start();
 
-  //   expect(counter).toBe(1);
-  // });
+    const response = await client.get(`http://localhost:${server.port}`, {
+      headers: new HttpHeaders().add("authorization", `Bearer ${readerToken}`),
+    });
+
+    expect(response.status).toBe(statusCodes.ok);
+  });
+
+  it("should be unauthorized by admin AND reader role policy at endpoint level", async () => {
+    await server
+      .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }), {
+        authentication: myJwtPolicy,
+        authorization: adminAndReaderRolesPolicy,
+      })
+      .start();
+
+    const response = await client.get(`http://localhost:${server.port}`, {
+      headers: new HttpHeaders().add("authorization", `Bearer ${readerToken}`),
+    });
+
+    expect(response.status).toBe(statusCodes.forbidden);
+  });
+
+  it("should be authorized by admin AND reader role policy at endpoint level", async () => {
+    await server
+      .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }), {
+        authentication: myJwtPolicy,
+        authorization: adminAndReaderRolesPolicy,
+      })
+      .start();
+
+    const response = await client.get(`http://localhost:${server.port}`, {
+      headers: new HttpHeaders().add("authorization", `Bearer ${adminAndReaderToken}`),
+    });
+
+    expect(response.status).toBe(statusCodes.ok);
+  });
 });

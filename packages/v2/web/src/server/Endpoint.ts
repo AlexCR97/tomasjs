@@ -4,7 +4,7 @@ import { IRouteParams } from "./RouteParams";
 import { Content } from "@/content";
 import { IRequestContextReader, RequestContext } from "./RequestContext";
 import { UrlParser } from "./UrlParser";
-import { AuthenticationPolicy, IUserReader } from "@/auth";
+import { AuthenticationPolicy, AuthorizationPolicy, IUserReader } from "@/auth";
 import { Middleware } from "./Middleware";
 import { Interceptor } from "./Interceptor";
 import { Guard } from "./Guard";
@@ -75,6 +75,7 @@ export type EndpointOptions = {
   interceptors?: Interceptor[];
   guards?: Guard[];
   authentication?: AuthenticationPolicy;
+  authorization?: AuthorizationPolicy;
 };
 
 export function isEndpoint(obj: any): obj is Endpoint {
