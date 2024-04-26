@@ -1,12 +1,13 @@
 import { HttpClient } from "@tomasjs/core/http";
 import { HttpServer } from "@/server";
-import { EndpointResponse } from "./Endpoint";
+import { EndpointResponse } from "./PlainEndpoint";
 import { statusCodes } from "@/statusCodes";
 import { testHttpServer } from "@/test";
 import { Middleware } from "@/middleware";
 import { Interceptor } from "@/interceptor";
 import { Guard } from "@/guard";
 import { JsonContent } from "@/content";
+import { Endpoint } from "./Endpoint";
 
 describe("Endpoint", () => {
   const client = new HttpClient();
@@ -19,6 +20,16 @@ describe("Endpoint", () => {
 
   afterEach(async () => {
     await server.stop();
+  });
+
+  it("should use an endpoint", async () => {
+    await server
+      .useEndpoint(
+        Endpoint.get("/", () => {
+          return new EndpointResponse();
+        })
+      )
+      .start();
   });
 
   it("should apply middleware at the endpoint level", async () => {
@@ -40,17 +51,17 @@ describe("Endpoint", () => {
 
     await server
       .useEndpoint(
-        "get",
-        "/",
-        () => {
+        Endpoint.get("/", () => {
           return new EndpointResponse({
             status: statusCodes.ok,
             content: JsonContent.from({
               aggregation,
             }),
           });
-        },
-        { middlewares: [first], interceptors: [second], guards: [third] }
+        })
+          .use(first)
+          .useInterceptor(second)
+          .useGuard(third)
       )
       .start();
 

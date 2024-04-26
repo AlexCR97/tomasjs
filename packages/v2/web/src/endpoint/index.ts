@@ -1,11 +1,12 @@
+export { Endpoint } from "./Endpoint";
+export { endpoints } from "./EndpointsMiddleware";
 export {
-  Endpoint,
+  PlainEndpoint,
   EndpointContext,
   EndpointHandler,
   EndpointOptions,
   EndpointResponse,
   EndpointResponseOptions,
   IEndpointContext,
-  isEndpoint,
-} from "./Endpoint";
-export { endpoints } from "./EndpointsMiddleware";
+  isPlainEndpoint,
+} from "./PlainEndpoint";

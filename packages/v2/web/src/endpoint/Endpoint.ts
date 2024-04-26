@@ -1,93 +1,90 @@
-import { HttpHeader, HttpHeaders, HttpMethod, PlainHttpHeaders } from "@tomasjs/core/http";
-import { Content } from "@/content";
-import { AuthenticationPolicy, AuthorizationPolicy, IUserReader } from "@/auth";
-import { Middleware } from "@/middleware";
-import { Interceptor } from "@/interceptor";
+import { HttpMethod } from "@tomasjs/core/http";
+import { EndpointHandler } from "./PlainEndpoint";
+import { PlainEndpoint } from "./PlainEndpoint";
+import { AuthenticationPolicy, AuthorizationPolicy } from "@/auth";
 import { Guard } from "@/guard";
-import {
-  IRequestContextReader,
-  IRouteParams,
-  IQueryParams,
-  RequestContext,
-  UrlParser,
-} from "@/server";
+import { Interceptor } from "@/interceptor";
+import { Middleware } from "@/middleware";
 
-export type Endpoint = {
-  method: HttpMethod;
-  path: string;
-  handler: EndpointHandler;
-  options?: EndpointOptions;
-};
-
-export type EndpointHandler = (
-  context: IEndpointContext
-) => EndpointResponse | Promise<EndpointResponse>;
-
-export interface IEndpointContext extends IRequestContextReader {
-  params: IRouteParams;
+interface IEndpoint {
+  use(middleware: Middleware): this;
+  useInterceptor(interceptor: Interceptor): this;
+  useGuard(guard: Guard): this;
+  useAuthentication(policy: AuthenticationPolicy): this;
+  useAuthorization(policy: AuthorizationPolicy): this;
+  toPlain(): PlainEndpoint;
 }
 
-export class EndpointContext implements IEndpointContext {
+export class Endpoint implements IEndpoint {
+  private readonly middlewares: Middleware[] = [];
+  private readonly interceptors: Interceptor[] = [];
+  private readonly guards: Guard[] = [];
+  private authentication: AuthenticationPolicy | undefined;
+  private authorization: AuthorizationPolicy | undefined;
+
   constructor(
-    readonly method: HttpMethod,
-    readonly url: string,
-    readonly path: string,
-    readonly headers: Readonly<PlainHttpHeaders>,
-    readonly params: IRouteParams,
-    readonly query: IQueryParams,
-    readonly body: Content<unknown>,
-    readonly user: IUserReader
+    private readonly method: HttpMethod,
+    private readonly path: string,
+    private readonly handler: EndpointHandler
   ) {}
 
-  static from(endpoint: Endpoint, req: RequestContext): EndpointContext {
-    const urlParser = new UrlParser(req.url);
-
-    return new EndpointContext(
-      req.method,
-      req.url,
-      req.path,
-      req.headers,
-      urlParser.routeParams(endpoint.path),
-      req.query,
-      req.body,
-      req.user
-    );
-  }
-}
-
-export class EndpointResponse {
-  readonly status: number | null;
-  readonly content: Content<unknown> | null;
-  readonly headers: HttpHeader[] | PlainHttpHeaders | HttpHeaders | null;
-
-  constructor(options?: EndpointResponseOptions) {
-    this.status = options?.status ?? null;
-    this.content = options?.content ?? null;
-    this.headers = options?.headers ?? null;
-  }
-}
-
-export type EndpointResponseOptions = {
-  status?: number;
-  content?: Content<unknown>;
-  headers?: HttpHeader[] | PlainHttpHeaders | HttpHeaders;
-};
-
-export type EndpointOptions = {
-  middlewares?: Middleware[];
-  interceptors?: Interceptor[];
-  guards?: Guard[];
-  authentication?: AuthenticationPolicy;
-  authorization?: AuthorizationPolicy;
-};
-
-export function isEndpoint(obj: any): obj is Endpoint {
-  if (obj === null || obj === undefined) {
-    return false;
+  static get(path: string, handler: EndpointHandler): Endpoint {
+    return new Endpoint("get", path, handler);
   }
 
-  const method = obj[<keyof Endpoint>"method"];
-  const path = obj[<keyof Endpoint>"path"];
-  const handler = obj[<keyof Endpoint>"handler"];
-  return typeof method === "string" && typeof path === "string" && typeof handler === "function";
+  static post(path: string, handler: EndpointHandler): Endpoint {
+    return new Endpoint("post", path, handler);
+  }
+
+  static put(path: string, handler: EndpointHandler): Endpoint {
+    return new Endpoint("put", path, handler);
+  }
+
+  static patch(path: string, handler: EndpointHandler): Endpoint {
+    return new Endpoint("patch", path, handler);
+  }
+
+  static delete(path: string, handler: EndpointHandler): Endpoint {
+    return new Endpoint("delete", path, handler);
+  }
+
+  use(middleware: Middleware): this {
+    this.middlewares.push(middleware);
+    return this;
+  }
+
+  useInterceptor(interceptor: Interceptor): this {
+    this.interceptors.push(interceptor);
+    return this;
+  }
+
+  useGuard(guard: Guard): this {
+    this.guards.push(guard);
+    return this;
+  }
+
+  useAuthentication(policy: AuthenticationPolicy): this {
+    this.authentication = policy;
+    return this;
+  }
+
+  useAuthorization(policy: AuthorizationPolicy): this {
+    this.authorization = policy;
+    return this;
+  }
+
+  toPlain(): PlainEndpoint {
+    return {
+      method: this.method,
+      path: this.path,
+      handler: this.handler,
+      options: {
+        middlewares: this.middlewares,
+        interceptors: this.interceptors,
+        guards: this.guards,
+        authentication: this.authentication,
+        authorization: this.authorization,
+      },
+    };
+  }
 }

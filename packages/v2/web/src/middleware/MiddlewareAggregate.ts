@@ -3,7 +3,7 @@ import { ErrorHandler, errorHandler } from "@/error-handler";
 import { Guard, guard } from "@/guard";
 import { Interceptor, interceptor } from "@/interceptor";
 import { Middleware } from "./Middleware";
-import { Endpoint, endpoints as endpointsMiddleware } from "@/endpoint";
+import { PlainEndpoint, endpoints as endpointsMiddleware } from "@/endpoint";
 
 interface IMiddlewareAggregate {
   addErrorHandler(...errorHandlers: ErrorHandler[]): this;
@@ -12,7 +12,7 @@ interface IMiddlewareAggregate {
   addGuard(...guards: Guard[]): this;
   addAuthentication(...policies: AuthenticationPolicy[]): this;
   addAuthorization(...policies: AuthorizationPolicy[]): this;
-  addEndpoint(...endpoints: Endpoint[]): this;
+  addEndpoint(...endpoints: PlainEndpoint[]): this;
   get(): Middleware[];
 }
 
@@ -54,7 +54,7 @@ export class MiddlewareAggregate implements IMiddlewareAggregate {
     return this;
   }
 
-  addEndpoint(...endpoints: Endpoint[]): this {
+  addEndpoint(...endpoints: PlainEndpoint[]): this {
     return this.addMiddleware(endpointsMiddleware(endpoints));
   }
 

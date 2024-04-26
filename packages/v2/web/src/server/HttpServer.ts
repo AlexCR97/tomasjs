@@ -4,7 +4,7 @@ import {
   EndpointHandler,
   EndpointOptions,
   EndpointResponse,
-  isEndpoint,
+  PlainEndpoint,
 } from "@/endpoint";
 import { ResponseWriter } from "./ResponseWriter";
 import { HttpMethod } from "@tomasjs/core/http";
@@ -31,6 +31,7 @@ interface IHttpServer {
   useAuthentication(policy: AuthenticationPolicy): this;
   useAuthorization(policy: AuthorizationPolicy): this;
   useEndpoint(endpoint: Endpoint): this;
+  useEndpoint(endpoint: PlainEndpoint): this;
   useEndpoint(
     method: HttpMethod,
     path: string,
@@ -54,7 +55,7 @@ export class HttpServer implements IHttpServer {
   private readonly guards: Guard[];
   private readonly authenticationPolicies: AuthenticationPolicy[];
   private readonly authorizationPolicies: AuthorizationPolicy[];
-  private readonly endpoints: Endpoint[];
+  private readonly endpoints: PlainEndpoint[];
   private errorHandler: ErrorHandler | undefined;
   private readonly server: Server;
 
@@ -139,6 +140,7 @@ export class HttpServer implements IHttpServer {
   }
 
   useEndpoint(endpoint: Endpoint): this;
+  useEndpoint(endpoint: PlainEndpoint): this;
   useEndpoint(
     method: HttpMethod,
     path: string,
@@ -147,20 +149,24 @@ export class HttpServer implements IHttpServer {
   ): this;
   useEndpoint(...args: any[]): this {
     if (args.length === 1) {
-      if (isEndpoint(args[0])) {
-        return this.mapEndpoint(args[0]);
+      const endpoint = args[0];
+
+      if (endpoint instanceof Endpoint) {
+        return this.addEndpoint(endpoint.toPlain());
+      } else {
+        return this.addEndpoint(endpoint);
       }
     }
 
     if (args.length === 3 || args.length === 4) {
       const [method, path, handler, options] = args;
-      return this.mapEndpoint({ method, path, handler, options });
+      return this.addEndpoint({ method, path, handler, options });
     }
 
     throw new InvalidOperationError();
   }
 
-  private mapEndpoint(endpoint: Endpoint): this {
+  private addEndpoint(endpoint: PlainEndpoint): this {
     this.endpoints.push(endpoint);
     return this;
   }

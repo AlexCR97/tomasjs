@@ -1,9 +1,9 @@
 import { statusCodes } from "@/statusCodes";
-import { Endpoint, EndpointContext, EndpointResponse } from "./Endpoint";
+import { EndpointContext, EndpointResponse, PlainEndpoint } from "./PlainEndpoint";
 import { Middleware, MiddlewareAggregate } from "@/middleware";
 import { IRequestContext, IResponseWriter, UrlParser, HttpPipeline } from "@/server";
 
-export function endpoints(endpoints: Endpoint[]): Middleware {
+export function endpoints(endpoints: PlainEndpoint[]): Middleware {
   return async (req, res, next) => {
     const endpointResponse = await handleRequest(req, res);
 
