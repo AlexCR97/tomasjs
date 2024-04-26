@@ -17,18 +17,19 @@ import {
 } from "./HttpPipeline";
 import { Middleware } from "./Middleware";
 import { RequestContext } from "./RequestContext";
-import { endpointsMiddleware } from "./EndpointMiddleware";
-import { ErrorHandler, errorHandlerMiddleware } from "./ErrorHandler";
+import { ErrorHandler } from "./ErrorHandler";
 import { statusCodes } from "@/statusCodes";
 import { PlainTextContent } from "@/content";
-import { Guard, guard } from "./Guard";
-import { Interceptor, interceptor } from "./Interceptor";
+import { Guard } from "./Guard";
+import { Interceptor } from "./Interceptor";
 import { MiddlewareAggregate } from "./MiddlewareAggregate";
+import { AuthenticationPolicy } from "@/auth";
 
 interface IHttpServer {
   use(middleware: Middleware): this;
   useInterceptor(interceptor: Interceptor): this;
   useGuard(guard: Guard): this;
+  useAuthentication(policy: AuthenticationPolicy): this;
   useEndpoint(endpoint: Endpoint): this;
   useEndpoint(
     method: HttpMethod,
@@ -51,6 +52,7 @@ export class HttpServer implements IHttpServer {
   private readonly middlewares: Middleware[];
   private readonly interceptors: Interceptor[];
   private readonly guards: Guard[];
+  private readonly authenticationPolicies: AuthenticationPolicy[];
   private readonly endpoints: Endpoint[];
   private errorHandler: ErrorHandler | undefined;
   private readonly server: Server;
@@ -81,6 +83,7 @@ export class HttpServer implements IHttpServer {
     this.middlewares = [];
     this.interceptors = [];
     this.guards = [];
+    this.authenticationPolicies = [];
     this.endpoints = [];
     this.server = createServer(async (req, res) => {
       const middlewares = new MiddlewareAggregate()
@@ -88,6 +91,7 @@ export class HttpServer implements IHttpServer {
         .addMiddleware(...this.middlewares)
         .addInterceptor(...this.interceptors)
         .addGuard(...this.guards)
+        .addAuthentication(...this.authenticationPolicies)
         .addEndpoint(...this.endpoints)
         .addMiddleware(this.terminalMiddleware)
         .get();
@@ -118,6 +122,11 @@ export class HttpServer implements IHttpServer {
 
   useGuard(guard: Guard): this {
     this.guards.push(guard);
+    return this;
+  }
+
+  useAuthentication(policy: AuthenticationPolicy): this {
+    this.authenticationPolicies.push(policy);
     return this;
   }
 

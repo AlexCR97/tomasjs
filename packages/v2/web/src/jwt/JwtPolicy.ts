@@ -1,7 +1,7 @@
-import { Guard } from "@/server/Guard";
 import { JwtDecoder, JwtDecoderOptions } from "./JwtDecoder";
+import { AuthenticationPolicy } from "@/auth";
 
-export function jwtGuard(options: JwtDecoderOptions): Guard {
+export function jwtPolicy(options: JwtDecoderOptions): AuthenticationPolicy {
   return async (req) => {
     const authorization = req.headers["authorization"];
 
@@ -27,6 +27,9 @@ export function jwtGuard(options: JwtDecoderOptions): Guard {
       return false;
     }
 
-    return true;
+    return {
+      authenticated: true,
+      claims: result.data,
+    };
   };
 }
