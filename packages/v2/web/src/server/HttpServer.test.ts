@@ -3,13 +3,14 @@ import { HttpServer } from "./HttpServer";
 import { QueryParams } from "./QueryParams";
 import { JsonContent, PlainTextContent } from "@/content";
 import { RouteParams } from "./RouteParams";
-import { EndpointResponse, endpoints } from "@/endpoint";
-import { statusCodes } from "@/statusCodes";
+import { endpoints } from "@/endpoint";
+import { statusCode } from "@/StatusCode";
 import { RequestContext } from "./RequestContext";
 import { ResponseWriter } from "./ResponseWriter";
 import { problemDetailsErrorHandler } from "@/error-handler";
 import { TomasError } from "@tomasjs/core/errors";
 import { testHttpServer } from "@/test";
+import { HttpResponse } from "./HttpResponse";
 
 describe("Server", () => {
   const client = new HttpClient();
@@ -27,9 +28,7 @@ describe("Server", () => {
   });
 
   it("should accept connections", async () => {
-    await server
-      .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }))
-      .start();
+    await server.useEndpoint("get", "/", () => new HttpResponse({ status: statusCode.ok })).start();
 
     const response = await client.get(`http://localhost:${server.port}`);
 
@@ -39,8 +38,8 @@ describe("Server", () => {
   it("should route requests", async () => {
     await server
       .useEndpoint("get", "/path/to/resource", () => {
-        return new EndpointResponse({
-          status: statusCodes.ok,
+        return new HttpResponse({
+          status: statusCode.ok,
           content: PlainTextContent.from("Hooray!"),
         });
       })
@@ -63,8 +62,8 @@ describe("Server", () => {
 
     await server
       .useEndpoint("get", "/", ({ query }) => {
-        return new EndpointResponse({
-          status: statusCodes.ok,
+        return new HttpResponse({
+          status: statusCode.ok,
           content: JsonContent.from(query.toPlain()),
         });
       })
@@ -93,8 +92,8 @@ describe("Server", () => {
         const jsonBodyContent = jsonBody.readData();
         expect(jsonBodyContent).toMatchObject(expectedBodyContent);
 
-        return new EndpointResponse({
-          status: statusCodes.ok,
+        return new HttpResponse({
+          status: statusCode.ok,
           content: JsonContent.from(jsonBodyContent),
         });
       })
@@ -120,8 +119,8 @@ describe("Server", () => {
       .useEndpoint("get", "/path/to/:resource", ({ params }) => {
         expect(params).toBeInstanceOf(RouteParams);
 
-        return new EndpointResponse({
-          status: statusCodes.ok,
+        return new HttpResponse({
+          status: statusCode.ok,
           content: JsonContent.from(params.toPlain()),
         });
       })
@@ -202,8 +201,8 @@ describe("Server", () => {
             method: "get",
             path: "/",
             handler: () => {
-              return new EndpointResponse({
-                status: statusCodes.ok,
+              return new HttpResponse({
+                status: statusCode.ok,
               });
             },
           },
@@ -223,7 +222,7 @@ describe("Server", () => {
 
     const response = await client.get(`http://localhost:${server.port}`);
 
-    expect(response.status).toBe(statusCodes.internalServerError);
+    expect(response.status).toBe(statusCode.internalServerError);
   });
 
   it("should use a custom error handler", async () => {
@@ -242,7 +241,7 @@ describe("Server", () => {
         };
 
         return await res
-          .withStatus(statusCodes.internalServerError)
+          .withStatus(statusCode.internalServerError)
           .withContent(JsonContent.from(errorResponse))
           .send();
       })
@@ -250,7 +249,7 @@ describe("Server", () => {
 
     const response = await client.get(`http://localhost:${server.port}`);
 
-    expect(response.status).toBe(statusCodes.internalServerError);
+    expect(response.status).toBe(statusCode.internalServerError);
 
     const responseJson = (await response.json()) as ErrorResponse;
 
@@ -274,7 +273,7 @@ describe("Server", () => {
 
     const response = await client.get(`http://localhost:${server.port}`);
 
-    expect(response.status).toBe(statusCodes.internalServerError);
+    expect(response.status).toBe(statusCode.internalServerError);
 
     const responseJson = await response.json();
 

@@ -5,8 +5,6 @@ export {
   EndpointContext,
   EndpointHandler,
   EndpointOptions,
-  EndpointResponse,
-  EndpointResponseOptions,
   IEndpointContext,
   isPlainEndpoint,
 } from "./PlainEndpoint";

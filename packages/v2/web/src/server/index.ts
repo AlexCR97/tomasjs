@@ -4,6 +4,7 @@ export {
   IterativeHttpPipeline,
   RecursiveHttpPipeline,
 } from "./HttpPipeline";
+export { HttpResponse, HttpResponseOptions } from "./HttpResponse";
 export { HttpServer, HttpServerOptions } from "./HttpServer";
 export {
   IQueryParams,

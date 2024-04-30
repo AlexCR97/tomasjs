@@ -1,11 +1,5 @@
 import { Server, createServer } from "http";
-import {
-  Endpoint,
-  EndpointHandler,
-  EndpointOptions,
-  EndpointResponse,
-  PlainEndpoint,
-} from "@/endpoint";
+import { Endpoint, EndpointHandler, EndpointOptions, PlainEndpoint } from "@/endpoint";
 import { ResponseWriter } from "./ResponseWriter";
 import { HttpMethod } from "@tomasjs/core/http";
 import { InvalidOperationError } from "@tomasjs/core/errors";
@@ -18,11 +12,12 @@ import {
 import { Middleware, MiddlewareAggregate } from "@/middleware";
 import { RequestContext } from "./RequestContext";
 import { ErrorHandler } from "@/error-handler";
-import { statusCodes } from "@/statusCodes";
+import { statusCode } from "@/StatusCode";
 import { PlainTextContent } from "@/content";
 import { Guard } from "@/guard";
 import { Interceptor } from "@/interceptor";
 import { AuthenticationPolicy, AuthorizationPolicy } from "@/auth";
+import { HttpResponse } from "./HttpResponse";
 
 interface IHttpServer {
   use(middleware: Middleware): this;
@@ -60,8 +55,8 @@ export class HttpServer implements IHttpServer {
   private readonly server: Server;
 
   private readonly defaultErrorHandler: ErrorHandler = async (req, res, err) => {
-    const response = new EndpointResponse({
-      status: statusCodes.internalServerError,
+    const response = new HttpResponse({
+      status: statusCode.internalServerError,
       content: PlainTextContent.from("An unexpected error occurred on the server"),
     });
 

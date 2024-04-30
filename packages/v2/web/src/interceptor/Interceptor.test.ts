@@ -1,7 +1,7 @@
 import { HttpClient } from "@tomasjs/core/http";
 import { HttpServer } from "@/server";
-import { EndpointResponse } from "@/endpoint";
-import { statusCodes } from "@/statusCodes";
+import { HttpResponse } from "@/server";
+import { statusCode } from "@/StatusCode";
 import { testHttpServer } from "@/test";
 import { Interceptor, interceptor } from "./Interceptor";
 import { JsonContent } from "@/content";
@@ -30,8 +30,8 @@ describe("Interceptor", () => {
       .use(interceptor(myInterceptor))
       .useEndpoint("get", "/", (req) => {
         const response = { authenticated: req.user.authenticated } as const;
-        return new EndpointResponse({
-          status: statusCodes.ok,
+        return new HttpResponse({
+          status: statusCode.ok,
           content: JsonContent.from(response),
         });
       })
@@ -51,8 +51,8 @@ describe("Interceptor", () => {
       .useInterceptor(myInterceptor)
       .useEndpoint("get", "/", (req) => {
         const response = { authenticated: req.user.authenticated } as const;
-        return new EndpointResponse({
-          status: statusCodes.ok,
+        return new HttpResponse({
+          status: statusCode.ok,
           content: JsonContent.from(response),
         });
       })

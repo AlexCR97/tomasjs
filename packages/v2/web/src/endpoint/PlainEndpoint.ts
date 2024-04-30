@@ -10,6 +10,7 @@ import {
   IQueryParams,
   RequestContext,
   UrlParser,
+  HttpResponse,
 } from "@/server";
 
 export type PlainEndpoint = {
@@ -19,9 +20,7 @@ export type PlainEndpoint = {
   options?: EndpointOptions;
 };
 
-export type EndpointHandler = (
-  context: IEndpointContext
-) => EndpointResponse | Promise<EndpointResponse>;
+export type EndpointHandler = (context: IEndpointContext) => HttpResponse | Promise<HttpResponse>;
 
 export interface IEndpointContext extends IRequestContextReader {
   params: IRouteParams;
@@ -54,24 +53,6 @@ export class EndpointContext implements IEndpointContext {
     );
   }
 }
-
-export class EndpointResponse {
-  readonly status: number | null;
-  readonly content: Content<unknown> | null;
-  readonly headers: HttpHeader[] | PlainHttpHeaders | HttpHeaders | null;
-
-  constructor(options?: EndpointResponseOptions) {
-    this.status = options?.status ?? null;
-    this.content = options?.content ?? null;
-    this.headers = options?.headers ?? null;
-  }
-}
-
-export type EndpointResponseOptions = {
-  status?: number;
-  content?: Content<unknown>;
-  headers?: HttpHeader[] | PlainHttpHeaders | HttpHeaders;
-};
 
 export type EndpointOptions = {
   middlewares?: Middleware[];

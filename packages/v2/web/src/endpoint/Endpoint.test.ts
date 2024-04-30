@@ -1,7 +1,6 @@
 import { HttpClient } from "@tomasjs/core/http";
-import { HttpServer } from "@/server";
-import { EndpointResponse } from "./PlainEndpoint";
-import { statusCodes } from "@/statusCodes";
+import { HttpResponse, HttpServer } from "@/server";
+import { statusCode } from "@/StatusCode";
 import { testHttpServer } from "@/test";
 import { Middleware } from "@/middleware";
 import { Interceptor } from "@/interceptor";
@@ -26,7 +25,7 @@ describe("Endpoint", () => {
     await server
       .useEndpoint(
         Endpoint.get("/", () => {
-          return new EndpointResponse();
+          return new HttpResponse();
         })
       )
       .start();
@@ -52,8 +51,8 @@ describe("Endpoint", () => {
     await server
       .useEndpoint(
         Endpoint.get("/", () => {
-          return new EndpointResponse({
-            status: statusCodes.ok,
+          return new HttpResponse({
+            status: statusCode.ok,
             content: JsonContent.from({
               aggregation,
             }),

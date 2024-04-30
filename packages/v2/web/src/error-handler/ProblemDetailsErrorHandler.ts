@@ -1,9 +1,10 @@
 import { ProblemDetailsContent } from "@/content";
 import { ErrorHandler } from "./ErrorHandlerMiddleware";
 import { ProblemDetails } from "@/ProblemDetails";
-import { statusCodes } from "@/statusCodes";
+import { statusCode } from "@/StatusCode";
 import { IRequestContext } from "@/server";
 import { TomasError } from "@tomasjs/core/errors";
+import { httpStatus } from "@/HttpStatus";
 
 export function problemDetailsErrorHandler(options?: { includeError?: boolean }): ErrorHandler {
   return async (req, res, err) => {
@@ -14,18 +15,19 @@ export function problemDetailsErrorHandler(options?: { includeError?: boolean })
       .withHeaders({
         "content-type": problemDetailsContent.type,
       })
-      .withStatus(statusCodes.internalServerError)
+      .withStatus(statusCode.internalServerError)
       .withContent(problemDetailsContent)
       .send();
   };
 
   function buildProblemDetails(req: IRequestContext, err: any): ProblemDetails {
+    const { type, title, code: status, details } = httpStatus.internalServerError;
+
     const problemDetails = new ProblemDetails({
-      type: "https://datatracker.ietf.org/doc/html/rfc7231#section-6.6.1",
-      title: "Internal Server Error",
-      status: statusCodes.internalServerError,
-      details:
-        "The server encountered an unexpected condition that prevented it from fulfilling the request.",
+      type,
+      title,
+      status,
+      details,
       instance: req.path,
     });
 

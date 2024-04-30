@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from "@tomasjs/core/http";
 import { HttpServer } from "@/server";
-import { EndpointResponse } from "@/endpoint";
-import { statusCodes } from "@/statusCodes";
+import { HttpResponse } from "@/server";
+import { statusCode } from "@/StatusCode";
 import { Guard, guard } from "./Guard";
 import { testHttpServer } from "@/test";
 
@@ -30,7 +30,7 @@ describe("Guard", () => {
   it("should use guard middleware", async () => {
     await server
       .use(guard(myGuardFunction))
-      .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }))
+      .useEndpoint("get", "/", () => new HttpResponse({ status: statusCode.ok }))
       .start();
 
     const response = await client.get(`http://localhost:${server.port}`, {
@@ -43,7 +43,7 @@ describe("Guard", () => {
   it("should use guard middleware shorthand", async () => {
     await server
       .useGuard(myGuardFunction)
-      .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }))
+      .useEndpoint("get", "/", () => new HttpResponse({ status: statusCode.ok }))
       .start();
 
     const response = await client.get(`http://localhost:${server.port}`, {
@@ -56,12 +56,12 @@ describe("Guard", () => {
   it("should deny unauthorized requests", async () => {
     await server
       .useGuard(myGuardFunction)
-      .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }))
+      .useEndpoint("get", "/", () => new HttpResponse({ status: statusCode.ok }))
       .start();
 
     const response = await client.get(`http://localhost:${server.port}`);
 
-    expect(response.status).toBe(statusCodes.unauthorized);
+    expect(response.status).toBe(statusCode.unauthorized);
 
     const responseJson = await response.json();
   });
@@ -77,11 +77,11 @@ describe("Guard", () => {
       .useGuard(() => {
         return true;
       })
-      .useEndpoint("get", "/", () => new EndpointResponse({ status: statusCodes.ok }))
+      .useEndpoint("get", "/", () => new HttpResponse({ status: statusCode.ok }))
       .start();
 
     const response = await client.get(`http://localhost:${server.port}`);
 
-    expect(response.status).toBe(statusCodes.ok);
+    expect(response.status).toBe(statusCode.ok);
   });
 });

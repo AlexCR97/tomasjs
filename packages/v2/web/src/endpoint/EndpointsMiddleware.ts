@@ -1,17 +1,17 @@
-import { statusCodes } from "@/statusCodes";
-import { EndpointContext, EndpointResponse, PlainEndpoint } from "./PlainEndpoint";
+import { statusCode } from "@/StatusCode";
+import { EndpointContext, PlainEndpoint } from "./PlainEndpoint";
 import { Middleware, MiddlewareAggregate } from "@/middleware";
-import { IRequestContext, IResponseWriter, UrlParser, HttpPipeline } from "@/server";
+import { IRequestContext, IResponseWriter, UrlParser, HttpPipeline, HttpResponse } from "@/server";
 
 export function endpoints(endpoints: PlainEndpoint[]): Middleware {
   return async (req, res, next) => {
-    const endpointResponse = await handleRequest(req, res);
+    const httpResponse = await handleRequest(req, res);
 
-    if (endpointResponse !== null) {
+    if (httpResponse !== null) {
       res
-        .withContent(endpointResponse.content)
-        .withHeaders(endpointResponse.headers)
-        .withStatus(endpointResponse.status);
+        .withContent(httpResponse.content)
+        .withHeaders(httpResponse.headers)
+        .withStatus(httpResponse.status);
     }
 
     return await next();
@@ -20,7 +20,7 @@ export function endpoints(endpoints: PlainEndpoint[]): Middleware {
   async function handleRequest(
     req: IRequestContext,
     res: IResponseWriter
-  ): Promise<EndpointResponse | null> {
+  ): Promise<HttpResponse | null> {
     const urlParser = new UrlParser(req.url);
 
     const endpoint = endpoints.find(({ method, path }) => {
@@ -28,8 +28,8 @@ export function endpoints(endpoints: PlainEndpoint[]): Middleware {
     });
 
     if (endpoint === undefined) {
-      return new EndpointResponse({
-        status: statusCodes.notFound,
+      return new HttpResponse({
+        status: statusCode.notFound,
       });
     }
 

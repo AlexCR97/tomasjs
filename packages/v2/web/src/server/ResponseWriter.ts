@@ -5,9 +5,9 @@ import { ServerResponse } from "http";
 
 export interface IResponseWriter {
   get sent(): boolean;
-  withHeaders(headers: HttpHeader[] | PlainHttpHeaders | HttpHeaders | null): this;
-  withStatus(status: number | null): this;
-  withContent(content: Content<unknown> | null): this;
+  withHeaders(headers: HttpHeader[] | PlainHttpHeaders | HttpHeaders | null | undefined): this;
+  withStatus(status: number | null | undefined): this;
+  withContent(content: Content<unknown> | null | undefined): this;
   send(): Promise<void>;
 }
 
@@ -23,30 +23,30 @@ export class ResponseWriter implements IResponseWriter {
     return this._sent;
   }
 
-  withHeaders(headers: HttpHeader[] | PlainHttpHeaders | HttpHeaders | null): this {
+  withHeaders(headers: HttpHeader[] | PlainHttpHeaders | HttpHeaders | null | undefined): this {
     if (this._sent) {
       throw new ResponseAlreadySentError();
     }
 
-    this.headers = headers;
+    this.headers = headers ?? null;
     return this;
   }
 
-  withStatus(status: number | null): this {
+  withStatus(status: number | null | undefined): this {
     if (this._sent) {
       throw new ResponseAlreadySentError();
     }
 
-    this.status = status;
+    this.status = status ?? null;
     return this;
   }
 
-  withContent(content: Content<unknown> | null): this {
+  withContent(content: Content<unknown> | null | undefined): this {
     if (this._sent) {
       throw new ResponseAlreadySentError();
     }
 
-    this.content = content;
+    this.content = content ?? null;
     return this;
   }
 
@@ -71,12 +71,14 @@ export class ResponseWriter implements IResponseWriter {
     });
   }
 
-  private setHeaders(headers: HttpHeader[] | PlainHttpHeaders | HttpHeaders | null): this {
+  private setHeaders(
+    headers: HttpHeader[] | PlainHttpHeaders | HttpHeaders | null | undefined
+  ): this {
     if (this._sent) {
       throw new ResponseAlreadySentError();
     }
 
-    if (headers === null) {
+    if (headers === null || headers === undefined) {
       return this;
     }
 
@@ -108,12 +110,12 @@ export class ResponseWriter implements IResponseWriter {
     return this;
   }
 
-  private setStatus(status: number | null): this {
+  private setStatus(status: number | null | undefined): this {
     if (this._sent) {
       throw new ResponseAlreadySentError();
     }
 
-    if (status === null) {
+    if (status === null || status === undefined) {
       return this;
     }
 
@@ -122,12 +124,12 @@ export class ResponseWriter implements IResponseWriter {
     return this;
   }
 
-  private setContent(content: Content<unknown> | null): this {
+  private setContent(content: Content<unknown> | null | undefined): this {
     if (this._sent) {
       throw new ResponseAlreadySentError();
     }
 
-    if (content === null) {
+    if (content === null || content === undefined) {
       return this;
     }
 
