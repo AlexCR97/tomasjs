@@ -65,7 +65,7 @@ describe("ConsoleApp", () => {
 
     await new ConsoleAppBuilder()
       .addEntryPoint(Main)
-      .setupServices((services) => services.add("singleton", Sum))
+      .setupContainer((services) => services.add("singleton", Sum))
       .build()
       .then((app) => app.start());
 

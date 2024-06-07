@@ -1,5 +1,6 @@
 export { InjectDecoratorMetadata, InjectDecoratorMetadataValue, inject } from "./@inject";
 export { Container, ContainerBuilder, IContainer, IContainerBuilder } from "./Container";
+export { ContainerBuilderDelegate } from "./ContainerBuilderDelegate";
 export {
   ContainerSetup,
   ContainerSetupFunction,

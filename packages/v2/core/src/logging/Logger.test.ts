@@ -3,6 +3,8 @@ import { ILogger, LogLevel, Logger } from "./Logger";
 import { ContainerBuilder } from "@/dependency-injection";
 import { GLOBAL_LOGGER } from "./tokens";
 import { LoggerFactory } from "./LoggerFactory";
+import { ConfigurationSetup } from "@/configuration";
+import { loggerSetup } from "./loggerSetup";
 
 describe("Logger", () => {
   const logLevels: LogLevel[] = ["debug", "verbose", "info", "warn", "error"];
@@ -17,8 +19,8 @@ describe("Logger", () => {
 
   it("Can create and use a TomasLogger", async () => {
     const services = await new ContainerBuilder()
-      .addConfiguration()
-      .addLogging()
+      .setup(new ConfigurationSetup().build())
+      .setup(loggerSetup)
       .buildServiceProvider();
 
     const logger = services.getOrThrow<Logger>(GLOBAL_LOGGER);
@@ -32,8 +34,8 @@ describe("Logger", () => {
 
   it("Can log with data", async () => {
     const services = await new ContainerBuilder()
-      .addConfiguration()
-      .addLogging()
+      .setup(new ConfigurationSetup().build())
+      .setup(loggerSetup)
       .buildServiceProvider();
 
     const logger = services.getOrThrow<Logger>(GLOBAL_LOGGER);
@@ -51,8 +53,8 @@ describe("Logger", () => {
 
   it("Can use log levels", async () => {
     const services = await new ContainerBuilder()
-      .addConfiguration()
-      .addLogging()
+      .setup(new ConfigurationSetup().build())
+      .setup(loggerSetup)
       .buildServiceProvider();
 
     const loggerFactory = services.getOrThrow(LoggerFactory);

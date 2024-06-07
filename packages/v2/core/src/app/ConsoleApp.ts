@@ -9,7 +9,7 @@ const entryPointToken = "@tomasjs/core/EntryPoint";
 
 export class ConsoleAppBuilder extends AppBuilder<ConsoleApp> {
   addEntryPoint(entryPoint: EntryPoint): this {
-    this.setupServices((services) => services.add("scoped", entryPointToken, entryPoint));
+    this.setupContainer((services) => services.add("scoped", entryPointToken, entryPoint));
     return this;
   }
 

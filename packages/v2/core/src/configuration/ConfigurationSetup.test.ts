@@ -1,11 +1,13 @@
 import "reflect-metadata";
 import { ContainerBuilder } from "@/dependency-injection";
-import { configurationToken } from "./ConfigurationSetup";
+import { ConfigurationSetup, configurationToken } from "./ConfigurationSetup";
 import { Configuration } from "./Configuration";
 
 describe("ConfigurationSetup", () => {
   it("Can setup Configuration", async () => {
-    const services = await new ContainerBuilder().addConfiguration(() => {}).buildServiceProvider();
+    const services = await new ContainerBuilder()
+      .setup(new ConfigurationSetup().build())
+      .buildServiceProvider();
 
     const configuration = services.getOrThrow<Configuration>(configurationToken);
     expect(configuration).toBeInstanceOf(Configuration);
@@ -19,7 +21,7 @@ describe("ConfigurationSetup", () => {
     } as const;
 
     const services = await new ContainerBuilder()
-      .addConfiguration((c) => c.addRawSource(rawSource))
+      .setup(new ConfigurationSetup().addRawSource(rawSource).build())
       .buildServiceProvider();
 
     const configuration = services.getOrThrow<Configuration>(configurationToken);
@@ -31,7 +33,7 @@ describe("ConfigurationSetup", () => {
 
   it("Can setup Configuration with environment source", async () => {
     const services = await new ContainerBuilder()
-      .addConfiguration((c) => c.addEnvironmentSource())
+      .setup(new ConfigurationSetup().addEnvironmentSource().build())
       .buildServiceProvider();
 
     const configuration = services.getOrThrow<Configuration>(configurationToken);
@@ -43,7 +45,7 @@ describe("ConfigurationSetup", () => {
 
   it("Can setup Configuration with json source", async () => {
     const services = await new ContainerBuilder()
-      .addConfiguration((c) => c.addJsonSource("./appconfig.test.json"))
+      .setup(new ConfigurationSetup().addJsonSource("./appconfig.test.json").build())
       .buildServiceProvider();
 
     const configuration = services.getOrThrow<Configuration>(configurationToken);
@@ -89,8 +91,12 @@ describe("ConfigurationSetup", () => {
     } as const;
 
     const services = await new ContainerBuilder()
-      .addConfiguration((c) =>
-        c.addEnvironmentSource().addJsonSource("./appconfig.test.json").addRawSource(rawSource)
+      .setup(
+        new ConfigurationSetup()
+          .addEnvironmentSource()
+          .addJsonSource("./appconfig.test.json")
+          .addRawSource(rawSource)
+          .build()
       )
       .buildServiceProvider();
 

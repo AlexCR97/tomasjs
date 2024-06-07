@@ -1,13 +1,18 @@
 import { ConfigurationSetup, IConfiguration, configurationToken } from "@/configuration";
 import { BusSetup } from "@/cqrs";
-import { ContainerBuilder, IServiceProvider } from "@/dependency-injection";
+import {
+  ContainerBuilder,
+  ContainerBuilderDelegate,
+  IServiceProvider,
+} from "@/dependency-injection";
 import { Environment, IEnvironment, environmentToken } from "./Environment";
+import { loggerSetup } from "@/logging";
 
 interface IAppBuilder<TApp extends IApp> {
   setupConfiguration(delegate: ConfigurationSetupDelegate): this;
   setupLogging(): this;
   setupBus(delegate: BusSetupDelegate): this;
-  setupServices(delegate: ContainerBuilderDelegate): this;
+  setupContainer(delegate: ContainerBuilderDelegate): this;
   build(): Promise<TApp>;
 }
 
@@ -21,7 +26,6 @@ export interface IApp {
 
 type ConfigurationSetupDelegate = (builder: ConfigurationSetup) => void;
 type BusSetupDelegate = (builder: BusSetup) => void;
-type ContainerBuilderDelegate = (container: ContainerBuilder) => void;
 
 export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp> {
   private configurationSetupDelegates: ConfigurationSetupDelegate[] = [];
@@ -42,6 +46,7 @@ export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp>
   }
 
   setupLogging(): this {
+    // TODO Implement this
     return this;
   }
 
@@ -50,30 +55,41 @@ export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp>
     return this;
   }
 
-  setupServices(delegate: ContainerBuilderDelegate): this {
+  setupContainer(delegate: ContainerBuilderDelegate): this {
     this.containerBuilderDelegates.push(delegate);
     return this;
   }
 
   async build(): Promise<TApp> {
-    const container = new ContainerBuilder()
-      .addConfiguration((config) => {
+    const containerBuilder = new ContainerBuilder()
+      .delegate((builder) => {
+        const setup = new ConfigurationSetup();
+
         for (const delegate of this.configurationSetupDelegates) {
-          delegate(config);
+          delegate(setup);
         }
+
+        builder.setup(setup.build());
       })
-      .addLogging()
-      .addBus((bus) => {
+      .delegate((builder) => {
+        builder.setup(loggerSetup);
+      })
+      .delegate((builder) => {
+        const busSetup = new BusSetup();
+
         for (const delegate of this.busSetupDelegates) {
-          delegate(bus);
+          delegate(busSetup);
+        }
+
+        builder.setup(busSetup.build());
+      })
+      .delegate((builder) => {
+        for (const delegate of this.containerBuilderDelegates) {
+          delegate(builder);
         }
       });
 
-    for (const delegate of this.containerBuilderDelegates) {
-      delegate(container);
-    }
-
-    const services = await container.buildServiceProvider();
+    const services = await containerBuilder.buildServiceProvider();
     const configuration = services.getOrThrow<IConfiguration>(configurationToken);
     const environment = services.getOrThrow<IEnvironment>(environmentToken);
     return await this.buildApp(configuration, environment, services);

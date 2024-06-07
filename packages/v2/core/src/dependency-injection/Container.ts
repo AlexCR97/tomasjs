@@ -14,10 +14,8 @@ import {
   ContainerSetupFunction,
   ContainerSetupFunctionAsync,
 } from "./ContainerSetup";
-import { ConfigurationSetup } from "@/configuration";
-import { loggerSetup } from "@/logging";
-import { BusSetup } from "@/cqrs";
 import { InvalidOperationError } from "@/errors";
+import { ContainerBuilderDelegate } from "./ContainerBuilderDelegate";
 
 export interface IContainer {
   get count(): number;
@@ -158,11 +156,9 @@ export interface IContainerBuilder {
   add<T>(scope: Scope, token: ValueToken, constructor: ConstructorToken<T>): IContainerBuilder;
   add<T>(scope: Scope, token: ValueToken, factory: ServiceFactory<T>): IContainerBuilder;
   add<T>(scope: Scope, token: ValueToken, value: T): IContainerBuilder;
-  addBus(setup?: (builder: BusSetup) => void): ContainerBuilder;
-  addConfiguration(setup?: (builder: ConfigurationSetup) => void): ContainerBuilder;
-  addLogging(): ContainerBuilder;
-  use(setup: ContainerSetupFunction): ContainerBuilder;
-  use(setup: ContainerSetupFunctionAsync): ContainerBuilder;
+  setup(setup: ContainerSetupFunction): IContainerBuilder;
+  setup(setup: ContainerSetupFunctionAsync): IContainerBuilder;
+  delegate(delegate: ContainerBuilderDelegate): IContainerBuilder;
   buildContainer(): Promise<IContainer>;
   buildServiceProvider(): Promise<IServiceProvider>;
 }
@@ -170,77 +166,53 @@ export interface IContainerBuilder {
 export class ContainerBuilder implements IContainerBuilder {
   private readonly setups: ContainerSetup[] = [];
 
-  add<T>(scope: Scope, constructor: ConstructorToken<T>): ContainerBuilder;
-  add<T>(scope: Scope, factory: ServiceFactory<T>): ContainerBuilder;
-  add<T>(scope: Scope, token: ValueToken, constructor: ConstructorToken<T>): ContainerBuilder;
-  add<T>(scope: Scope, token: ValueToken, factory: ServiceFactory<T>): ContainerBuilder;
-  add<T>(scope: Scope, token: ValueToken, value: T): ContainerBuilder;
-  add(...args: any[]): ContainerBuilder {
+  add<T>(scope: Scope, constructor: ConstructorToken<T>): this;
+  add<T>(scope: Scope, factory: ServiceFactory<T>): this;
+  add<T>(scope: Scope, token: ValueToken, constructor: ConstructorToken<T>): this;
+  add<T>(scope: Scope, token: ValueToken, factory: ServiceFactory<T>): this;
+  add<T>(scope: Scope, token: ValueToken, value: T): this;
+  add(...args: any[]): this {
     if (args.length === 2) {
       if (isScope(args[0]) && isConstructor(args[1])) {
         const [scope, constructor] = args;
-        return this.use((container) => container.add(scope, constructor));
+        return this.setup((container) => container.add(scope, constructor));
       }
 
       if (isScope(args[0]) && isServiceFactory(args[1])) {
         const [scope, factory] = args;
-        return this.use((container) => container.add(scope, factory));
+        return this.setup((container) => container.add(scope, factory));
       }
     }
 
     if (args.length === 3) {
       if (isScope(args[0]) && isValueToken(args[1]) && isConstructorToken(args[2])) {
         const [scope, token, constructor] = args;
-        return this.use((container) => container.add(scope, token, constructor));
+        return this.setup((container) => container.add(scope, token, constructor));
       }
 
       if (isScope(args[0]) && isValueToken(args[1]) && isServiceFactory(args[2])) {
         const [scope, token, factory] = args;
-        return this.use((container) => container.add(scope, token, factory));
+        return this.setup((container) => container.add(scope, token, factory));
       }
 
       if (isScope(args[0]) && isValueToken(args[1]) && args[2] !== undefined && args[2] !== null) {
         const [scope, token, value] = args;
-        return this.use((container) => container.add(scope, token, value));
+        return this.setup((container) => container.add(scope, token, value));
       }
     }
 
     throw new InvalidOperationError();
   }
 
-  addBus(setup?: (builder: BusSetup) => void): ContainerBuilder {
-    const busSetup = new BusSetup();
-
-    if (setup !== null && setup !== undefined) {
-      setup(busSetup);
-    }
-
-    this.setups.push(busSetup.build());
-
-    return this;
-  }
-
-  addConfiguration(setup?: (builder: ConfigurationSetup) => void): ContainerBuilder {
-    const configurationSetup = new ConfigurationSetup();
-
-    if (setup !== null && setup !== undefined) {
-      setup(configurationSetup);
-    }
-
-    this.setups.push(configurationSetup.build());
-
-    return this;
-  }
-
-  addLogging(): ContainerBuilder {
-    this.setups.push(loggerSetup);
-    return this;
-  }
-
-  use(setup: ContainerSetupFunction): ContainerBuilder;
-  use(setup: ContainerSetupFunctionAsync): ContainerBuilder;
-  use(...args: any[]): ContainerBuilder {
+  setup(setup: ContainerSetupFunction): this;
+  setup(setup: ContainerSetupFunctionAsync): this;
+  setup(...args: any[]): this {
     this.setups.push(...args);
+    return this;
+  }
+
+  delegate(delegate: ContainerBuilderDelegate): this {
+    delegate(this);
     return this;
   }
 

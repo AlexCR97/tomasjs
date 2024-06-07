@@ -140,10 +140,10 @@ describe("Container", () => {
     }
 
     const services = await new ContainerBuilder()
-      .use(setupA)
-      .use(setupB)
-      .use(setupC)
-      .use((c) =>
+      .setup(setupA)
+      .setup(setupB)
+      .setup(setupC)
+      .setup((c) =>
         c
           .add("singleton", "d", "d")
           .add("singleton", "e", "e")

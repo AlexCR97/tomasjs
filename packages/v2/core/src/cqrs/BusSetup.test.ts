@@ -6,11 +6,16 @@ import { RequestHandler } from "./RequestHandler";
 import { IRequest } from "./IRequest";
 import { EventHandler } from "./EventHandler";
 import { eventHandler } from "./@eventHandler";
+import { BusSetup } from "./BusSetup";
 
 describe("BusSetup", () => {
   it("Can setup Bus", async () => {
-    const services = await new ContainerBuilder().addBus().buildServiceProvider();
+    const services = await new ContainerBuilder()
+      .setup(new BusSetup().build())
+      .buildServiceProvider();
+
     const bus = services.getOrThrow(Bus);
+
     expect(bus).toBeInstanceOf(Bus);
   });
 
@@ -27,7 +32,7 @@ describe("BusSetup", () => {
     }
 
     const services = await new ContainerBuilder()
-      .addBus((bus) => bus.addRequestHandlers(TestRequestHandler))
+      .setup(new BusSetup().addRequestHandlers(TestRequestHandler).build())
       .buildServiceProvider();
 
     const bus = services.getOrThrow(Bus);
@@ -52,7 +57,7 @@ describe("BusSetup", () => {
 
     (async () => {
       const services = await new ContainerBuilder()
-        .addBus((bus) => bus.addEventHandlers(HelloEventHandler))
+        .setup(new BusSetup().addEventHandlers(HelloEventHandler).build())
         .buildServiceProvider();
 
       const bus = services.getOrThrow(Bus);
