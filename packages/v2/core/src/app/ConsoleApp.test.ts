@@ -67,6 +67,20 @@ describe("ConsoleApp", () => {
     expect(counter).toBe(1);
   });
 
+  it("should use an anonymous entry point function without arguments", async () => {
+    let counter = 0;
+
+    const app = await new ConsoleAppBuilder()
+      .addEntryPoint(() => {
+        counter++;
+      })
+      .build();
+
+    await app.start();
+
+    expect(counter).toBe(1);
+  });
+
   it("should inject dependencies", async () => {
     let result = 0;
 

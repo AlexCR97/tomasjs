@@ -81,7 +81,9 @@ function isEntryPointFunction(obj: any): obj is EntryPointFunction {
     return false;
   }
 
-  return typeof obj === "function" && (obj as Function).length === 1;
+  return (
+    typeof obj === "function" && ((obj as Function).length === 0 || (obj as Function).length === 1)
+  );
 }
 
 function isEntryPointInstance(obj: any): obj is IEntryPoint {
