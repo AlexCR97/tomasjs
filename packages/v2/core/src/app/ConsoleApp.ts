@@ -2,14 +2,22 @@ import { IServiceProvider } from "@/dependency-injection";
 import { AppBuilder, IApp } from "./AppBuilder";
 import { InvalidOperationError, TomasError } from "@/errors";
 import { IConfiguration } from "@/configuration";
-import { Constructor } from "@/system";
+import { Constructor, isConstructor } from "@/system";
 import { IEnvironment } from "./Environment";
 
 const entryPointToken = "@tomasjs/core/EntryPoint";
 
 export class ConsoleAppBuilder extends AppBuilder<ConsoleApp> {
   addEntryPoint(entryPoint: EntryPoint): this {
-    this.setupContainer((services) => services.add("scoped", entryPointToken, entryPoint));
+    this.setupContainer((services) => {
+      if (isConstructor(entryPoint)) {
+        services.add("scoped", entryPointToken, entryPoint);
+      } else if (isEntryPointFunction(entryPoint)) {
+        services.addValue("scoped", entryPointToken, entryPoint);
+      } else {
+        throw new InvalidOperationError();
+      }
+    });
     return this;
   }
 

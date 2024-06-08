@@ -24,6 +24,7 @@ export interface IContainer {
   add<T>(scope: Scope, token: ValueToken, constructor: ConstructorToken<T>): IContainer;
   add<T>(scope: Scope, token: ValueToken, factory: ServiceFactory<T>): IContainer;
   add<T>(scope: Scope, token: ValueToken, value: T): IContainer;
+  addValue<T>(scope: Scope, token: ValueToken, value: T): IContainer;
   clear(): void;
   contains<T>(token: Token<T>): boolean;
   remove<T>(token: Token<T>): boolean;
@@ -117,7 +118,7 @@ export class Container implements IContainer {
     throw new InvalidOperationError();
   }
 
-  private addValue<T>(scope: Scope, token: ValueToken, value: T): Container {
+  addValue<T>(scope: Scope, token: ValueToken, value: T): Container {
     this.serviceDescriptors.push(new ValueServiceDescriptor(scope, token, value));
     return this;
   }
@@ -156,6 +157,7 @@ export interface IContainerBuilder {
   add<T>(scope: Scope, token: ValueToken, constructor: ConstructorToken<T>): IContainerBuilder;
   add<T>(scope: Scope, token: ValueToken, factory: ServiceFactory<T>): IContainerBuilder;
   add<T>(scope: Scope, token: ValueToken, value: T): IContainerBuilder;
+  addValue<T>(scope: Scope, token: ValueToken, value: T): IContainerBuilder;
   setup(setup: ContainerSetupFunction): IContainerBuilder;
   setup(setup: ContainerSetupFunctionAsync): IContainerBuilder;
   delegate(delegate: ContainerBuilderDelegate): IContainerBuilder;
@@ -202,6 +204,10 @@ export class ContainerBuilder implements IContainerBuilder {
     }
 
     throw new InvalidOperationError();
+  }
+
+  addValue<T>(scope: Scope, token: ValueToken, value: T): this {
+    return this.setup((container) => container.addValue(scope, token, value));
   }
 
   setup(setup: ContainerSetupFunction): this;

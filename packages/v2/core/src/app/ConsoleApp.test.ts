@@ -1,6 +1,11 @@
 import "reflect-metadata";
 import { Configuration } from "@/configuration";
-import { ConsoleAppBuilder, ConsoleAppEntryPointError, IEntryPoint } from "./ConsoleApp";
+import {
+  ConsoleAppBuilder,
+  ConsoleAppEntryPointError,
+  EntryPointFunction,
+  IEntryPoint,
+} from "./ConsoleApp";
 import { ServiceProvider, inject } from "@/dependency-injection";
 import { Environment } from "./Environment";
 
@@ -10,24 +15,6 @@ describe("ConsoleApp", () => {
     expect(app.configuration).toBeInstanceOf(Configuration);
     expect(app.environment).toBeInstanceOf(Environment);
     expect(app.services).toBeInstanceOf(ServiceProvider);
-  });
-
-  // TODO Fix this test
-  it.skip("should use an entry point function", async () => {
-    let counter = 0;
-
-    const app = await new ConsoleAppBuilder()
-      .addEntryPoint(({ args, configuration, services }) => {
-        expect(Array.isArray(args)).toBe(true);
-        expect(configuration).toBeInstanceOf(Configuration);
-        expect(services).toBeInstanceOf(ServiceProvider);
-        counter++;
-      })
-      .build();
-
-    await app.start();
-
-    expect(counter).toBe(1);
   });
 
   it("should use an entry point instance", async () => {
@@ -40,6 +27,40 @@ describe("ConsoleApp", () => {
     }
 
     const app = await new ConsoleAppBuilder().addEntryPoint(Main).build();
+
+    await app.start();
+
+    expect(counter).toBe(1);
+  });
+
+  it("should use a named entry point function", async () => {
+    let counter = 0;
+
+    const main: EntryPointFunction = ({ args, configuration, services }) => {
+      expect(Array.isArray(args)).toBe(true);
+      expect(configuration).toBeInstanceOf(Configuration);
+      expect(services).toBeInstanceOf(ServiceProvider);
+      counter++;
+    };
+
+    const app = await new ConsoleAppBuilder().addEntryPoint(main).build();
+
+    await app.start();
+
+    expect(counter).toBe(1);
+  });
+
+  it("should use an anonymous entry point function", async () => {
+    let counter = 0;
+
+    const app = await new ConsoleAppBuilder()
+      .addEntryPoint(({ args, configuration, services }) => {
+        expect(Array.isArray(args)).toBe(true);
+        expect(configuration).toBeInstanceOf(Configuration);
+        expect(services).toBeInstanceOf(ServiceProvider);
+        counter++;
+      })
+      .build();
 
     await app.start();
 
