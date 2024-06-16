@@ -1,0 +1,6 @@
+{
+  "project": {
+    "name": "{{project.name}}",
+    "template": "{{project.template}}"
+  }
+}

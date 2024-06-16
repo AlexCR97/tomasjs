@@ -5,7 +5,7 @@ import { Logger } from "@tomasjs/core/logging";
 import { Configuration } from "@tomasjs/core/configuration";
 import path, { join } from "path";
 import fs, { existsSync } from "fs";
-import { copyFile, mkdir, rm, unlink } from "fs/promises";
+import { copyFile, mkdir, rm } from "fs/promises";
 import yauzl, { Entry, ZipFile } from "yauzl";
 import { execSync } from "node:child_process";
 
@@ -35,7 +35,6 @@ export const createCommand = new Command()
       return;
     }
 
-    // TODO Unzip project template.
     console.log("Unzipping project template...");
     const unzipResult = await unzip(
       templateDownloadResult.data!.downloadedFileName,
@@ -49,14 +48,15 @@ export const createCommand = new Command()
 
     await rm(templateDownloadResult.data!.downloadedPath, { recursive: true, force: true });
 
-    // TODO Install project dependencies.
-    installDependencies(projectName, projectDirectoryResult.data!.projectDirectory);
+    // TODO Replace values in package.json
+    // TODO Replace values in tomasjs.json
 
-    // TODO Write tomasjs.json
+    installDependencies(projectDirectoryResult.data!.projectDirectory);
 
-    // TODO Log next steps.
-
-    console.log(":D");
+    console.log("Your TomasJS project has been created!");
+    console.log("Next steps:");
+    console.log(`$ cd ./${projectName}`);
+    console.log("$ pnpm dev");
 
     function inputProjectName(): Promise<string> {
       console.log(
@@ -240,15 +240,10 @@ export const createCommand = new Command()
       });
     }
 
-    function installDependencies(projectName: string, projectDirectory: string) {
+    function installDependencies(projectDirectory: string) {
       console.log("Installing project dependencies...");
 
       process.chdir(projectDirectory); // equivalent to "cd /some/path"
       execSync("pnpm i");
-
-      console.log("Your TomasJS project has been created!");
-      console.log("Next steps:");
-      console.log(`$ cd ./${projectName}`);
-      console.log("$ pnpm dev");
     }
   });
