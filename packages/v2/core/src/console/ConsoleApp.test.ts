@@ -7,7 +7,7 @@ import {
   IEntryPoint,
 } from "./ConsoleApp";
 import { ServiceProvider, inject } from "@/dependency-injection";
-import { Environment } from "./Environment";
+import { Environment } from "@/app";
 
 describe("ConsoleApp", () => {
   it("should build a console app", async () => {

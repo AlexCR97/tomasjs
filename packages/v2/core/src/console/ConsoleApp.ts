@@ -1,9 +1,8 @@
 import { IServiceProvider } from "@/dependency-injection";
-import { AppBuilder, IApp } from "./AppBuilder";
 import { InvalidOperationError, TomasError } from "@/errors";
 import { IConfiguration } from "@/configuration";
 import { Constructor, isConstructor } from "@/system";
-import { IEnvironment } from "./Environment";
+import { AppBuilder, IEnvironment, IApp } from "@/app";
 
 const entryPointToken = "@tomasjs/core/EntryPoint";
 
