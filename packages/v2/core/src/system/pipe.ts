@@ -4,8 +4,11 @@
  * @returns A pipe which can then be used to chain transformations.
  */
 export function pipe<TInput>(input: TInput): IPipe<TInput> {
-  return new Pipe(input);
+  const pipeline = new TransformationPipeline(input);
+  return new Pipe(pipeline);
 }
+
+export type Transform<TInput, TOutput> = (input: TInput) => TOutput;
 
 /**
  * Represents a transformation pipeline.
@@ -28,14 +31,37 @@ interface IPipe<TInput> {
 }
 
 class Pipe<TInput> implements IPipe<TInput> {
-  constructor(private readonly input: TInput) {}
+  constructor(private readonly pipeline: TransformationPipeline) {}
 
   pipe<TOutput>(transform: (input: TInput) => TOutput): IPipe<TOutput> {
-    const next = transform(this.input);
-    return new Pipe<TOutput>(next);
+    this.pipeline.addTransform(transform);
+    return new Pipe<TOutput>(this.pipeline);
   }
 
   get(): TInput {
-    return this.input;
+    return this.pipeline.applyTransformations();
+  }
+}
+
+class TransformationPipeline {
+  private readonly initialValue: any;
+  private readonly transformations: Transform<any, any>[] = [];
+
+  constructor(initialValue: any) {
+    this.initialValue = initialValue;
+  }
+
+  addTransform(transform: Transform<any, any>) {
+    this.transformations.push(transform);
+  }
+
+  applyTransformations() {
+    let current = this.initialValue;
+
+    for (const transform of this.transformations) {
+      current = transform(current);
+    }
+
+    return current;
   }
 }
