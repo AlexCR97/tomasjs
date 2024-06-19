@@ -30,7 +30,7 @@
     "winston": "^3.13.0"
   },
   "devDependencies": {
-    "@tsconfig/node18": "^18.2.2",
+    "@tsconfig/node18": "^18.2.4",
     "@types/jest": "^29.5.12",
     "@types/node": "^20.11.30",
     "@types/triple-beam": "^1.3.5",
