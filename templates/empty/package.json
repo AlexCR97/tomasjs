@@ -6,18 +6,19 @@
   "license": "{{license}}",
   "types": "./**/*.d.ts",
   "scripts": {
-    "postinstall": "pnpm link ../../core/dist",
     "build": "del dist /s /q && tsc -b ./tsconfig.build.json && tsc-alias && node ./dist/package.js",
     "test": "jest",
     "dev": "nodemon -r tsconfig-paths/register ./src/app.ts",
     "start": "node ./dist/app.js"
   },
   "dependencies": {
+    "@tomasjs/core": "^2.0.0",
     "reflect-metadata": "^0.2.1",
     "triple-beam": "^1.4.1",
     "winston": "^3.13.0"
   },
   "peerDependencies": {
+    "@tomasjs/core": "^2.0.0",
     "reflect-metadata": "^0.2.1",
     "triple-beam": "^1.4.1",
     "winston": "^3.13.0"
