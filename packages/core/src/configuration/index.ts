@@ -1,6 +1,19 @@
-export { Configuration } from "./Configuration";
-export { ConfigurationSource } from "./ConfigurationSource";
-export { ConfigurationSourceError } from "./ConfigurationSourceError";
-export { KeyConfiguration } from "./KeyConfiguration";
-export { UseConfiguration, UseConfigurationOptions } from "./UseConfiguration";
-export { configurationToken } from "./configurationToken";
+export { Configuration, IConfiguration } from "./Configuration";
+export {
+  ConfigurationSection,
+  ConfigurationSectionNotFoundError as ConfigurationSectionError,
+  IConfigurationSection,
+} from "./ConfigurationSection";
+export { ConfigurationSetup, configurationToken } from "./ConfigurationSetup";
+export {
+  ConfigurationSource,
+  ConfigurationSourceType,
+  EnvironmentConfigurationSource,
+  JsonConfigurationSource,
+  RawConfigurationSource,
+} from "./ConfigurationSource";
+export {
+  ConfigurationValueNotFoundError as ConfigurationValueError,
+  ConfigurationValueType,
+  ConfigurationValueTypeError,
+} from "./ConfigurationValue";

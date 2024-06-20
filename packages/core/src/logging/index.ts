@@ -1,4 +1,4 @@
-export { GlobalLoggingOptions, globalLoggingOptions } from "./GlobalLoggingOptions";
-export { LogLevel } from "./LogLevel";
-export { Logger } from "./Logger";
-export { TomasLogger } from "./TomasLogger";
+export { ILogger, LogLevel, Logger } from "./Logger";
+export { ILoggerFactory, LoggerFactory } from "./LoggerFactory";
+export { loggerSetup } from "./loggerSetup";
+export { GLOBAL_LOGGER } from "./tokens";
