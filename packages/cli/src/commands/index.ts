@@ -1,1 +1,2 @@
-export { GenerateCommand } from "./GenerateCommand";
+export { InitCommand } from "./InitCommand";
+export { MainCommand } from "./MainCommand";
