@@ -1,0 +1,14 @@
+{
+  "booleanTrue": true,
+  "booleanFalse": false,
+  "booleanTrueString": "true",
+  "booleanFalseString": "false",
+  "number": 99,
+  "numberString": "99",
+  "string": "it works!",
+  "object": {
+    "foo": {
+      "bar": "buzz"
+    }
+  }
+}
