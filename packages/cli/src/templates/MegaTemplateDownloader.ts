@@ -9,7 +9,7 @@ import { existsSync } from "node:fs";
 import { ILogger, LoggerFactory } from "@tomasjs/core/logging";
 import { inject } from "@tomasjs/core/dependency-injection";
 import { join } from "node:path";
-import {  mkdir, writeFile } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 
 export class MegaTemplateDownloader implements ProjectTemplateDownloader {
   private readonly logger: ILogger;
@@ -60,7 +60,7 @@ export class MegaTemplateDownloader implements ProjectTemplateDownloader {
 
   private getZipFileUrl(type: TemplateType): string {
     if (type === "empty") {
-      return "https://mega.nz/file/Ej9A3L5b#GvdjfvSuFOcmHllqPPq1qZ2Zj9eekad2CtUdyoqBoYo";
+      return "https://mega.nz/file/In0jTJQZ#2wk_79FNdr-P7kJPMHcpxWaL-KZxYJuwlQRwQPCEIY0"; // TODO Make this configurable
     }
 
     throw new Error(`No url configured for template type "${type}"`);
