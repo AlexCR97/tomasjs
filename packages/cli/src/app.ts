@@ -1,7 +1,7 @@
 #! /usr/bin/env node
 
 import "reflect-metadata";
-import { ConsoleAppBuilder, IEntryPoint } from "@tomasjs/core/app";
+import { ConsoleAppBuilder, IEntryPoint } from "@tomasjs/core/console";
 import { InitCommand, MainCommand } from "./commands";
 import {
   GoogleDriveTemplateDownloader,
