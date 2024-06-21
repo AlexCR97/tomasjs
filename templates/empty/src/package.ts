@@ -27,16 +27,8 @@ fs.writeFileSync(
   Buffer.from(JSON.stringify(sourceObj, null, 2), "utf-8")
 );
 
-fs.copyFileSync(__dirname + "/../.npmignore", __dirname + "/.npmignore");
-
-fs.copyFileSync(__dirname + "/../readme.md", __dirname + "/readme.md");
-
-deleteFile(path.join(__dirname, "dev-imports.d.ts"));
-deleteFile(path.join(__dirname, "dev-imports.js"));
-deleteFile(path.join(__dirname, "dev-imports.js.map"));
-
-deleteFile(path.join(__dirname, "SetupPackage.d.ts"));
-deleteFile(path.join(__dirname, "SetupPackage.js.map"));
+deleteFile(path.join(__dirname, "package.d.ts"));
+deleteFile(path.join(__dirname, "package.js.map"));
 
 function deleteFile(path: fs.PathLike) {
   if (fs.existsSync(path)) {

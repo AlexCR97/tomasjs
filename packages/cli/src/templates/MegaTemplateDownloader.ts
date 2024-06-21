@@ -60,7 +60,7 @@ export class MegaTemplateDownloader implements ProjectTemplateDownloader {
 
   private getZipFileUrl(type: TemplateType): string {
     if (type === "empty") {
-      return "https://mega.nz/file/In0jTJQZ#2wk_79FNdr-P7kJPMHcpxWaL-KZxYJuwlQRwQPCEIY0"; // TODO Make this configurable
+      return "https://mega.nz/file/Z28D3JBS#vqwZn_gfLRwDzpQwftHS1yQcMmlReHtx1XZk6u4Ahgo"; // TODO Make this configurable
     }
 
     throw new Error(`No url configured for template type "${type}"`);
