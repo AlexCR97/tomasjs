@@ -2,12 +2,13 @@
 
 import "reflect-metadata";
 import { ConsoleAppBuilder, IEntryPoint } from "@tomasjs/core/console";
-import { InitCommand, MainCommand } from "./commands";
+import { BuildCommand, InitCommand, MainCommand } from "./commands";
 import { inject } from "@tomasjs/core/dependency-injection";
 import {
   PROJECT_TEMPLATE_DOWNLOADER_FACTORY_TOKEN,
   ProjectTemplateDownloaderFactory,
 } from "./templates/ProjectTemplateDownloaderFactory";
+import { appconfig } from "./appconfig";
 
 class Main implements IEntryPoint {
   constructor(@inject(MainCommand) private readonly command: MainCommand) {}
@@ -18,11 +19,12 @@ class Main implements IEntryPoint {
 }
 
 new ConsoleAppBuilder()
-  .setupConfiguration((config) => config.addJsonSource())
+  .setupConfiguration((config) => config.addRawSource(appconfig))
   .setupContainer((container) => {
     container
       .add("singleton", MainCommand)
       .add("singleton", InitCommand)
+      .add("singleton", BuildCommand)
       .add(
         "singleton",
         PROJECT_TEMPLATE_DOWNLOADER_FACTORY_TOKEN,
