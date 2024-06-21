@@ -32,7 +32,7 @@ export class InitCommand implements CommandFactory {
   createCommand(): Command {
     return new Command()
       .name("init")
-      .description("Creates a new TomasJS project")
+      .description("create a new project")
       .action(async () => {
         const projectName = await this.inputProjectName();
 

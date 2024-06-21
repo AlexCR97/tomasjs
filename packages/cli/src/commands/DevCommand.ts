@@ -8,7 +8,7 @@ export class DevCommand implements CommandFactory {
   createCommand(): Command {
     return new Command()
       .name("dev")
-      .description("Runs a TomasJS project for development")
+      .description("run a project and watch changes")
       .action(async () => {
         const currentDir = process.cwd();
 

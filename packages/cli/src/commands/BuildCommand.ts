@@ -9,7 +9,7 @@ export class BuildCommand implements CommandFactory {
   createCommand(): Command {
     return new Command()
       .name("build")
-      .description("Builds a TomasJS project")
+      .description("build a project")
       .action(async () => {
         const currentDir = process.cwd();
 
