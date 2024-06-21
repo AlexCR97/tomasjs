@@ -7,7 +7,11 @@ import fs from "node:fs";
 import { rm } from "node:fs/promises";
 import yauzl, { Entry, ZipFile } from "yauzl";
 import { execSync } from "node:child_process";
-import { PROJECT_TEMPLATE_DOWNLOADER, ProjectTemplateDownloader, TemplateType } from "@/templates";
+import {
+  IProjectTemplateDownloaderFactory,
+  PROJECT_TEMPLATE_DOWNLOADER_FACTORY_TOKEN,
+  TemplateType,
+} from "@/templates";
 import { CommandFactory } from "./CommandFactory";
 import { inject } from "@tomasjs/core/dependency-injection";
 
@@ -18,8 +22,8 @@ export class InitCommand implements CommandFactory {
     @inject(LoggerFactory)
     loggerFactory: LoggerFactory,
 
-    @inject(PROJECT_TEMPLATE_DOWNLOADER)
-    private readonly projectTemplateDownloader: ProjectTemplateDownloader
+    @inject(PROJECT_TEMPLATE_DOWNLOADER_FACTORY_TOKEN)
+    private readonly projectTemplateDownloaderFactory: IProjectTemplateDownloaderFactory
   ) {
     this.logger = loggerFactory.createLogger(InitCommand.name, "debug");
   }
@@ -42,9 +46,9 @@ export class InitCommand implements CommandFactory {
         }
 
         console.log("Downloading project template...");
-        const templateDownloadResult = await this.projectTemplateDownloader.download(
-          projectTemplate
-        );
+        const templateDownloadResult = await this.projectTemplateDownloaderFactory
+          .createProjectTemplateDownloader()
+          .download(projectTemplate);
 
         if (templateDownloadResult.error) {
           console.error(templateDownloadResult.error.message);

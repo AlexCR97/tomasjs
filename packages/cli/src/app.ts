@@ -3,13 +3,11 @@
 import "reflect-metadata";
 import { ConsoleAppBuilder, IEntryPoint } from "@tomasjs/core/console";
 import { InitCommand, MainCommand } from "./commands";
-import {
-  GoogleDriveTemplateDownloader,
-  LocalTemplateDownloader,
-  MegaTemplateDownloader,
-  PROJECT_TEMPLATE_DOWNLOADER,
-} from "./templates";
 import { inject } from "@tomasjs/core/dependency-injection";
+import {
+  PROJECT_TEMPLATE_DOWNLOADER_FACTORY_TOKEN,
+  ProjectTemplateDownloaderFactory,
+} from "./templates/ProjectTemplateDownloaderFactory";
 
 class Main implements IEntryPoint {
   constructor(@inject(MainCommand) private readonly command: MainCommand) {}
@@ -20,13 +18,16 @@ class Main implements IEntryPoint {
 }
 
 new ConsoleAppBuilder()
+  .setupConfiguration((config) => config.addJsonSource())
   .setupContainer((container) => {
     container
       .add("singleton", MainCommand)
       .add("singleton", InitCommand)
-      // .add("singleton", PROJECT_TEMPLATE_DOWNLOADER, LocalTemplateDownloader)
-      // .add("singleton", PROJECT_TEMPLATE_DOWNLOADER, GoogleDriveTemplateDownloader)
-      .add("singleton", PROJECT_TEMPLATE_DOWNLOADER, MegaTemplateDownloader);
+      .add(
+        "singleton",
+        PROJECT_TEMPLATE_DOWNLOADER_FACTORY_TOKEN,
+        ProjectTemplateDownloaderFactory
+      );
   })
   .addEntryPoint(Main)
   .build()

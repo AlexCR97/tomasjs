@@ -6,17 +6,21 @@ import {
   TemplateType,
 } from "./ProjectTemplateDownloader";
 import { existsSync } from "node:fs";
-import { ILogger, LoggerFactory } from "@tomasjs/core/logging";
+import { ILogger, ILoggerFactory, LoggerFactory } from "@tomasjs/core/logging";
 import { inject } from "@tomasjs/core/dependency-injection";
 import { join } from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
+import { IConfiguration, configurationToken } from "@tomasjs/core/configuration";
 
 export class MegaTemplateDownloader implements ProjectTemplateDownloader {
   private readonly logger: ILogger;
 
   constructor(
     @inject(LoggerFactory)
-    loggerFactory: LoggerFactory
+    loggerFactory: ILoggerFactory,
+
+    @inject(configurationToken)
+    private readonly config: IConfiguration
   ) {
     this.logger = loggerFactory.createLogger(MegaTemplateDownloader.name, "debug");
   }
@@ -59,10 +63,11 @@ export class MegaTemplateDownloader implements ProjectTemplateDownloader {
   }
 
   private getZipFileUrl(type: TemplateType): string {
-    if (type === "empty") {
-      return "https://mega.nz/file/Z28D3JBS#vqwZn_gfLRwDzpQwftHS1yQcMmlReHtx1XZk6u4Ahgo"; // TODO Make this configurable
-    }
-
-    throw new Error(`No url configured for template type "${type}"`);
+    return this.config
+      .sectionOrThrow("templateDownloader")
+      .sectionOrThrow("strategies")
+      .sectionOrThrow("mega")
+      .sectionOrThrow(type)
+      .valueOrThrow<string>("string");
   }
 }
