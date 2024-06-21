@@ -32,11 +32,6 @@ export class BuildCommand implements CommandFactory {
           return console.error(tscAliasResult.error);
         }
 
-        const packageResult = await Executable.run("node ./dist/package.js");
-        if (packageResult.error) {
-          return console.error(packageResult.error);
-        }
-
         console.log("Project built!");
         console.log("To run the project: tomasjs start");
       });
