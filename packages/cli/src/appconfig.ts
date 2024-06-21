@@ -8,7 +8,7 @@ export const appconfig = {
     use: "mega",
     strategies: {
       mega: {
-        empty: "https://mega.nz/file/Z28D3JBS#vqwZn_gfLRwDzpQwftHS1yQcMmlReHtx1XZk6u4Ahgo",
+        empty: "https://mega.nz/file/dnUASRIK#RjfTY6vx_nY9fdlQRHNUk7SnQ7CJG-wx7F_S03xI4Vw",
       },
     },
   },
