@@ -2,9 +2,9 @@ import { Command } from "commander";
 import { input, select } from "@inquirer/prompts";
 import { Result, ResultFailure, ResultSuccess } from "@tomasjs/core/system";
 import { ILogger, LoggerFactory } from "@tomasjs/core/logging";
-import path from "node:path";
+import path, { join } from "node:path";
 import fs from "node:fs";
-import { rm } from "node:fs/promises";
+import { rm, writeFile } from "node:fs/promises";
 import yauzl, { Entry, ZipFile } from "yauzl";
 import { execSync } from "node:child_process";
 import {
@@ -14,6 +14,7 @@ import {
 } from "@/templates";
 import { CommandFactory } from "./CommandFactory";
 import { inject } from "@tomasjs/core/dependency-injection";
+import { readJsonFile } from "@tomasjs/core/files";
 
 export class InitCommand implements CommandFactory {
   private readonly logger: ILogger;
@@ -68,8 +69,20 @@ export class InitCommand implements CommandFactory {
 
         await rm(templateDownloadResult.data!.downloadedPath, { recursive: true, force: true });
 
-        // TODO Replace values in package.json
-        // TODO Replace values in tomasjs.json
+        await this.injectValuesInJsonFile(
+          join(projectDirectoryResult.data!.projectDirectory, "package.json"),
+          {
+            name: projectName,
+          }
+        );
+
+        await this.injectValuesInJsonFile(
+          join(projectDirectoryResult.data!.projectDirectory, "tomasjs.json"),
+          {
+            "project.name": projectName,
+            "project.template": projectTemplate,
+          }
+        );
 
         this.installDependencies(projectDirectoryResult.data!.projectDirectory);
 
@@ -221,6 +234,18 @@ export class InitCommand implements CommandFactory {
         });
       });
     });
+  }
+
+  private async injectValuesInJsonFile(filePath: string, values: Record<string, string>) {
+    const jsonContent = readJsonFile(filePath);
+    let jsonStr = JSON.stringify(jsonContent, undefined, 2);
+
+    for (const key of Object.keys(values)) {
+      const value = values[key];
+      jsonStr = jsonStr.replace(`{{${key}}}`, value);
+    }
+
+    await writeFile(filePath, jsonStr, { flag: "w" });
   }
 
   private installDependencies(projectDirectory: string) {
