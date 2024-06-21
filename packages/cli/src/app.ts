@@ -2,7 +2,7 @@
 
 import "reflect-metadata";
 import { ConsoleAppBuilder, IEntryPoint } from "@tomasjs/core/console";
-import { BuildCommand, DevCommand, InitCommand, MainCommand } from "./commands";
+import { BuildCommand, DevCommand, InitCommand, MainCommand, StartCommand } from "./commands";
 import { inject } from "@tomasjs/core/dependency-injection";
 import {
   PROJECT_TEMPLATE_DOWNLOADER_FACTORY_TOKEN,
@@ -26,6 +26,7 @@ new ConsoleAppBuilder()
       .add("singleton", InitCommand)
       .add("singleton", BuildCommand)
       .add("singleton", DevCommand)
+      .add("singleton", StartCommand)
       .add(
         "singleton",
         PROJECT_TEMPLATE_DOWNLOADER_FACTORY_TOKEN,

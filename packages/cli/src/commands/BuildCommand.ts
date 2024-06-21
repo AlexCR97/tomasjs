@@ -38,7 +38,7 @@ export class BuildCommand implements CommandFactory {
         }
 
         console.log("Project built!");
-        console.log("To run the project: pnpm start");
+        console.log("To run the project: tomasjs start");
       });
   }
 }
