@@ -2,6 +2,11 @@ export const appconfig = {
   logging: {
     minimumLevel: {
       default: "warn",
+      override: {
+        "@tomasjs/cli": "info",
+        MegaTemplateDownloader: "warn",
+        InitCommand: "warn",
+      },
     },
   },
   templateDownloader: {

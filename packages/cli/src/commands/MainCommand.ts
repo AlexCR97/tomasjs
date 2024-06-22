@@ -9,8 +9,8 @@ import { StartCommand } from "./StartCommand";
 export class MainCommand implements CommandFactory {
   constructor(
     @inject(InitCommand) private readonly init: InitCommand,
-    @inject(BuildCommand) private readonly build: BuildCommand,
     @inject(DevCommand) private readonly dev: DevCommand,
+    @inject(BuildCommand) private readonly build: BuildCommand,
     @inject(StartCommand) private readonly start: StartCommand
   ) {}
 
@@ -20,8 +20,8 @@ export class MainCommand implements CommandFactory {
       .description("The official CLI for TomasJS")
       .version("1.0.0")
       .addCommand(this.init.createCommand())
-      .addCommand(this.build.createCommand())
       .addCommand(this.dev.createCommand())
+      .addCommand(this.build.createCommand())
       .addCommand(this.start.createCommand());
   }
 }

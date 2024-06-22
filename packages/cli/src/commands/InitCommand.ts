@@ -6,7 +6,6 @@ import path, { join } from "node:path";
 import fs from "node:fs";
 import { rm, writeFile } from "node:fs/promises";
 import yauzl, { Entry, ZipFile } from "yauzl";
-import { execSync } from "node:child_process";
 import {
   IProjectTemplateDownloaderFactory,
   PROJECT_TEMPLATE_DOWNLOADER_FACTORY_TOKEN,
@@ -15,9 +14,11 @@ import {
 import { CommandFactory } from "./CommandFactory";
 import { inject } from "@tomasjs/core/dependency-injection";
 import { readJsonFile } from "@tomasjs/core/files";
+import { Executable } from "@/process";
 
 export class InitCommand implements CommandFactory {
-  private readonly logger: ILogger;
+  private readonly debugLogger: ILogger;
+  private readonly infoLogger: ILogger;
 
   constructor(
     @inject(LoggerFactory)
@@ -26,7 +27,8 @@ export class InitCommand implements CommandFactory {
     @inject(PROJECT_TEMPLATE_DOWNLOADER_FACTORY_TOKEN)
     private readonly projectTemplateDownloaderFactory: IProjectTemplateDownloaderFactory
   ) {
-    this.logger = loggerFactory.createLogger(InitCommand.name, "debug");
+    this.debugLogger = loggerFactory.createLogger(InitCommand.name, "debug");
+    this.infoLogger = loggerFactory.createLogger("@tomasjs/cli", "info");
   }
 
   createCommand(): Command {
@@ -38,7 +40,8 @@ export class InitCommand implements CommandFactory {
 
         const projectTemplate = await this.selectProjectTemplateType();
 
-        console.log("Creating project directory...");
+        this.infoLogger.info("Creating project directory...");
+
         const projectDirectoryResult = this.createProjectDirectory(projectName);
 
         if (projectDirectoryResult.error) {
@@ -46,7 +49,8 @@ export class InitCommand implements CommandFactory {
           return;
         }
 
-        console.log("Downloading project template...");
+        this.infoLogger.info("Installing project template...");
+
         const templateDownloadResult = await this.projectTemplateDownloaderFactory
           .createProjectTemplateDownloader()
           .download(projectTemplate);
@@ -56,7 +60,8 @@ export class InitCommand implements CommandFactory {
           return;
         }
 
-        console.log("Unzipping project template...");
+        this.debugLogger.debug("Unzipping project template...");
+
         const unzipResult = await this.unzip(
           templateDownloadResult.data!.downloadedFileName,
           projectDirectoryResult.data!.projectDirectory
@@ -84,12 +89,13 @@ export class InitCommand implements CommandFactory {
           }
         );
 
-        this.installDependencies(projectDirectoryResult.data!.projectDirectory);
+        await this.installDependencies(projectDirectoryResult.data!.projectDirectory);
 
-        console.log("Your TomasJS project has been created!");
-        console.log("Next steps:");
-        console.log(`$ cd ./${projectName}`);
-        console.log("$ pnpm dev");
+        console.log("✅ Project created\n");
+
+        console.log("🚀 Next steps:");
+        console.log(`> cd ./${projectName}`);
+        console.log("> tomasjs dev");
       });
   }
 
@@ -130,10 +136,10 @@ export class InitCommand implements CommandFactory {
     try {
       const currentWorkingDirectory = process.cwd();
 
-      this.logger.debug(`currentWorkingDirectory: ${currentWorkingDirectory}`);
+      this.debugLogger.debug(`currentWorkingDirectory: ${currentWorkingDirectory}`);
 
       const projectDirectory = path.join(currentWorkingDirectory, projectName);
-      this.logger.debug(`projectDirectory: ${projectDirectory}`);
+      this.debugLogger.debug(`projectDirectory: ${projectDirectory}`);
 
       if (fs.existsSync(projectDirectory)) {
         return Result.failure(
@@ -157,25 +163,25 @@ export class InitCommand implements CommandFactory {
     zipFilePath: string,
     toPath: string
   ): Promise<ResultSuccess | ResultFailure<Error>> {
-    this.logger.debug(`Opening zip ${zipFilePath} ...`);
+    this.debugLogger.debug(`Opening zip ${zipFilePath} ...`);
 
     return new Promise((resolve) => {
       yauzl.open(zipFilePath, { lazyEntries: true }, (err, zipFile: ZipFile) => {
         if (err) {
-          this.logger.debug(`Could not open zip ${zipFilePath}. Reason: ${err.message}`);
+          this.debugLogger.debug(`Could not open zip ${zipFilePath}. Reason: ${err.message}`);
           return resolve(Result.failure(err));
         }
 
-        this.logger.debug("Reading entries ...");
+        this.debugLogger.debug("Reading entries ...");
 
         zipFile.readEntry();
 
         zipFile.on("entry", (entry: Entry) => {
-          this.logger.debug(`entry: ${entry.fileName}`);
+          this.debugLogger.debug(`entry: ${entry.fileName}`);
 
           if (/\/$/.test(entry.fileName)) {
             // directory entry
-            this.logger.debug("entry is a directory!");
+            this.debugLogger.debug("entry is a directory!");
 
             // Directory file names end with '/'.
             // Note that entries for directories themselves are optional.
@@ -183,44 +189,44 @@ export class InitCommand implements CommandFactory {
             zipFile.readEntry();
           } else {
             // file entry
-            this.logger.debug("entry is a file!");
+            this.debugLogger.debug("entry is a file!");
 
-            this.logger.debug(`Opening read stream for ${entry.fileName} ...`);
+            this.debugLogger.debug(`Opening read stream for ${entry.fileName} ...`);
 
             zipFile.openReadStream(entry, (err, readStream) => {
               if (err) {
-                this.logger.debug(
+                this.debugLogger.debug(
                   `Could not open read stream for ${entry.fileName}. Reason: ${err.message}`
                 );
                 return resolve(Result.failure(err));
               }
 
               readStream.on("end", () => {
-                this.logger.debug(`Read stream for ${entry.fileName} ended`);
+                this.debugLogger.debug(`Read stream for ${entry.fileName} ended`);
                 zipFile.readEntry();
               });
 
               const entryFileNameParts = entry.fileName.split("/");
-              this.logger.debug("entryFileNameParts", entryFileNameParts);
+              this.debugLogger.debug("entryFileNameParts", entryFileNameParts);
 
               if (entryFileNameParts.length > 1) {
                 const entryFileNamePartsWithoutFileName = entryFileNameParts.slice(
                   0,
                   entryFileNameParts.length - 1
                 );
-                this.logger.debug(
+                this.debugLogger.debug(
                   "entryFileNamePartsWithoutFileName",
                   entryFileNamePartsWithoutFileName
                 );
 
                 const downloadPathParts = [toPath, ...entryFileNamePartsWithoutFileName];
-                this.logger.debug("downloadPathParts", downloadPathParts);
+                this.debugLogger.debug("downloadPathParts", downloadPathParts);
 
                 fs.mkdirSync(path.join(...downloadPathParts), { recursive: true });
               }
 
               const writePath = path.join(toPath, entry.fileName);
-              this.logger.debug(`Writing stream to ${writePath} ...`);
+              this.debugLogger.debug(`Writing stream to ${writePath} ...`);
               fs.writeFileSync(writePath, "");
               const writeStream = fs.createWriteStream(writePath);
               readStream.pipe(writeStream);
@@ -229,7 +235,7 @@ export class InitCommand implements CommandFactory {
         });
 
         zipFile.once("end", () => {
-          this.logger.info("zip file reading ended.");
+          this.debugLogger.info("zip file reading ended.");
           resolve(Result.success(null));
         });
       });
@@ -248,10 +254,10 @@ export class InitCommand implements CommandFactory {
     await writeFile(filePath, jsonStr, { flag: "w" });
   }
 
-  private installDependencies(projectDirectory: string) {
-    console.log("Installing project dependencies...");
-
+  private async installDependencies(projectDirectory: string): Promise<void> {
+    this.infoLogger.info("Installing dependencies...");
     process.chdir(projectDirectory); // equivalent to "cd /some/path"
-    execSync("pnpm i");
+    await Executable.run("pnpm i");
+    console.log();
   }
 }

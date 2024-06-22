@@ -14,10 +14,10 @@ export class BuildCommand implements CommandFactory {
         const currentDir = process.cwd();
 
         if (!existsSync(join(currentDir, "tomasjs.json"))) {
-          return console.log("Could not find project in current directory");
+          return console.error("Could not find project in current directory");
         }
 
-        console.log("Building project...");
+        console.log("🔨 Building project...");
 
         const distDir = join(currentDir, "dist");
         await rm(distDir, { force: true, recursive: true });
@@ -32,8 +32,12 @@ export class BuildCommand implements CommandFactory {
           return console.error(tscAliasResult.error);
         }
 
-        console.log("Project built!");
-        console.log("To run the project: tomasjs start");
+        console.log();
+
+        console.log("✅ Project built \n");
+
+        console.log("🚀 To run the project:");
+        console.log("> tomasjs start");
       });
   }
 }

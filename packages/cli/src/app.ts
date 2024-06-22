@@ -14,7 +14,7 @@ class Main implements IEntryPoint {
   constructor(@inject(MainCommand) private readonly command: MainCommand) {}
 
   main(args: string[]): void | Promise<void> {
-    this.command.createCommand().parse(process.argv);
+    this.command.createCommand().parse(args);
   }
 }
 
