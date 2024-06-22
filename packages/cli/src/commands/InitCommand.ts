@@ -1,10 +1,9 @@
 import { Command } from "commander";
 import { input, select } from "@inquirer/prompts";
-import { Result, ResultFailure, ResultSuccess } from "@tomasjs/core/system";
 import { ILogger, LoggerFactory } from "@tomasjs/core/logging";
 import path, { join } from "node:path";
-import fs from "node:fs";
-import { rm, writeFile } from "node:fs/promises";
+import fs, { existsSync } from "node:fs";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import yauzl, { Entry, ZipFile } from "yauzl";
 import {
   IProjectTemplateDownloaderFactory,
@@ -15,20 +14,22 @@ import { CommandFactory } from "./CommandFactory";
 import { inject } from "@tomasjs/core/dependency-injection";
 import { readJsonFile } from "@tomasjs/core/files";
 import { Executable } from "@/process";
+import { APP_LOGGER } from "@/logger";
 
 export class InitCommand implements CommandFactory {
   private readonly debugLogger: ILogger;
-  private readonly infoLogger: ILogger;
 
   constructor(
     @inject(LoggerFactory)
     loggerFactory: LoggerFactory,
 
+    @inject(APP_LOGGER)
+    private readonly appLogger: ILogger,
+
     @inject(PROJECT_TEMPLATE_DOWNLOADER_FACTORY_TOKEN)
     private readonly projectTemplateDownloaderFactory: IProjectTemplateDownloaderFactory
   ) {
     this.debugLogger = loggerFactory.createLogger(InitCommand.name, "debug");
-    this.infoLogger = loggerFactory.createLogger("@tomasjs/cli", "info");
   }
 
   createCommand(): Command {
@@ -36,70 +37,61 @@ export class InitCommand implements CommandFactory {
       .name("init")
       .description("create a new project")
       .action(async () => {
-        const projectName = await this.inputProjectName();
+        try {
+          const projectName = await this.inputProjectName();
 
-        const projectTemplate = await this.selectProjectTemplateType();
+          const projectTemplate = await this.selectProjectTemplateType();
 
-        this.infoLogger.info("Creating project directory...");
+          this.appLogger.info("Creating project directory...");
 
-        const projectDirectoryResult = this.createProjectDirectory(projectName);
+          const { projectDirectory } = await this.createProjectDirectory(projectName);
 
-        if (projectDirectoryResult.error) {
-          console.error(projectDirectoryResult.error);
-          return;
-        }
+          this.appLogger.info("Installing project template...");
 
-        this.infoLogger.info("Installing project template...");
+          const templateDownloadResult = await this.projectTemplateDownloaderFactory
+            .createProjectTemplateDownloader()
+            .download(projectTemplate);
 
-        const templateDownloadResult = await this.projectTemplateDownloaderFactory
-          .createProjectTemplateDownloader()
-          .download(projectTemplate);
-
-        if (templateDownloadResult.error) {
-          console.error(templateDownloadResult.error.message);
-          return;
-        }
-
-        this.debugLogger.debug("Unzipping project template...");
-
-        const unzipResult = await this.unzip(
-          templateDownloadResult.data!.downloadedFileName,
-          projectDirectoryResult.data!.projectDirectory
-        );
-
-        if (unzipResult.error) {
-          console.error(unzipResult.error.message);
-          return;
-        }
-
-        await rm(templateDownloadResult.data!.downloadedPath, { recursive: true, force: true });
-
-        await this.injectValuesInJsonFile(
-          join(projectDirectoryResult.data!.projectDirectory, "package.json"),
-          {
-            name: projectName,
+          if (templateDownloadResult.error) {
+            throw templateDownloadResult.error;
           }
-        );
 
-        await this.injectValuesInJsonFile(
-          join(projectDirectoryResult.data!.projectDirectory, "tomasjs.json"),
-          {
+          this.debugLogger.debug("Unzipping project template...");
+
+          await this.unzip(templateDownloadResult.data!.downloadedFileName, projectDirectory);
+
+          await rm(templateDownloadResult.data!.downloadedPath, { recursive: true, force: true });
+
+          await this.injectValuesInJsonFile(join(projectDirectory, "package.json"), {
+            name: projectName,
+          });
+
+          await this.injectValuesInJsonFile(join(projectDirectory, "tomasjs.json"), {
             "project.name": projectName,
             "project.template": projectTemplate,
+          });
+
+          await this.installDependencies(projectDirectory);
+
+          console.log();
+
+          console.log("✅ Project created\n");
+
+          console.log("🚀 Next steps:");
+          console.log(`> cd ./${projectName}`);
+          console.log("> tomasjs dev");
+        } catch (err) {
+          if (err instanceof Error) {
+            this.appLogger.error(err.message);
+          } else {
+            this.appLogger.error(`An unexpected error occurred: ${err}`);
           }
-        );
-
-        await this.installDependencies(projectDirectoryResult.data!.projectDirectory);
-
-        console.log("✅ Project created\n");
-
-        console.log("🚀 Next steps:");
-        console.log(`> cd ./${projectName}`);
-        console.log("> tomasjs dev");
+        }
       });
   }
 
   private inputProjectName(): Promise<string> {
+    // TODO Improve this message
     console.log(
       "A valid project name must contain only letters (a-z A-Z), numbers (0-9), hyphens (-), underscores (_) and must not start with a number."
     );
@@ -130,46 +122,32 @@ export class InitCommand implements CommandFactory {
     });
   }
 
-  private createProjectDirectory(
-    projectName: string
-  ): ResultSuccess<{ projectDirectory: string }> | ResultFailure<string> {
-    try {
-      const currentWorkingDirectory = process.cwd();
+  private async createProjectDirectory(projectName: string): Promise<{ projectDirectory: string }> {
+    const currentWorkingDirectory = process.cwd();
+    this.debugLogger.debug(`currentWorkingDirectory: ${currentWorkingDirectory}`);
 
-      this.debugLogger.debug(`currentWorkingDirectory: ${currentWorkingDirectory}`);
+    const projectDirectory = path.join(currentWorkingDirectory, projectName);
+    this.debugLogger.debug(`projectDirectory: ${projectDirectory}`);
 
-      const projectDirectory = path.join(currentWorkingDirectory, projectName);
-      this.debugLogger.debug(`projectDirectory: ${projectDirectory}`);
-
-      if (fs.existsSync(projectDirectory)) {
-        return Result.failure(
-          `A project named "${projectName}" already exists in the current directory. Please use another name.`
-        );
-      }
-
-      fs.mkdirSync(projectDirectory);
-
-      return Result.success({ projectDirectory });
-    } catch (err) {
-      if (err instanceof Error) {
-        return Result.failure(err.message);
-      }
-
-      return Result.failure(`An unexpected error occurred: ${err}`);
+    if (existsSync(projectDirectory)) {
+      throw new Error(
+        `A project named "${projectName}" already exists in the current directory. Please use another name.`
+      );
     }
+
+    await mkdir(projectDirectory);
+
+    return { projectDirectory };
   }
 
-  private async unzip(
-    zipFilePath: string,
-    toPath: string
-  ): Promise<ResultSuccess | ResultFailure<Error>> {
+  private async unzip(zipFilePath: string, toPath: string): Promise<void> {
     this.debugLogger.debug(`Opening zip ${zipFilePath} ...`);
 
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       yauzl.open(zipFilePath, { lazyEntries: true }, (err, zipFile: ZipFile) => {
         if (err) {
           this.debugLogger.debug(`Could not open zip ${zipFilePath}. Reason: ${err.message}`);
-          return resolve(Result.failure(err));
+          return reject(err);
         }
 
         this.debugLogger.debug("Reading entries ...");
@@ -198,7 +176,7 @@ export class InitCommand implements CommandFactory {
                 this.debugLogger.debug(
                   `Could not open read stream for ${entry.fileName}. Reason: ${err.message}`
                 );
-                return resolve(Result.failure(err));
+                return reject(err);
               }
 
               readStream.on("end", () => {
@@ -236,13 +214,16 @@ export class InitCommand implements CommandFactory {
 
         zipFile.once("end", () => {
           this.debugLogger.info("zip file reading ended.");
-          resolve(Result.success(null));
+          return resolve();
         });
       });
     });
   }
 
-  private async injectValuesInJsonFile(filePath: string, values: Record<string, string>) {
+  private async injectValuesInJsonFile(
+    filePath: string,
+    values: Record<string, string>
+  ): Promise<void> {
     const jsonContent = readJsonFile(filePath);
     let jsonStr = JSON.stringify(jsonContent, undefined, 2);
 
@@ -255,9 +236,14 @@ export class InitCommand implements CommandFactory {
   }
 
   private async installDependencies(projectDirectory: string): Promise<void> {
-    this.infoLogger.info("Installing dependencies...");
+    this.appLogger.info("Installing dependencies...");
+
     process.chdir(projectDirectory); // equivalent to "cd /some/path"
-    await Executable.run("pnpm i");
-    console.log();
+
+    const result = await Executable.run("pnpm i");
+
+    if (result.error) {
+      throw result.error;
+    }
   }
 }
