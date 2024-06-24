@@ -8,6 +8,7 @@ export interface ILoggerFactory {
   createLogger(category: string, level: LogLevel): ILogger;
 }
 
+// TODO Deprecate LoggerFactory
 export class LoggerFactory implements ILoggerFactory {
   constructor(@inject(configurationToken) private readonly configuration: Configuration) {}
 
