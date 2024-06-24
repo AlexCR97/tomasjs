@@ -47,4 +47,8 @@ export class Configuration implements IConfiguration {
 
     return value;
   }
+
+  static empty(): IConfiguration {
+    return new Configuration([]);
+  }
 }

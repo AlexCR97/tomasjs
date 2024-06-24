@@ -6,7 +6,7 @@ import {
 } from "winston";
 import { SPLAT } from "triple-beam";
 import { pipe } from "@/system";
-import { Configuration } from "@/configuration";
+import { IConfiguration } from "@/configuration";
 
 export interface ILogger {
   log(level: LogLevel, message: any, ...params: any[]): void;
@@ -55,6 +55,15 @@ const logLevelScores = new Map<LogLevel, number>([
   ["debug", 4],
 ]);
 
+export type LoggerOptions = {
+  category: string;
+  configuration: IConfiguration;
+  level: LogLevel;
+  showCategory: boolean;
+  showLevel: boolean;
+  showTimestamp: boolean;
+};
+
 export class Logger implements ILogger {
   private readonly logger: WinstonLogger;
 
@@ -68,18 +77,26 @@ export class Logger implements ILogger {
 
   private readonly defaultTransport = new winstonTransport.Console();
 
-  constructor(
-    private readonly category: string,
-    private readonly level: LogLevel,
-    private readonly configuration: Configuration
-  ) {
+  constructor(readonly options: LoggerOptions) {
     this.logger = createWinstonLogger({
-      defaultMeta: { category },
-      level,
+      defaultMeta: { category: options.category },
+      level: options.level,
       levels: Object.fromEntries(logLevelScores),
       format: this.format,
       transports: [this.defaultTransport],
     });
+  }
+
+  private get category(): string {
+    return this.options.category;
+  }
+
+  private get configuration(): IConfiguration {
+    return this.options.configuration;
+  }
+
+  private get level(): string {
+    return this.options.level;
   }
 
   log(method: LogLevel, message: any, ...params: any[]): void {
