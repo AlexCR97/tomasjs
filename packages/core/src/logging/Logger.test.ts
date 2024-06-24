@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { ILogger, LogLevel, Logger } from "./Logger";
+import { ILogger, LogLevel } from "./Logger";
 import { ContainerBuilder } from "@/dependency-injection";
 import { GLOBAL_LOGGER } from "./tokens";
 import { LoggerFactory } from "./LoggerFactory";
@@ -17,13 +17,13 @@ describe("Logger", () => {
     logger.error("error");
   }
 
-  it("Can create and use a TomasLogger", async () => {
+  it("Can use the global Logger", async () => {
     const services = await new ContainerBuilder()
       .setup(new ConfigurationSetup().build())
       .setup(loggerSetup)
       .buildServiceProvider();
 
-    const logger = services.getOrThrow<Logger>(GLOBAL_LOGGER);
+    const logger = services.getOrThrow<ILogger>(GLOBAL_LOGGER);
     logger.debug('This is a log with "debug" level.');
     logger.verbose('This is a log with "verbose" level.');
     logger.info('This is a log with "info" level.');
@@ -38,7 +38,7 @@ describe("Logger", () => {
       .setup(loggerSetup)
       .buildServiceProvider();
 
-    const logger = services.getOrThrow<Logger>(GLOBAL_LOGGER);
+    const logger = services.getOrThrow<ILogger>(GLOBAL_LOGGER);
     logger.debug("Log with number", 10);
     logger.debug("Log with boolean", true);
     logger.debug("Log with string", "TestString");

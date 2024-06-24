@@ -116,13 +116,14 @@ export class Logger implements ILogger {
   }
 
   private tryOverrideWithOverrideLevel() {
-    const override = this.configuration.section("logging.minimumLevel.override");
+    const overrideLevel = this.configuration
+      .section("logging.minimumLevel.override")
+      ?.section(this.category)
+      ?.value<LogLevel>("string");
 
-    if (override === null) {
-      return;
+    if (overrideLevel !== undefined && overrideLevel !== null) {
+      this.logger.level = overrideLevel;
     }
-
-    this.logger.level = override.section(this.category)?.value<LogLevel>("string") ?? this.level;
   }
 
   private resetOriginalLevel() {
