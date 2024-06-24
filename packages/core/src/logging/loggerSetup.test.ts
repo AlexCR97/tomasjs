@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { ContainerBuilder } from "@/dependency-injection";
-import { GLOBAL_LOGGER, LOGGER, LOGGER_BUILDER } from "./tokens";
+import { LOGGER, LOGGER_BUILDER } from "./tokens";
 import { ConfigurationSetup } from "@/configuration";
 import { loggerSetup } from "./loggerSetup";
 import { ILogger, Logger, LoggerOptions } from "./Logger";
@@ -58,15 +58,5 @@ describe("loggerSetup", () => {
 
     const typedLogger = logger as Logger;
     expect(typedLogger.options).toMatchObject(LoggerBuilder.defaultOptions);
-  });
-
-  it("can resolve the global Logger", async () => {
-    const services = await new ContainerBuilder()
-      .setup(new ConfigurationSetup().build())
-      .setup(loggerSetup)
-      .buildServiceProvider();
-
-    const logger = services.getOrThrow<ILogger>(GLOBAL_LOGGER);
-    expect(logger).toBeInstanceOf(Logger);
   });
 });

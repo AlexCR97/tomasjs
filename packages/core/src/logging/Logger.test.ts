@@ -1,10 +1,10 @@
 import "reflect-metadata";
 import { ILogger, LogLevel } from "./Logger";
 import { ContainerBuilder } from "@/dependency-injection";
-import { GLOBAL_LOGGER } from "./tokens";
-import { LoggerFactory } from "./LoggerFactory";
 import { ConfigurationSetup } from "@/configuration";
 import { loggerSetup } from "./loggerSetup";
+import { LOGGER, LOGGER_BUILDER } from "./tokens";
+import { ILoggerBuilder } from "./LoggerBuilder";
 
 describe("Logger", () => {
   const logLevels: LogLevel[] = ["debug", "verbose", "info", "warn", "error"];
@@ -23,7 +23,7 @@ describe("Logger", () => {
       .setup(loggerSetup)
       .buildServiceProvider();
 
-    const logger = services.getOrThrow<ILogger>(GLOBAL_LOGGER);
+    const logger = services.getOrThrow<ILogger>(LOGGER);
     logger.debug('This is a log with "debug" level.');
     logger.verbose('This is a log with "verbose" level.');
     logger.info('This is a log with "info" level.');
@@ -38,7 +38,7 @@ describe("Logger", () => {
       .setup(loggerSetup)
       .buildServiceProvider();
 
-    const logger = services.getOrThrow<ILogger>(GLOBAL_LOGGER);
+    const logger = services.getOrThrow<ILogger>(LOGGER);
     logger.debug("Log with number", 10);
     logger.debug("Log with boolean", true);
     logger.debug("Log with string", "TestString");
@@ -57,11 +57,11 @@ describe("Logger", () => {
       .setup(loggerSetup)
       .buildServiceProvider();
 
-    const loggerFactory = services.getOrThrow(LoggerFactory);
+    const loggerBuilder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
 
     for (const level of logLevels) {
       console.log("Now using level:", level);
-      const logger = loggerFactory.createLogger("test", level);
+      const logger = loggerBuilder.withCategory("test").withLevel(level).build();
       doLogs(logger);
     }
   });
