@@ -26,7 +26,10 @@ export class StartCommand implements CommandFactory {
           }
 
           // TODO Preserve output color
-          const result = await Executable.run("node ./dist/app.js");
+          const result = await Executable.run("node ./dist/app.js", {
+            onStdOut: (data) => process.stdout.write(data),
+            onStdErr: (data) => process.stderr.write(data),
+          });
 
           if (result.error) {
             throw result.error;

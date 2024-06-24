@@ -25,9 +25,12 @@ export class DevCommand implements CommandFactory {
             throw new Error("Could not find project in current directory");
           }
 
-          // TODO Preserve output color
           const result = await Executable.run(
-            "npx nodemon -r tsconfig-paths/register ./src/app.ts"
+            "npx nodemon -r tsconfig-paths/register ./src/app.ts",
+            {
+              onStdOut: (data) => process.stdout.write(data),
+              onStdErr: (data) => process.stderr.write(data),
+            }
           );
 
           if (result.error) {
