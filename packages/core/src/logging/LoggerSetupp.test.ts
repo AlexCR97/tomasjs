@@ -2,15 +2,15 @@ import "reflect-metadata";
 import { ContainerBuilder } from "@/dependency-injection";
 import { LOGGER, LOGGER_BUILDER } from "./tokens";
 import { ConfigurationSetup } from "@/configuration";
-import { loggerSetup } from "./loggerSetup";
 import { ILogger, Logger, LoggerOptions } from "./Logger";
 import { ILoggerBuilder, LoggerBuilder } from "./LoggerBuilder";
+import { LoggerSetup } from "./LoggerSetupp";
 
 describe("loggerSetup", () => {
   it("can resolve the default LoggerBuilder", async () => {
     const services = await new ContainerBuilder()
       .setup(new ConfigurationSetup().build())
-      .setup(loggerSetup)
+      .setup(new LoggerSetup().build())
       .buildServiceProvider();
 
     const builder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
@@ -18,6 +18,19 @@ describe("loggerSetup", () => {
 
     const logger = builder.build() as Logger;
     expect(logger.options).toMatchObject(LoggerBuilder.defaultOptions);
+  });
+
+  it("can resolve the default Logger", async () => {
+    const services = await new ContainerBuilder()
+      .setup(new ConfigurationSetup().build())
+      .setup(new LoggerSetup().build())
+      .buildServiceProvider();
+
+    const logger = services.getOrThrow<ILogger>(LOGGER);
+    expect(logger).toBeInstanceOf(Logger);
+
+    const typedLogger = logger as Logger;
+    expect(typedLogger.options).toMatchObject(LoggerBuilder.defaultOptions);
   });
 
   it("can override the default LoggerBuilder options", async () => {
@@ -37,7 +50,7 @@ describe("loggerSetup", () => {
           })
           .build()
       )
-      .setup(loggerSetup)
+      .setup(new LoggerSetup().build())
       .buildServiceProvider();
 
     const builder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
@@ -45,18 +58,5 @@ describe("loggerSetup", () => {
 
     const logger = builder.build() as Logger;
     expect(logger.options).toMatchObject(customOptions);
-  });
-
-  it("can resolve the default Logger", async () => {
-    const services = await new ContainerBuilder()
-      .setup(new ConfigurationSetup().build())
-      .setup(loggerSetup)
-      .buildServiceProvider();
-
-    const logger = services.getOrThrow<ILogger>(LOGGER);
-    expect(logger).toBeInstanceOf(Logger);
-
-    const typedLogger = logger as Logger;
-    expect(typedLogger.options).toMatchObject(LoggerBuilder.defaultOptions);
   });
 });

@@ -6,7 +6,7 @@ import {
   IServiceProvider,
 } from "@/dependency-injection";
 import { Environment, IEnvironment, environmentToken } from "./Environment";
-import { loggerSetup } from "@/logging";
+import { LoggerSetup } from "@/logging";
 
 interface IAppBuilder<TApp extends IApp> {
   setupConfiguration(delegate: ConfigurationSetupDelegate): this;
@@ -72,7 +72,8 @@ export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp>
         builder.setup(setup.build());
       })
       .delegate((builder) => {
-        builder.setup(loggerSetup);
+        // TODO Add delegator
+        builder.setup(new LoggerSetup().build());
       })
       .delegate((builder) => {
         const busSetup = new BusSetup();

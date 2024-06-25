@@ -2,9 +2,9 @@ import "reflect-metadata";
 import { ILogger, LogLevel } from "./Logger";
 import { ContainerBuilder } from "@/dependency-injection";
 import { ConfigurationSetup } from "@/configuration";
-import { loggerSetup } from "./loggerSetup";
 import { LOGGER, LOGGER_BUILDER } from "./tokens";
 import { ILoggerBuilder } from "./LoggerBuilder";
+import { LoggerSetup } from "./LoggerSetupp";
 
 describe("Logger", () => {
   const logLevels: LogLevel[] = ["debug", "verbose", "info", "warn", "error"];
@@ -20,7 +20,7 @@ describe("Logger", () => {
   it("Can use the global Logger", async () => {
     const services = await new ContainerBuilder()
       .setup(new ConfigurationSetup().build())
-      .setup(loggerSetup)
+      .setup(new LoggerSetup().build())
       .buildServiceProvider();
 
     const logger = services.getOrThrow<ILogger>(LOGGER);
@@ -35,7 +35,7 @@ describe("Logger", () => {
   it("Can log with data", async () => {
     const services = await new ContainerBuilder()
       .setup(new ConfigurationSetup().build())
-      .setup(loggerSetup)
+      .setup(new LoggerSetup().build())
       .buildServiceProvider();
 
     const logger = services.getOrThrow<ILogger>(LOGGER);
@@ -54,7 +54,7 @@ describe("Logger", () => {
   it("Can use log levels", async () => {
     const services = await new ContainerBuilder()
       .setup(new ConfigurationSetup().build())
-      .setup(loggerSetup)
+      .setup(new LoggerSetup().build())
       .buildServiceProvider();
 
     const loggerBuilder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
