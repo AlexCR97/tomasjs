@@ -4,7 +4,7 @@ import { LOGGER, LOGGER_BUILDER } from "./tokens";
 import { ConfigurationSetup } from "@/configuration";
 import { ILogger, Logger, LoggerOptions } from "./Logger";
 import { ILoggerBuilder, LoggerBuilder } from "./LoggerBuilder";
-import { LoggerSetup } from "./LoggerSetupp";
+import { LoggerSetup } from "./LoggerSetup";
 
 describe("loggerSetup", () => {
   it("can resolve the default LoggerBuilder", async () => {

@@ -4,7 +4,7 @@ import { ContainerBuilder } from "@/dependency-injection";
 import { ConfigurationSetup } from "@/configuration";
 import { LOGGER, LOGGER_BUILDER } from "./tokens";
 import { ILoggerBuilder } from "./LoggerBuilder";
-import { LoggerSetup } from "./LoggerSetupp";
+import { LoggerSetup } from "./LoggerSetup";
 
 describe("Logger", () => {
   const logLevels: LogLevel[] = ["debug", "verbose", "info", "warn", "error"];
