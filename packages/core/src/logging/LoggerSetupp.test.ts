@@ -9,7 +9,7 @@ import {
 } from "@/configuration";
 import { ILogger, Logger, LoggerOptions } from "./Logger";
 import { ILoggerBuilder, LoggerBuilder } from "./LoggerBuilder";
-import { LoggerConfiguration, LoggerSetup } from "./LoggerSetup";
+import { LoggerConfiguration, LoggerSetup } from "./LoggerSetupp";
 
 describe("loggerSetup", () => {
   it("can resolve the default LoggerBuilder", async () => {
