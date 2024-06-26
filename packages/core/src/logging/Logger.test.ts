@@ -1,10 +1,10 @@
 import "reflect-metadata";
-import { ILogger, LogLevel, Logger } from "./Logger";
+import { ILogger, LogLevel } from "./Logger";
 import { ContainerBuilder } from "@/dependency-injection";
-import { GLOBAL_LOGGER } from "./tokens";
-import { LoggerFactory } from "./LoggerFactory";
 import { ConfigurationSetup } from "@/configuration";
-import { loggerSetup } from "./loggerSetup";
+import { LOGGER, LOGGER_BUILDER } from "./tokens";
+import { ILoggerBuilder } from "./LoggerBuilder";
+import { LoggerSetup } from "./LoggerSetupp";
 
 describe("Logger", () => {
   const logLevels: LogLevel[] = ["debug", "verbose", "info", "warn", "error"];
@@ -17,13 +17,13 @@ describe("Logger", () => {
     logger.error("error");
   }
 
-  it("Can create and use a TomasLogger", async () => {
+  it("Can use the global Logger", async () => {
     const services = await new ContainerBuilder()
       .setup(new ConfigurationSetup().build())
-      .setup(loggerSetup)
+      .setup(new LoggerSetup().build())
       .buildServiceProvider();
 
-    const logger = services.getOrThrow<Logger>(GLOBAL_LOGGER);
+    const logger = services.getOrThrow<ILogger>(LOGGER);
     logger.debug('This is a log with "debug" level.');
     logger.verbose('This is a log with "verbose" level.');
     logger.info('This is a log with "info" level.');
@@ -35,10 +35,10 @@ describe("Logger", () => {
   it("Can log with data", async () => {
     const services = await new ContainerBuilder()
       .setup(new ConfigurationSetup().build())
-      .setup(loggerSetup)
+      .setup(new LoggerSetup().build())
       .buildServiceProvider();
 
-    const logger = services.getOrThrow<Logger>(GLOBAL_LOGGER);
+    const logger = services.getOrThrow<ILogger>(LOGGER);
     logger.debug("Log with number", 10);
     logger.debug("Log with boolean", true);
     logger.debug("Log with string", "TestString");
@@ -54,14 +54,14 @@ describe("Logger", () => {
   it("Can use log levels", async () => {
     const services = await new ContainerBuilder()
       .setup(new ConfigurationSetup().build())
-      .setup(loggerSetup)
+      .setup(new LoggerSetup().build())
       .buildServiceProvider();
 
-    const loggerFactory = services.getOrThrow(LoggerFactory);
+    const loggerBuilder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
 
     for (const level of logLevels) {
       console.log("Now using level:", level);
-      const logger = loggerFactory.createLogger("test", level);
+      const logger = loggerBuilder.withCategory("test").withLevel(level).build();
       doLogs(logger);
     }
   });
