@@ -10,7 +10,7 @@ import { LoggerSetup } from "@/logging";
 
 interface IAppBuilder<TApp extends IApp> {
   setupConfiguration(delegate: ConfigurationSetupDelegate): this;
-  setupLogging(): this;
+  setupLogging(delegate: LoggerSetupDelegate): this;
   setupBus(delegate: BusSetupDelegate): this;
   setupContainer(delegate: ContainerBuilderDelegate): this;
   build(): Promise<TApp>;
@@ -25,10 +25,12 @@ export interface IApp {
 }
 
 type ConfigurationSetupDelegate = (builder: ConfigurationSetup) => void;
+type LoggerSetupDelegate = (builder: LoggerSetup) => void;
 type BusSetupDelegate = (builder: BusSetup) => void;
 
 export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp> {
   private configurationSetupDelegates: ConfigurationSetupDelegate[] = [];
+  private loggerSetupDelegates: LoggerSetupDelegate[] = [];
   private busSetupDelegates: BusSetupDelegate[] = [];
   private containerBuilderDelegates: ContainerBuilderDelegate[] = [];
 
@@ -45,8 +47,8 @@ export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp>
     return this;
   }
 
-  setupLogging(): this {
-    // TODO Implement this
+  setupLogging(delegate: LoggerSetupDelegate): this {
+    this.loggerSetupDelegates.push(delegate);
     return this;
   }
 
@@ -72,8 +74,13 @@ export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp>
         builder.setup(setup.build());
       })
       .delegate((builder) => {
-        // TODO Add delegator
-        builder.setup(new LoggerSetup().build());
+        const setup = new LoggerSetup();
+
+        for (const delegate of this.loggerSetupDelegates) {
+          delegate(setup);
+        }
+
+        builder.setup(setup.build());
       })
       .delegate((builder) => {
         const busSetup = new BusSetup();
