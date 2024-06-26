@@ -1,7 +1,3 @@
-import { ContainerSetup } from "@/dependency-injection";
-import { IServiceProvider } from "@/dependency-injection";
-import { LOGGER, LOGGER_BUILDER } from "./tokens";
-import { ILoggerBuilder, LoggerBuilder } from "./LoggerBuilder";
 import {
   Configuration,
   ConfigurationSection,
@@ -9,8 +5,11 @@ import {
   IConfigurationSection,
   configurationToken,
 } from "@/configuration";
-import { ILogger, LogLevel, LoggerOptions } from "./Logger";
+import { ContainerSetup, IServiceProvider } from "@/dependency-injection";
 import { InvalidOperationError } from "@/errors";
+import { LOGGER, LOGGER_BUILDER } from "./tokens";
+import { ILoggerBuilder, LoggerBuilder } from "./LoggerBuilder";
+import { ILogger, LogLevel, LoggerOptions } from "./Logger";
 
 interface ILoggerSetup {
   withConfiguration(config: IConfiguration): this;

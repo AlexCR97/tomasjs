@@ -1,10 +1,15 @@
 import "reflect-metadata";
 import { ContainerBuilder } from "@/dependency-injection";
 import { LOGGER, LOGGER_BUILDER } from "./tokens";
-import { ConfigurationSetup } from "@/configuration";
+import {
+  Configuration,
+  ConfigurationSection,
+  ConfigurationSetup,
+  RawConfigurationSource,
+} from "@/configuration";
 import { ILogger, Logger, LoggerOptions } from "./Logger";
 import { ILoggerBuilder, LoggerBuilder } from "./LoggerBuilder";
-import { LoggerSetup } from "./LoggerSetup";
+import { LoggerConfiguration, LoggerSetup } from "./LoggerSetup";
 
 describe("loggerSetup", () => {
   it("can resolve the default LoggerBuilder", async () => {
@@ -33,23 +38,112 @@ describe("loggerSetup", () => {
     expect(typedLogger.options).toMatchObject(LoggerBuilder.defaultOptions);
   });
 
-  it("can override the default LoggerBuilder options", async () => {
-    const customOptions: Partial<LoggerOptions> = {
-      category: "custom",
-      level: "error",
-      showTimestamp: false,
+  it("can explicitly override the default LoggerConfiguration with a Configuration instance", async () => {
+    const loggerConfig: LoggerConfiguration = {
+      default: {
+        category: "foo",
+        level: "verbose",
+        showCategory: true,
+        showLevel: false,
+        showTimestamp: false,
+      },
+      minimumLevel: {
+        default: "error",
+        override: {
+          bar: "warn",
+        },
+      },
     };
 
     const services = await new ContainerBuilder()
       .setup(
-        new ConfigurationSetup()
-          .addRawSource({
-            logging: {
-              default: customOptions,
-            },
-          })
+        new LoggerSetup()
+          .withConfiguration(
+            new Configuration([
+              ConfigurationSection.fromRoot(
+                RawConfigurationSource.new({
+                  logging: loggerConfig,
+                }).readSource()
+              ),
+            ])
+          )
           .build()
       )
+      .buildServiceProvider();
+
+    const builder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
+    expect(builder).toBeInstanceOf(LoggerBuilder);
+
+    const logger = builder.build() as Logger;
+    expect(logger.options).toMatchObject(loggerConfig.default!);
+  });
+
+  it("can explicitly override the default LoggerConfiguration with a ConfigurationSection instance", async () => {
+    const loggerConfig: LoggerConfiguration = {
+      default: {
+        category: "bar",
+        level: "info",
+        showCategory: false,
+        showLevel: true,
+        showTimestamp: true,
+      },
+      minimumLevel: {
+        default: "verbose",
+        override: {
+          foo: "debug",
+        },
+      },
+    };
+
+    const services = await new ContainerBuilder()
+      .setup(
+        new LoggerSetup()
+          .withConfiguration(
+            ConfigurationSection.fromRoot(RawConfigurationSource.new(loggerConfig).readSource())
+          )
+          .build()
+      )
+      .buildServiceProvider();
+
+    const builder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
+    expect(builder).toBeInstanceOf(LoggerBuilder);
+
+    const logger = builder.build() as Logger;
+    expect(logger.options).toMatchObject(loggerConfig.default!);
+  });
+
+  it("can explicitly override the default LoggerConfiguration with LoggerOptions", async () => {
+    const loggerOptions: LoggerOptions = {
+      category: "fizz",
+      configuration: Configuration.empty(),
+      level: "info",
+      showCategory: false,
+      showLevel: false,
+      showTimestamp: false,
+    };
+
+    const services = await new ContainerBuilder()
+      .setup(new LoggerSetup().withConfiguration({ default: loggerOptions }).build())
+      .buildServiceProvider();
+
+    const builder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
+    expect(builder).toBeInstanceOf(LoggerBuilder);
+
+    const logger = builder.build() as Logger;
+    expect(logger.options).toMatchObject(loggerOptions);
+  });
+
+  it("can implicitly override the default LoggerConfiguration with a ConfigurationSetup", async () => {
+    const loggerConfig: LoggerConfiguration = {
+      default: {
+        category: "custom",
+        level: "error",
+        showTimestamp: false,
+      },
+    };
+
+    const services = await new ContainerBuilder()
+      .setup(new ConfigurationSetup().addRawSource({ logging: loggerConfig }).build())
       .setup(new LoggerSetup().build())
       .buildServiceProvider();
 
@@ -57,6 +151,6 @@ describe("loggerSetup", () => {
     expect(builder).toBeInstanceOf(LoggerBuilder);
 
     const logger = builder.build() as Logger;
-    expect(logger.options).toMatchObject(customOptions);
+    expect(logger.options).toMatchObject(loggerConfig.default!);
   });
 });
