@@ -1,4 +1,4 @@
-export { ILogger, LogLevel, Logger } from "./Logger";
-export { ILoggerFactory, LoggerFactory } from "./LoggerFactory";
-export { loggerSetup } from "./loggerSetup";
-export { GLOBAL_LOGGER } from "./tokens";
+export { ILogger, LogLevel, LoggerOptions } from "./Logger";
+export { ILoggerBuilder, LoggerBuilder } from "./LoggerBuilder";
+export { LoggerConfiguration, LoggerSetup } from "./LoggerSetupp";
+export { LOGGER, LOGGER_BUILDER } from "./tokens";
