@@ -8,6 +8,8 @@ import {
 } from "./ConsoleApp";
 import { ServiceProvider, inject } from "@/dependency-injection";
 import { Environment } from "@/app";
+import { ILoggerBuilder, LOGGER_BUILDER, LoggerConfiguration } from "@/logging";
+import { Logger } from "@/logging/Logger";
 
 describe("ConsoleApp", () => {
   it("should build a console app", async () => {
@@ -113,5 +115,34 @@ describe("ConsoleApp", () => {
     } catch (err) {
       expect(err).toBeInstanceOf(ConsoleAppEntryPointError);
     }
+  });
+
+  it("should configure logging", async () => {
+    const loggerConfig: LoggerConfiguration = {
+      default: {
+        category: "foo",
+        level: "warn",
+        showCategory: true,
+        showLevel: false,
+        showTimestamp: false,
+      },
+      minimumLevel: {
+        default: "error",
+        override: {
+          ["bar"]: "verbose",
+        },
+      },
+    };
+
+    await new ConsoleAppBuilder()
+      .setupLogging((logger) => logger.withConfiguration(loggerConfig))
+      .addEntryPoint(({ services }) => {
+        const loggerBuilder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
+        const logger = loggerBuilder.build();
+        const typedLogger = logger as Logger;
+        expect(typedLogger.options).toMatchObject(loggerConfig.default!);
+      })
+      .build()
+      .then((app) => app.start());
   });
 });
