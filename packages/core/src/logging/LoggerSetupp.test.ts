@@ -11,6 +11,7 @@ import { ILogger, Logger, LoggerOptions } from "./Logger";
 import { ILoggerBuilder, LoggerBuilder } from "./LoggerBuilder";
 import { LoggerConfiguration, LoggerSetup } from "./LoggerSetupp";
 import { LOG_LEVELS } from "./LogLevel";
+import { Log } from "./Log";
 
 describe("LoggerSetup", () => {
   it("can resolve the default LoggerBuilder", async () => {
@@ -44,9 +45,7 @@ describe("LoggerSetup", () => {
       default: {
         category: "foo",
         level: "verbose",
-        showCategory: true,
-        showLevel: false,
-        showTimestamp: false,
+        format: `{${Log.DEFAULT_DATA_KEYS.category}} {${Log.DEFAULT_DATA_KEYS.message}}`,
       },
       minimumLevel: {
         default: "error",
@@ -84,9 +83,7 @@ describe("LoggerSetup", () => {
       default: {
         category: "bar",
         level: "info",
-        showCategory: false,
-        showLevel: true,
-        showTimestamp: true,
+        format: `{${Log.DEFAULT_DATA_KEYS.timestamp}} {${Log.DEFAULT_DATA_KEYS.level}} {${Log.DEFAULT_DATA_KEYS.message}}`,
       },
       minimumLevel: {
         default: "verbose",
@@ -118,9 +115,7 @@ describe("LoggerSetup", () => {
       category: "fizz",
       configuration: Configuration.empty(),
       level: "info",
-      showCategory: false,
-      showLevel: false,
-      showTimestamp: false,
+      format: `{${Log.DEFAULT_DATA_KEYS.message}}`,
     };
 
     const services = await new ContainerBuilder()
@@ -139,7 +134,7 @@ describe("LoggerSetup", () => {
       default: {
         category: "custom",
         level: "error",
-        showTimestamp: false,
+        format: `[{${Log.DEFAULT_DATA_KEYS.category}}] {${Log.DEFAULT_DATA_KEYS.level}} {${Log.DEFAULT_DATA_KEYS.message}}`,
       },
     };
 
@@ -225,6 +220,36 @@ describe("LoggerSetup", () => {
       logger.warn("foo bar fizz buzz");
       logger.error("foo bar fizz buzz");
       logger.fatal("foo bar fizz buzz");
+    }
+  });
+
+  it("can override the format", async () => {
+    const formats = [
+      `{${Log.DEFAULT_DATA_KEYS.timestamp}} {${Log.DEFAULT_DATA_KEYS.level}} [{${Log.DEFAULT_DATA_KEYS.category}}] {${Log.DEFAULT_DATA_KEYS.message}}`,
+      `{${Log.DEFAULT_DATA_KEYS.level}} [{${Log.DEFAULT_DATA_KEYS.category}}] {${Log.DEFAULT_DATA_KEYS.message}}`,
+      `[{${Log.DEFAULT_DATA_KEYS.category}}] {${Log.DEFAULT_DATA_KEYS.message}}`,
+      `{${Log.DEFAULT_DATA_KEYS.timestamp}} {${Log.DEFAULT_DATA_KEYS.message}}`,
+      `{${Log.DEFAULT_DATA_KEYS.message}}`,
+    ] as const;
+
+    for (const format of formats) {
+      const loggerConfig: LoggerConfiguration = {
+        default: {
+          format,
+        },
+      };
+
+      const services = await new ContainerBuilder()
+        .setup(new ConfigurationSetup().addRawSource({ logging: loggerConfig }).build())
+        .setup(new LoggerSetup().build())
+        .buildServiceProvider();
+
+      const builder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
+      const logger = builder.build();
+
+      process.stdout.write(`Now using format "${format}"\n`);
+      logger.debug("(a + b) * (a + b) = {result}", { result: "a^2 + b^2 + 2ab" });
+      process.stdout.write("\n");
     }
   });
 });

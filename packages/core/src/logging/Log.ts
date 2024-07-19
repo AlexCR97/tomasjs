@@ -8,13 +8,16 @@ interface ILog {
   timestamp: Date;
   template: string;
   templateData: LogData;
+  format: string;
   message(): string;
 }
 
-const DEFAULT_FORMAT = "{timestamp} {level} {message}";
-
 export class Log implements ILog {
-  private constructor(readonly template: string, readonly templateData: LogData) {}
+  private constructor(
+    readonly template: string,
+    readonly templateData: LogData,
+    readonly format: string
+  ) {}
 
   get category(): string {
     return this.templateData["category"] as string;
@@ -31,7 +34,7 @@ export class Log implements ILog {
   message(): string {
     return pipe()
       .pipe(() => render(this.template, this.templateData))
-      .pipe((message) => render(DEFAULT_FORMAT, { ...this.templateData, message }))
+      .pipe((message) => render(this.format, { ...this.templateData, message }))
       .get();
 
     function render(template: string, data: LogData): string {
@@ -48,12 +51,23 @@ export class Log implements ILog {
     }
   }
 
+  static readonly DEFAULT_DATA_KEYS = {
+    category: "category",
+    level: "level",
+    timestamp: "timestamp",
+    message: "message",
+  } as const;
+
+  static readonly DEFAULT_FORMAT =
+    `{${this.DEFAULT_DATA_KEYS.timestamp}} {${this.DEFAULT_DATA_KEYS.level}} {${this.DEFAULT_DATA_KEYS.message}}` as const;
+
   static create(options: {
     category: string;
     level: LogLevel;
     timestamp: Date;
     template: string;
     templateData: LogData;
+    format: string;
   }): Log {
     const finalTemplateData: LogData = {
       category: options.category,
@@ -62,16 +76,17 @@ export class Log implements ILog {
       ...options.templateData,
     };
 
-    return new Log(options.template, finalTemplateData);
+    return new Log(options.template, finalTemplateData, options.format);
   }
 
   static default(template: string, templateData: LogData): Log {
     return this.create({
       category: "default",
-      level: "verbose",
+      level: "debug",
       timestamp: new Date(),
       template,
       templateData,
+      format: this.DEFAULT_FORMAT,
     });
   }
 }

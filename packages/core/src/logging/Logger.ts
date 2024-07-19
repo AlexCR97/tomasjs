@@ -17,28 +17,12 @@ export interface ILogger {
 export type LoggerOptions = {
   category: string;
   configuration: IConfiguration;
+  format: string;
   level: LogLevel;
-
-  // TODO Implement these
-  showCategory: boolean;
-  showLevel: boolean;
-  showTimestamp: boolean;
 };
 
 export class Logger implements ILogger {
   constructor(readonly options: LoggerOptions) {}
-
-  private get category(): string {
-    return this.options.category;
-  }
-
-  private get configuration(): IConfiguration {
-    return this.options.configuration;
-  }
-
-  private get level(): LogLevel {
-    return this.options.level;
-  }
 
   log(level: LogLevel, message: string, data?: LogData): void {
     const computedLevel = this.computeLogLevel();
@@ -47,11 +31,12 @@ export class Logger implements ILogger {
 
     if (showLog) {
       const log = Log.create({
-        category: this.category,
+        category: this.options.category,
         timestamp: new Date(),
         level: level,
         template: message,
         templateData: data ?? {},
+        format: this.options.format,
       });
 
       const renderedMessage = log.message();
@@ -61,18 +46,18 @@ export class Logger implements ILogger {
   }
 
   private computeLogLevel(): LogLevel {
-    return pipe(this.level)
+    return pipe(this.options.level)
       .pipe((currentLevel) => {
-        const defaultLevel = this.configuration
+        const defaultLevel = this.options.configuration
           .section("logging.minimumLevel.default")
           ?.value<LogLevel>("string");
 
         return defaultLevel ?? currentLevel;
       })
       .pipe((currentLevel) => {
-        const overrideLevel = this.configuration
+        const overrideLevel = this.options.configuration
           .section("logging.minimumLevel.override")
-          ?.section(this.category)
+          ?.section(this.options.category)
           ?.value<LogLevel>("string");
 
         return overrideLevel ?? currentLevel;

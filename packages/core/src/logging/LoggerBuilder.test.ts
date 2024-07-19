@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { LoggerBuilder } from "./LoggerBuilder";
 import { Logger, LoggerOptions } from "./Logger";
 import { Configuration } from "@/configuration";
+import { Log } from "./Log";
 
 describe("LoggerBuilder", () => {
   it("can build a default logger", async () => {
@@ -17,9 +18,7 @@ describe("LoggerBuilder", () => {
       category: "foo",
       configuration: Configuration.empty(),
       level: "info",
-      showCategory: false,
-      showLevel: true,
-      showTimestamp: false,
+      format: `{${Log.DEFAULT_DATA_KEYS.level}} {${Log.DEFAULT_DATA_KEYS.message}}`,
     };
 
     const logger = LoggerBuilder.fromOptions(customOptions).build();
