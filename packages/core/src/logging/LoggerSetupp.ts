@@ -9,7 +9,8 @@ import { ContainerSetup, IServiceProvider } from "@/dependency-injection";
 import { InvalidOperationError } from "@/errors";
 import { LOGGER, LOGGER_BUILDER } from "./tokens";
 import { ILoggerBuilder, LoggerBuilder } from "./LoggerBuilder";
-import { ILogger, LogLevel, LoggerOptions } from "./Logger";
+import { ILogger, LoggerOptions } from "./Logger";
+import { LogLevel } from "./LogLevel";
 
 interface ILoggerSetup {
   withConfiguration(config: IConfiguration): this;
@@ -65,12 +66,21 @@ export class LoggerSetup implements ILoggerSetup {
   build(): ContainerSetup {
     return (container) => {
       container.add<ILoggerBuilder>("singleton", LOGGER_BUILDER, (services: IServiceProvider) => {
-        const loggerConfig = this.getLoggerConfiguration(services);
+        const configuration = services.get<IConfiguration>(configurationToken);
+
+        const loggerConfig = this.getLoggerConfiguration(configuration);
         const defaultOptions = loggerConfig?.default;
 
-        return defaultOptions === undefined || defaultOptions === null
-          ? LoggerBuilder.default()
-          : LoggerBuilder.fromOptions(defaultOptions);
+        const loggerBuilder =
+          defaultOptions === undefined || defaultOptions === null
+            ? LoggerBuilder.default()
+            : LoggerBuilder.fromOptions(defaultOptions);
+
+        if (configuration) {
+          loggerBuilder.withConfiguration(configuration);
+        }
+
+        return loggerBuilder;
       });
 
       container.add<ILogger>("singleton", LOGGER, (services: IServiceProvider) => {
@@ -79,16 +89,15 @@ export class LoggerSetup implements ILoggerSetup {
     };
   }
 
-  private getLoggerConfiguration(services: IServiceProvider): LoggerConfiguration | null {
+  private getLoggerConfiguration(
+    configuration: IConfiguration | undefined
+  ): LoggerConfiguration | null {
     if (this.config !== undefined && this.config !== null) {
       return this.config;
     }
 
-    return (
-      services
-        .get<IConfiguration>(configurationToken)
-        ?.section("logging")
-        ?.value<LoggerConfiguration>("object") ?? null
-    );
+    const loggerConfig = configuration?.section("logging")?.value<LoggerConfiguration>("object");
+
+    return loggerConfig ?? null;
   }
 }

@@ -10,8 +10,9 @@ import {
 import { ILogger, Logger, LoggerOptions } from "./Logger";
 import { ILoggerBuilder, LoggerBuilder } from "./LoggerBuilder";
 import { LoggerConfiguration, LoggerSetup } from "./LoggerSetupp";
+import { LOG_LEVELS } from "./LogLevel";
 
-describe("loggerSetup", () => {
+describe("LoggerSetup", () => {
   it("can resolve the default LoggerBuilder", async () => {
     const services = await new ContainerBuilder()
       .setup(new ConfigurationSetup().build())
@@ -152,5 +153,78 @@ describe("loggerSetup", () => {
 
     const logger = builder.build() as Logger;
     expect(logger.options).toMatchObject(loggerConfig.default!);
+  });
+
+  it("can override the default LogLevel", async () => {
+    for (const level of LOG_LEVELS) {
+      const loggerConfig: LoggerConfiguration = {
+        minimumLevel: {
+          default: level,
+        },
+      };
+
+      const services = await new ContainerBuilder()
+        .setup(new ConfigurationSetup().addRawSource({ logging: loggerConfig }).build())
+        .setup(new LoggerSetup().build())
+        .buildServiceProvider();
+
+      const builder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
+      const logger = builder.build();
+
+      process.stdout.write(`Now using level "${level}"\n`);
+      doLogs(logger);
+      process.stdout.write("\n");
+    }
+
+    function doLogs(logger: ILogger) {
+      logger.verbose("foo bar fizz buzz");
+      logger.debug("foo bar fizz buzz");
+      logger.info("foo bar fizz buzz");
+      logger.warn("foo bar fizz buzz");
+      logger.error("foo bar fizz buzz");
+      logger.fatal("foo bar fizz buzz");
+    }
+  });
+
+  it("can override a category LogLevel", async () => {
+    const category = "TestLogger";
+
+    for (const level of LOG_LEVELS) {
+      const loggerConfig: LoggerConfiguration = {
+        minimumLevel: {
+          override: {
+            [category]: level,
+          },
+        },
+      };
+
+      const services = await new ContainerBuilder()
+        .setup(new ConfigurationSetup().addRawSource({ logging: loggerConfig }).build())
+        .setup(new LoggerSetup().build())
+        .buildServiceProvider();
+
+      const builder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
+      const defaultLogger = builder.build();
+      const overrideLogger = builder.withCategory(category).build();
+
+      process.stdout.write(`Now using level "${level}"\n`);
+
+      process.stdout.write("[default]\n");
+      doLogs(defaultLogger);
+
+      process.stdout.write("[override]\n");
+      doLogs(overrideLogger);
+
+      process.stdout.write("\n");
+    }
+
+    function doLogs(logger: ILogger) {
+      logger.verbose("foo bar fizz buzz");
+      logger.debug("foo bar fizz buzz");
+      logger.info("foo bar fizz buzz");
+      logger.warn("foo bar fizz buzz");
+      logger.error("foo bar fizz buzz");
+      logger.fatal("foo bar fizz buzz");
+    }
   });
 });

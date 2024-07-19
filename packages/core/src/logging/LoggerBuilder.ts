@@ -1,5 +1,6 @@
-import { ILogger, LogLevel, Logger, LoggerOptions } from "./Logger";
+import { ILogger, Logger, LoggerOptions } from "./Logger";
 import { Configuration, IConfiguration } from "@/configuration";
+import { LogLevel } from "./LogLevel";
 
 export interface ILoggerBuilder {
   withCategory(category: string): this;
@@ -66,7 +67,7 @@ export class LoggerBuilder implements ILoggerBuilder {
     category: "default",
     configuration: Configuration.empty(),
     level: "debug",
-    showCategory: true,
+    showCategory: false,
     showLevel: true,
     showTimestamp: true,
   };
