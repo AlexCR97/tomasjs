@@ -10,8 +10,10 @@ import {
 import { ILogger, Logger, LoggerOptions } from "./Logger";
 import { ILoggerBuilder, LoggerBuilder } from "./LoggerBuilder";
 import { LoggerConfiguration, LoggerSetup } from "./LoggerSetupp";
+import { LOG_LEVELS } from "./LogLevel";
+import { Log } from "./Log";
 
-describe("loggerSetup", () => {
+describe("logging/LoggerSetup", () => {
   it("can resolve the default LoggerBuilder", async () => {
     const services = await new ContainerBuilder()
       .setup(new ConfigurationSetup().build())
@@ -43,9 +45,7 @@ describe("loggerSetup", () => {
       default: {
         category: "foo",
         level: "verbose",
-        showCategory: true,
-        showLevel: false,
-        showTimestamp: false,
+        format: `{${Log.DEFAULT_DATA_KEYS.category}} {${Log.DEFAULT_DATA_KEYS.message}}`,
       },
       minimumLevel: {
         default: "error",
@@ -83,9 +83,7 @@ describe("loggerSetup", () => {
       default: {
         category: "bar",
         level: "info",
-        showCategory: false,
-        showLevel: true,
-        showTimestamp: true,
+        format: `{${Log.DEFAULT_DATA_KEYS.timestamp}} {${Log.DEFAULT_DATA_KEYS.level}} {${Log.DEFAULT_DATA_KEYS.message}}`,
       },
       minimumLevel: {
         default: "verbose",
@@ -117,9 +115,7 @@ describe("loggerSetup", () => {
       category: "fizz",
       configuration: Configuration.empty(),
       level: "info",
-      showCategory: false,
-      showLevel: false,
-      showTimestamp: false,
+      format: `{${Log.DEFAULT_DATA_KEYS.message}}`,
     };
 
     const services = await new ContainerBuilder()
@@ -138,7 +134,7 @@ describe("loggerSetup", () => {
       default: {
         category: "custom",
         level: "error",
-        showTimestamp: false,
+        format: `[{${Log.DEFAULT_DATA_KEYS.category}}] {${Log.DEFAULT_DATA_KEYS.level}} {${Log.DEFAULT_DATA_KEYS.message}}`,
       },
     };
 
@@ -152,5 +148,108 @@ describe("loggerSetup", () => {
 
     const logger = builder.build() as Logger;
     expect(logger.options).toMatchObject(loggerConfig.default!);
+  });
+
+  it("can override the default LogLevel", async () => {
+    for (const level of LOG_LEVELS) {
+      const loggerConfig: LoggerConfiguration = {
+        minimumLevel: {
+          default: level,
+        },
+      };
+
+      const services = await new ContainerBuilder()
+        .setup(new ConfigurationSetup().addRawSource({ logging: loggerConfig }).build())
+        .setup(new LoggerSetup().build())
+        .buildServiceProvider();
+
+      const builder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
+      const logger = builder.build();
+
+      process.stdout.write(`Now using level "${level}"\n`);
+      doLogs(logger);
+      process.stdout.write("\n");
+    }
+
+    function doLogs(logger: ILogger) {
+      logger.verbose("foo bar fizz buzz");
+      logger.debug("foo bar fizz buzz");
+      logger.info("foo bar fizz buzz");
+      logger.warn("foo bar fizz buzz");
+      logger.error("foo bar fizz buzz");
+      logger.fatal("foo bar fizz buzz");
+    }
+  });
+
+  it("can override a category LogLevel", async () => {
+    const category = "TestLogger";
+
+    for (const level of LOG_LEVELS) {
+      const loggerConfig: LoggerConfiguration = {
+        minimumLevel: {
+          override: {
+            [category]: level,
+          },
+        },
+      };
+
+      const services = await new ContainerBuilder()
+        .setup(new ConfigurationSetup().addRawSource({ logging: loggerConfig }).build())
+        .setup(new LoggerSetup().build())
+        .buildServiceProvider();
+
+      const builder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
+      const defaultLogger = builder.build();
+      const overrideLogger = builder.withCategory(category).build();
+
+      process.stdout.write(`Now using level "${level}"\n`);
+
+      process.stdout.write("[default]\n");
+      doLogs(defaultLogger);
+
+      process.stdout.write("[override]\n");
+      doLogs(overrideLogger);
+
+      process.stdout.write("\n");
+    }
+
+    function doLogs(logger: ILogger) {
+      logger.verbose("foo bar fizz buzz");
+      logger.debug("foo bar fizz buzz");
+      logger.info("foo bar fizz buzz");
+      logger.warn("foo bar fizz buzz");
+      logger.error("foo bar fizz buzz");
+      logger.fatal("foo bar fizz buzz");
+    }
+  });
+
+  it("can override the format", async () => {
+    const formats = [
+      `{${Log.DEFAULT_DATA_KEYS.timestamp}} {${Log.DEFAULT_DATA_KEYS.level}} [{${Log.DEFAULT_DATA_KEYS.category}}] {${Log.DEFAULT_DATA_KEYS.message}}`,
+      `{${Log.DEFAULT_DATA_KEYS.level}} [{${Log.DEFAULT_DATA_KEYS.category}}] {${Log.DEFAULT_DATA_KEYS.message}}`,
+      `[{${Log.DEFAULT_DATA_KEYS.category}}] {${Log.DEFAULT_DATA_KEYS.message}}`,
+      `{${Log.DEFAULT_DATA_KEYS.timestamp}} {${Log.DEFAULT_DATA_KEYS.message}}`,
+      `{${Log.DEFAULT_DATA_KEYS.message}}`,
+    ] as const;
+
+    for (const format of formats) {
+      const loggerConfig: LoggerConfiguration = {
+        default: {
+          format,
+        },
+      };
+
+      const services = await new ContainerBuilder()
+        .setup(new ConfigurationSetup().addRawSource({ logging: loggerConfig }).build())
+        .setup(new LoggerSetup().build())
+        .buildServiceProvider();
+
+      const builder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
+      const logger = builder.build();
+
+      process.stdout.write(`Now using format "${format}"\n`);
+      logger.debug("(a + b) * (a + b) = {result}", { result: "a^2 + b^2 + 2ab" });
+      process.stdout.write("\n");
+    }
   });
 });

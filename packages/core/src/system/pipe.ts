@@ -3,7 +3,7 @@
  * @param input The initial input of the pipe
  * @returns A pipe which can then be used to chain transformations.
  */
-export function pipe<TInput>(input: TInput): IPipe<TInput> {
+export function pipe<TInput>(input?: TInput): IPipe<TInput> {
   const pipeline = new TransformationPipeline(input);
   return new Pipe(pipeline);
 }

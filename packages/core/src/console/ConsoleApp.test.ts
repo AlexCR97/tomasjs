@@ -8,7 +8,7 @@ import {
 } from "./ConsoleApp";
 import { ServiceProvider, inject } from "@/dependency-injection";
 import { Environment } from "@/app";
-import { ILoggerBuilder, LOGGER_BUILDER, LoggerConfiguration } from "@/logging";
+import { ILoggerBuilder, Log, LOGGER_BUILDER, LoggerConfiguration } from "@/logging";
 import { Logger } from "@/logging/Logger";
 
 describe("ConsoleApp", () => {
@@ -122,9 +122,7 @@ describe("ConsoleApp", () => {
       default: {
         category: "foo",
         level: "warn",
-        showCategory: true,
-        showLevel: false,
-        showTimestamp: false,
+        format: `[{${Log.DEFAULT_DATA_KEYS.category}}] {${Log.DEFAULT_DATA_KEYS.message}}`,
       },
       minimumLevel: {
         default: "error",
