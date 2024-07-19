@@ -7,7 +7,7 @@ import { ILoggerBuilder } from "./LoggerBuilder";
 import { LoggerSetup } from "./LoggerSetupp";
 import { LOG_LEVELS } from "./LogLevel";
 
-describe("Logger", () => {
+describe("logging/Logger", () => {
   it("Can use the default Logger", async () => {
     const services = await new ContainerBuilder()
       .setup(new ConfigurationSetup().build())

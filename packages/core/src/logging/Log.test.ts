@@ -1,7 +1,7 @@
 import "reflect-metadata";
 import { Log } from "./Log";
 
-describe("Log", () => {
+describe("logging/Log", () => {
   it("can render", () => {
     const messageTemplate = "Hello {name}";
     const log = Log.default(messageTemplate, { name: "world!" });

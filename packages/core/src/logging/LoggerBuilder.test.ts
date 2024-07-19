@@ -4,7 +4,7 @@ import { Logger, LoggerOptions } from "./Logger";
 import { Configuration } from "@/configuration";
 import { Log } from "./Log";
 
-describe("LoggerBuilder", () => {
+describe("logging/LoggerBuilder", () => {
   it("can build a default logger", async () => {
     const logger = LoggerBuilder.default().build();
     expect(logger).toBeInstanceOf(Logger);

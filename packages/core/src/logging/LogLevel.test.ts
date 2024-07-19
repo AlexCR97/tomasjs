@@ -1,6 +1,6 @@
 import { compareLogLevel } from "./LogLevel";
 
-describe("LogLevel", () => {
+describe("logging/LogLevel", () => {
   it("can compare log levels", () => {
     expect(compareLogLevel("info", "info")).toBe(0);
     expect(compareLogLevel("debug", "error")).toBe(-3);

@@ -1,6 +1,8 @@
 import { pipe } from "@/system";
-import { LogData, LogDataValue } from "./LogData";
+import { ILogDataValue, LogData } from "./LogData";
 import { LogLevel } from "./LogLevel";
+import { LogDataValue } from "./LogDataValueRegistry";
+import { ConsoleColor, escape } from "@/system/console";
 
 interface ILog {
   category: string;
@@ -41,9 +43,24 @@ export class Log implements ILog {
       let message = template;
 
       for (const key in data) {
-        const unknownValue = data[key];
-        const colorize = key !== "timestamp" && key !== "message";
-        const stringValue = LogDataValue.from(unknownValue, { colorize }).toString();
+        const logDataValue = pipe(data[key])
+          .pipe((unknownValue) => LogDataValue.for(unknownValue))
+          .pipe((logDataValue) => {
+            return shouldColorize(key) ? new ColoredLogData("pink", logDataValue) : logDataValue;
+
+            function shouldColorize(key: string): boolean {
+              const nonColorableKeys: string[] = [
+                Log.DEFAULT_DATA_KEYS.timestamp,
+                Log.DEFAULT_DATA_KEYS.message,
+              ];
+
+              return !nonColorableKeys.includes(key);
+            }
+          })
+          .get();
+
+        const stringValue = logDataValue.toString();
+
         message = message.replace(`{${key}}`, stringValue);
       }
 
@@ -88,5 +105,17 @@ export class Log implements ILog {
       templateData,
       format: this.DEFAULT_FORMAT,
     });
+  }
+}
+
+class ColoredLogData<T> implements ILogDataValue<T> {
+  constructor(readonly color: ConsoleColor, readonly wrapped: ILogDataValue<T>) {}
+
+  get value(): T {
+    return this.wrapped.value;
+  }
+
+  toString(): string {
+    return escape(this.color, this.wrapped.toString());
   }
 }

@@ -13,7 +13,7 @@ import { LoggerConfiguration, LoggerSetup } from "./LoggerSetupp";
 import { LOG_LEVELS } from "./LogLevel";
 import { Log } from "./Log";
 
-describe("LoggerSetup", () => {
+describe("logging/LoggerSetup", () => {
   it("can resolve the default LoggerBuilder", async () => {
     const services = await new ContainerBuilder()
       .setup(new ConfigurationSetup().build())
