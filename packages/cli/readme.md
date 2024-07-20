@@ -1,2 +1,1 @@
-# tomasjs-cli
-The official CLI for TomasJS
+# TomasJS CLI
