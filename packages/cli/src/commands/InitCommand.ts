@@ -1,6 +1,6 @@
 import { Command } from "commander";
 import { input, select } from "@inquirer/prompts";
-import { ILogger, LoggerFactory } from "@tomasjs/core/logging";
+import { ILogger, ILoggerBuilder, LOGGER_BUILDER } from "@tomasjs/core/logging";
 import path, { join } from "node:path";
 import fs, { existsSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
@@ -13,6 +13,7 @@ import {
 import { CommandFactory } from "./CommandFactory";
 import { inject } from "@tomasjs/core/dependency-injection";
 import { readJsonFile } from "@tomasjs/core/files";
+import { escape } from "@tomasjs/core/system/console";
 import { Executable } from "@/process";
 import { APP_LOGGER } from "@/logger";
 
@@ -20,8 +21,8 @@ export class InitCommand implements CommandFactory {
   private readonly debugLogger: ILogger;
 
   constructor(
-    @inject(LoggerFactory)
-    loggerFactory: LoggerFactory,
+    @inject(LOGGER_BUILDER)
+    loggerBuilder: ILoggerBuilder,
 
     @inject(APP_LOGGER)
     private readonly appLogger: ILogger,
@@ -29,7 +30,7 @@ export class InitCommand implements CommandFactory {
     @inject(PROJECT_TEMPLATE_DOWNLOADER_FACTORY_TOKEN)
     private readonly projectTemplateDownloaderFactory: IProjectTemplateDownloaderFactory
   ) {
-    this.debugLogger = loggerFactory.createLogger(InitCommand.name, "debug");
+    this.debugLogger = loggerBuilder.withCategory(InitCommand.name).withLevel("debug").build();
   }
 
   createCommand(): Command {
@@ -84,16 +85,21 @@ export class InitCommand implements CommandFactory {
           if (err instanceof Error) {
             this.appLogger.error(err.message);
           } else {
-            this.appLogger.error(`An unexpected error occurred: ${err}`);
+            this.appLogger.error("An unexpected error occurred: {err}", { err });
           }
         }
       });
   }
 
   private inputProjectName(): Promise<string> {
-    // TODO Improve this message
     console.log(
-      "A valid project name must contain only letters (a-z A-Z), numbers (0-9), hyphens (-), underscores (_) and must not start with a number."
+      `A valid project name must contain only ${escape("yellow", "letters (a-z A-Z)")}, ${escape(
+        "yellow",
+        "numbers (0-9)"
+      )}, ${escape("yellow", "hyphens (-)")}, ${escape(
+        "yellow",
+        "underscores (_)"
+      )} and must ${escape("yellow", "not start with a number")}.`
     );
 
     return input({
@@ -185,7 +191,9 @@ export class InitCommand implements CommandFactory {
               });
 
               const entryFileNameParts = entry.fileName.split("/");
-              this.debugLogger.debug("entryFileNameParts", entryFileNameParts);
+              this.debugLogger.debug("entryFileNameParts: {entryFileNameParts}", {
+                entryFileNameParts,
+              });
 
               if (entryFileNameParts.length > 1) {
                 const entryFileNamePartsWithoutFileName = entryFileNameParts.slice(
@@ -193,12 +201,14 @@ export class InitCommand implements CommandFactory {
                   entryFileNameParts.length - 1
                 );
                 this.debugLogger.debug(
-                  "entryFileNamePartsWithoutFileName",
-                  entryFileNamePartsWithoutFileName
+                  "entryFileNamePartsWithoutFileName: {entryFileNamePartsWithoutFileName}",
+                  { entryFileNamePartsWithoutFileName }
                 );
 
                 const downloadPathParts = [toPath, ...entryFileNamePartsWithoutFileName];
-                this.debugLogger.debug("downloadPathParts", downloadPathParts);
+                this.debugLogger.debug("downloadPathParts: {downloadPathParts}", {
+                  downloadPathParts,
+                });
 
                 fs.mkdirSync(path.join(...downloadPathParts), { recursive: true });
               }

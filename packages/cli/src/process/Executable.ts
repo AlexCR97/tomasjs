@@ -1,4 +1,5 @@
 import { Result, ResultFailure, ResultSuccess } from "@tomasjs/core/system";
+import { escape } from "@tomasjs/core/system/console";
 import { exec } from "node:child_process";
 
 export type ExecutableOptions = {
@@ -7,28 +8,18 @@ export type ExecutableOptions = {
 };
 
 export class Executable {
-  // See https://stackoverflow.com/a/41407246/11435765
-  private readonly colorReset = "\x1b[0m";
-  private readonly colorYellow = "\x1b[33m";
-  private readonly colorGray = "\x1b[90m";
-  private readonly colorRed = "\x1b[41m";
-
   private readonly options: ExecutableOptions;
 
   constructor(private readonly command: string, options?: Partial<ExecutableOptions>) {
     this.options = {
-      onStdOut:
-        options?.onStdOut ??
-        ((data) => process.stdout.write(`${this.colorGray}${data}${this.colorReset}`)),
-      onStdErr:
-        options?.onStdErr ??
-        ((data) => process.stderr.write(`${this.colorRed}${data}${this.colorReset}`)),
+      onStdOut: options?.onStdOut ?? ((data) => process.stdout.write(escape("black", data))),
+      onStdErr: options?.onStdErr ?? ((data) => process.stderr.write(escape("red", data))),
     };
   }
 
   async run(): Promise<ResultFailure<Error> | ResultSuccess<number | null>> {
     return new Promise((resolve) => {
-      process.stdout.write(`${this.colorYellow}> ${this.command}${this.colorReset}\n`);
+      process.stdout.write(escape("yellow", `> ${this.command}\n`));
 
       const child = exec(this.command);
 

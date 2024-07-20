@@ -44,7 +44,7 @@ export class DevCommand implements CommandFactory {
           if (err instanceof Error) {
             this.appLogger.error(err.message);
           } else {
-            this.appLogger.error(`An unexpected error occurred: ${err}`);
+            this.appLogger.error("An unexpected error occurred: {err}", { err });
           }
         }
       });

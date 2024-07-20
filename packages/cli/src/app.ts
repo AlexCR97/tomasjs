@@ -10,7 +10,7 @@ import {
 } from "./templates/ProjectTemplateDownloaderFactory";
 import { appconfig } from "./appconfig";
 import { APP_LOGGER } from "./logger";
-import { LoggerFactory } from "@tomasjs/core/logging";
+import { ILogger, ILoggerBuilder, LOGGER_BUILDER } from "@tomasjs/core/logging";
 
 class Main implements IEntryPoint {
   constructor(@inject(MainCommand) private readonly command: MainCommand) {}
@@ -30,10 +30,21 @@ new ConsoleAppBuilder()
       .add("singleton", DevCommand)
       .add("singleton", StartCommand)
       .add("singleton", PROJECT_TEMPLATE_DOWNLOADER_FACTORY_TOKEN, ProjectTemplateDownloaderFactory)
-      .add("singleton", APP_LOGGER, (services: IServiceProvider) => {
-        return services.getOrThrow(LoggerFactory).createLogger("tomasjs", "info");
+      .add<ILogger>("singleton", APP_LOGGER, (services: IServiceProvider) => {
+        return services
+          .getOrThrow<ILoggerBuilder>(LOGGER_BUILDER)
+          .withCategory("@tomasjs/cli")
+          .withLevel("info")
+          .build();
       });
   })
+  .setupLogging((logging) =>
+    logging.withConfiguration({
+      minimumLevel: {
+        default: "verbose",
+      },
+    })
+  )
   .addEntryPoint(Main)
   .build()
   .then((app) => app.start());

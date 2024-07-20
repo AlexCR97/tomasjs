@@ -1,5 +1,5 @@
 import { Configuration } from "@tomasjs/core/configuration";
-import { Logger } from "@tomasjs/core/logging";
+import { Log, Logger } from "@tomasjs/core/logging";
 import { Result, ResultFailure, ResultSuccess } from "@tomasjs/core/system";
 import { existsSync } from "node:fs";
 import { copyFile, mkdir } from "node:fs/promises";
@@ -11,11 +11,12 @@ import {
 } from "./ProjectTemplateDownloader";
 
 export class LocalTemplateDownloader implements ProjectTemplateDownloader {
-  private readonly logger = new Logger(
-    LocalTemplateDownloader.name,
-    "debug",
-    new Configuration([])
-  );
+  private readonly logger = new Logger({
+    category: LocalTemplateDownloader.name,
+    configuration: Configuration.empty(),
+    format: Log.DEFAULT_FORMAT,
+    level: "debug",
+  });
 
   async download(
     type: TemplateType

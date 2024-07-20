@@ -6,7 +6,7 @@ import {
   TemplateType,
 } from "./ProjectTemplateDownloader";
 import { existsSync } from "node:fs";
-import { ILogger, ILoggerFactory, LoggerFactory } from "@tomasjs/core/logging";
+import { ILogger, ILoggerBuilder, LOGGER_BUILDER } from "@tomasjs/core/logging";
 import { inject } from "@tomasjs/core/dependency-injection";
 import { join } from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -16,13 +16,16 @@ export class MegaTemplateDownloader implements ProjectTemplateDownloader {
   private readonly logger: ILogger;
 
   constructor(
-    @inject(LoggerFactory)
-    loggerFactory: ILoggerFactory,
+    @inject(LOGGER_BUILDER)
+    loggerBuilder: ILoggerBuilder,
 
     @inject(configurationToken)
     private readonly config: IConfiguration
   ) {
-    this.logger = loggerFactory.createLogger(MegaTemplateDownloader.name, "debug");
+    this.logger = loggerBuilder
+      .withCategory(MegaTemplateDownloader.name)
+      .withLevel("debug")
+      .build();
   }
 
   async download(
