@@ -9,7 +9,7 @@ import { ConfigurationValueNotFoundError, ConfigurationValueType } from "./Confi
 export interface IConfiguration extends IConfigurationSection {}
 
 export class Configuration implements IConfiguration {
-  constructor(private readonly roots: readonly ConfigurationSection[]) {}
+  constructor(private readonly roots: readonly IConfigurationSection[]) {}
 
   section(path: string): IConfigurationSection | null {
     for (const root of this.roots) {
@@ -46,5 +46,9 @@ export class Configuration implements IConfiguration {
     }
 
     return value;
+  }
+
+  static empty(): IConfiguration {
+    return new Configuration([]);
   }
 }

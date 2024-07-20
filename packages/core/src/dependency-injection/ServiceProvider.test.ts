@@ -233,8 +233,7 @@ describe("ServiceProvider", () => {
       .buildServiceProvider();
 
     try {
-      const serviceA = services.getOrThrow(ServiceA);
-      console.log("serviceA", serviceA);
+      services.getOrThrow(ServiceA);
     } catch (err) {
       expect(err).toBeInstanceOf(ServiceNotFoundError);
     }
