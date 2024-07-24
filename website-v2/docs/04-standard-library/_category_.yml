@@ -1,0 +1,6 @@
+label: "Standard Library"
+collapsible: true
+collapsed: false
+link:
+  type: generated-index
+  title: "Standard Library"

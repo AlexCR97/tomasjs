@@ -1,0 +1,6 @@
+label: "Getting started"
+collapsible: true
+collapsed: false
+link:
+  type: generated-index
+  title: "Getting started"
