@@ -1,339 +1,524 @@
-import { HttpBody, HttpMethod, HttpRequest, PlainHttpRequest } from "./HttpRequest";
-import { HttpHeaders, PlainHttpHeaders } from "./HttpHeaders";
-import { HttpResponse } from "./HttpResponse";
 import {
-  RequestInterceptor,
-  RequestInterceptorResult,
-  ResponseInterceptor,
-  isRequestInterceptorFunction,
-  isRequestInterceptorInstance,
-  isResponseInterceptorFunction,
-  isResponseInterceptorInstance,
-} from "./Interceptor";
+  request as sendHttpRequest,
+  IncomingMessage,
+  RequestOptions,
+  OutgoingHttpHeader,
+  OutgoingHttpHeaders,
+  ClientRequest,
+  IncomingHttpHeaders,
+} from "node:http";
+import { request as sendHttpsRequest } from "node:https";
 import { InvalidOperationError } from "@/errors";
-import { JsonSerializationError } from "./JsonSerializationError";
+import { ILogger, NullLogger } from "@/logging";
+import {
+  HttpContentFactory,
+  HttpContentType,
+  IHttpContent,
+  isJsonContent,
+  JsonRecord,
+} from "./HttpContent";
+import {
+  HttpHeaders,
+  HttpHeaderValue,
+  IHttpHeaders,
+  isIHttpHeaders,
+  PlainHttpHeaders,
+} from "./HttpHeaders";
+import { HttpMethod, isHttpMethod } from "./HttpMethod";
+import { HttpRequest, HttpRequestError, IHttpRequest } from "./HttpRequest";
+import { HttpResponse, IHttpResponse } from "./HttpResponse";
+import { readToBuffer } from "@/system/streams";
+import { JsonResponseError } from "./JsonResponseError";
+import { pipe } from "@/system";
 
-interface IHttpClient {
-  send(request: PlainHttpRequest): Promise<HttpResponse>;
-  send(request: HttpRequest): Promise<HttpResponse>;
-  send(method: HttpMethod, url: string, options?: HttpRequestOptions): Promise<HttpResponse>;
+export type IHttpClient = IHttpClientMethods & IHttpClientMethodsJson;
 
-  sendJson<T>(request: PlainHttpRequest): Promise<T>;
-  sendJson<T>(request: HttpRequest): Promise<T>;
-  sendJson<T>(method: HttpMethod, url: string, options?: HttpRequestOptions): Promise<T>;
+type IHttpClientMethods = {
+  send<TResponse, TRequest = unknown>(
+    request: IHttpRequest<TRequest>
+  ): Promise<IHttpResponse<TResponse>>;
+  send<TResponse, TRequest = unknown>(
+    method: HttpMethod,
+    url: string,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<IHttpResponse<TResponse>>;
 
-  /* #region Shorthands */
+  get<TResponse, TRequest>(
+    url: string,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<IHttpResponse<TResponse>>;
 
-  get(url: string, options?: HttpRequestOptions): Promise<HttpResponse>;
-  getJson<T>(url: string, options?: HttpRequestOptions): Promise<T>;
+  post<TResponse, TRequest>(
+    url: string,
+    body: IHttpContent<TRequest>,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<IHttpResponse<TResponse>>;
 
-  post(url: string, body: HttpBody, options?: HttpRequestOptions): Promise<HttpResponse>;
-  postJson<T>(url: string, body: HttpBody, options?: HttpRequestOptions): Promise<T>;
+  put<TResponse, TRequest>(
+    url: string,
+    body: IHttpContent<TRequest>,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<IHttpResponse<TResponse>>;
 
-  put(url: string, body: HttpBody, options?: HttpRequestOptions): Promise<HttpResponse>;
-  putJson<T>(url: string, body: HttpBody, options?: HttpRequestOptions): Promise<T>;
+  patch<TResponse, TRequest>(
+    url: string,
+    body: IHttpContent<TRequest>,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<IHttpResponse<TResponse>>;
 
-  patch(url: string, body: HttpBody, options?: HttpRequestOptions): Promise<HttpResponse>;
-  patchJson<T>(url: string, body: HttpBody, options?: HttpRequestOptions): Promise<T>;
+  delete<TResponse, TRequest>(
+    url: string,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<IHttpResponse<TResponse>>;
 
-  delete(url: string, options?: HttpRequestOptions): Promise<HttpResponse>;
-  deleteJson<T>(url: string, options?: HttpRequestOptions): Promise<T>;
+  head<TResponse, TRequest>(
+    url: string,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<IHttpResponse<TResponse>>;
 
-  head(url: string, options?: HttpRequestOptions): Promise<HttpResponse>;
+  options<TResponse, TRequest>(
+    url: string,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<IHttpResponse<TResponse>>;
+};
 
-  options(url: string, options?: HttpRequestOptions): Promise<HttpResponse>;
+type IHttpClientMethodsJson = {
+  sendJson<TResponse extends JsonRecord, TRequest = unknown>(
+    request: IHttpRequest<TRequest>
+  ): Promise<TResponse>;
+  sendJson<TResponse extends JsonRecord, TRequest = unknown>(
+    method: HttpMethod,
+    url: string,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<TResponse>;
 
-  /* #endregion */
-}
+  getJson<TResponse extends JsonRecord, TRequest = unknown>(
+    url: string,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<TResponse>;
 
-export type HttpRequestOptions = { headers?: HttpHeaders; body?: HttpBody };
+  postJson<TResponse extends JsonRecord, TRequest = unknown>(
+    url: string,
+    body: IHttpContent<TRequest>,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<TResponse>;
 
-// TODO Add logging to HttpClient
+  putJson<TResponse extends JsonRecord, TRequest = unknown>(
+    url: string,
+    body: IHttpContent<TRequest>,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<TResponse>;
+
+  patchJson<TResponse extends JsonRecord, TRequest = unknown>(
+    url: string,
+    body: IHttpContent<TRequest>,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<TResponse>;
+
+  deleteJson<TResponse extends JsonRecord, TRequest = unknown>(
+    url: string,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<TResponse>;
+};
+
+export type HttpRequestOptions<TRequest> = {
+  headers?: IHttpHeaders | PlainHttpHeaders;
+  body?: IHttpContent<TRequest>;
+};
 
 export class HttpClient implements IHttpClient {
-  private readonly _baseUrl: string | null;
-  private readonly _headers: PlainHttpHeaders | HttpHeaders | null;
-  private readonly _requestInterceptor: RequestInterceptor | null;
-  private readonly _responseInterceptor: ResponseInterceptor | null;
+  private readonly baseUrl: string | undefined;
+  private readonly defaultHeaders: IHttpHeaders | PlainHttpHeaders | undefined;
+  private readonly logger: ILogger;
 
   constructor(options?: {
     baseUrl?: string;
-    headers?: PlainHttpHeaders | HttpHeaders;
-    requestInterceptor?: RequestInterceptor;
-    responseInterceptor?: ResponseInterceptor;
+    headers?: IHttpHeaders | PlainHttpHeaders;
+    logger?: ILogger;
   }) {
-    this._baseUrl = options?.baseUrl ?? null;
-    this._headers = options?.headers ?? null;
-    this._requestInterceptor = options?.requestInterceptor ?? null;
-    this._responseInterceptor = options?.responseInterceptor ?? null;
+    this.baseUrl = options?.baseUrl;
+    this.defaultHeaders = options?.headers;
+    this.logger = options?.logger ?? new NullLogger();
   }
 
-  send(request: PlainHttpRequest): Promise<HttpResponse>;
-  send(request: HttpRequest): Promise<HttpResponse>;
-  send(method: HttpMethod, url: string, options?: HttpRequestOptions): Promise<HttpResponse>;
-  async send(...args: any[]): Promise<HttpResponse> {
+  /* #region IHttpClientMethods */
+
+  send<TResponse, TRequest>(request: IHttpRequest<TRequest>): Promise<IHttpResponse<TResponse>>;
+  send<TResponse, TRequest>(
+    method: HttpMethod,
+    url: string,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<IHttpResponse<TResponse>>;
+  async send<TResponse>(...args: any[]): Promise<IHttpResponse<TResponse>> {
     if (args.length === 1) {
-      if (args[0] instanceof HttpRequest) {
-        return await this.sendRequest(args[0].toPlain());
-      } else {
-        return await this.sendRequest(args[0]);
-      }
+      return await this._send(args[0]);
     }
 
     if (args.length === 2 || args.length === 3) {
-      const [method, url, options] = args;
+      const method: HttpMethod = args[0];
+      const url: string = args[1];
+      const options: HttpRequestOptions<TResponse> | undefined = args[2];
+      const requestBuilder = HttpRequest.builder().withMethod(method).withUrl(url);
 
-      const request = new HttpRequest(method).withUrl(url);
-
-      if (options?.body) {
-        request.withBody(options.body);
-      }
-
-      if (options?.headers) {
-        request.withHeaders(options.headers);
-      }
-
-      return await this.sendRequest(request.toPlain());
-    }
-
-    throw new InvalidOperationError();
-  }
-
-  sendJson<T>(request: PlainHttpRequest): Promise<T>;
-  sendJson<T>(request: HttpRequest): Promise<T>;
-  sendJson<T>(method: HttpMethod, url: string, options?: HttpRequestOptions): Promise<T>;
-  async sendJson<T>(...args: any[]): Promise<T> {
-    if (args.length === 1) {
-      if (args[0] instanceof HttpRequest) {
-        args[0].withHeaders((h) => h.add("Content-Type", "application/json"));
-        const response = await this.send(args[0]);
-        return await this.readJsonResponse<T>(response);
-      } else {
-        const plainHttpRequest: PlainHttpRequest = args[0];
-
-        if (!plainHttpRequest.headers) {
-          plainHttpRequest.headers = {};
+      if (options) {
+        if (options.headers) {
+          requestBuilder.withHeaders(options.headers);
         }
 
-        plainHttpRequest.headers = {
-          ...plainHttpRequest.headers,
-          "Content-Type": "application/json",
-        };
-
-        const response = await this.sendRequest(plainHttpRequest);
-        return await this.readJsonResponse<T>(response);
-      }
-    }
-
-    if (args.length === 2 || args.length === 3) {
-      const [method, url, options] = args;
-
-      const request = new HttpRequest(method).withUrl(url);
-
-      if (options?.body) {
-        request.withBody(options.body);
+        if (options.body) {
+          requestBuilder.withBody(options.body);
+        }
       }
 
-      if (options?.headers) {
-        request
-          .withHeaders(options.headers)
-          .withHeaders((h) => h.add("Content-Type", "application/json"));
-      }
-
-      const response = await this.sendRequest(request.toPlain());
-      return await this.readJsonResponse<T>(response);
+      return await this._send(requestBuilder.build());
     }
 
     throw new InvalidOperationError();
   }
 
-  /* #region Shorthands */
+  private async _send<TResponse, TRequest>(
+    request: IHttpRequest<TRequest>
+  ): Promise<IHttpResponse<TResponse>> {
+    try {
+      this.logger.debug("Sending HTTP request:\n{request}", { request: request.toString() });
 
-  async get(url: string, options?: HttpRequestOptions): Promise<HttpResponse> {
-    return await this.send("get", url, options);
-  }
+      const response = await this.sendRequest(request);
 
-  async getJson<T>(url: string, options?: HttpRequestOptions): Promise<T> {
-    return await this.sendJson<T>("get", url, options);
-  }
+      const httpResponse = await toHttpResponse<TResponse, TRequest>(response, request);
 
-  async post(url: string, body: HttpBody, options?: HttpRequestOptions): Promise<HttpResponse> {
-    if (!options) {
-      options = {};
+      this.logger.debug("Received HTTP response:\n{response}", {
+        response: httpResponse.toString(),
+      });
+
+      return httpResponse;
+    } catch (err) {
+      throw HttpRequestError.from<TRequest>(request, err);
     }
 
-    options.body = body;
+    async function toHttpResponse<TResponse, TRequest>(
+      res: IncomingMessage,
+      req: IHttpRequest<TRequest>
+    ): Promise<IHttpResponse<TResponse>> {
+      return new HttpResponse<TResponse>(
+        res.httpVersion,
+        toHttpMethod(res.method ?? req.method),
+        toUrl(res, req),
+        toPlainHttpHeaders(res.headers),
+        res.statusCode ?? 0,
+        res.statusMessage ?? "",
+        await toHttpContent(res)
+      );
 
-    return await this.send("post", url, options);
-  }
+      function toHttpMethod(method: string | undefined): HttpMethod {
+        if (isHttpMethod(method)) {
+          return method;
+        }
 
-  async postJson<T>(url: string, body: HttpBody, options?: HttpRequestOptions): Promise<T> {
-    if (!options) {
-      options = {};
+        if (typeof method === "string") {
+          const normalizedMethod = method.trim().toUpperCase();
+
+          if (isHttpMethod(normalizedMethod)) {
+            return normalizedMethod;
+          }
+        }
+
+        throw new InvalidOperationError();
+      }
+
+      function toUrl<T>(res: IncomingMessage, req: IHttpRequest<T>): string {
+        if (res.url !== undefined && res.url !== null && res.url.trim().length > 0) {
+          return res.url;
+        }
+
+        return req.url;
+      }
+
+      function toPlainHttpHeaders(incomingHttpHeaders: IncomingHttpHeaders): PlainHttpHeaders {
+        const headers = new HttpHeaders();
+
+        for (const headerKey in incomingHttpHeaders) {
+          const headerValue = incomingHttpHeaders[headerKey];
+
+          if (headerValue) {
+            headers.add(headerKey, headerValue);
+          }
+        }
+
+        return headers.toPlain();
+      }
+
+      async function toHttpContent<T>(res: IncomingMessage): Promise<IHttpContent<T>> {
+        const contentType: HttpContentType = res.headers["content-type"] ?? "Unknown";
+        const data = await readToBuffer(res);
+        return HttpContentFactory.from(contentType, data) as IHttpContent<T>;
+      }
     }
-
-    options.body = body;
-
-    return await this.sendJson<T>("post", url, options);
   }
 
-  async put(url: string, body: HttpBody, options?: HttpRequestOptions): Promise<HttpResponse> {
-    if (!options) {
-      options = {};
-    }
+  private sendRequest<TRequest>(request: IHttpRequest<TRequest>): Promise<IncomingMessage> {
+    return new Promise<IncomingMessage>((resolve, reject) => {
+      let res: IncomingMessage;
 
-    options.body = body;
+      const url = buildUrl(this.baseUrl, request.url);
 
-    return await this.sendJson("put", url, options);
+      const clientRequest = sendRequest(url, {
+        method: request.method,
+        headers: buildHeaders(request, { defaultHeaders: this.defaultHeaders }),
+      });
+
+      if (request.body) {
+        clientRequest.write(request.body.data);
+      }
+
+      clientRequest.on("socket", () => {
+        this.logger.verbose("Socket opened");
+      });
+
+      clientRequest.on("response", ($res) => {
+        this.logger.verbose("Response received");
+        res = $res;
+      });
+
+      clientRequest.on("error", (err) => {
+        this.logger.verbose("An error occurred. {errorName}: {errorMessage}", {
+          errorName: err.name,
+          errorMessage: err.message,
+        });
+
+        return reject(err);
+      });
+
+      clientRequest.on("close", () => {
+        this.logger.verbose("Connection closed");
+        return resolve(res);
+      });
+
+      clientRequest.end();
+
+      function buildUrl(baseUrl: string | undefined, resourceUrl: string): string {
+        const parts: string[] = [];
+
+        if (
+          baseUrl !== null &&
+          baseUrl !== undefined &&
+          baseUrl.trim().length > 0 &&
+          baseUrl.trim() !== "/"
+        ) {
+          parts.push(baseUrl);
+        }
+
+        if (
+          resourceUrl !== null &&
+          resourceUrl !== undefined &&
+          resourceUrl.trim().length > 0 &&
+          resourceUrl.trim() !== "/"
+        ) {
+          parts.push(resourceUrl);
+        }
+
+        return parts.map((part) => trim(part, "/")).join("/");
+
+        function trim(str: string, char: string): string {
+          return pipe(str)
+            .pipe((str) => (str.startsWith(char) ? str.slice(1) : str))
+            .pipe((str) => (str.endsWith(char) ? str.slice(0, str.length - 1) : str))
+            .get();
+        }
+      }
+
+      function sendRequest(url: string, options: RequestOptions): ClientRequest {
+        return url.includes("https")
+          ? sendHttpsRequest(url, options)
+          : sendHttpRequest(url, options);
+      }
+
+      function buildHeaders<T>(
+        request: IHttpRequest<T>,
+        options: { defaultHeaders: IHttpHeaders | PlainHttpHeaders | undefined }
+      ): OutgoingHttpHeaders {
+        let headers: OutgoingHttpHeaders = {};
+
+        if (options?.defaultHeaders) {
+          const defaultHeaders = isIHttpHeaders(options.defaultHeaders)
+            ? options.defaultHeaders
+            : HttpHeaders.fromPlain(options.defaultHeaders);
+
+          headers = { ...headers, ...toOutgoingHttpHeaders(defaultHeaders) };
+        }
+
+        if (request.headers) {
+          headers = { ...headers, ...toOutgoingHttpHeaders(request.headers) };
+        }
+
+        if (request.body) {
+          headers = withContentLength(headers, request.body);
+        }
+
+        return headers;
+
+        function toOutgoingHttpHeaders(headers: IHttpHeaders): OutgoingHttpHeaders {
+          const outgoingHttpHeaders: OutgoingHttpHeaders = {};
+          const plainHeaders = headers.toPlain();
+
+          for (const headerKey in plainHeaders) {
+            const headerValue = plainHeaders[headerKey];
+            outgoingHttpHeaders[headerKey] = toOutgoingHttpHeader(headerValue);
+          }
+
+          return outgoingHttpHeaders;
+
+          function toOutgoingHttpHeader(headerValue: HttpHeaderValue): OutgoingHttpHeader {
+            if (typeof headerValue === "string") {
+              return headerValue;
+            }
+
+            return [...headerValue];
+          }
+        }
+
+        function withContentLength<T>(
+          headers: OutgoingHttpHeaders,
+          body: IHttpContent<T>
+        ): OutgoingHttpHeaders {
+          const newHeaders: OutgoingHttpHeaders = { ...headers };
+          const contentLength = Buffer.byteLength(body.data);
+          newHeaders["content-length"] = contentLength;
+          return newHeaders;
+        }
+      }
+    });
   }
 
-  async putJson<T>(url: string, body: HttpBody, options?: HttpRequestOptions): Promise<T> {
-    if (!options) {
-      options = {};
-    }
-
-    options.body = body;
-
-    return await this.sendJson<T>("put", url, options);
+  get<TResponse, TRequest>(
+    url: string,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<IHttpResponse<TResponse>> {
+    return this.send("GET", url, options);
   }
 
-  async patch(url: string, body: HttpBody, options?: HttpRequestOptions): Promise<HttpResponse> {
-    if (!options) {
-      options = {};
-    }
-
-    options.body = body;
-
-    return await this.send("patch", url, options);
+  post<TResponse, TRequest>(
+    url: string,
+    body: IHttpContent<TRequest>,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<IHttpResponse<TResponse>> {
+    return this.send("POST", url, { ...options, body });
   }
 
-  async patchJson<T>(url: string, body: HttpBody, options?: HttpRequestOptions): Promise<T> {
-    if (!options) {
-      options = {};
-    }
-
-    options.body = body;
-
-    return await this.sendJson<T>("patch", url, options);
+  put<TResponse, TRequest>(
+    url: string,
+    body: IHttpContent<TRequest>,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<IHttpResponse<TResponse>> {
+    return this.send("PUT", url, { ...options, body });
   }
 
-  async delete(url: string, options?: HttpRequestOptions): Promise<HttpResponse> {
-    return await this.send("delete", url, options);
+  patch<TResponse, TRequest>(
+    url: string,
+    body: IHttpContent<TRequest>,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<IHttpResponse<TResponse>> {
+    return this.send("PATCH", url, { ...options, body });
   }
 
-  async deleteJson<T>(url: string, options?: HttpRequestOptions): Promise<T> {
-    return await this.sendJson<T>("delete", url, options);
+  delete<TResponse, TRequest>(
+    url: string,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<IHttpResponse<TResponse>> {
+    return this.send("DELETE", url, options);
   }
 
-  async head(url: string, options?: HttpRequestOptions): Promise<HttpResponse> {
-    return await this.send("head", url, options);
+  head<TResponse, TRequest>(
+    url: string,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<IHttpResponse<TResponse>> {
+    return this.send("HEAD", url, options);
   }
 
-  async options(url: string, options?: HttpRequestOptions): Promise<HttpResponse> {
-    return await this.send("options", url, options);
+  options<TResponse, TRequest>(
+    url: string,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<IHttpResponse<TResponse>> {
+    return this.send("OPTIONS", url, options);
   }
 
   /* #endregion */
 
-  private async sendRequest(request: PlainHttpRequest): Promise<HttpResponse> {
-    request = this.buildRequest(request);
-    request = await this.interceptRequest(request, this._requestInterceptor);
+  /* #region IHttpClientMethodsJson */
 
-    const response = await fetch(request.url, {
-      method: request.method,
-      headers: request.headers,
-      body: request.body,
-    });
+  sendJson<TResponse extends JsonRecord, TRequest = unknown>(
+    request: IHttpRequest<TRequest>
+  ): Promise<TResponse>;
+  sendJson<TResponse extends JsonRecord, TRequest = unknown>(
+    method: HttpMethod,
+    url: string,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<TResponse>;
+  async sendJson<TResponse extends JsonRecord, TRequest>(...args: any[]): Promise<TResponse> {
+    const response = await getResponse(this, args);
 
-    return await this.interceptResponse(response, this._responseInterceptor);
-  }
-
-  private buildRequest(request: PlainHttpRequest): PlainHttpRequest {
-    if (this._baseUrl) {
-      request.url = this.buildUrl(this._baseUrl, request.url);
+    if (isJsonContent<TResponse>(response.body)) {
+      return response.body.readData();
     }
 
-    if (this._headers) {
-      if (request.headers === undefined) {
-        request.headers = {};
+    throw new JsonResponseError(response);
+
+    async function getResponse<TResponse, TRequest>(
+      thiz: HttpClient,
+      args: any[]
+    ): Promise<IHttpResponse<TResponse>> {
+      if (args.length === 1) {
+        const request: IHttpRequest<TRequest> = args[0];
+        return await thiz.send(request);
       }
 
-      if (this._headers instanceof HttpHeaders) {
-        const plainHeaders = this._headers.toPlain();
-        request.headers = { ...request.headers, ...plainHeaders };
-      } else {
-        request.headers = { ...request.headers, ...this._headers };
+      if (args.length === 2 || args.length === 3) {
+        const method: HttpMethod = args[0];
+        const url: string = args[1];
+        const options: HttpRequestOptions<TRequest> | undefined = args[2];
+        return await thiz.send(method, url, options);
       }
-    }
 
-    return request;
-  }
-
-  private buildUrl(baseUrl: string | null, url: string): string {
-    const parts: string[] = [];
-
-    if (
-      baseUrl !== null &&
-      baseUrl !== undefined &&
-      baseUrl.trim().length > 0 &&
-      baseUrl.trim() !== "/"
-    ) {
-      parts.push(baseUrl);
-    }
-
-    if (url !== null && url !== undefined && url.trim().length > 0 && url.trim() !== "/") {
-      parts.push(url);
-    }
-
-    return parts.join("/");
-  }
-
-  private async interceptRequest(
-    request: PlainHttpRequest,
-    interceptor: RequestInterceptor | null
-  ): Promise<PlainHttpRequest> {
-    if (interceptor === null) {
-      return request;
-    }
-
-    const httpRequest = HttpRequest.fromPlain(request);
-    let result: RequestInterceptorResult;
-
-    if (isRequestInterceptorFunction(interceptor)) {
-      result = await interceptor(httpRequest);
-    } else if (isRequestInterceptorInstance(interceptor)) {
-      result = await interceptor.intercept(httpRequest);
-    } else {
-      throw new InvalidOperationError();
-    }
-
-    return result instanceof HttpRequest ? result.toPlain() : result;
-  }
-
-  private async interceptResponse(
-    response: HttpResponse,
-    interceptor: ResponseInterceptor | null
-  ): Promise<HttpResponse> {
-    if (interceptor === null) {
-      return response;
-    }
-
-    if (isResponseInterceptorFunction(interceptor)) {
-      return await interceptor(response);
-    } else if (isResponseInterceptorInstance(interceptor)) {
-      return await interceptor.intercept(response);
-    } else {
       throw new InvalidOperationError();
     }
   }
 
-  private async readJsonResponse<T>(response: HttpResponse): Promise<T> {
-    if (!response.ok) {
-      throw JsonSerializationError.cannotDeserialize(response);
-    }
-
-    const json = await response.json();
-
-    return json as T;
+  getJson<TResponse extends JsonRecord, TRequest = unknown>(
+    url: string,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<TResponse> {
+    return this.sendJson("GET", url, options);
   }
+
+  postJson<TResponse extends JsonRecord, TRequest = unknown>(
+    url: string,
+    body: IHttpContent<TRequest>,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<TResponse> {
+    return this.sendJson("POST", url, { ...options, body });
+  }
+
+  putJson<TResponse extends JsonRecord, TRequest = unknown>(
+    url: string,
+    body: IHttpContent<TRequest>,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<TResponse> {
+    return this.sendJson("PUT", url, { ...options, body });
+  }
+
+  patchJson<TResponse extends JsonRecord, TRequest = unknown>(
+    url: string,
+    body: IHttpContent<TRequest>,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<TResponse> {
+    return this.sendJson("PATCH", url, { ...options, body });
+  }
+
+  deleteJson<TResponse extends JsonRecord, TRequest = unknown>(
+    url: string,
+    options?: HttpRequestOptions<TRequest>
+  ): Promise<TResponse> {
+    return this.sendJson("DELETE", url, options);
+  }
+
+  /* #endregion */
 }

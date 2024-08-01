@@ -1,358 +1,257 @@
+import { LoggerBuilder } from "@/logging";
 import { HttpClient } from "./HttpClient";
-import { HttpHeaders } from "./HttpHeaders";
-import { HttpRequest } from "./HttpRequest";
-import {
-  IRequestInterceptor,
-  IResponseInterceptor,
-  RequestInterceptorFunction,
-  RequestInterceptorResult,
-  ResponseInterceptorFunction,
-} from "./Interceptor";
+import { createServer } from "http";
+import { HtmlContent, IHttpContent, JsonContent, PlainTextContent } from "./HttpContent";
+import { HTTP_STATUS_CODES } from "./HttpStatus";
+import { readToBuffer } from "@/system/streams";
 
 describe("HttpClient", () => {
-  describe("GET", () => {
-    const getUrl = "https://jsonplaceholder.typicode.com/todos/1";
+  const logger = LoggerBuilder.default().withLevel("info").build();
+  const client = new HttpClient({ logger });
 
-    const getResponse = {
-      id: 1,
-      title: "delectus aut autem",
-      completed: false,
-      userId: 1,
-    };
+  const port = 3000;
+  const baseUrl = `http://localhost:${port}`;
+  const testServer = createServer(async (req, res) => {
+    if (req.url === "/ping" || req.url === "/ping/") {
+      return respond(200);
+    }
 
-    type GetResponseType = typeof getResponse;
+    if (req.url === "/plain-text") {
+      return respond(200, { content: PlainTextContent.from("Hello World!") });
+    }
 
-    describe("send", () => {
-      it("should send a PlainHttpRequest", async () => {
-        const client = new HttpClient();
+    if (req.url === "/html") {
+      return respond(200, { content: HtmlContent.from(/*html*/ `<p>Hello World!</p>`) });
+    }
 
-        const response = await client.send({
-          method: "get",
-          url: getUrl,
-        });
+    if (req.url === "/json") {
+      return respond(200, { content: JsonContent.from({ foo: "bar" }) });
+    }
 
-        expect(response.ok).toBe(true);
-      });
+    if (req.url === "/post/json") {
+      const requestBody = await readToBuffer(req);
+      return respond(201, { content: new JsonContent(requestBody) });
+    }
 
-      it("should send an HttpRequest", async () => {
-        const client = new HttpClient();
+    if (req.url === "/headers/default") {
+      const secret = req.headers["x-api-key"];
 
-        const response = await client.send(new HttpRequest("get").withUrl(getUrl));
+      const status =
+        secret === "yeah buddy!" ? HTTP_STATUS_CODES.ok : HTTP_STATUS_CODES.unauthorized;
 
-        expect(response.ok).toBe(true);
-      });
+      return respond(status);
+    }
 
-      it("should send a short-handed request", async () => {
-        const client = new HttpClient();
+    if (req.url === "/headers/request") {
+      const secret = req.headers["x-api-key"];
 
-        const response = await client.send("get", getUrl);
+      const status =
+        secret === "lightweight!" ? HTTP_STATUS_CODES.ok : HTTP_STATUS_CODES.unauthorized;
 
-        expect(response.ok).toBe(true);
-      });
+      return respond(status);
+    }
 
-      it("should send a short-handed request with options", async () => {
-        const client = new HttpClient();
+    if (req.url === "/headers/mixed") {
+      const secret1 = req.headers["x-api-key-1"];
+      const secret2 = req.headers["x-api-key-2"];
+      const status =
+        secret1 === "Tom" && secret2 === "Pim"
+          ? HTTP_STATUS_CODES.ok
+          : HTTP_STATUS_CODES.unauthorized;
 
-        const response = await client.send("get", getUrl, {
-          headers: new HttpHeaders().add("Content-Type", "application/json"),
-        });
+      return respond(status);
+    }
 
-        expect(response.ok).toBe(true);
-      });
+    return respond(404);
 
-      it("should deserialize a json response", async () => {
-        const client = new HttpClient();
+    function respond(status: number, options?: { content?: IHttpContent<unknown> }) {
+      res.statusCode = status;
 
-        const response = await client.send("get", getUrl, {
-          headers: new HttpHeaders().add("Content-Type", "application/json"),
-        });
+      if (options?.content) {
+        withContent(options.content);
+      }
 
-        expect(response.ok).toBe(true);
+      return res.end();
 
-        const json = await response.json();
+      function withContent(content: IHttpContent<unknown>) {
+        res.setHeader("content-type", content.type);
+        res.write(content.data);
+      }
+    }
+  });
 
-        expect(json).toMatchObject(getResponse);
-      });
-    });
-
-    describe("sendJson", () => {
-      it("should send a PlainHttpRequest", async () => {
-        const client = new HttpClient();
-
-        const response = await client.sendJson<GetResponseType>({
-          method: "get",
-          url: getUrl,
-        });
-
-        expect(response).toMatchObject(getResponse);
-      });
-
-      it("should send an HttpRequest", async () => {
-        const client = new HttpClient();
-
-        const response = await client.sendJson<GetResponseType>(
-          new HttpRequest("get").withUrl(getUrl)
-        );
-
-        expect(response).toMatchObject(getResponse);
-      });
-
-      it("should send a short-handed request", async () => {
-        const client = new HttpClient();
-
-        const response = await client.sendJson<GetResponseType>("get", getUrl);
-
-        expect(response).toMatchObject(getResponse);
-      });
-
-      it("should send a short-handed request with options", async () => {
-        const client = new HttpClient();
-
-        const response = await client.sendJson<GetResponseType>("get", getUrl, {
-          headers: new HttpHeaders().add("Content-Type", "application/json"),
-        });
-
-        expect(response).toMatchObject(getResponse);
-      });
+  beforeAll(async () => {
+    await new Promise<void>((resolve) => {
+      testServer.on("listening", () => resolve(this));
+      testServer.listen(port);
     });
   });
 
-  describe("POST", () => {
-    const postUrl = "https://jsonplaceholder.typicode.com/posts";
-
-    const postRequest = JSON.stringify({
-      title: "foo",
-      body: "bar",
-      userId: 1,
-    });
-
-    const postResponse = {
-      id: 101,
-    };
-
-    type PostResponseType = typeof postResponse;
-
-    describe("send", () => {
-      it("should send a PlainHttpRequest", async () => {
-        const client = new HttpClient();
-
-        const response = await client.send({
-          method: "post",
-          url: postUrl,
-          body: postRequest,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        expect(response.ok).toBe(true);
-      });
-
-      it("should send an HttpRequest", async () => {
-        const client = new HttpClient();
-
-        const response = await client.send(
-          new HttpRequest("post").withUrl(postUrl).withBody(postRequest)
-        );
-
-        expect(response.ok).toBe(true);
-      });
-
-      it("should send a short-handed request", async () => {
-        const client = new HttpClient();
-
-        const response = await client.send("post", postUrl, {
-          headers: new HttpHeaders().add("Content-Type", "application/json"),
-          body: postRequest,
-        });
-
-        expect(response.ok).toBe(true);
-      });
-
-      it("should deserialize a json response", async () => {
-        const client = new HttpClient();
-
-        const response = await client.send("post", postUrl, {
-          headers: new HttpHeaders().add("Content-Type", "application/json"),
-          body: postRequest,
-        });
-
-        expect(response.ok).toBe(true);
-
-        const json = await response.json();
-
-        expect(json).toMatchObject(postResponse);
-      });
-    });
-
-    describe("sendJson", () => {
-      it("should send a PlainHttpRequest", async () => {
-        const client = new HttpClient();
-
-        const response = await client.sendJson<PostResponseType>({
-          method: "post",
-          url: postUrl,
-          body: postRequest,
-          headers: {
-            "Content-Type": "application/json",
-          },
-        });
-
-        expect(response).toMatchObject(postResponse);
-      });
-
-      it("should send an HttpRequest", async () => {
-        const client = new HttpClient();
-
-        const response = await client.sendJson<PostResponseType>(
-          new HttpRequest("post").withUrl(postUrl).withBody(postRequest)
-        );
-
-        expect(response).toMatchObject(postResponse);
-      });
-
-      it("should send a short-handed request", async () => {
-        const client = new HttpClient();
-
-        const response = await client.sendJson<PostResponseType>("post", postUrl, {
-          headers: new HttpHeaders().add("Content-Type", "application/json"),
-          body: postRequest,
-        });
-
-        expect(response).toMatchObject(postResponse);
-      });
-    });
-
-    describe("post", () => {
-      it("should post json", async () => {
-        const client = new HttpClient();
-
-        const response = await client.post(postUrl, postRequest);
-
-        expect(response.ok).toBe(true);
-
-        const json = await response.json();
-
-        expect(json).toMatchObject(postResponse);
-      });
-
-      it("should post json with options", async () => {
-        const client = new HttpClient();
-
-        const response = await client.post(postUrl, postRequest, {
-          headers: new HttpHeaders().add("Content-Type", "application/json"),
-        });
-
-        expect(response.ok).toBe(true);
-
-        const json = await response.json();
-
-        expect(json).toMatchObject(postResponse);
-      });
-    });
-
-    describe("postJson", () => {
-      it("should post json", async () => {
-        const client = new HttpClient();
-
-        const response = await client.postJson<PostResponseType>(postUrl, postRequest);
-
-        expect(response).toMatchObject(postResponse);
-      });
-
-      it("should post json with options", async () => {
-        const client = new HttpClient();
-
-        const response = await client.postJson<PostResponseType>(postUrl, postRequest, {
-          headers: new HttpHeaders().add("Content-Type", "application/json"),
-        });
-
-        expect(response).toMatchObject(postResponse);
-      });
+  afterAll(async () => {
+    await new Promise<void>((resolve, reject) => {
+      testServer.closeAllConnections();
+      testServer.close((err) => (err === undefined ? resolve() : reject(err)));
     });
   });
 
-  describe("constructor", () => {
-    const baseUrl = "https://jsonplaceholder.typicode.com/";
-    const resourceUrl = "todos/1";
+  it("can ping test server", async () => {
+    const response = await client.get(`${baseUrl}/ping`);
+    expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+  });
 
-    it("should use baseUrl", async () => {
-      const urls: { baseUrl: string; resourceUrl: string }[] = [
-        {
-          baseUrl: "https://jsonplaceholder.typicode.com",
-          resourceUrl: "todos/1",
-        },
-        {
-          baseUrl: "https://jsonplaceholder.typicode.com/",
-          resourceUrl: "todos/1",
-        },
-        {
-          baseUrl: "https://jsonplaceholder.typicode.com/",
-          resourceUrl: "/todos/1",
-        },
-        {
-          baseUrl: "https://jsonplaceholder.typicode.com",
-          resourceUrl: "/todos/1",
-        },
-      ];
+  it("can get plain text", async () => {
+    const response = await client.get(`${baseUrl}/plain-text`);
+    expect(response.status).toBe(HTTP_STATUS_CODES.ok);
 
-      for (const { baseUrl, resourceUrl } of urls) {
-        const client = new HttpClient({ baseUrl });
+    const responseBodyContent = response.body.readData();
+    expect(responseBodyContent).toMatch("Hello World!");
+  });
+
+  it("can get html", async () => {
+    const response = await client.get(`${baseUrl}/html`);
+    expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+
+    const responseBodyContent = response.body.readData();
+    expect(responseBodyContent).toMatch(/*html*/ `<p>Hello World!</p>`);
+  });
+
+  it("can get json", async () => {
+    const response = await client.get(`${baseUrl}/json`);
+    expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+
+    const responseBodyContent = response.body.readData();
+    expect(responseBodyContent).toMatchObject({ foo: "bar" });
+  });
+
+  it("can get external web resources", async () => {
+    const response = await client.get("https://jsonplaceholder.typicode.com/todos/1");
+    expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+  });
+
+  it("can get json using shorthand", async () => {
+    type Todo = {
+      userId: number;
+      id: number;
+      title: string;
+      completed: boolean;
+    };
+
+    const response = await client.getJson<Todo>("https://jsonplaceholder.typicode.com/todos/1");
+
+    expect(response.userId).toBeTruthy();
+    expect(response.id).toBeTruthy();
+    expect(response.title).toBeTruthy();
+    expect(response.completed).not.toBeUndefined();
+    expect(response.completed).not.toBeNull();
+  });
+
+  it("can post json", async () => {
+    const response = await client.post(`${baseUrl}/post/json`, JsonContent.from({ bar: "foo" }));
+
+    expect(response.status).toBe(HTTP_STATUS_CODES.created);
+
+    const responseBody = response.body.readData();
+    expect(responseBody).toMatchObject({ bar: "foo" });
+  });
+
+  it("can send default headers", async () => {
+    const client = new HttpClient({ headers: { "x-api-key": "yeah buddy!" }, logger });
+    const response = await client.get(`${baseUrl}/headers/default`);
+    expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+  });
+
+  it("can send request headers", async () => {
+    const unauthorizedResponse = await client.get(`${baseUrl}/headers/request`);
+    expect(unauthorizedResponse.status).toBe(HTTP_STATUS_CODES.unauthorized);
+
+    const authorizedResponse = await client.get(`${baseUrl}/headers/request`, {
+      headers: { "x-api-key": "lightweight!" },
+    });
+    expect(authorizedResponse.status).toBe(HTTP_STATUS_CODES.ok);
+  });
+
+  it("can send default headers and request headers", async () => {
+    const client = new HttpClient({ headers: { "x-api-key-1": "Tom" }, logger });
+
+    const response = await client.get(`${baseUrl}/headers/mixed`, {
+      headers: { "x-api-key-2": "Pim" },
+    });
+
+    expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+  });
+
+  it("can use base url", async () => {
+    type UrlPermutation = { baseUrl: string; resourceUrl: string; enabled?: boolean };
+
+    const urlPermutations: UrlPermutation[] = [
+      {
+        baseUrl: "",
+        resourceUrl: `http://localhost:${port}/ping`,
+        enabled: true,
+      },
+      {
+        baseUrl: "/",
+        resourceUrl: `http://localhost:${port}/ping`,
+        enabled: true,
+      },
+      {
+        baseUrl: "/",
+        resourceUrl: `http://localhost:${port}/ping/`,
+        enabled: true,
+      },
+      {
+        baseUrl: "",
+        resourceUrl: `http://localhost:${port}/ping/`,
+        enabled: true,
+      },
+      {
+        baseUrl: `http://localhost:${port}`,
+        resourceUrl: "ping",
+        enabled: true,
+      },
+      {
+        baseUrl: `http://localhost:${port}/`,
+        resourceUrl: "ping",
+        enabled: true,
+      },
+      {
+        baseUrl: `http://localhost:${port}/`,
+        resourceUrl: "/ping",
+        enabled: true,
+      },
+      {
+        baseUrl: `http://localhost:${port}`,
+        resourceUrl: "/ping",
+        enabled: true,
+      },
+      {
+        baseUrl: `http://localhost:${port}/ping`,
+        resourceUrl: "",
+        enabled: true,
+      },
+      {
+        baseUrl: `http://localhost:${port}/ping/`,
+        resourceUrl: "",
+        enabled: true,
+      },
+      {
+        baseUrl: `http://localhost:${port}/ping/`,
+        resourceUrl: "/",
+        enabled: true,
+      },
+      {
+        baseUrl: `http://localhost:${port}/ping`,
+        resourceUrl: "/",
+        enabled: true,
+      },
+    ];
+
+    for (const { baseUrl, resourceUrl, enabled } of urlPermutations) {
+      if (enabled) {
+        const client = new HttpClient({ baseUrl, logger });
         const response = await client.get(resourceUrl);
-        expect(response.ok).toBe(true);
+        expect(response.status).toBe(HTTP_STATUS_CODES.ok);
       }
-    });
-
-    it("should use RequestInterceptorFunction", async () => {
-      const requestInterceptor: RequestInterceptorFunction = async (request) => {
-        request.withHeaders((h) => h.add("X-CustomHeader", "Test!"));
-        return request;
-      };
-
-      const client = new HttpClient({ baseUrl, requestInterceptor });
-      const response = await client.get(resourceUrl);
-      expect(response.ok).toBe(true);
-    });
-
-    it("should use RequestInterceptor instance", async () => {
-      class MyRequestInterceptor implements IRequestInterceptor {
-        async intercept(request: HttpRequest): Promise<RequestInterceptorResult> {
-          request.withHeaders((h) => h.add("X-CustomHeader", "Test!"));
-          return request;
-        }
-      }
-
-      const client = new HttpClient({ baseUrl, requestInterceptor: new MyRequestInterceptor() });
-      const response = await client.get(resourceUrl);
-      expect(response.ok).toBe(true);
-    });
-
-    it("should use ResponseInterceptorFunction", async () => {
-      const responseInterceptor: ResponseInterceptorFunction = async (response) => {
-        if (!response.ok) {
-          // Handle error (in a non-test scenario)
-        }
-
-        return response;
-      };
-
-      const client = new HttpClient({ baseUrl, responseInterceptor });
-      await client.get(resourceUrl);
-    });
-
-    it("should use ResponseInterceptor instance", async () => {
-      class MyResponseInterceptor implements IResponseInterceptor {
-        async intercept(response: Response): Promise<Response> {
-          if (!response.ok) {
-            // Handle error (in a non-test scenario)
-          }
-
-          return response;
-        }
-      }
-
-      const client = new HttpClient({ baseUrl, responseInterceptor: new MyResponseInterceptor() });
-      await client.get(resourceUrl);
-    });
+    }
   });
 });
