@@ -9,13 +9,13 @@ import {
 } from "./HttpHeaders";
 import { HttpMethod } from "./HttpMethod";
 
-export type IHttpRequest<T> = {
+export interface IHttpRequest<T> {
   readonly method: HttpMethod;
   readonly url: string;
   readonly headers?: IHttpHeaders;
   readonly body?: IHttpContent<T>;
   toString(): string;
-};
+}
 
 export class HttpRequest<T> implements IHttpRequest<T> {
   constructor(
@@ -45,38 +45,52 @@ export class HttpRequest<T> implements IHttpRequest<T> {
     return lines.join("\n");
   }
 
-  static builder<T>() {
-    let method: HttpMethod = "GET";
-    let url: string = "/";
-    let headers: IHttpHeaders = new HttpHeaders();
-    let body: IHttpContent<T> | undefined;
+  static builder<T>(): IHttpRequestBuilder<T> {
+    return new HttpRequestBuilder<T>();
+  }
+}
 
-    return {
-      withMethod($method: HttpMethod) {
-        method = $method;
-        return this;
-      },
-      withUrl($url: string) {
-        url = $url;
-        return this;
-      },
-      withHeaders($headers: IHttpHeaders | PlainHttpHeaders) {
-        if (isIHttpHeaders($headers)) {
-          headers.add($headers.toPlain());
-        } else if (isPlainHttpHeaders($headers)) {
-          headers.add($headers);
-        }
+export interface IHttpRequestBuilder<T> {
+  withMethod(method: HttpMethod): this;
+  withUrl(url: string): this;
+  withHeaders(headers: IHttpHeaders | PlainHttpHeaders): this;
+  withBody(body: IHttpContent<T>): this;
+  build(): IHttpRequest<T>;
+}
 
-        return this;
-      },
-      withBody($body: IHttpContent<T>) {
-        body = $body;
-        return this;
-      },
-      build(): HttpRequest<T> {
-        return new HttpRequest<T>(method, url, headers, body);
-      },
-    } as const;
+class HttpRequestBuilder<T> implements IHttpRequestBuilder<T> {
+  private method: HttpMethod = "GET";
+  private url: string = "/";
+  private headers: IHttpHeaders = new HttpHeaders();
+  private body: IHttpContent<T> | undefined;
+
+  withMethod(method: HttpMethod): this {
+    this.method = method;
+    return this;
+  }
+
+  withUrl(url: string): this {
+    this.url = url;
+    return this;
+  }
+
+  withHeaders(headers: IHttpHeaders | PlainHttpHeaders): this {
+    if (isIHttpHeaders(headers)) {
+      this.headers.add(headers.toPlain());
+    } else if (isPlainHttpHeaders(headers)) {
+      this.headers.add(headers);
+    }
+
+    return this;
+  }
+
+  withBody(body: IHttpContent<T>): this {
+    this.body = body;
+    return this;
+  }
+
+  build(): HttpRequest<T> {
+    return new HttpRequest<T>(this.method, this.url, this.headers, this.body);
   }
 }
 

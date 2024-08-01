@@ -48,8 +48,6 @@ interface IHttpClient {
 
 export type HttpRequestOptions = { headers?: HttpHeaders; body?: HttpBody };
 
-// TODO Add logging to HttpClient
-
 export class HttpClient implements IHttpClient {
   private readonly _baseUrl: string | null;
   private readonly _headers: PlainHttpHeaders | HttpHeaders | null;

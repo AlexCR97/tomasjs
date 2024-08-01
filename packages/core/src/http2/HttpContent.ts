@@ -147,7 +147,11 @@ export function isJsonContent<T extends JsonRecord>(obj: unknown): obj is JsonCo
   return obj instanceof JsonContent;
 }
 
-export const HttpContentFactory = {
+export interface IHttpContentFactory {
+  from(contentType: HttpContentType, data: Buffer): IHttpContent<unknown>;
+}
+
+export const HttpContentFactory: IHttpContentFactory = {
   from(contentType: HttpContentType, data: Buffer): IHttpContent<unknown> {
     if (contentType.includes("text/plain")) {
       return new PlainTextContent(data);

@@ -51,7 +51,9 @@ export interface IHttpHeaders {
   add(header: PlainHttpHeaders): this;
   add(headers: HttpHeader[]): this;
   add(key: string, value: HttpHeaderValue): this;
-  find(key: string): HttpHeader | null;
+  find(key: string): HttpHeaderValue | null;
+  findAll(key: string): string[] | null;
+  findFirst(key: string): string | null;
   includes(key: string): boolean;
   remove(key: string): boolean;
   toPlain(): PlainHttpHeaders;
@@ -113,7 +115,7 @@ export class HttpHeaders implements IHttpHeaders {
   }
 
   private addHeader(header: HttpHeader): this {
-    const existingHeader = this.find(header.key);
+    const existingHeader = this.findHeader(header.key);
 
     if (existingHeader === null) {
       this.headers.push(header);
@@ -145,10 +147,46 @@ export class HttpHeaders implements IHttpHeaders {
     return this;
   }
 
-  find(key: string): HttpHeader | null {
-    return (
-      this.headers.find((x) => x.key.trim().toLowerCase() === key.trim().toLowerCase()) ?? null
+  find(key: string): HttpHeaderValue | null {
+    const header = this.findHeader(key);
+
+    if (header === null) {
+      return null;
+    }
+
+    return header.value;
+  }
+
+  private findHeader(key: string): HttpHeader | null {
+    const header = this.headers.find(
+      (x) => x.key.trim().toLowerCase() === key.trim().toLowerCase()
     );
+
+    if (header === undefined) {
+      return null;
+    }
+
+    return header;
+  }
+
+  findAll(key: string): string[] | null {
+    const value = this.find(key);
+
+    if (value === null) {
+      return null;
+    }
+
+    return Array.isArray(value) ? value : [value];
+  }
+
+  findFirst(key: string): string | null {
+    const value = this.find(key);
+
+    if (value === null) {
+      return null;
+    }
+
+    return Array.isArray(value) ? value[0] : value;
   }
 
   includes(key: string): boolean {
@@ -156,7 +194,7 @@ export class HttpHeaders implements IHttpHeaders {
   }
 
   remove(key: string): boolean {
-    const header = this.find(key);
+    const header = this.findHeader(key);
 
     if (header === null) {
       return false;

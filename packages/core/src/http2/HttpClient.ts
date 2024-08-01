@@ -33,7 +33,7 @@ import { pipe } from "@/system";
 
 export type IHttpClient = IHttpClientMethods & IHttpClientMethodsJson;
 
-export type IHttpClientMethods = {
+type IHttpClientMethods = {
   send<TResponse, TRequest = unknown>(
     request: IHttpRequest<TRequest>
   ): Promise<IHttpResponse<TResponse>>;
@@ -82,7 +82,7 @@ export type IHttpClientMethods = {
   ): Promise<IHttpResponse<TResponse>>;
 };
 
-export type IHttpClientMethodsJson = {
+type IHttpClientMethodsJson = {
   sendJson<TResponse extends JsonRecord, TRequest = unknown>(
     request: IHttpRequest<TRequest>
   ): Promise<TResponse>;

@@ -106,13 +106,13 @@ describe("HttpHeaders", () => {
     headers.add("Authorization", "Bearer token");
 
     const foundHeaderWithExactCase = headers.find("Authorization");
-    expect(foundHeaderWithExactCase).toEqual({ key: "Authorization", value: "Bearer token" });
+    expect(foundHeaderWithExactCase).toMatch("Bearer token");
 
     const foundHeaderWithUppercase = headers.find("AUTHORIZATION");
-    expect(foundHeaderWithUppercase).toEqual({ key: "Authorization", value: "Bearer token" });
+    expect(foundHeaderWithUppercase).toEqual("Bearer token");
 
     const foundHeaderWithLowercase = headers.find("authorization");
-    expect(foundHeaderWithLowercase).toEqual({ key: "Authorization", value: "Bearer token" });
+    expect(foundHeaderWithLowercase).toEqual("Bearer token");
   });
 
   it("should return null when finding a non-existent header", () => {
