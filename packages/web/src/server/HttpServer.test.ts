@@ -1,7 +1,6 @@
-import { HttpClient, HttpHeaders } from "@tomasjs/core/http";
+import { HttpClient, HttpHeaders, JsonContent, PlainTextContent } from "@tomasjs/core/http";
 import { HttpServer } from "./HttpServer";
 import { QueryParams } from "./QueryParams";
-import { JsonContent, PlainTextContent } from "@/content";
 import { RouteParams } from "./RouteParams";
 import { endpoints } from "@/endpoint";
 import { statusCode } from "@/StatusCode";

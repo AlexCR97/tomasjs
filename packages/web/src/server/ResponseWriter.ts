@@ -1,19 +1,18 @@
-import { Content } from "@/content";
 import { TomasError } from "@tomasjs/core/errors";
-import { HttpHeader, HttpHeaders, PlainHttpHeaders } from "@tomasjs/core/http";
+import { HttpHeader, HttpHeaders, IHttpContent, PlainHttpHeaders } from "@tomasjs/core/http";
 import { ServerResponse } from "http";
 
 export interface IResponseWriter {
   get sent(): boolean;
   withHeaders(headers: HttpHeader[] | PlainHttpHeaders | HttpHeaders | null | undefined): this;
   withStatus(status: number | null | undefined): this;
-  withContent(content: Content<unknown> | null | undefined): this;
+  withContent(content: IHttpContent<unknown> | null | undefined): this;
   send(): Promise<void>;
 }
 
 export class ResponseWriter implements IResponseWriter {
   private _sent = false;
-  private content: Content<unknown> | null = null;
+  private content: IHttpContent<unknown> | null = null;
   private headers: HttpHeader[] | PlainHttpHeaders | HttpHeaders | null = null;
   private status: number | null = null;
 
@@ -41,7 +40,7 @@ export class ResponseWriter implements IResponseWriter {
     return this;
   }
 
-  withContent(content: Content<unknown> | null | undefined): this {
+  withContent(content: IHttpContent<unknown> | null | undefined): this {
     if (this._sent) {
       throw new ResponseAlreadySentError();
     }
@@ -124,7 +123,7 @@ export class ResponseWriter implements IResponseWriter {
     return this;
   }
 
-  private setContent(content: Content<unknown> | null | undefined): this {
+  private setContent(content: IHttpContent<unknown> | null | undefined): this {
     if (this._sent) {
       throw new ResponseAlreadySentError();
     }
@@ -133,7 +132,7 @@ export class ResponseWriter implements IResponseWriter {
       return this;
     }
 
-    this.withHeaders({ "content-type": content.type });
+    this.res.setHeader("content-type", content.type);
     this.res.write(content.data);
     return this;
   }

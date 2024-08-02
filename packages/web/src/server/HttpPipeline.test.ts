@@ -9,7 +9,7 @@ describe.skip("HttpPipeline", () => {
   const middlewareCount = 100;
   const iterations = 500;
 
-  it("`should benchmark HttpPipeline", async () => {
+  it("should benchmark HttpPipeline", async () => {
     const recursiveServer = await buildHttpServer("recursive");
     const iterativeServer = await buildHttpServer("iterative");
 

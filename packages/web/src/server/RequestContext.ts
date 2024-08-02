@@ -1,6 +1,12 @@
-import { HttpHeader, HttpHeaders, HttpMethod, PlainHttpHeaders } from "@tomasjs/core/http";
+import {
+  HttpHeader,
+  HttpHeaders,
+  HttpMethod,
+  IHttpContent,
+  PlainHttpHeaders,
+} from "@tomasjs/core/http";
 import { IQueryParams } from "./QueryParams";
-import { Content, ContentFactory } from "@/content";
+import { ContentFactory } from "@/content";
 import { IncomingMessage } from "http";
 import { UrlParser } from "./UrlParser";
 import { InvalidOperationError } from "@tomasjs/core/errors";
@@ -14,7 +20,7 @@ export interface IRequestContext {
   readonly path: string;
   readonly headers: Readonly<PlainHttpHeaders>;
   readonly query: IQueryParams;
-  readonly body: Content<unknown>;
+  readonly body: IHttpContent<unknown>;
   readonly user: IUser;
 }
 
@@ -24,7 +30,7 @@ export interface IRequestContextReader {
   readonly path: string;
   readonly headers: Readonly<PlainHttpHeaders>;
   readonly query: IQueryParams;
-  readonly body: Content<unknown>;
+  readonly body: IHttpContent<unknown>;
   readonly user: IUserReader;
 }
 
@@ -35,7 +41,7 @@ export class RequestContext implements IRequestContext {
     readonly path: string,
     readonly headers: Readonly<PlainHttpHeaders>,
     readonly query: IQueryParams,
-    readonly body: Content<unknown>,
+    readonly body: IHttpContent<unknown>,
     readonly user: IUser
   ) {}
 
@@ -59,36 +65,6 @@ export class RequestContext implements IRequestContext {
     }
 
     throw new InvalidOperationError();
-
-    // if (req.method === "GET") {
-    //   return "get";
-    // }
-
-    // if (req.method === "POST") {
-    //   return "post";
-    // }
-
-    // if (req.method === "PUT") {
-    //   return "put";
-    // }
-
-    // if (req.method === "PATCH") {
-    //   return "patch";
-    // }
-
-    // if (req.method === "DELETE") {
-    //   return "delete";
-    // }
-
-    // if (req.method === "HEAD") {
-    //   return "head";
-    // }
-
-    // if (req.method === "OPTIONS") {
-    //   return "options";
-    // }
-
-    // throw new InvalidOperationError();
   }
 
   private static getHeaders(req: IncomingMessage): Readonly<PlainHttpHeaders> {
@@ -102,7 +78,7 @@ export class RequestContext implements IRequestContext {
       .get();
   }
 
-  private static async getRequestBody(req: IncomingMessage): Promise<Content<unknown>> {
+  private static async getRequestBody(req: IncomingMessage): Promise<IHttpContent<unknown>> {
     const factory = await ContentFactory.from(req);
     return factory.createContent();
   }
@@ -115,7 +91,7 @@ export class RequestContextReader implements IRequestContextReader {
     readonly path: string,
     readonly headers: Readonly<PlainHttpHeaders>,
     readonly query: IQueryParams,
-    readonly body: Content<unknown>,
+    readonly body: IHttpContent<unknown>,
     readonly user: IUserReader
   ) {}
 

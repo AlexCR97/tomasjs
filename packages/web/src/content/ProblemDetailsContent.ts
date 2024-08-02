@@ -1,9 +1,10 @@
 import { ProblemDetails } from "@/ProblemDetails";
-import { Content } from "./Content";
-import { ContentType } from "./ContentType";
+import { HttpContentType, IHttpContent } from "@tomasjs/core/http";
 
-export class ProblemDetailsContent extends Content<ProblemDetails> {
-  override type: ContentType = "application/problem+json";
+export class ProblemDetailsContent implements IHttpContent<ProblemDetails> {
+  readonly type: HttpContentType = "application/problem+json";
+
+  constructor(readonly data: Buffer) {}
 
   readData(): ProblemDetails {
     // TODO Add non-standard fields to extensions

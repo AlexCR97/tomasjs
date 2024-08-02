@@ -1,10 +1,9 @@
-import { HttpClient } from "@tomasjs/core/http";
+import { HttpClient, JsonContent } from "@tomasjs/core/http";
 import { HttpServer } from "@/server";
 import { HttpResponse } from "@/server";
 import { statusCode } from "@/StatusCode";
 import { testHttpServer } from "@/test";
 import { Interceptor, interceptor } from "./Interceptor";
-import { JsonContent } from "@/content";
 
 describe("Interceptor", () => {
   const client = new HttpClient();

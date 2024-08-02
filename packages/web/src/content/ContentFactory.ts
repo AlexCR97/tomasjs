@@ -1,16 +1,19 @@
-import { IncomingMessage } from "http";
-import { Content } from "./Content";
-import { ContentType } from "./ContentType";
-import { HtmlContent } from "./HtmlContent";
-import { JsonContent } from "./JsonContent";
-import { PlainTextContent } from "./PlainTextContent";
+import {
+  HtmlContent,
+  HttpContentType,
+  IHttpContent,
+  JsonContent,
+  PlainTextContent,
+  RawContent,
+} from "@tomasjs/core/http";
+import { readToBuffer } from "@tomasjs/core/system/streams";
+import { IncomingMessage } from "node:http";
 import { ProblemDetailsContent } from "./ProblemDetailsContent";
-import { RawContent } from "./RawContent";
 
 export class ContentFactory {
-  constructor(private readonly contentType: ContentType, private readonly data: Buffer) {}
+  constructor(private readonly contentType: HttpContentType, private readonly data: Buffer) {}
 
-  createContent(): Content<unknown> {
+  createContent(): IHttpContent<unknown> {
     if (this.contentType === "text/html") {
       return new HtmlContent(this.data);
     }
@@ -27,32 +30,19 @@ export class ContentFactory {
       return new ProblemDetailsContent(this.data);
     }
 
-    return new RawContent(this.data);
+    return new RawContent(this.contentType, this.data);
   }
 
   static async from(req: IncomingMessage): Promise<ContentFactory> {
     const contentType = this.getContentType(req);
-    const data = await this.readData(req);
+    const data = await readToBuffer(req);
     return new ContentFactory(contentType, data);
   }
 
-  private static getContentType(req: IncomingMessage): ContentType {
+  private static getContentType(req: IncomingMessage): HttpContentType {
     const contentType = req.headers["content-type"];
-    return contentType === undefined ? "application/octet-stream" : (contentType as ContentType);
-  }
-
-  private static async readData(req: IncomingMessage): Promise<Buffer> {
-    return new Promise((resolve) => {
-      const parts: Uint8Array[] = [];
-
-      req.on("data", (bytes: Uint8Array) => {
-        parts.push(bytes);
-      });
-
-      req.on("end", () => {
-        const buffer = Buffer.concat(parts);
-        return resolve(buffer);
-      });
-    });
+    return contentType === undefined
+      ? "application/octet-stream"
+      : (contentType as HttpContentType);
   }
 }

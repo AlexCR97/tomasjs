@@ -1,9 +1,8 @@
-import { Content } from "@/content";
-import { HttpHeader, PlainHttpHeaders, HttpHeaders } from "@tomasjs/core/http";
+import { HttpHeader, PlainHttpHeaders, HttpHeaders, IHttpContent } from "@tomasjs/core/http";
 
 export class HttpResponse {
   readonly status: number | undefined;
-  readonly content: Content<unknown> | undefined;
+  readonly content: IHttpContent<unknown> | undefined;
   readonly headers: HttpHeader[] | PlainHttpHeaders | HttpHeaders | undefined;
 
   constructor(options?: HttpResponseOptions) {
@@ -15,6 +14,6 @@ export class HttpResponse {
 
 export type HttpResponseOptions = {
   status?: number;
-  content?: Content<unknown>;
+  content?: IHttpContent<unknown>;
   headers?: HttpHeader[] | PlainHttpHeaders | HttpHeaders;
 };

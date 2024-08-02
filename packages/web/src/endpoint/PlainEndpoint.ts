@@ -1,5 +1,4 @@
-import { HttpHeader, HttpHeaders, HttpMethod, PlainHttpHeaders } from "@tomasjs/core/http";
-import { Content } from "@/content";
+import { HttpMethod, IHttpContent, PlainHttpHeaders } from "@tomasjs/core/http";
 import { AuthenticationPolicy, AuthorizationPolicy, IUserReader } from "@/auth";
 import { Middleware } from "@/middleware";
 import { Interceptor } from "@/interceptor";
@@ -34,7 +33,7 @@ export class EndpointContext implements IEndpointContext {
     readonly headers: Readonly<PlainHttpHeaders>,
     readonly params: IRouteParams,
     readonly query: IQueryParams,
-    readonly body: Content<unknown>,
+    readonly body: IHttpContent<unknown>,
     readonly user: IUserReader
   ) {}
 

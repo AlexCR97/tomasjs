@@ -1,7 +1,7 @@
 import { Server, createServer } from "http";
 import { Endpoint, EndpointHandler, EndpointOptions, PlainEndpoint } from "@/endpoint";
 import { ResponseWriter } from "./ResponseWriter";
-import { HttpMethod } from "@tomasjs/core/http";
+import { HttpMethod, PlainTextContent } from "@tomasjs/core/http";
 import { InvalidOperationError } from "@tomasjs/core/errors";
 import {
   HttpPipeline,
@@ -13,7 +13,6 @@ import { Middleware, MiddlewareAggregate } from "@/middleware";
 import { RequestContext } from "./RequestContext";
 import { ErrorHandler } from "@/error-handler";
 import { statusCode } from "@/StatusCode";
-import { PlainTextContent } from "@/content";
 import { Guard } from "@/guard";
 import { Interceptor } from "@/interceptor";
 import { AuthenticationPolicy, AuthorizationPolicy } from "@/auth";
