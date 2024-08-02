@@ -29,23 +29,23 @@ export class Endpoint implements IEndpoint {
   ) {}
 
   static get(path: string, handler: EndpointHandler): Endpoint {
-    return new Endpoint("get", path, handler);
+    return new Endpoint("GET", path, handler);
   }
 
   static post(path: string, handler: EndpointHandler): Endpoint {
-    return new Endpoint("post", path, handler);
+    return new Endpoint("POST", path, handler);
   }
 
   static put(path: string, handler: EndpointHandler): Endpoint {
-    return new Endpoint("put", path, handler);
+    return new Endpoint("PUT", path, handler);
   }
 
   static patch(path: string, handler: EndpointHandler): Endpoint {
-    return new Endpoint("patch", path, handler);
+    return new Endpoint("PATCH", path, handler);
   }
 
   static delete(path: string, handler: EndpointHandler): Endpoint {
-    return new Endpoint("delete", path, handler);
+    return new Endpoint("DELETE", path, handler);
   }
 
   use(middleware: Middleware): this {

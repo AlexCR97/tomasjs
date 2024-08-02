@@ -28,16 +28,16 @@ describe("Server", () => {
   });
 
   it("should accept connections", async () => {
-    await server.useEndpoint("get", "/", () => new HttpResponse({ status: statusCode.ok })).start();
+    await server.useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok })).start();
 
     const response = await client.get(`http://localhost:${server.port}`);
 
-    expect(response.ok).toBe(true);
+    expect(response.isSuccess).toBe(true);
   });
 
   it("should route requests", async () => {
     await server
-      .useEndpoint("get", "/path/to/resource", () => {
+      .useEndpoint("GET", "/path/to/resource", () => {
         return new HttpResponse({
           status: statusCode.ok,
           content: PlainTextContent.from("Hooray!"),
@@ -47,9 +47,9 @@ describe("Server", () => {
 
     const response = await client.get(`http://localhost:${server.port}/path/to/resource`);
 
-    expect(response.ok).toBe(true);
+    expect(response.isSuccess).toBe(true);
 
-    const responseText = await response.text();
+    const responseText = response.body.readData();
 
     expect(responseText).toMatch("Hooray!");
   });
@@ -61,7 +61,7 @@ describe("Server", () => {
     });
 
     await server
-      .useEndpoint("get", "/", ({ query }) => {
+      .useEndpoint("GET", "/", ({ query }) => {
         return new HttpResponse({
           status: statusCode.ok,
           content: JsonContent.from(query.toPlain()),
@@ -71,9 +71,9 @@ describe("Server", () => {
 
     const response = await client.get(`http://localhost:${server.port}?${queryParams.toString()}`);
 
-    expect(response.ok).toBe(true);
+    expect(response.isSuccess).toBe(true);
 
-    const responseJson = await response.json();
+    const responseJson = response.body.readData();
 
     expect(responseJson).toMatchObject(queryParams.toPlain());
   });
@@ -85,7 +85,7 @@ describe("Server", () => {
     } as const;
 
     await server
-      .useEndpoint("post", "/", ({ body }) => {
+      .useEndpoint("POST", "/", ({ body }) => {
         expect(body).toBeInstanceOf(JsonContent);
 
         const jsonBody = body as JsonContent<typeof expectedBodyContent>;
@@ -101,22 +101,24 @@ describe("Server", () => {
 
     const response = await client.post(
       `http://localhost:${server.port}`,
-      JSON.stringify(expectedBodyContent),
+      JsonContent.from(expectedBodyContent),
       {
-        headers: new HttpHeaders().add("content-type", "application/json"),
+        headers: {
+          "content-type": "application/json",
+        },
       }
     );
 
-    expect(response.ok).toBe(true);
+    expect(response.isSuccess).toBe(true);
 
-    const responseJson = await response.json();
+    const responseJson = response.body.readData();
 
     expect(responseJson).toMatchObject(expectedBodyContent);
   });
 
   it("should provide route params", async () => {
     await server
-      .useEndpoint("get", "/path/to/:resource", ({ params }) => {
+      .useEndpoint("GET", "/path/to/:resource", ({ params }) => {
         expect(params).toBeInstanceOf(RouteParams);
 
         return new HttpResponse({
@@ -128,9 +130,9 @@ describe("Server", () => {
 
     const response = await client.get(`http://localhost:${server.port}/path/to/1`);
 
-    expect(response.ok).toBe(true);
+    expect(response.isSuccess).toBe(true);
 
-    const responseJson = await response.json();
+    const responseJson = response.body.readData();
 
     expect(responseJson).toMatchObject({
       resource: "1",
@@ -198,7 +200,7 @@ describe("Server", () => {
       .use(
         endpoints([
           {
-            method: "get",
+            method: "GET",
             path: "/",
             handler: () => {
               return new HttpResponse({
@@ -215,7 +217,7 @@ describe("Server", () => {
 
   it("should use the default error handler", async () => {
     await server
-      .useEndpoint("get", "/", () => {
+      .useEndpoint("GET", "/", () => {
         throw new Error("This is a custom error!");
       })
       .start();
@@ -229,7 +231,7 @@ describe("Server", () => {
     type ErrorResponse = { type: string; message: string };
 
     await server
-      .useEndpoint("get", "/", () => {
+      .useEndpoint("GET", "/", () => {
         throw new Error("This is a custom error!");
       })
       .useErrorHandler(async (req, res, err) => {
@@ -251,7 +253,7 @@ describe("Server", () => {
 
     expect(response.status).toBe(statusCode.internalServerError);
 
-    const responseJson = (await response.json()) as ErrorResponse;
+    const responseJson = response.body.readData() as ErrorResponse;
 
     expect(responseJson.type).toMatch(Error.name);
     expect(responseJson.message).toMatch("This is a custom error!");
@@ -259,7 +261,7 @@ describe("Server", () => {
 
   it("should use Problem Details error handler", async () => {
     await server
-      .useEndpoint("get", "/", () => {
+      .useEndpoint("GET", "/", () => {
         throw new TomasError("custom/error", "This is a custom error!", {
           data: { foo: "bar" },
           innerError: new TomasError("custom/innerError", "This is an inner error!", {
@@ -275,7 +277,7 @@ describe("Server", () => {
 
     expect(response.status).toBe(statusCode.internalServerError);
 
-    const responseJson = await response.json();
+    const responseJson = response.body.readData();
 
     // expect(responseJson.type).toMatch(Error.name);
     // expect(responseJson.message).toMatch("This is a custom error!");

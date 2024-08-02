@@ -66,9 +66,9 @@ describe("Endpoint", () => {
 
     const response = await client.get(`http://localhost:${server.port}`);
 
-    expect(response.ok).toBe(true);
+    expect(response.isSuccess).toBe(true);
 
-    const responseJson = await response.json();
+    const responseJson = response.body.readData();
 
     expect(responseJson).toMatchObject({
       aggregation: [1, 2, 3],

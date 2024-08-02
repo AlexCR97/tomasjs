@@ -29,7 +29,7 @@ describe("JwtPolicy", () => {
   it("should be denied by jwt policy at global level", async () => {
     await server
       .useAuthentication(myJwtPolicy)
-      .useEndpoint("get", "/", () => new HttpResponse({ status: statusCode.ok }))
+      .useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok }))
       .start();
 
     const response = await client.get(`http://localhost:${server.port}`);
@@ -40,7 +40,7 @@ describe("JwtPolicy", () => {
   it("should be authorized by jwt policy at global level", async () => {
     await server
       .useAuthentication(myJwtPolicy)
-      .useEndpoint("get", "/", ({ user }) => {
+      .useEndpoint("GET", "/", ({ user }) => {
         expect(user.authenticated).toBe(true);
         expect(user.claims.toPlain()).toMatchObject(claims.toPlain());
         return new HttpResponse({ status: statusCode.ok });
@@ -51,7 +51,7 @@ describe("JwtPolicy", () => {
       headers: new HttpHeaders().add("authorization", `Bearer ${token}`),
     });
 
-    expect(response.ok).toBe(true);
+    expect(response.isSuccess).toBe(true);
   });
 
   it("should be denied by jwt policy at endpoint level", async () => {
@@ -59,7 +59,7 @@ describe("JwtPolicy", () => {
 
     await server
       .useEndpoint(
-        "get",
+        "GET",
         "/",
         () => {
           counter += 1; // this should not be reached!
@@ -83,7 +83,7 @@ describe("JwtPolicy", () => {
 
     await server
       .useEndpoint(
-        "get",
+        "GET",
         "/",
         ({ user }) => {
           expect(user.authenticated).toBe(true);

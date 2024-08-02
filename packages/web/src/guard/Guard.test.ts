@@ -30,40 +30,40 @@ describe("Guard", () => {
   it("should use guard middleware", async () => {
     await server
       .use(guard(myGuardFunction))
-      .useEndpoint("get", "/", () => new HttpResponse({ status: statusCode.ok }))
+      .useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok }))
       .start();
 
     const response = await client.get(`http://localhost:${server.port}`, {
       headers: new HttpHeaders().add(apiKeyHeader, apiKeyValue),
     });
 
-    expect(response.ok).toBe(true);
+    expect(response.isSuccess).toBe(true);
   });
 
   it("should use guard middleware shorthand", async () => {
     await server
       .useGuard(myGuardFunction)
-      .useEndpoint("get", "/", () => new HttpResponse({ status: statusCode.ok }))
+      .useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok }))
       .start();
 
     const response = await client.get(`http://localhost:${server.port}`, {
       headers: new HttpHeaders().add(apiKeyHeader, apiKeyValue),
     });
 
-    expect(response.ok).toBe(true);
+    expect(response.isSuccess).toBe(true);
   });
 
   it("should deny unauthorized requests", async () => {
     await server
       .useGuard(myGuardFunction)
-      .useEndpoint("get", "/", () => new HttpResponse({ status: statusCode.ok }))
+      .useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok }))
       .start();
 
     const response = await client.get(`http://localhost:${server.port}`);
 
     expect(response.status).toBe(statusCode.unauthorized);
 
-    const responseJson = await response.json();
+    const responseJson = response.body.readData();
   });
 
   it("should apply multiple guards", async () => {
@@ -77,7 +77,7 @@ describe("Guard", () => {
       .useGuard(() => {
         return true;
       })
-      .useEndpoint("get", "/", () => new HttpResponse({ status: statusCode.ok }))
+      .useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok }))
       .start();
 
     const response = await client.get(`http://localhost:${server.port}`);

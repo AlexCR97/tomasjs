@@ -43,7 +43,7 @@ describe("RolePolicy", () => {
     await server
       .useAuthentication(myJwtPolicy)
       .useAuthorization(adminRolePolicy)
-      .useEndpoint("get", "/", () => new HttpResponse({ status: statusCode.ok }))
+      .useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok }))
       .start();
 
     const response = await client.get(`http://localhost:${server.port}`, {
@@ -57,7 +57,7 @@ describe("RolePolicy", () => {
     await server
       .useAuthentication(myJwtPolicy)
       .useAuthorization(adminRolePolicy)
-      .useEndpoint("get", "/", () => new HttpResponse({ status: statusCode.ok }))
+      .useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok }))
       .start();
 
     const response = await client.get(`http://localhost:${server.port}`, {
@@ -72,7 +72,7 @@ describe("RolePolicy", () => {
 
     await server
       .useEndpoint(
-        "get",
+        "GET",
         "/",
         () => {
           counter += 1; // this should not be reached!
@@ -98,7 +98,7 @@ describe("RolePolicy", () => {
 
     await server
       .useEndpoint(
-        "get",
+        "GET",
         "/",
         ({ user }) => {
           expect(user.authorized).toBe(true);
@@ -122,7 +122,7 @@ describe("RolePolicy", () => {
 
   it("should be authorized by admin OR reader role policy at endpoint level", async () => {
     await server
-      .useEndpoint("get", "/", () => new HttpResponse({ status: statusCode.ok }), {
+      .useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok }), {
         authentication: myJwtPolicy,
         authorization: adminOrReaderRolesPolicy,
       })
@@ -137,7 +137,7 @@ describe("RolePolicy", () => {
 
   it("should be unauthorized by admin AND reader role policy at endpoint level", async () => {
     await server
-      .useEndpoint("get", "/", () => new HttpResponse({ status: statusCode.ok }), {
+      .useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok }), {
         authentication: myJwtPolicy,
         authorization: adminAndReaderRolesPolicy,
       })
@@ -152,7 +152,7 @@ describe("RolePolicy", () => {
 
   it("should be authorized by admin AND reader role policy at endpoint level", async () => {
     await server
-      .useEndpoint("get", "/", () => new HttpResponse({ status: statusCode.ok }), {
+      .useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok }), {
         authentication: myJwtPolicy,
         authorization: adminAndReaderRolesPolicy,
       })

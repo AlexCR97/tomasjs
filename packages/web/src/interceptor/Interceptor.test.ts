@@ -28,7 +28,7 @@ describe("Interceptor", () => {
   it("should use interceptor middleware", async () => {
     await server
       .use(interceptor(myInterceptor))
-      .useEndpoint("get", "/", (req) => {
+      .useEndpoint("GET", "/", (req) => {
         const response = { authenticated: req.user.authenticated } as const;
         return new HttpResponse({
           status: statusCode.ok,
@@ -39,9 +39,9 @@ describe("Interceptor", () => {
 
     const response = await client.get(`http://localhost:${server.port}`);
 
-    expect(response.ok).toBe(true);
+    expect(response.isSuccess).toBe(true);
 
-    const responseJson = await response.json();
+    const responseJson = response.body.readData();
 
     expect(responseJson).toMatchObject({ authenticated: true });
   });
@@ -49,7 +49,7 @@ describe("Interceptor", () => {
   it("should use interceptor middleware shorthand", async () => {
     await server
       .useInterceptor(myInterceptor)
-      .useEndpoint("get", "/", (req) => {
+      .useEndpoint("GET", "/", (req) => {
         const response = { authenticated: req.user.authenticated } as const;
         return new HttpResponse({
           status: statusCode.ok,
@@ -60,9 +60,9 @@ describe("Interceptor", () => {
 
     const response = await client.get(`http://localhost:${server.port}`);
 
-    expect(response.ok).toBe(true);
+    expect(response.isSuccess).toBe(true);
 
-    const responseJson = await response.json();
+    const responseJson = response.body.readData();
 
     expect(responseJson).toMatchObject({ authenticated: true });
   });

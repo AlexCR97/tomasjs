@@ -6,6 +6,7 @@ import { UrlParser } from "./UrlParser";
 import { InvalidOperationError } from "@tomasjs/core/errors";
 import { pipe } from "@tomasjs/core/system";
 import { IUser, IUserReader, User, UserReader } from "@/auth";
+import { isHttpMethod } from "@tomasjs/core/http/HttpMethod";
 
 export interface IRequestContext {
   readonly method: HttpMethod;
@@ -53,35 +54,41 @@ export class RequestContext implements IRequestContext {
   }
 
   private static getHttpMethod(req: IncomingMessage): HttpMethod {
-    if (req.method === "GET") {
-      return "get";
-    }
-
-    if (req.method === "POST") {
-      return "post";
-    }
-
-    if (req.method === "PUT") {
-      return "put";
-    }
-
-    if (req.method === "PATCH") {
-      return "patch";
-    }
-
-    if (req.method === "DELETE") {
-      return "delete";
-    }
-
-    if (req.method === "HEAD") {
-      return "head";
-    }
-
-    if (req.method === "OPTIONS") {
-      return "options";
+    if (isHttpMethod(req.method)) {
+      return req.method;
     }
 
     throw new InvalidOperationError();
+
+    // if (req.method === "GET") {
+    //   return "get";
+    // }
+
+    // if (req.method === "POST") {
+    //   return "post";
+    // }
+
+    // if (req.method === "PUT") {
+    //   return "put";
+    // }
+
+    // if (req.method === "PATCH") {
+    //   return "patch";
+    // }
+
+    // if (req.method === "DELETE") {
+    //   return "delete";
+    // }
+
+    // if (req.method === "HEAD") {
+    //   return "head";
+    // }
+
+    // if (req.method === "OPTIONS") {
+    //   return "options";
+    // }
+
+    // throw new InvalidOperationError();
   }
 
   private static getHeaders(req: IncomingMessage): Readonly<PlainHttpHeaders> {
