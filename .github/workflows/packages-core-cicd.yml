@@ -3,7 +3,7 @@ name: Publish @tomasjs/core
 on:
   push:
     branches:
-      - main
+      - release/v2
     paths:
       - .github/workflows/packages-core-cicd.yml
       - packages/core/src/**
@@ -19,19 +19,24 @@ jobs:
       - name: Setup node
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
           registry-url: https://registry.npmjs.org/
           token: ${{secrets.NPM_ACCESS_TOKEN}}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
 
       - name: Install modules
         run: |
           cd ./packages/core
-          npm install
+          pnpm install
 
       - name: Build
         run: |
           cd ./packages/core
-          npm run compile
+          pnpm build
 
       - name: Publish
         env:

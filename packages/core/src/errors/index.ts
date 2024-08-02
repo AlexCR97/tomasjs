@@ -1,3 +1,4 @@
+export { InvalidCastError } from "./InvalidCastError";
+export { InvalidOperationError } from "./InvalidOperationError";
 export { NotImplementedError } from "./NotImplementedError";
-export { RequiredArgumentError } from "./RequiredArgumentError";
-export { TomasError } from "./TomasError";
+export { ErrorOptions, TomasError } from "./TomasError";

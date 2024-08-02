@@ -1,9 +1,0 @@
-{
-  "minimumLevel": {
-    "default": "error",
-    "override": {
-      "Foo": "debug",
-      "Bar": "verbose"
-    }
-  }
-}

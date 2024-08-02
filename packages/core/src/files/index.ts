@@ -1,12 +1,11 @@
 import { TomasError } from "@/errors";
-import { Pipe } from "@/pipes";
 import { readFileSync } from "fs";
 
-export function readFile(path: string, encoding?: BufferEncoding) {
+export function readFile(path: string, encoding?: BufferEncoding): string | Buffer {
   try {
     return readFileSync(path, encoding);
   } catch (err) {
-    throw new TomasError(`No such file "${path}"`, {
+    throw new TomasError("core/files/FileNotFound", `No such file at path "${path}"`, {
       data: { path },
       innerError: err,
     });
@@ -14,8 +13,6 @@ export function readFile(path: string, encoding?: BufferEncoding) {
 }
 
 export function readJsonFile<T>(path: string): T {
-  return new Pipe(path)
-    .apply((path) => readFile(path, "utf8") as string)
-    .apply((content) => JSON.parse(content))
-    .get();
+  const content = readFile(path, "utf8") as string;
+  return JSON.parse(content);
 }
