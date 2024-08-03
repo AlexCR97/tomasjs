@@ -5,7 +5,7 @@ import { statusCode } from "@/StatusCode";
 import { HttpClient, IHttpClient } from "@tomasjs/core/http";
 import { testHttpServer } from "@/test";
 
-describe("x-WebApp", () => {
+describe("WebApp", () => {
   let client: IHttpClient;
   let server: IHttpServer;
   let app: WebApp | undefined;
