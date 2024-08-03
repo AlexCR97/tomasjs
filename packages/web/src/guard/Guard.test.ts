@@ -1,5 +1,5 @@
 import { HttpClient, HttpHeaders } from "@tomasjs/core/http";
-import { HttpServer } from "@/server";
+import { IHttpServer } from "@/server";
 import { HttpResponse } from "@/server";
 import { statusCode } from "@/StatusCode";
 import { Guard, guard } from "./Guard";
@@ -15,7 +15,7 @@ describe("Guard", () => {
     return apiKey === apiKeyValue;
   };
 
-  let server: HttpServer;
+  let server: IHttpServer;
 
   beforeEach(async () => {
     server = await testHttpServer();

@@ -5,7 +5,7 @@ import { Interceptor, interceptor } from "@/interceptor";
 import { Middleware } from "./Middleware";
 import { PlainEndpoint, endpoints as endpointsMiddleware } from "@/endpoint";
 
-interface IMiddlewareAggregate {
+export interface IMiddlewareAggregate {
   addErrorHandler(...errorHandlers: ErrorHandler[]): this;
   addMiddleware(...middlewares: Middleware[]): this;
   addInterceptor(...interceptors: Interceptor[]): this;

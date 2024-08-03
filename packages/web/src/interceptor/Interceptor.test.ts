@@ -1,5 +1,5 @@
 import { HttpClient, JsonContent } from "@tomasjs/core/http";
-import { HttpServer } from "@/server";
+import { IHttpServer } from "@/server";
 import { HttpResponse } from "@/server";
 import { statusCode } from "@/StatusCode";
 import { testHttpServer } from "@/test";
@@ -12,7 +12,7 @@ describe("Interceptor", () => {
     req.user.authenticate();
   };
 
-  let server: HttpServer;
+  let server: IHttpServer;
 
   beforeEach(async () => {
     server = await testHttpServer();

@@ -1,5 +1,5 @@
 import { HttpClient } from "@tomasjs/core/http";
-import { HttpServer } from "./HttpServer";
+import { IHttpServer } from "./HttpServer";
 import { IterativeHttpPipeline, RecursiveHttpPipeline } from "./HttpPipeline";
 import { benchmark } from "@/test/benchmark";
 import { testHttpServer } from "@/test";
@@ -40,7 +40,7 @@ describe.skip("HttpPipeline", () => {
     let breakpoint = "stop here";
   });
 
-  async function buildHttpServer(pipelineMode: "recursive" | "iterative"): Promise<HttpServer> {
+  async function buildHttpServer(pipelineMode: "recursive" | "iterative"): Promise<IHttpServer> {
     const server = await testHttpServer();
 
     for (let i = 0; i < middlewareCount; i++) {

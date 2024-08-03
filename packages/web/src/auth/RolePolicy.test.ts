@@ -1,6 +1,5 @@
 import { HttpClient, HttpHeaders } from "@tomasjs/core/http";
-import { HttpServer } from "@/server";
-import { HttpResponse } from "@/server";
+import { HttpResponse, IHttpServer } from "@/server";
 import { testHttpServer } from "@/test";
 import { Claims } from "@/auth";
 import { JwtSigner, jwtPolicy } from "@/jwt";
@@ -27,7 +26,7 @@ describe("RolePolicy", () => {
   const adminAndReaderToken = new JwtSigner({ secret }).sign(adminAndReaderClaims);
   const adminAndReaderRolesPolicy = rolePolicy([adminRole, readerRole], { check: "all" });
 
-  let server: HttpServer;
+  let server: IHttpServer;
 
   beforeEach(async () => {
     server = await testHttpServer();

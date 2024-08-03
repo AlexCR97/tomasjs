@@ -1,8 +1,8 @@
-import { HttpServer } from "@/server";
+import { HttpServer, IHttpServer } from "@/server";
 import { TomasError } from "@tomasjs/core/errors";
 import net from "net";
 
-export async function testHttpServer(): Promise<HttpServer> {
+export async function testHttpServer(): Promise<IHttpServer> {
   const maxAttempts = 100;
   const minPort = 10000;
   const maxPort = 65536;
@@ -27,26 +27,26 @@ export async function testHttpServer(): Promise<HttpServer> {
         );
       }
     }
-  }
 
-  function getRandomPort(): number {
-    return Math.floor(Math.random() * (maxPort - minPort + 1)) + minPort;
-  }
+    function getRandomPort(): number {
+      return Math.floor(Math.random() * (maxPort - minPort + 1)) + minPort;
+    }
 
-  function isPortAvailable(port: number): Promise<boolean> {
-    return new Promise((resolve) => {
-      const server = net.createServer();
+    function isPortAvailable(port: number): Promise<boolean> {
+      return new Promise((resolve) => {
+        const server = net.createServer();
 
-      server.once("error", function (err) {
-        return resolve(false);
+        server.once("error", function (err) {
+          return resolve(false);
+        });
+
+        server.once("listening", function () {
+          server.close();
+          return resolve(true);
+        });
+
+        server.listen(port);
       });
-
-      server.once("listening", function () {
-        server.close();
-        return resolve(true);
-      });
-
-      server.listen(port);
-    });
+    }
   }
 }

@@ -4,8 +4,13 @@ export {
   IterativeHttpPipeline,
   RecursiveHttpPipeline,
 } from "./HttpPipeline";
+export {
+  HttpPipelineBuilder,
+  HttpPipelineBuilderDelegate,
+  IHttpPipelineBuilder,
+} from "./HttpPipelineBuilder";
 export { HttpResponse, HttpResponseOptions } from "./HttpResponse";
-export { HttpServer, HttpServerOptions } from "./HttpServer";
+export { HttpServer, HttpServerOptions, IHttpServer } from "./HttpServer";
 export {
   IQueryParams,
   PlainQueryParams,

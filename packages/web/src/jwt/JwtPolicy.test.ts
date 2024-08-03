@@ -1,7 +1,7 @@
 import { HttpClient, HttpHeaders } from "@tomasjs/core/http";
 import { statusCode } from "@/StatusCode";
 import { JwtSigner } from "./JwtSigner";
-import { HttpServer } from "@/server";
+import { IHttpServer } from "@/server";
 import { HttpResponse } from "@/server";
 import { testHttpServer } from "@/test";
 import { Claims } from "@/auth";
@@ -14,7 +14,7 @@ describe("JwtPolicy", () => {
   const token = new JwtSigner({ secret }).sign(claims);
   const myJwtPolicy = jwtPolicy({ secret });
 
-  let server: HttpServer;
+  let server: IHttpServer;
 
   beforeEach(async () => {
     server = await testHttpServer();

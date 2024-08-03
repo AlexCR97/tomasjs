@@ -1,5 +1,5 @@
 import { HttpClient, JsonContent } from "@tomasjs/core/http";
-import { HttpResponse, HttpServer } from "@/server";
+import { HttpResponse, IHttpServer } from "@/server";
 import { statusCode } from "@/StatusCode";
 import { testHttpServer } from "@/test";
 import { Middleware } from "@/middleware";
@@ -10,7 +10,7 @@ import { Endpoint } from "./Endpoint";
 describe("Endpoint", () => {
   const client = new HttpClient();
 
-  let server: HttpServer;
+  let server: IHttpServer;
 
   beforeEach(async () => {
     server = await testHttpServer();
