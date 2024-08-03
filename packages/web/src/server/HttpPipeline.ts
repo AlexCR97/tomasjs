@@ -1,4 +1,4 @@
-import { Middleware } from "@/middleware";
+import { MiddlewareFunction } from "@/middleware";
 import { IRequestContext } from "./RequestContext";
 import { IResponseWriter } from "./ResponseWriter";
 
@@ -7,10 +7,10 @@ export interface IHttpPipeline {
 }
 
 export class RecursiveHttpPipeline implements IHttpPipeline {
-  private readonly middlewares: Middleware[];
-  private readonly terminalMiddleware: Middleware;
+  private readonly middlewares: MiddlewareFunction[];
+  private readonly terminalMiddleware: MiddlewareFunction;
 
-  constructor(middlewares: Middleware[]) {
+  constructor(middlewares: MiddlewareFunction[]) {
     this.middlewares = middlewares;
 
     this.terminalMiddleware = async () => {
@@ -26,7 +26,7 @@ export class RecursiveHttpPipeline implements IHttpPipeline {
   private async runPipeline(
     request: IRequestContext,
     response: IResponseWriter,
-    current: Middleware,
+    current: MiddlewareFunction,
     nextIndex: number
   ): Promise<void> {
     return await current(request, response, async () => {
@@ -37,10 +37,10 @@ export class RecursiveHttpPipeline implements IHttpPipeline {
 }
 
 export class IterativeHttpPipeline implements IHttpPipeline {
-  private readonly middlewares: Middleware[];
-  private readonly terminalMiddleware: Middleware;
+  private readonly middlewares: MiddlewareFunction[];
+  private readonly terminalMiddleware: MiddlewareFunction;
 
-  constructor(middlewares: Middleware[]) {
+  constructor(middlewares: MiddlewareFunction[]) {
     this.middlewares = middlewares;
 
     this.terminalMiddleware = async () => {

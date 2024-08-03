@@ -1,4 +1,4 @@
-import { Middleware, MiddlewareAggregate } from "@/middleware";
+import { MiddlewareFunction, MiddlewareAggregate } from "@/middleware";
 import { IRequestContext } from "@/server";
 import { IClaims } from "./Claims";
 
@@ -13,7 +13,7 @@ export type AuthenticationPolicyResultExtended = {
   claims?: IClaims;
 };
 
-export function authentication(policy: AuthenticationPolicy): Middleware[] {
+export function authentication(policy: AuthenticationPolicy): MiddlewareFunction[] {
   return new MiddlewareAggregate()
     .addInterceptor(async (req) => {
       const result = await policy(req);

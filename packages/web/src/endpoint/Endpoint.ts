@@ -4,10 +4,10 @@ import { PlainEndpoint } from "./PlainEndpoint";
 import { AuthenticationPolicy, AuthorizationPolicy } from "@/auth";
 import { Guard } from "@/guard";
 import { Interceptor } from "@/interceptor";
-import { Middleware } from "@/middleware";
+import { MiddlewareFunction } from "@/middleware";
 
 interface IEndpoint {
-  use(middleware: Middleware): this;
+  use(middleware: MiddlewareFunction): this;
   useInterceptor(interceptor: Interceptor): this;
   useGuard(guard: Guard): this;
   useAuthentication(policy: AuthenticationPolicy): this;
@@ -16,7 +16,7 @@ interface IEndpoint {
 }
 
 export class Endpoint implements IEndpoint {
-  private readonly middlewares: Middleware[] = [];
+  private readonly middlewares: MiddlewareFunction[] = [];
   private readonly interceptors: Interceptor[] = [];
   private readonly guards: Guard[] = [];
   private authentication: AuthenticationPolicy | undefined;
@@ -48,7 +48,7 @@ export class Endpoint implements IEndpoint {
     return new Endpoint("DELETE", path, handler);
   }
 
-  use(middleware: Middleware): this {
+  use(middleware: MiddlewareFunction): this {
     this.middlewares.push(middleware);
     return this;
   }

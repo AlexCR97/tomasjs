@@ -1,2 +1,2 @@
-export { Middleware } from "./Middleware";
+export { MiddlewareFunction } from "./Middleware";
 export { MiddlewareAggregate } from "./MiddlewareAggregate";

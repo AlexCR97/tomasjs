@@ -1,4 +1,4 @@
-import { Middleware } from "@/middleware";
+import { MiddlewareFunction } from "@/middleware";
 import { IRequestContext, IResponseWriter } from "@/server";
 
 export type ErrorHandler = (
@@ -7,7 +7,7 @@ export type ErrorHandler = (
   error: any
 ) => void | Promise<void>;
 
-export function errorHandler(handler: ErrorHandler): Middleware {
+export function errorHandler(handler: ErrorHandler): MiddlewareFunction {
   return async (req, res, next) => {
     try {
       await next();

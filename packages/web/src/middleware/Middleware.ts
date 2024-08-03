@@ -1,6 +1,6 @@
 import { IRequestContext, IResponseWriter } from "@/server";
 
-export type Middleware = (
+export type MiddlewareFunction = (
   request: IRequestContext,
   response: IResponseWriter,
   next: () => Promise<void>

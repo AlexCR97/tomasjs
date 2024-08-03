@@ -1,5 +1,5 @@
 import { HttpResponse } from "@/server";
-import { Middleware } from "@/middleware";
+import { MiddlewareFunction } from "@/middleware";
 import { ProblemDetailsContent } from "@/content";
 import { ProblemDetails } from "@/ProblemDetails";
 import { IRequestContext, IResponseWriter } from "@/server";
@@ -9,7 +9,7 @@ import { httpStatus } from "@/HttpStatus";
 export type Guard = (request: IRequestContext) => GuardResult | Promise<GuardResult>;
 export type GuardResult = boolean | 401 | 403;
 
-export function guard(guard: Guard): Middleware {
+export function guard(guard: Guard): MiddlewareFunction {
   return async (req, res, next) => {
     const result = await guard(req);
 

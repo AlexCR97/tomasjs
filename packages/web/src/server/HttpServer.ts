@@ -9,7 +9,7 @@ import {
   IterativeHttpPipeline,
   RecursiveHttpPipeline,
 } from "./HttpPipeline";
-import { Middleware } from "@/middleware";
+import { MiddlewareFunction } from "@/middleware";
 import { RequestContext } from "./RequestContext";
 import { ErrorHandler } from "@/error-handler";
 import { Guard } from "@/guard";
@@ -20,7 +20,7 @@ import { HttpPipelineBuilder } from "./HttpPipelineBuilder";
 export interface IHttpServer {
   readonly port: number;
 
-  use(middleware: Middleware): this;
+  use(middleware: MiddlewareFunction): this;
   useInterceptor(interceptor: Interceptor): this;
   useGuard(guard: Guard): this;
   useAuthentication(policy: AuthenticationPolicy): this;
@@ -71,7 +71,7 @@ export class HttpServer implements IHttpServer {
     });
   }
 
-  use(middleware: Middleware): this {
+  use(middleware: MiddlewareFunction): this {
     this.pipeline.use(middleware);
     return this;
   }

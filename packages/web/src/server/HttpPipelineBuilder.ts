@@ -3,7 +3,7 @@ import { Endpoint, PlainEndpoint, EndpointHandler, EndpointOptions } from "@/end
 import { ErrorHandler } from "@/error-handler";
 import { Guard } from "@/guard";
 import { Interceptor } from "@/interceptor";
-import { Middleware, MiddlewareAggregate } from "@/middleware";
+import { MiddlewareFunction, MiddlewareAggregate } from "@/middleware";
 import { HttpResponse } from "@/server";
 import { statusCode } from "@/StatusCode";
 import { InvalidOperationError } from "@tomasjs/core/errors";
@@ -13,7 +13,7 @@ export type HttpPipelineBuilderDelegate = (pipeline: IHttpPipelineBuilder) => vo
 
 export interface IHttpPipelineBuilder {
   delegate(delegate: HttpPipelineBuilderDelegate): this;
-  use(middleware: Middleware): this;
+  use(middleware: MiddlewareFunction): this;
   useInterceptor(interceptor: Interceptor): this;
   useGuard(guard: Guard): this;
   useAuthentication(policy: AuthenticationPolicy): this;
@@ -30,7 +30,7 @@ export interface IHttpPipelineBuilder {
 }
 
 export class HttpPipelineBuilder implements IHttpPipelineBuilder {
-  private readonly middlewares: Middleware[] = [];
+  private readonly middlewares: MiddlewareFunction[] = [];
   private readonly interceptors: Interceptor[] = [];
   private readonly guards: Guard[] = [];
   private readonly authenticationPolicies: AuthenticationPolicy[] = [];
@@ -51,7 +51,7 @@ export class HttpPipelineBuilder implements IHttpPipelineBuilder {
       .send();
   };
 
-  private readonly terminalMiddleware: Middleware = async (_, res) => {
+  private readonly terminalMiddleware: MiddlewareFunction = async (_, res) => {
     if (res.sent) {
       return;
     }
@@ -64,7 +64,7 @@ export class HttpPipelineBuilder implements IHttpPipelineBuilder {
     return this;
   }
 
-  use(middleware: Middleware): this {
+  use(middleware: MiddlewareFunction): this {
     this.middlewares.push(middleware);
     return this;
   }
@@ -126,7 +126,7 @@ export class HttpPipelineBuilder implements IHttpPipelineBuilder {
     return this;
   }
 
-  build(): Middleware[] {
+  build(): MiddlewareFunction[] {
     return new MiddlewareAggregate()
       .addErrorHandler(this.errorHandler ?? this.defaultErrorHandler)
       .addMiddleware(...this.middlewares)

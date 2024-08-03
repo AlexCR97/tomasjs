@@ -1,9 +1,9 @@
-import { Middleware, MiddlewareAggregate } from "@/middleware";
+import { MiddlewareFunction, MiddlewareAggregate } from "@/middleware";
 import { IRequestContextReader, RequestContextReader } from "@/server";
 
 export type AuthorizationPolicy = (request: IRequestContextReader) => boolean | Promise<boolean>;
 
-export function authorization(policy: AuthorizationPolicy): Middleware[] {
+export function authorization(policy: AuthorizationPolicy): MiddlewareFunction[] {
   return new MiddlewareAggregate()
     .addInterceptor(async (req) => {
       if (!req.user.authenticated) {
