@@ -10,6 +10,7 @@ import {
   isMiddlewareFactoryFunction,
   isIMiddlewareFactory,
 } from "./Middleware";
+import { HTTP_STATUS_CODES } from "@tomasjs/core/http";
 
 describe("Middleware", () => {
   describe(isMiddlewareFunction.name, () => {
@@ -57,6 +58,17 @@ describe("Middleware", () => {
     it("should return true for a middleware instance", () => {
       class TestMiddleware implements IMiddleware {
         run(req: IRequestContext, res: IResponseWriter, next: NextFunction): void {}
+      }
+
+      const middleware = new TestMiddleware();
+      expect(isIMiddleware(middleware)).toBe(true);
+    });
+
+    it("should return true for a middleware instance with an async method", () => {
+      class TestMiddleware implements IMiddleware {
+        async run(req: IRequestContext, res: IResponseWriter, next: NextFunction): Promise<void> {
+          return await res.withStatus(HTTP_STATUS_CODES.ok).send();
+        }
       }
 
       const middleware = new TestMiddleware();

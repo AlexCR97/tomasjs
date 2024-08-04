@@ -1,13 +1,8 @@
-import {
-  HttpPipelineBuilder,
-  HttpPipelineBuilderDelegate,
-  HttpServer,
-  HttpServerOptions,
-  IHttpServer,
-} from "@/server";
-import { AppBuilder, IApp, IEnvironment } from "@tomasjs/core/app";
-import { IConfiguration } from "@tomasjs/core/configuration";
-import { IServiceProvider } from "@tomasjs/core/dependency-injection";
+import { HttpServer, HttpServerOptions, IHttpServer } from "@/server";
+import { AppBuilder, environmentToken, IApp, IEnvironment } from "@tomasjs/core/app";
+import { configurationToken, IConfiguration } from "@tomasjs/core/configuration";
+import { IContainerBuilder, IServiceProvider } from "@tomasjs/core/dependency-injection";
+import { WebAppPipelineBuilder, WebAppPipelineBuilderDelegate } from "./WebAppPipelineBuilder";
 
 export type WebAppBuilderOptions = {
   server?: IHttpServer;
@@ -15,7 +10,7 @@ export type WebAppBuilderOptions = {
 };
 
 export class WebAppBuilder extends AppBuilder<WebApp> {
-  private readonly pipeline = new HttpPipelineBuilder();
+  private readonly pipeline = new WebAppPipelineBuilder();
   private options: WebAppBuilderOptions | undefined;
 
   constructor(options?: WebAppBuilderOptions) {
@@ -28,24 +23,23 @@ export class WebAppBuilder extends AppBuilder<WebApp> {
     return this;
   }
 
-  setupHttpPipeline(delegate: HttpPipelineBuilderDelegate): this {
+  setupHttpPipeline(delegate: WebAppPipelineBuilderDelegate): this {
     delegate(this.pipeline);
     return this;
   }
 
-  protected override async buildApp(
-    configuration: IConfiguration,
-    environment: IEnvironment,
-    services: IServiceProvider
-  ): Promise<WebApp> {
+  protected override async buildApp(containerBuilder: IContainerBuilder): Promise<WebApp> {
     const serverOptions = this.options?.serverOptions;
     const server = this.options?.server ?? new HttpServer(serverOptions);
-    const middlewares = this.pipeline.build();
+    const middlewareFunctions = await this.pipeline.build(containerBuilder);
 
-    for (const middleware of middlewares) {
+    for (const middleware of middlewareFunctions) {
       server.use(middleware);
     }
 
+    const services = await containerBuilder.buildServiceProvider();
+    const configuration = services.getOrThrow<IConfiguration>(configurationToken);
+    const environment = services.getOrThrow<IEnvironment>(environmentToken);
     return new WebApp(configuration, environment, services, server);
   }
 }

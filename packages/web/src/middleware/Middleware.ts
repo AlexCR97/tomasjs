@@ -1,4 +1,5 @@
 import { IRequestContext, IResponseWriter } from "@/server";
+import { isAsyncFunction } from "util/types";
 
 export type NextFunction = () => Promise<void>;
 
@@ -45,8 +46,12 @@ function isNotNull<T>(obj: T): obj is NonNullable<T> {
 function isFunction(obj: NonNullable<unknown>): obj is Function {
   const isFunctionType = typeof obj === "function";
   const isFunctionInstance = obj instanceof Function;
-  const isFunctionPrototype = Object.getPrototypeOf(obj) === Function.prototype;
-  return isFunctionType && isFunctionInstance && isFunctionPrototype;
+
+  const proto = Object.getPrototypeOf(obj);
+  const isFunctionPrototype = proto === Function.prototype;
+  const isAsyncFunctionObj = isAsyncFunction(obj);
+
+  return isFunctionType && isFunctionInstance && (isFunctionPrototype || isAsyncFunctionObj);
 }
 
 function hasLength(obj: NonNullable<unknown>): obj is { length: number } {

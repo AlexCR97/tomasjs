@@ -20,13 +20,13 @@
     "link": "cd ./dist && npm link"
   },
   "dependencies": {
-    "@tomasjs/core": "^2.4.0",
+    "@tomasjs/core": "^2.5.0",
     "jsonwebtoken": "^9.0.2",
     "reflect-metadata": "^0.2.1",
     "url-pattern": "^1.0.3"
   },
   "peerDependencies": {
-    "@tomasjs/core": "^2.4.0",
+    "@tomasjs/core": "^2.5.0",
     "jsonwebtoken": "^9.0.2",
     "reflect-metadata": "^0.2.1",
     "url-pattern": "^1.0.3"
