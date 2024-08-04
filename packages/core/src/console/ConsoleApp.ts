@@ -1,12 +1,17 @@
-import { IServiceProvider } from "@/dependency-injection";
+import { AppBuilder, IEnvironment, IApp, environmentToken, IAppBuilder } from "@/app";
+import { configurationToken, IConfiguration } from "@/configuration";
+import { IContainerBuilder, IServiceProvider } from "@/dependency-injection";
 import { InvalidOperationError, TomasError } from "@/errors";
-import { IConfiguration } from "@/configuration";
 import { Constructor, isConstructor } from "@/system";
-import { AppBuilder, IEnvironment, IApp } from "@/app";
 
+// TODO Normalize token
 const entryPointToken = "@tomasjs/core/EntryPoint";
 
-export class ConsoleAppBuilder extends AppBuilder<ConsoleApp> {
+export interface IConsoleAppBuilder extends IAppBuilder<ConsoleApp> {
+  addEntryPoint(entryPoint: EntryPoint): this;
+}
+
+export class ConsoleAppBuilder extends AppBuilder<ConsoleApp> implements IConsoleAppBuilder {
   addEntryPoint(entryPoint: EntryPoint): this {
     this.setupContainer((services) => {
       if (isConstructor(entryPoint)) {
@@ -20,11 +25,10 @@ export class ConsoleAppBuilder extends AppBuilder<ConsoleApp> {
     return this;
   }
 
-  protected override async buildApp(
-    configuration: IConfiguration,
-    environment: IEnvironment,
-    services: IServiceProvider
-  ): Promise<ConsoleApp> {
+  protected override async buildApp(containerBuilder: IContainerBuilder): Promise<ConsoleApp> {
+    const services = await containerBuilder.buildServiceProvider();
+    const configuration = services.getOrThrow<IConfiguration>(configurationToken);
+    const environment = services.getOrThrow<IEnvironment>(environmentToken);
     return new ConsoleApp(configuration, environment, services);
   }
 }
