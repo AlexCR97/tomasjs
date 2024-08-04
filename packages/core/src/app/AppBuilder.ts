@@ -1,14 +1,15 @@
-import { ConfigurationSetup, IConfiguration, configurationToken } from "@/configuration";
+import { ConfigurationSetup, IConfiguration } from "@/configuration";
 import { BusSetup } from "@/cqrs";
 import {
   ContainerBuilder,
   ContainerBuilderDelegate,
+  IContainerBuilder,
   IServiceProvider,
 } from "@/dependency-injection";
-import { Environment, IEnvironment, environmentToken } from "./Environment";
 import { LoggerSetup } from "@/logging";
+import { Environment, IEnvironment, environmentToken } from "./Environment";
 
-interface IAppBuilder<TApp extends IApp> {
+export interface IAppBuilder<TApp extends IApp> {
   setupConfiguration(delegate: ConfigurationSetupDelegate): this;
   setupLogging(delegate: LoggerSetupDelegate): this;
   setupBus(delegate: BusSetupDelegate): this;
@@ -24,22 +25,28 @@ export interface IApp {
   stop(): Promise<void>;
 }
 
-type ConfigurationSetupDelegate = (builder: ConfigurationSetup) => void;
-type LoggerSetupDelegate = (builder: LoggerSetup) => void;
-type BusSetupDelegate = (builder: BusSetup) => void;
+export type ConfigurationSetupDelegate = (builder: ConfigurationSetup) => void;
+
+export type LoggerSetupDelegate = (builder: LoggerSetup) => void;
+
+export type BusSetupDelegate = (builder: BusSetup) => void;
 
 export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp> {
-  private configurationSetupDelegates: ConfigurationSetupDelegate[] = [];
-  private loggerSetupDelegates: LoggerSetupDelegate[] = [];
-  private busSetupDelegates: BusSetupDelegate[] = [];
-  private containerBuilderDelegates: ContainerBuilderDelegate[] = [];
+  private readonly configurationSetupDelegates: ConfigurationSetupDelegate[] = [];
+  private readonly loggerSetupDelegates: LoggerSetupDelegate[] = [];
+  private readonly busSetupDelegates: BusSetupDelegate[] = [];
+  private readonly containerBuilderDelegates: ContainerBuilderDelegate[] = [];
 
   constructor() {
     const env = Environment.current();
-    this.configurationSetupDelegates.push((config) => config.addRawSource(env));
-    this.containerBuilderDelegates.push((container) =>
-      container.add("singleton", environmentToken, env)
-    );
+
+    this.configurationSetupDelegates.push((config) => {
+      config.addRawSource(env);
+    });
+
+    this.containerBuilderDelegates.push((container) => {
+      container.add("singleton", environmentToken, env);
+    });
   }
 
   setupConfiguration(delegate: ConfigurationSetupDelegate): this {
@@ -97,15 +104,8 @@ export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp>
         }
       });
 
-    const services = await containerBuilder.buildServiceProvider();
-    const configuration = services.getOrThrow<IConfiguration>(configurationToken);
-    const environment = services.getOrThrow<IEnvironment>(environmentToken);
-    return await this.buildApp(configuration, environment, services);
+    return await this.buildApp(containerBuilder);
   }
 
-  protected abstract buildApp(
-    configuration: IConfiguration,
-    environment: IEnvironment,
-    services: IServiceProvider
-  ): Promise<TApp>;
+  protected abstract buildApp(containerBuilder: IContainerBuilder): Promise<TApp>;
 }
