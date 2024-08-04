@@ -3,12 +3,12 @@ import { IHttpServer } from "@/server";
 import { HttpResponse } from "@/server";
 import { statusCode } from "@/StatusCode";
 import { testHttpServer } from "@/test";
-import { Interceptor, interceptor } from "./Interceptor";
+import { InterceptorFunction, interceptor } from "./Interceptor";
 
 describe("Interceptor", () => {
   const client = new HttpClient();
 
-  const myInterceptor: Interceptor = (req) => {
+  const myInterceptor: InterceptorFunction = (req) => {
     req.user.authenticate();
   };
 

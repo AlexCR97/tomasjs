@@ -1,7 +1,7 @@
 import { HttpMethod, IHttpContent, PlainHttpHeaders } from "@tomasjs/core/http";
 import { AuthenticationPolicy, AuthorizationPolicy, IUserReader } from "@/auth";
 import { MiddlewareFunction } from "@/middleware";
-import { Interceptor } from "@/interceptor";
+import { InterceptorFunction } from "@/interceptor";
 import { Guard } from "@/guard";
 import {
   IRequestContextReader,
@@ -55,7 +55,7 @@ export class EndpointContext implements IEndpointContext {
 
 export type EndpointOptions = {
   middlewares?: MiddlewareFunction[];
-  interceptors?: Interceptor[];
+  interceptors?: InterceptorFunction[];
   guards?: Guard[];
   authentication?: AuthenticationPolicy;
   authorization?: AuthorizationPolicy;

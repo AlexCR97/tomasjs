@@ -3,7 +3,7 @@ import { HttpResponse, IHttpServer } from "@/server";
 import { statusCode } from "@/StatusCode";
 import { testHttpServer } from "@/test";
 import { MiddlewareFunction } from "@/middleware";
-import { Interceptor } from "@/interceptor";
+import { InterceptorFunction } from "@/interceptor";
 import { Guard } from "@/guard";
 import { Endpoint } from "./Endpoint";
 
@@ -38,7 +38,7 @@ describe("Endpoint", () => {
       return next();
     };
 
-    const second: Interceptor = (req) => {
+    const second: InterceptorFunction = (req) => {
       aggregation.push(2);
     };
 

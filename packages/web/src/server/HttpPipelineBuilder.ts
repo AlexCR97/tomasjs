@@ -2,7 +2,7 @@ import { AuthenticationPolicy, AuthorizationPolicy } from "@/auth";
 import { Endpoint, PlainEndpoint, EndpointHandler, EndpointOptions } from "@/endpoint";
 import { ErrorHandler } from "@/error-handler";
 import { Guard } from "@/guard";
-import { Interceptor } from "@/interceptor";
+import { InterceptorFunction } from "@/interceptor";
 import { MiddlewareFunction, MiddlewareAggregate } from "@/middleware";
 import { HttpResponse } from "@/server";
 import { statusCode } from "@/StatusCode";
@@ -14,7 +14,7 @@ export type HttpPipelineBuilderDelegate = (pipeline: IHttpPipelineBuilder) => vo
 export interface IHttpPipelineBuilder {
   delegate(delegate: HttpPipelineBuilderDelegate): this;
   use(middleware: MiddlewareFunction): this;
-  useInterceptor(interceptor: Interceptor): this;
+  useInterceptor(interceptor: InterceptorFunction): this;
   useGuard(guard: Guard): this;
   useAuthentication(policy: AuthenticationPolicy): this;
   useAuthorization(policy: AuthorizationPolicy): this;
@@ -31,7 +31,7 @@ export interface IHttpPipelineBuilder {
 
 export class HttpPipelineBuilder implements IHttpPipelineBuilder {
   private readonly middlewares: MiddlewareFunction[] = [];
-  private readonly interceptors: Interceptor[] = [];
+  private readonly interceptors: InterceptorFunction[] = [];
   private readonly guards: Guard[] = [];
   private readonly authenticationPolicies: AuthenticationPolicy[] = [];
   private readonly authorizationPolicies: AuthorizationPolicy[] = [];
@@ -69,7 +69,7 @@ export class HttpPipelineBuilder implements IHttpPipelineBuilder {
     return this;
   }
 
-  useInterceptor(interceptor: Interceptor): this {
+  useInterceptor(interceptor: InterceptorFunction): this {
     this.interceptors.push(interceptor);
     return this;
   }

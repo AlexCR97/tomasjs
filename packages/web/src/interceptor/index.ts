@@ -1,1 +1,1 @@
-export { Interceptor, interceptor } from "./Interceptor";
+export { InterceptorFunction, interceptor } from "./Interceptor";

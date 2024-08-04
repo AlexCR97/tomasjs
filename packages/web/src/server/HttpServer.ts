@@ -13,7 +13,7 @@ import { MiddlewareFunction } from "@/middleware";
 import { RequestContext } from "./RequestContext";
 import { ErrorHandler } from "@/error-handler";
 import { Guard } from "@/guard";
-import { Interceptor } from "@/interceptor";
+import { InterceptorFunction } from "@/interceptor";
 import { AuthenticationPolicy, AuthorizationPolicy } from "@/auth";
 import { HttpPipelineBuilder } from "./HttpPipelineBuilder";
 
@@ -21,7 +21,7 @@ export interface IHttpServer {
   readonly port: number;
 
   use(middleware: MiddlewareFunction): this;
-  useInterceptor(interceptor: Interceptor): this;
+  useInterceptor(interceptor: InterceptorFunction): this;
   useGuard(guard: Guard): this;
   useAuthentication(policy: AuthenticationPolicy): this;
   useAuthorization(policy: AuthorizationPolicy): this;
@@ -76,7 +76,7 @@ export class HttpServer implements IHttpServer {
     return this;
   }
 
-  useInterceptor(interceptor: Interceptor): this {
+  useInterceptor(interceptor: InterceptorFunction): this {
     this.pipeline.useInterceptor(interceptor);
     return this;
   }

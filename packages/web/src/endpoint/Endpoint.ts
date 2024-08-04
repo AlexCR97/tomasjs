@@ -3,12 +3,12 @@ import { EndpointHandler } from "./PlainEndpoint";
 import { PlainEndpoint } from "./PlainEndpoint";
 import { AuthenticationPolicy, AuthorizationPolicy } from "@/auth";
 import { Guard } from "@/guard";
-import { Interceptor } from "@/interceptor";
+import { InterceptorFunction } from "@/interceptor";
 import { MiddlewareFunction } from "@/middleware";
 
 interface IEndpoint {
   use(middleware: MiddlewareFunction): this;
-  useInterceptor(interceptor: Interceptor): this;
+  useInterceptor(interceptor: InterceptorFunction): this;
   useGuard(guard: Guard): this;
   useAuthentication(policy: AuthenticationPolicy): this;
   useAuthorization(policy: AuthorizationPolicy): this;
@@ -17,7 +17,7 @@ interface IEndpoint {
 
 export class Endpoint implements IEndpoint {
   private readonly middlewares: MiddlewareFunction[] = [];
-  private readonly interceptors: Interceptor[] = [];
+  private readonly interceptors: InterceptorFunction[] = [];
   private readonly guards: Guard[] = [];
   private authentication: AuthenticationPolicy | undefined;
   private authorization: AuthorizationPolicy | undefined;
@@ -53,7 +53,7 @@ export class Endpoint implements IEndpoint {
     return this;
   }
 
-  useInterceptor(interceptor: Interceptor): this {
+  useInterceptor(interceptor: InterceptorFunction): this {
     this.interceptors.push(interceptor);
     return this;
   }
