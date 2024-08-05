@@ -1,5 +1,5 @@
+import { isNotNull, hasLength, isInRange, isFunction } from "@/common";
 import { IRequestContext, IResponseWriter } from "@/server";
-import { isAsyncFunction } from "util/types";
 
 export type NextFunction = () => Promise<void>;
 
@@ -35,30 +35,4 @@ export function isIMiddlewareFactory(obj: unknown): obj is IMiddlewareFactory {
   return (
     isNotNull(obj) && isMiddlewareFactoryFunction((obj as IMiddlewareFactory)["createMiddleware"])
   );
-}
-
-// TODO Move to @tomasjs/core/system
-function isNotNull<T>(obj: T): obj is NonNullable<T> {
-  return obj !== undefined && obj !== null;
-}
-
-// TODO Move to @tomasjs/core/system
-function isFunction(obj: NonNullable<unknown>): obj is Function {
-  const isFunctionType = typeof obj === "function";
-  const isFunctionInstance = obj instanceof Function;
-
-  const proto = Object.getPrototypeOf(obj);
-  const isFunctionPrototype = proto === Function.prototype;
-  const isAsyncFunctionObj = isAsyncFunction(obj);
-
-  return isFunctionType && isFunctionInstance && (isFunctionPrototype || isAsyncFunctionObj);
-}
-
-function hasLength(obj: NonNullable<unknown>): obj is { length: number } {
-  return typeof (obj as any)["length"] === "number";
-}
-
-// TODO Move to @tomasjs/core/system
-function isInRange(num: number, min: number, max: number): boolean {
-  return num >= min && num <= max;
 }
