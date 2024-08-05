@@ -12,7 +12,6 @@ import {
   isIMiddlewareFactory,
   isMiddlewareFactoryFunction,
   isMiddlewareFunction,
-  MiddlewareAggregate,
   MiddlewareFactoryFunction,
   MiddlewareFunction,
 } from "@/middleware";
@@ -26,9 +25,15 @@ import {
   isInterceptorFactoryFunction,
   isInterceptorFunction,
 } from "@/interceptor/Interceptor";
-import { Endpoint, EndpointHandler, EndpointOptions, PlainEndpoint } from "@/endpoint";
+import { isPlainEndpoint, PlainEndpoint } from "@/endpoint";
 import { HttpMethod } from "@tomasjs/core/http";
-import { WebAppEndpoint, WebAppEndpointContext } from "./WebAppEndpoint";
+import {
+  isWebAppEndpointHandler,
+  WebAppEndpoint,
+  WebAppEndpointContext,
+  WebAppEndpointHandler,
+} from "./WebAppEndpoint";
+import { isHttpMethod } from "@tomasjs/core/http/HttpMethod";
 
 export type WebAppPipelineBuilderDelegate = (builder: IWebAppPipelineBuilder) => void;
 
@@ -67,23 +72,18 @@ export interface IWebAppPipelineBuilder {
   useInterceptor(interceptor: Constructor<IInterceptor>): this;
   useInterceptor(interceptor: Constructor<IInterceptorFactory>): this;
 
-  // useEndpoint(endpoint: Endpoint): this;
+  // useEndpoint(endpoint: WebAppEndpointBuilder): this;
   useEndpoint(endpoint: WebAppEndpoint): this;
-  // useEndpoint(
-  //   method: HttpMethod,
-  //   path: string,
-  //   handler: EndpointHandler,
-  //   options?: EndpointOptions
-  // ): this;
+  useEndpoint(method: HttpMethod, path: string, handler: WebAppEndpointHandler): this;
 
   // Endpoint shorthands
-  // get(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
-  // post(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
-  // put(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
-  // patch(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
-  // delete(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
-  // head(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
-  // options(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  get(path: string, handler: WebAppEndpointHandler): this;
+  post(path: string, handler: WebAppEndpointHandler): this;
+  put(path: string, handler: WebAppEndpointHandler): this;
+  patch(path: string, handler: WebAppEndpointHandler): this;
+  delete(path: string, handler: WebAppEndpointHandler): this;
+  head(path: string, handler: WebAppEndpointHandler): this;
+  options(path: string, handler: WebAppEndpointHandler): this;
 }
 
 export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
@@ -135,9 +135,60 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     return this;
   }
 
-  useEndpoint(endpoint: WebAppEndpoint): this {
+  useEndpoint(endpoint: WebAppEndpoint): this;
+  useEndpoint(method: HttpMethod, path: string, handler: WebAppEndpointHandler): this;
+  useEndpoint(...args: unknown[]): this {
+    if (args.length === 1 && isPlainEndpoint(args[0])) {
+      const endpoint: WebAppEndpoint = args[0];
+      return this.useWebAppEndpoint(endpoint);
+    }
+
+    if (
+      args.length === 3 &&
+      isHttpMethod(args[0]) &&
+      typeof args[1] === "string" &&
+      isWebAppEndpointHandler(args[2])
+    ) {
+      const method: HttpMethod = args[0];
+      const path: string = args[1];
+      const handler: WebAppEndpointHandler = args[2];
+      return this.useWebAppEndpoint({ method, path, handler });
+    }
+
+    throw new InvalidOperationError();
+  }
+
+  private useWebAppEndpoint(endpoint: WebAppEndpoint): this {
     this.endpoints.push(endpoint);
     return this;
+  }
+
+  get(path: string, handler: WebAppEndpointHandler): this {
+    return this.useEndpoint("GET", path, handler);
+  }
+
+  post(path: string, handler: WebAppEndpointHandler): this {
+    return this.useEndpoint("POST", path, handler);
+  }
+
+  put(path: string, handler: WebAppEndpointHandler): this {
+    return this.useEndpoint("PUT", path, handler);
+  }
+
+  patch(path: string, handler: WebAppEndpointHandler): this {
+    return this.useEndpoint("PATCH", path, handler);
+  }
+
+  delete(path: string, handler: WebAppEndpointHandler): this {
+    return this.useEndpoint("DELETE", path, handler);
+  }
+
+  head(path: string, handler: WebAppEndpointHandler): this {
+    return this.useEndpoint("HEAD", path, handler);
+  }
+
+  options(path: string, handler: WebAppEndpointHandler): this {
+    return this.useEndpoint("OPTIONS", path, handler);
   }
 
   async build(container: IContainerBuilder): Promise<{

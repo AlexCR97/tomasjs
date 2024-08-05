@@ -187,7 +187,7 @@ describe("x-WebApp", () => {
   });
 
   describe("useEndpoint", () => {
-    it("should use a WebAppEndpoint", async () => {
+    it("should map an endpoint", async () => {
       app = await new WebAppBuilder({ server })
         .setupHttpPipeline((pipeline) => {
           pipeline.useEndpoint({
@@ -196,11 +196,44 @@ describe("x-WebApp", () => {
             handler: ({ services }) => {
               const logger = services.getOrThrow<ILogger>(LOGGER);
               logger.debug("Endpoints work!");
-
-              return new HttpResponse({
-                status: HTTP_STATUS_CODES.ok,
-              });
+              return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
             },
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should map an endpoint with the shorthand", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useEndpoint("GET", "/", ({ services }) => {
+            const logger = services.getOrThrow<ILogger>(LOGGER);
+            logger.debug("Endpoint with shorthand works!");
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should map an endpoint with the GET shorthand", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", ({ services }) => {
+            const logger = services.getOrThrow<ILogger>(LOGGER);
+            logger.debug("Endpoint with GET shorthand works!");
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
           });
         })
         .build();
