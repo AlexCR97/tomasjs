@@ -1,8 +1,7 @@
 import "reflect-metadata";
-import { IHttpServer, IRequestContext, IResponseWriter } from "@/server";
-import { WebApp, WebAppBuilder } from "./WebApp";
+import { inject } from "@tomasjs/core/dependency-injection";
 import { HTTP_STATUS_CODES, HttpClient, IHttpClient } from "@tomasjs/core/http";
-import { testHttpServer } from "@/test";
+import { ILogger, LOGGER } from "@tomasjs/core/logging";
 import {
   IMiddleware,
   IMiddlewareFactory,
@@ -10,8 +9,9 @@ import {
   MiddlewareFunction,
   NextFunction,
 } from "@/middleware";
-import { inject } from "@tomasjs/core/dependency-injection";
-import { ILogger, LOGGER } from "@tomasjs/core/logging";
+import { IHttpServer, IRequestContext, IResponseWriter } from "@/server";
+import { testHttpServer } from "@/test";
+import { WebApp, WebAppBuilder } from "./WebApp";
 
 // TODO Rename test suite
 describe("x-WebApp", () => {
@@ -30,129 +30,159 @@ describe("x-WebApp", () => {
     }
   });
 
-  it("should use a MiddlewareFunction", async () => {
-    app = await new WebAppBuilder({ server })
-      .setupHttpPipeline((pipeline) => {
-        pipeline.use(async (req, res, next) => {
+  describe("use", () => {
+    it("should use a MiddlewareFunction", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.use(async (req, res, next) => {
+            return await res.withStatus(HTTP_STATUS_CODES.ok).send();
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.isSuccess).toBe(true);
+    });
+
+    it("should use an IMiddleware", async () => {
+      class MyMiddleware implements IMiddleware {
+        async run(req: IRequestContext, res: IResponseWriter, next: NextFunction): Promise<void> {
           return await res.withStatus(HTTP_STATUS_CODES.ok).send();
-        });
-      })
-      .build();
-
-    await app.start();
-
-    const response = await client.get("/");
-
-    expect(response.isSuccess).toBe(true);
-  });
-
-  it("should use an IMiddleware", async () => {
-    class MyMiddleware implements IMiddleware {
-      async run(req: IRequestContext, res: IResponseWriter, next: NextFunction): Promise<void> {
-        return await res.withStatus(HTTP_STATUS_CODES.ok).send();
+        }
       }
-    }
 
-    app = await new WebAppBuilder({ server })
-      .setupHttpPipeline((pipeline) => {
-        pipeline.use(new MyMiddleware());
-      })
-      .build();
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.use(new MyMiddleware());
+        })
+        .build();
 
-    await app.start();
+      await app.start();
 
-    const response = await client.get("/");
+      const response = await client.get("/");
 
-    expect(response.isSuccess).toBe(true);
-  });
+      expect(response.isSuccess).toBe(true);
+    });
 
-  it("should use an IMiddleware service", async () => {
-    class MyMiddleware implements IMiddleware {
-      constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+    it("should use an IMiddleware service", async () => {
+      class MyMiddleware implements IMiddleware {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
 
-      async run(req: IRequestContext, res: IResponseWriter, next: NextFunction): Promise<void> {
-        this.logger.debug("It works!");
-        return await res.withStatus(HTTP_STATUS_CODES.ok).send();
-      }
-    }
-
-    app = await new WebAppBuilder({ server })
-      .setupHttpPipeline((pipeline) => {
-        pipeline.use(MyMiddleware);
-      })
-      .build();
-
-    await app.start();
-
-    const response = await client.get("/");
-
-    expect(response.isSuccess).toBe(true);
-  });
-
-  it("should use a MiddlewareFactoryFunction", async () => {
-    const middleware: MiddlewareFactoryFunction = () => {
-      return async (req, res, next) => {
-        return await res.withStatus(HTTP_STATUS_CODES.ok).send();
-      };
-    };
-
-    app = await new WebAppBuilder({ server })
-      .setupHttpPipeline((pipeline) => {
-        pipeline.use(middleware);
-      })
-      .build();
-
-    await app.start();
-
-    const response = await client.get("/");
-
-    expect(response.isSuccess).toBe(true);
-  });
-
-  it("should use an IMiddlewareFactory", async () => {
-    class MyMiddlewareFactory implements IMiddlewareFactory {
-      createMiddleware(): MiddlewareFunction | IMiddleware {
-        return async (req, res, next) => {
-          return await res.withStatus(HTTP_STATUS_CODES.ok).send();
-        };
-      }
-    }
-
-    app = await new WebAppBuilder({ server })
-      .setupHttpPipeline((pipeline) => {
-        pipeline.use(new MyMiddlewareFactory());
-      })
-      .build();
-
-    await app.start();
-
-    const response = await client.get("/");
-
-    expect(response.isSuccess).toBe(true);
-  });
-
-  it("should use an IMiddlewareFactory service", async () => {
-    class MyMiddlewareFactory implements IMiddlewareFactory {
-      constructor(@inject(LOGGER) private readonly logger: ILogger) {}
-
-      createMiddleware(): MiddlewareFunction | IMiddleware {
-        return async (req, res, next) => {
+        async run(req: IRequestContext, res: IResponseWriter, next: NextFunction): Promise<void> {
           this.logger.debug("It works!");
           return await res.withStatus(HTTP_STATUS_CODES.ok).send();
-        };
+        }
       }
-    }
 
-    app = await new WebAppBuilder({ server })
-      .setupHttpPipeline((pipeline) => {
-        pipeline.use(MyMiddlewareFactory);
-      })
-      .build();
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.use(MyMiddleware);
+        })
+        .build();
 
-    await app.start();
+      await app.start();
 
-    const response = await client.get("/");
+      const response = await client.get("/");
 
-    expect(response.isSuccess).toBe(true);
+      expect(response.isSuccess).toBe(true);
+    });
+
+    it("should use a MiddlewareFactoryFunction", async () => {
+      const middleware: MiddlewareFactoryFunction = () => {
+        return async (req, res, next) => {
+          return await res.withStatus(HTTP_STATUS_CODES.ok).send();
+        };
+      };
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.use(middleware);
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.isSuccess).toBe(true);
+    });
+
+    it("should use an IMiddlewareFactory", async () => {
+      class MyMiddlewareFactory implements IMiddlewareFactory {
+        createMiddleware(): MiddlewareFunction | IMiddleware {
+          return async (req, res, next) => {
+            return await res.withStatus(HTTP_STATUS_CODES.ok).send();
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.use(new MyMiddlewareFactory());
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.isSuccess).toBe(true);
+    });
+
+    it("should use an IMiddlewareFactory service", async () => {
+      class MyMiddlewareFactory implements IMiddlewareFactory {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        createMiddleware(): MiddlewareFunction | IMiddleware {
+          return async (req, res, next) => {
+            this.logger.debug("It works!");
+            return await res.withStatus(HTTP_STATUS_CODES.ok).send();
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.use(MyMiddlewareFactory);
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.isSuccess).toBe(true);
+    });
+  });
+
+  describe("useInterceptor", () => {
+    // TODO Do not skip this test when endpoints can be used
+    it.skip("should use an InterceptorFunction", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useInterceptor((req) => {
+            req.user.authenticate();
+          });
+
+          // TODO Use endpoint here
+          pipeline.use(async (req, res, next) => {
+            const status = req.user.authenticated
+              ? HTTP_STATUS_CODES.ok
+              : HTTP_STATUS_CODES.unauthorized;
+
+            return await res.withStatus(status).send();
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
   });
 });

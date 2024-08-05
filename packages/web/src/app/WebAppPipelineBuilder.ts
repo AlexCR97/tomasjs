@@ -16,8 +16,34 @@ import {
   MiddlewareFactoryFunction,
   MiddlewareFunction,
 } from "@/middleware";
+import { InterceptorFunction } from "@/interceptor";
+import {
+  IInterceptor,
+  IInterceptorFactory,
+  InterceptorFactoryFunction,
+  isIInterceptor,
+  isIInterceptorFactory,
+  isInterceptorFactoryFunction,
+  isInterceptorFunction,
+} from "@/interceptor/Interceptor";
 
 export type WebAppPipelineBuilderDelegate = (builder: IWebAppPipelineBuilder) => void;
+
+type MiddlewareType =
+  | MiddlewareFunction
+  | IMiddleware
+  | Constructor<IMiddleware>
+  | MiddlewareFactoryFunction
+  | IMiddlewareFactory
+  | Constructor<IMiddlewareFactory>;
+
+type InterceptorType =
+  | InterceptorFunction
+  | IInterceptor
+  | Constructor<IInterceptor>
+  | InterceptorFactoryFunction
+  | IInterceptorFactory
+  | Constructor<IInterceptorFactory>;
 
 export interface IWebAppPipelineBuilder {
   delegate(delegate: WebAppPipelineBuilderDelegate): this;
@@ -29,10 +55,19 @@ export interface IWebAppPipelineBuilder {
   use(middleware: IMiddlewareFactory): this;
   use(middleware: Constructor<IMiddleware>): this;
   use(middleware: Constructor<IMiddlewareFactory>): this;
+
+  useInterceptor(interceptor: InterceptorFunction): this;
+  useInterceptor(interceptor: IInterceptor): this;
+  useInterceptor(interceptor: InterceptorFunction | IInterceptor): this;
+  useInterceptor(interceptor: InterceptorFactoryFunction): this;
+  useInterceptor(interceptor: IInterceptorFactory): this;
+  useInterceptor(interceptor: Constructor<IInterceptor>): this;
+  useInterceptor(interceptor: Constructor<IInterceptorFactory>): this;
 }
 
 export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   private readonly middlewares: MiddlewareType[] = [];
+  private readonly interceptors: InterceptorType[] = [];
   private readonly containerDelegates: ContainerBuilderDelegate[] = [];
 
   delegate(delegate: WebAppPipelineBuilderDelegate): this {
@@ -59,13 +94,36 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     return this;
   }
 
+  useInterceptor(interceptor: InterceptorFunction): this;
+  useInterceptor(interceptor: IInterceptor): this;
+  useInterceptor(interceptor: InterceptorFunction | IInterceptor): this;
+  useInterceptor(interceptor: InterceptorFactoryFunction): this;
+  useInterceptor(interceptor: IInterceptorFactory): this;
+  useInterceptor(interceptor: Constructor<IInterceptor>): this;
+  useInterceptor(interceptor: Constructor<IInterceptorFactory>): this;
+  useInterceptor(interceptor: any): this {
+    this.interceptors.push(interceptor);
+
+    if (isConstructor<IInterceptor | IInterceptorFactory>(interceptor)) {
+      this.containerDelegates.push((c) => {
+        c.add("singleton", interceptor);
+      });
+    }
+
+    return this;
+  }
+
   async build(container: IContainerBuilder): Promise<MiddlewareFunction[]> {
     this.containerDelegates.forEach((delegate) => delegate(container));
     const services = await container.buildServiceProvider();
 
-    const middlewareFunctions = this.middlewares.map((x) => this.toMiddlewareFunction(x, services));
+    const middlewareFuncs = this.middlewares.map((x) => this.toMiddlewareFunction(x, services));
+    const interceptorFuncs = this.interceptors.map((x) => this.toInterceptorFunction(x, services));
 
-    return new MiddlewareAggregate().addMiddleware(...middlewareFunctions).get();
+    return new MiddlewareAggregate()
+      .addMiddleware(...middlewareFuncs)
+      .addInterceptor(...interceptorFuncs)
+      .get();
   }
 
   private toMiddlewareFunction(
@@ -104,12 +162,41 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
 
     throw new InvalidOperationError();
   }
-}
 
-type MiddlewareType =
-  | MiddlewareFunction
-  | IMiddleware
-  | Constructor<IMiddleware>
-  | MiddlewareFactoryFunction
-  | IMiddlewareFactory
-  | Constructor<IMiddlewareFactory>;
+  private toInterceptorFunction(
+    interceptorType: InterceptorType,
+    services: IServiceProvider
+  ): InterceptorFunction {
+    if (isConstructor<IInterceptor | IInterceptorFactory>(interceptorType)) {
+      return (req) => {
+        const service = services.getOrThrow<IInterceptor | IInterceptorFactory>(interceptorType);
+        const interceptor = this.toInterceptorFunction(service, services);
+        return interceptor(req);
+      };
+    }
+
+    if (isInterceptorFactoryFunction(interceptorType)) {
+      const interceptor = interceptorType();
+      return this.toInterceptorFunction(interceptor, services);
+    }
+
+    if (isInterceptorFunction(interceptorType)) {
+      return (req) => {
+        return interceptorType(req);
+      };
+    }
+
+    if (isIInterceptor(interceptorType)) {
+      return (req) => {
+        return interceptorType.intercept(req);
+      };
+    }
+
+    if (isIInterceptorFactory(interceptorType)) {
+      const interceptor = interceptorType.createInterceptor();
+      return this.toInterceptorFunction(interceptor, services);
+    }
+
+    throw new InvalidOperationError();
+  }
+}
