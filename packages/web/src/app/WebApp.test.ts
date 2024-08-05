@@ -12,6 +12,12 @@ import {
 import { HttpResponse, IHttpServer, IRequestContext, IResponseWriter } from "@/server";
 import { testHttpServer } from "@/test";
 import { WebApp, WebAppBuilder } from "./WebApp";
+import {
+  IInterceptor,
+  IInterceptorFactory,
+  InterceptorFactoryFunction,
+  InterceptorFunction,
+} from "@/interceptor";
 
 // TODO Rename test suite
 describe("x-WebApp", () => {
@@ -72,7 +78,7 @@ describe("x-WebApp", () => {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
 
         async run(req: IRequestContext, res: IResponseWriter, next: NextFunction): Promise<void> {
-          this.logger.debug("It works!");
+          this.logger.debug("IMiddleware service works!");
           return await res.withStatus(HTTP_STATUS_CODES.ok).send();
         }
       }
@@ -159,21 +165,19 @@ describe("x-WebApp", () => {
   });
 
   describe("useInterceptor", () => {
-    // TODO Do not skip this test when endpoints can be used
-    it.skip("should use an InterceptorFunction", async () => {
+    it("should use an InterceptorFunction", async () => {
       app = await new WebAppBuilder({ server })
         .setupHttpPipeline((pipeline) => {
           pipeline.useInterceptor((req) => {
             req.user.authenticate();
           });
 
-          // TODO Use endpoint here
-          pipeline.use(async (req, res, next) => {
-            const status = req.user.authenticated
+          pipeline.get("/", ({ user }) => {
+            const status = user.authenticated
               ? HTTP_STATUS_CODES.ok
               : HTTP_STATUS_CODES.unauthorized;
 
-            return await res.withStatus(status).send();
+            return new HttpResponse({ status });
           });
         })
         .build();
@@ -183,6 +187,156 @@ describe("x-WebApp", () => {
       const response = await client.get("/");
 
       expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IInterceptor", async () => {
+      class MyInterceptor implements IInterceptor {
+        intercept(req: IRequestContext): void {
+          req.user.authenticate();
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useInterceptor(new MyInterceptor());
+
+          pipeline.get("/", ({ user }) => {
+            const status = user.authenticated
+              ? HTTP_STATUS_CODES.ok
+              : HTTP_STATUS_CODES.unauthorized;
+
+            return new HttpResponse({ status });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IInterceptor service", async () => {
+      class MyInterceptor implements IInterceptor {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        intercept(req: IRequestContext): void {
+          this.logger.debug("IInterceptor service works!");
+          req.user.authenticate();
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useInterceptor(MyInterceptor);
+
+          pipeline.get("/", ({ user }) => {
+            const status = user.authenticated
+              ? HTTP_STATUS_CODES.ok
+              : HTTP_STATUS_CODES.unauthorized;
+
+            return new HttpResponse({ status });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an InterceptorFactoryFunction", async () => {
+      const interceptor: InterceptorFactoryFunction = () => {
+        return async (req) => {
+          req.user.authenticate();
+        };
+      };
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useInterceptor(interceptor);
+
+          pipeline.get("/", ({ user }) => {
+            const status = user.authenticated
+              ? HTTP_STATUS_CODES.ok
+              : HTTP_STATUS_CODES.unauthorized;
+
+            return new HttpResponse({ status });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.isSuccess).toBe(true);
+    });
+
+    it("should use an IInterceptorFactory", async () => {
+      class MyInterceptor implements IInterceptorFactory {
+        createInterceptor(): InterceptorFunction {
+          return async (req) => {
+            req.user.authenticate();
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useInterceptor(new MyInterceptor());
+
+          pipeline.get("/", ({ user }) => {
+            const status = user.authenticated
+              ? HTTP_STATUS_CODES.ok
+              : HTTP_STATUS_CODES.unauthorized;
+
+            return new HttpResponse({ status });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.isSuccess).toBe(true);
+    });
+
+    it("should use an IInterceptorFactory service", async () => {
+      class MyInterceptor implements IInterceptorFactory {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        createInterceptor(): InterceptorFunction {
+          return async (req) => {
+            this.logger.debug("IInterceptorFactory service works!");
+            req.user.authenticate();
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useInterceptor(MyInterceptor);
+
+          pipeline.get("/", ({ user }) => {
+            const status = user.authenticated
+              ? HTTP_STATUS_CODES.ok
+              : HTTP_STATUS_CODES.unauthorized;
+
+            return new HttpResponse({ status });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.isSuccess).toBe(true);
     });
   });
 
