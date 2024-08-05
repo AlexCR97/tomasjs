@@ -31,10 +31,18 @@ export class WebAppBuilder extends AppBuilder<WebApp> {
   protected override async buildApp(containerBuilder: IContainerBuilder): Promise<WebApp> {
     const serverOptions = this.options?.serverOptions;
     const server = this.options?.server ?? new HttpServer(serverOptions);
-    const middlewareFunctions = await this.pipeline.build(containerBuilder);
+    const { middlewares, interceptors, endpoints } = await this.pipeline.build(containerBuilder);
 
-    for (const middleware of middlewareFunctions) {
+    for (const middleware of middlewares) {
       server.use(middleware);
+    }
+
+    for (const interceptor of interceptors) {
+      server.useInterceptor(interceptor);
+    }
+
+    for (const endpoint of endpoints) {
+      server.useEndpoint(endpoint);
     }
 
     const services = await containerBuilder.buildServiceProvider();

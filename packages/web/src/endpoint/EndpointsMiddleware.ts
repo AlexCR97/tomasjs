@@ -46,7 +46,11 @@ export function endpoints(endpoints: PlainEndpoint[]): MiddlewareFunction {
       middlewareAggregate.addAuthorization(endpoint.options.authorization);
     }
 
-    await new HttpPipeline(middlewareAggregate.get()).run(req, res);
+    const endpointMiddlewares = middlewareAggregate.get();
+
+    if (endpointMiddlewares.length > 0) {
+      await new HttpPipeline(endpointMiddlewares).run(req, res);
+    }
 
     if (res.sent) {
       return null;

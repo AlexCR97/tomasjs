@@ -9,7 +9,7 @@ import {
   MiddlewareFunction,
   NextFunction,
 } from "@/middleware";
-import { IHttpServer, IRequestContext, IResponseWriter } from "@/server";
+import { HttpResponse, IHttpServer, IRequestContext, IResponseWriter } from "@/server";
 import { testHttpServer } from "@/test";
 import { WebApp, WebAppBuilder } from "./WebApp";
 
@@ -174,6 +174,33 @@ describe("x-WebApp", () => {
               : HTTP_STATUS_CODES.unauthorized;
 
             return await res.withStatus(status).send();
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+  });
+
+  describe("useEndpoint", () => {
+    it("should use a WebAppEndpoint", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useEndpoint({
+            method: "GET",
+            path: "/",
+            handler: ({ services }) => {
+              const logger = services.getOrThrow<ILogger>(LOGGER);
+              logger.debug("Endpoints work!");
+
+              return new HttpResponse({
+                status: HTTP_STATUS_CODES.ok,
+              });
+            },
           });
         })
         .build();

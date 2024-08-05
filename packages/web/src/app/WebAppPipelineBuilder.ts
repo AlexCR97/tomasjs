@@ -26,6 +26,9 @@ import {
   isInterceptorFactoryFunction,
   isInterceptorFunction,
 } from "@/interceptor/Interceptor";
+import { Endpoint, EndpointHandler, EndpointOptions, PlainEndpoint } from "@/endpoint";
+import { HttpMethod } from "@tomasjs/core/http";
+import { WebAppEndpoint, WebAppEndpointContext } from "./WebAppEndpoint";
 
 export type WebAppPipelineBuilderDelegate = (builder: IWebAppPipelineBuilder) => void;
 
@@ -63,11 +66,30 @@ export interface IWebAppPipelineBuilder {
   useInterceptor(interceptor: IInterceptorFactory): this;
   useInterceptor(interceptor: Constructor<IInterceptor>): this;
   useInterceptor(interceptor: Constructor<IInterceptorFactory>): this;
+
+  // useEndpoint(endpoint: Endpoint): this;
+  useEndpoint(endpoint: WebAppEndpoint): this;
+  // useEndpoint(
+  //   method: HttpMethod,
+  //   path: string,
+  //   handler: EndpointHandler,
+  //   options?: EndpointOptions
+  // ): this;
+
+  // Endpoint shorthands
+  // get(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  // post(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  // put(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  // patch(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  // delete(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  // head(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  // options(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
 }
 
 export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   private readonly middlewares: MiddlewareType[] = [];
   private readonly interceptors: InterceptorType[] = [];
+  private readonly endpoints: WebAppEndpoint[] = [];
   private readonly containerDelegates: ContainerBuilderDelegate[] = [];
 
   delegate(delegate: WebAppPipelineBuilderDelegate): this {
@@ -113,17 +135,28 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     return this;
   }
 
-  async build(container: IContainerBuilder): Promise<MiddlewareFunction[]> {
+  useEndpoint(endpoint: WebAppEndpoint): this {
+    this.endpoints.push(endpoint);
+    return this;
+  }
+
+  async build(container: IContainerBuilder): Promise<{
+    middlewares: MiddlewareFunction[];
+    interceptors: InterceptorFunction[];
+    endpoints: PlainEndpoint[];
+  }> {
     this.containerDelegates.forEach((delegate) => delegate(container));
     const services = await container.buildServiceProvider();
 
-    const middlewareFuncs = this.middlewares.map((x) => this.toMiddlewareFunction(x, services));
-    const interceptorFuncs = this.interceptors.map((x) => this.toInterceptorFunction(x, services));
+    const middlewares = this.middlewares.map((x) => this.toMiddlewareFunction(x, services));
+    const interceptors = this.interceptors.map((x) => this.toInterceptorFunction(x, services));
+    const endpoints = this.endpoints.map((x) => this.toPlainEndpoint(x, services));
 
-    return new MiddlewareAggregate()
-      .addMiddleware(...middlewareFuncs)
-      .addInterceptor(...interceptorFuncs)
-      .get();
+    return {
+      middlewares,
+      interceptors,
+      endpoints,
+    };
   }
 
   private toMiddlewareFunction(
@@ -198,5 +231,17 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     }
 
     throw new InvalidOperationError();
+  }
+
+  private toPlainEndpoint(endpoint: WebAppEndpoint, services: IServiceProvider): PlainEndpoint {
+    return {
+      method: endpoint.method,
+      path: endpoint.path,
+      handler: async (context) => {
+        const newContext = WebAppEndpointContext.from(context, services);
+        return await endpoint.handler(newContext);
+      },
+      options: undefined, // TODO Map options
+    };
   }
 }
