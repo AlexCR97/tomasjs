@@ -1,1 +1,1 @@
-export { Guard, GuardResult, guard } from "./Guard";
+export { GuardFunction, GuardResult, guard } from "./Guard";

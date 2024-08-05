@@ -2,7 +2,7 @@ import { HttpClient, HttpHeaders } from "@tomasjs/core/http";
 import { IHttpServer } from "@/server";
 import { HttpResponse } from "@/server";
 import { statusCode } from "@/StatusCode";
-import { Guard, guard } from "./Guard";
+import { GuardFunction, guard } from "./Guard";
 import { testHttpServer } from "@/test";
 
 describe("Guard", () => {
@@ -10,7 +10,7 @@ describe("Guard", () => {
   const apiKeyHeader = "x-api-key";
   const apiKeyValue = "foo bar fizz buzz";
 
-  const myGuardFunction: Guard = (req) => {
+  const myGuardFunction: GuardFunction = (req) => {
     const apiKey = req.headers[apiKeyHeader];
     return apiKey === apiKeyValue;
   };

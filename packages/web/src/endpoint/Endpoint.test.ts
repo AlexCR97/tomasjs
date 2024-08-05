@@ -4,7 +4,7 @@ import { statusCode } from "@/StatusCode";
 import { testHttpServer } from "@/test";
 import { MiddlewareFunction } from "@/middleware";
 import { InterceptorFunction } from "@/interceptor";
-import { Guard } from "@/guard";
+import { GuardFunction } from "@/guard";
 import { Endpoint } from "./Endpoint";
 
 describe("Endpoint", () => {
@@ -42,7 +42,7 @@ describe("Endpoint", () => {
       aggregation.push(2);
     };
 
-    const third: Guard = (req) => {
+    const third: GuardFunction = (req) => {
       aggregation.push(3);
       return true;
     };

@@ -6,10 +6,11 @@ import { IRequestContext, IResponseWriter } from "@/server";
 import { InvalidOperationError } from "@tomasjs/core/errors";
 import { httpStatus } from "@/HttpStatus";
 
-export type Guard = (request: IRequestContext) => GuardResult | Promise<GuardResult>;
+export type GuardFunction = (request: IRequestContext) => GuardResult | Promise<GuardResult>;
+
 export type GuardResult = boolean | 401 | 403;
 
-export function guard(guard: Guard): MiddlewareFunction {
+export function guard(guard: GuardFunction): MiddlewareFunction {
   return async (req, res, next) => {
     const result = await guard(req);
 

@@ -1,7 +1,7 @@
 import { AuthenticationPolicy, AuthorizationPolicy } from "@/auth";
 import { Endpoint, PlainEndpoint, EndpointHandler, EndpointOptions } from "@/endpoint";
 import { ErrorHandler } from "@/error-handler";
-import { Guard } from "@/guard";
+import { GuardFunction } from "@/guard";
 import { InterceptorFunction } from "@/interceptor";
 import { MiddlewareFunction, MiddlewareAggregate } from "@/middleware";
 import { HttpResponse } from "@/server";
@@ -15,7 +15,7 @@ export interface IHttpPipelineBuilder {
   delegate(delegate: HttpPipelineBuilderDelegate): this;
   use(middleware: MiddlewareFunction): this;
   useInterceptor(interceptor: InterceptorFunction): this;
-  useGuard(guard: Guard): this;
+  useGuard(guard: GuardFunction): this;
   useAuthentication(policy: AuthenticationPolicy): this;
   useAuthorization(policy: AuthorizationPolicy): this;
   useEndpoint(endpoint: Endpoint): this;
@@ -32,7 +32,7 @@ export interface IHttpPipelineBuilder {
 export class HttpPipelineBuilder implements IHttpPipelineBuilder {
   private readonly middlewares: MiddlewareFunction[] = [];
   private readonly interceptors: InterceptorFunction[] = [];
-  private readonly guards: Guard[] = [];
+  private readonly guards: GuardFunction[] = [];
   private readonly authenticationPolicies: AuthenticationPolicy[] = [];
   private readonly authorizationPolicies: AuthorizationPolicy[] = [];
   private readonly endpoints: PlainEndpoint[] = [];
@@ -74,7 +74,7 @@ export class HttpPipelineBuilder implements IHttpPipelineBuilder {
     return this;
   }
 
-  useGuard(guard: Guard): this {
+  useGuard(guard: GuardFunction): this {
     this.guards.push(guard);
     return this;
   }
