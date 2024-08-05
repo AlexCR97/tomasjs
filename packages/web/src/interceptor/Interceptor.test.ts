@@ -77,6 +77,7 @@ describe("Interceptor", () => {
     });
   });
 
+  // TODO Rename test suite
   describe("with WebAppBuilder", () => {
     describe(isInterceptorFunction.name, () => {
       it("should return true for named functions", () => {
