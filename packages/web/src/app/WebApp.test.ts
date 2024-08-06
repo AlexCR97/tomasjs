@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { inject } from "@tomasjs/core/dependency-injection";
-import { HTTP_STATUS_CODES, HttpClient, IHttpClient } from "@tomasjs/core/http";
+import { HTTP_STATUS_CODES, HttpClient, HttpHeaders, IHttpClient } from "@tomasjs/core/http";
 import { ILogger, LOGGER } from "@tomasjs/core/logging";
 import {
   IMiddleware,
@@ -18,6 +18,7 @@ import {
   InterceptorFactoryFunction,
   InterceptorFunction,
 } from "@/interceptor";
+import { GuardFactoryFunction, GuardFunction, GuardResult, IGuard, IGuardFactory } from "@/guard";
 
 // TODO Rename test suite
 describe("x-WebApp", () => {
@@ -337,6 +338,150 @@ describe("x-WebApp", () => {
       const response = await client.get("/");
 
       expect(response.isSuccess).toBe(true);
+    });
+  });
+
+  describe("useGuard", () => {
+    const secretHeaderKey = "x-foo";
+    const secretHeaderValue = "bar";
+    const headers = new HttpHeaders().add(secretHeaderKey, secretHeaderValue);
+
+    it("should use a GuardFunction", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useGuard((req) => {
+            return req.headers[secretHeaderKey] === secretHeaderValue;
+          });
+
+          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IGuard", async () => {
+      class MyGuard implements IGuard {
+        protect(req: IRequestContext): GuardResult {
+          return req.headers[secretHeaderKey] === secretHeaderValue;
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useGuard(new MyGuard());
+
+          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IGuard service", async () => {
+      class MyGuard implements IGuard {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        protect(req: IRequestContext): GuardResult {
+          this.logger.debug("IGuard service works!");
+          return req.headers[secretHeaderKey] === secretHeaderValue;
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useGuard(MyGuard);
+
+          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use a GuardFactoryFunction", async () => {
+      const myGuard: GuardFactoryFunction = () => {
+        return (req: IRequestContext) => {
+          return req.headers[secretHeaderKey] === secretHeaderValue;
+        };
+      };
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useGuard(myGuard);
+
+          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IGuardFactory", async () => {
+      class MyGuard implements IGuardFactory {
+        createGuard(): GuardFunction | IGuard {
+          return (req) => {
+            return req.headers[secretHeaderKey] === secretHeaderValue;
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useGuard(new MyGuard());
+
+          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IGuardFactory service", async () => {
+      class MyGuard implements IGuardFactory {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        createGuard(): GuardFunction {
+          return (req) => {
+            this.logger.debug("IGuardFactory service works!");
+            return req.headers[secretHeaderKey] === secretHeaderValue;
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useGuard(MyGuard);
+
+          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
     });
   });
 

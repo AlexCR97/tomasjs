@@ -34,6 +34,16 @@ import {
   WebAppEndpointHandler,
 } from "./WebAppEndpoint";
 import { isHttpMethod } from "@tomasjs/core/http/HttpMethod";
+import {
+  GuardFactoryFunction,
+  GuardFunction,
+  IGuard,
+  IGuardFactory,
+  isGuardFactoryFunction,
+  isGuardFunction,
+  isIGuard,
+  isIGuardFactory,
+} from "@/guard";
 
 export type WebAppPipelineBuilderDelegate = (builder: IWebAppPipelineBuilder) => void;
 
@@ -52,6 +62,14 @@ type InterceptorType =
   | InterceptorFactoryFunction
   | IInterceptorFactory
   | Constructor<IInterceptorFactory>;
+
+type GuardType =
+  | GuardFunction
+  | IGuard
+  | Constructor<IGuard>
+  | GuardFactoryFunction
+  | IGuardFactory
+  | Constructor<IGuardFactory>;
 
 export interface IWebAppPipelineBuilder {
   delegate(delegate: WebAppPipelineBuilderDelegate): this;
@@ -72,6 +90,15 @@ export interface IWebAppPipelineBuilder {
   useInterceptor(interceptor: Constructor<IInterceptor>): this;
   useInterceptor(interceptor: Constructor<IInterceptorFactory>): this;
 
+  useGuard(guard: GuardFunction): this;
+  useGuard(guard: IGuard): this;
+  useGuard(guard: GuardFunction | IGuard): this;
+  useGuard(guard: GuardFactoryFunction): this;
+  useGuard(guard: IGuardFactory): this;
+  useGuard(guard: Constructor<IGuard>): this;
+  useGuard(guard: Constructor<IGuardFactory>): this;
+
+  // TODO Implement
   // useEndpoint(endpoint: WebAppEndpointBuilder): this;
   useEndpoint(endpoint: WebAppEndpoint): this;
   useEndpoint(method: HttpMethod, path: string, handler: WebAppEndpointHandler): this;
@@ -89,6 +116,7 @@ export interface IWebAppPipelineBuilder {
 export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   private readonly middlewares: MiddlewareType[] = [];
   private readonly interceptors: InterceptorType[] = [];
+  private readonly guards: GuardType[] = [];
   private readonly endpoints: WebAppEndpoint[] = [];
   private readonly containerDelegates: ContainerBuilderDelegate[] = [];
 
@@ -129,6 +157,25 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     if (isConstructor<IInterceptor | IInterceptorFactory>(interceptor)) {
       this.containerDelegates.push((c) => {
         c.add("singleton", interceptor);
+      });
+    }
+
+    return this;
+  }
+
+  useGuard(guard: GuardFunction): this;
+  useGuard(guard: IGuard): this;
+  useGuard(guard: GuardFunction | IGuard): this;
+  useGuard(guard: GuardFactoryFunction): this;
+  useGuard(guard: IGuardFactory): this;
+  useGuard(guard: Constructor<IGuard>): this;
+  useGuard(guard: Constructor<IGuardFactory>): this;
+  useGuard(guard: any): this {
+    this.guards.push(guard);
+
+    if (isConstructor<IGuard | IGuardFactory>(guard)) {
+      this.containerDelegates.push((c) => {
+        c.add("singleton", guard);
       });
     }
 
@@ -194,6 +241,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   async build(container: IContainerBuilder): Promise<{
     middlewares: MiddlewareFunction[];
     interceptors: InterceptorFunction[];
+    guards: GuardFunction[];
     endpoints: PlainEndpoint[];
   }> {
     this.containerDelegates.forEach((delegate) => delegate(container));
@@ -201,11 +249,13 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
 
     const middlewares = this.middlewares.map((x) => this.toMiddlewareFunction(x, services));
     const interceptors = this.interceptors.map((x) => this.toInterceptorFunction(x, services));
+    const guards = this.guards.map((x) => this.toGuardFunction(x, services));
     const endpoints = this.endpoints.map((x) => this.toPlainEndpoint(x, services));
 
     return {
       middlewares,
       interceptors,
+      guards,
       endpoints,
     };
   }
@@ -279,6 +329,40 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     if (isIInterceptorFactory(interceptorType)) {
       const interceptor = interceptorType.createInterceptor();
       return this.toInterceptorFunction(interceptor, services);
+    }
+
+    throw new InvalidOperationError();
+  }
+
+  private toGuardFunction(guardType: GuardType, services: IServiceProvider): GuardFunction {
+    if (isConstructor<IGuard | IGuardFactory>(guardType)) {
+      return (req) => {
+        const service = services.getOrThrow<IGuard | IGuardFactory>(guardType);
+        const guard = this.toGuardFunction(service, services);
+        return guard(req);
+      };
+    }
+
+    if (isGuardFactoryFunction(guardType)) {
+      const guard = guardType();
+      return this.toGuardFunction(guard, services);
+    }
+
+    if (isGuardFunction(guardType)) {
+      return (req) => {
+        return guardType(req);
+      };
+    }
+
+    if (isIGuard(guardType)) {
+      return (req) => {
+        return guardType.protect(req);
+      };
+    }
+
+    if (isIGuardFactory(guardType)) {
+      const guard = guardType.createGuard();
+      return this.toGuardFunction(guard, services);
     }
 
     throw new InvalidOperationError();

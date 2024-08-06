@@ -1,5 +1,5 @@
 import { IUserReader } from "@/auth";
-import { hasLength, isFunction, isNotNull } from "@/common";
+import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
 import { IEndpointContext } from "@/endpoint";
 import { HttpResponse, IQueryParams, IRouteParams } from "@/server";
 import { IServiceProvider } from "@tomasjs/core/dependency-injection";
@@ -21,7 +21,7 @@ export interface IWebAppEndpointContext extends IEndpointContext {
 }
 
 export function isWebAppEndpointHandler(obj: unknown): obj is WebAppEndpointHandler {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 1;
+  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
 }
 
 export class WebAppEndpointContext implements IWebAppEndpointContext {
