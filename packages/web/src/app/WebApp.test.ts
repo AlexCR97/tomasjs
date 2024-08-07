@@ -9,7 +9,13 @@ import {
   MiddlewareFunction,
   NextFunction,
 } from "@/middleware";
-import { HttpResponse, IHttpServer, IRequestContext, IResponseWriter } from "@/server";
+import {
+  HttpResponse,
+  IHttpServer,
+  IRequestContext,
+  IRequestContextReader,
+  IResponseWriter,
+} from "@/server";
 import { testHttpServer } from "@/test";
 import { WebApp, WebAppBuilder } from "./WebApp";
 import {
@@ -22,9 +28,13 @@ import { GuardFactoryFunction, GuardFunction, GuardResult, IGuard, IGuardFactory
 import {
   AuthenticationPolicyFunction,
   AuthenticationPolicyResult,
+  AuthorizationPolicyFunction,
   Claims,
   IAuthenticationPolicy,
   IAuthenticationPolicyFactory,
+  IAuthorizationPolicy,
+  IAuthorizationPolicyFactory,
+  rolePolicy,
 } from "@/auth";
 import { jwtPolicy, JwtSigner } from "@/jwt";
 
@@ -622,6 +632,164 @@ describe("x-WebApp", () => {
           pipeline.get("/", ({ user }) => {
             expect(user.authenticated).toBe(true);
             expect(user.claims.toPlain()).toMatchObject(claims.toPlain());
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers: { authorization: `Bearer ${token}` } });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+  });
+
+  describe("useAuthorization", () => {
+    const secret = "foo bar fizz buzz";
+    const role = "admin";
+    const claims = new Claims({ role });
+    const token = new JwtSigner({ secret }).sign(claims);
+
+    it("should use an AuthorizationPolicyFunction", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useAuthentication(jwtPolicy({ secret }));
+
+          pipeline.useAuthorization(rolePolicy(role));
+
+          pipeline.get("/", ({ user }) => {
+            expect(user.authenticated).toBe(true);
+            expect(user.authorized).toBe(true);
+            expect(user.claims.has("role")).toBe(true);
+            expect(user.claims.get("role")).toMatch(role);
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers: { authorization: `Bearer ${token}` } });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IAuthorizationPolicy", async () => {
+      class MyPolicy implements IAuthorizationPolicy {
+        authorize(req: IRequestContextReader): boolean | Promise<boolean> {
+          const policy = rolePolicy(role);
+          return policy(req);
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useAuthentication(jwtPolicy({ secret }));
+
+          pipeline.useAuthorization(new MyPolicy());
+
+          pipeline.get("/", ({ user }) => {
+            expect(user.authenticated).toBe(true);
+            expect(user.authorized).toBe(true);
+            expect(user.claims.has("role")).toBe(true);
+            expect(user.claims.get("role")).toMatch(role);
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers: { authorization: `Bearer ${token}` } });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IAuthorizationPolicy service", async () => {
+      class MyPolicy implements IAuthorizationPolicy {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        authorize(req: IRequestContextReader): boolean | Promise<boolean> {
+          this.logger.debug("IAuthorizationPolicy service works!");
+          const policy = rolePolicy(role);
+          return policy(req);
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useAuthentication(jwtPolicy({ secret }));
+
+          pipeline.useAuthorization(MyPolicy);
+
+          pipeline.get("/", ({ user }) => {
+            expect(user.authenticated).toBe(true);
+            expect(user.authorized).toBe(true);
+            expect(user.claims.has("role")).toBe(true);
+            expect(user.claims.get("role")).toMatch(role);
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers: { authorization: `Bearer ${token}` } });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IAuthorizationPolicyFactory", async () => {
+      class MyPolicy implements IAuthorizationPolicyFactory {
+        createAuthorizationPolicy(): AuthorizationPolicyFunction {
+          return rolePolicy(role);
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useAuthentication(jwtPolicy({ secret }));
+
+          pipeline.useAuthorization(new MyPolicy());
+
+          pipeline.get("/", ({ user }) => {
+            expect(user.authenticated).toBe(true);
+            expect(user.authorized).toBe(true);
+            expect(user.claims.has("role")).toBe(true);
+            expect(user.claims.get("role")).toMatch(role);
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers: { authorization: `Bearer ${token}` } });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IAuthorizationPolicyFactory service", async () => {
+      class MyPolicy implements IAuthorizationPolicyFactory {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+        createAuthorizationPolicy(): AuthorizationPolicyFunction {
+          this.logger.debug("IAuthorizationPolicyFactory service works!");
+          return rolePolicy(role);
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useAuthentication(jwtPolicy({ secret }));
+
+          pipeline.useAuthorization(MyPolicy);
+
+          pipeline.get("/", ({ user }) => {
+            expect(user.authenticated).toBe(true);
+            expect(user.authorized).toBe(true);
+            expect(user.claims.has("role")).toBe(true);
+            expect(user.claims.get("role")).toMatch(role);
             return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
           });
         })

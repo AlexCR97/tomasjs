@@ -46,11 +46,17 @@ import {
 } from "@/guard";
 import {
   AuthenticationPolicyFunction,
+  AuthorizationPolicyFunction,
   IAuthenticationPolicy,
   IAuthenticationPolicyFactory,
+  IAuthorizationPolicy,
+  IAuthorizationPolicyFactory,
   isAuthenticationPolicyFunction,
+  isAuthorizationPolicyFunction,
   isIAuthenticationPolicy,
   isIAuthenticationPolicyFactory,
+  isIAuthorizationPolicy,
+  isIAuthorizationPolicyFactory,
 } from "@/auth";
 
 export type WebAppPipelineBuilderDelegate = (builder: IWebAppPipelineBuilder) => void;
@@ -86,6 +92,13 @@ type AuthenticationPolicyType =
   | IAuthenticationPolicyFactory
   | Constructor<IAuthenticationPolicyFactory>;
 
+type AuthorizationPolicyType =
+  | AuthorizationPolicyFunction
+  | IAuthorizationPolicy
+  | Constructor<IAuthorizationPolicy>
+  | IAuthorizationPolicyFactory
+  | Constructor<IAuthorizationPolicyFactory>;
+
 export interface IWebAppPipelineBuilder {
   delegate(delegate: WebAppPipelineBuilderDelegate): this;
 
@@ -120,6 +133,13 @@ export interface IWebAppPipelineBuilder {
   useAuthentication(policy: Constructor<IAuthenticationPolicy>): this;
   useAuthentication(policy: Constructor<IAuthenticationPolicyFactory>): this;
 
+  useAuthorization(policy: AuthorizationPolicyFunction): this;
+  useAuthorization(policy: IAuthorizationPolicy): this;
+  useAuthorization(policy: AuthorizationPolicyFunction | IAuthenticationPolicy): this;
+  useAuthorization(policy: IAuthorizationPolicyFactory): this;
+  useAuthorization(policy: Constructor<IAuthorizationPolicy>): this;
+  useAuthorization(policy: Constructor<IAuthorizationPolicyFactory>): this;
+
   // TODO Implement
   // useEndpoint(endpoint: WebAppEndpointBuilder): this;
   useEndpoint(endpoint: WebAppEndpoint): this;
@@ -140,6 +160,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   private readonly interceptors: InterceptorType[] = [];
   private readonly guards: GuardType[] = [];
   private readonly authenticationPolicies: AuthenticationPolicyType[] = [];
+  private readonly authorizationPolicies: AuthorizationPolicyType[] = [];
   private readonly endpoints: WebAppEndpoint[] = [];
   private readonly containerDelegates: ContainerBuilderDelegate[] = [];
 
@@ -221,6 +242,22 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     return this;
   }
 
+  useAuthorization(policy: AuthorizationPolicyFunction): this;
+  useAuthorization(policy: IAuthorizationPolicy): this;
+  useAuthorization(policy: AuthorizationPolicyFunction | IAuthenticationPolicy): this;
+  useAuthorization(policy: IAuthorizationPolicyFactory): this;
+  useAuthorization(policy: Constructor<IAuthorizationPolicy>): this;
+  useAuthorization(policy: Constructor<IAuthorizationPolicyFactory>): this;
+  useAuthorization(policy: any): this {
+    this.authorizationPolicies.push(policy);
+
+    if (isConstructor<IAuthorizationPolicy | IAuthorizationPolicyFactory>(policy)) {
+      this.containerDelegates.push((c) => c.add("singleton", policy));
+    }
+
+    return this;
+  }
+
   useEndpoint(endpoint: WebAppEndpoint): this;
   useEndpoint(method: HttpMethod, path: string, handler: WebAppEndpointHandler): this;
   useEndpoint(...args: unknown[]): this {
@@ -282,6 +319,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     interceptors: InterceptorFunction[];
     guards: GuardFunction[];
     authenticationPolicies: AuthenticationPolicyFunction[];
+    authorizationPolicies: AuthorizationPolicyFunction[];
     endpoints: PlainEndpoint[];
   }> {
     this.containerDelegates.forEach((delegate) => delegate(container));
@@ -293,6 +331,9 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     const authenticationPolicies = this.authenticationPolicies.map((x) =>
       this.toAuthenticationPolicyFunction(x, services)
     );
+    const authorizationPolicies = this.authorizationPolicies.map((x) =>
+      this.toAuthorizationPolicyFunction(x, services)
+    );
     const endpoints = this.endpoints.map((x) => this.toPlainEndpoint(x, services));
 
     return {
@@ -300,6 +341,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
       interceptors,
       guards,
       authenticationPolicies,
+      authorizationPolicies,
       endpoints,
     };
   }
@@ -441,6 +483,40 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     if (isIAuthenticationPolicyFactory(policyType)) {
       const guard = policyType.createAuthenticationPolicy();
       return this.toAuthenticationPolicyFunction(guard, services);
+    }
+
+    throw new InvalidOperationError();
+  }
+
+  private toAuthorizationPolicyFunction(
+    policyType: AuthorizationPolicyType,
+    services: IServiceProvider
+  ): AuthorizationPolicyFunction {
+    if (isConstructor<IAuthorizationPolicy | IAuthorizationPolicyFactory>(policyType)) {
+      return (req) => {
+        const service = services.getOrThrow<IAuthorizationPolicy | IAuthorizationPolicyFactory>(
+          policyType
+        );
+        const policy = this.toAuthorizationPolicyFunction(service, services);
+        return policy(req);
+      };
+    }
+
+    if (isAuthorizationPolicyFunction(policyType)) {
+      return (req) => {
+        return policyType(req);
+      };
+    }
+
+    if (isIAuthorizationPolicy(policyType)) {
+      return (req) => {
+        return policyType.authorize(req);
+      };
+    }
+
+    if (isIAuthorizationPolicyFactory(policyType)) {
+      const guard = policyType.createAuthorizationPolicy();
+      return this.toAuthorizationPolicyFunction(guard, services);
     }
 
     throw new InvalidOperationError();

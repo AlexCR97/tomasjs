@@ -1,5 +1,5 @@
 import { InvalidOperationError } from "@tomasjs/core/errors";
-import { AuthorizationPolicy } from "./Authorization";
+import { AuthorizationPolicyFunction } from "./Authorization";
 
 export type RolePolicyOptions = {
   check?: RolePolicyOptionsCheck;
@@ -7,9 +7,12 @@ export type RolePolicyOptions = {
 
 export type RolePolicyOptionsCheck = "any" | "all";
 
-export function rolePolicy(role: string): AuthorizationPolicy;
-export function rolePolicy(roles: string[], options?: RolePolicyOptions): AuthorizationPolicy;
-export function rolePolicy(...args: any[]): AuthorizationPolicy {
+export function rolePolicy(role: string): AuthorizationPolicyFunction;
+export function rolePolicy(
+  roles: string[],
+  options?: RolePolicyOptions
+): AuthorizationPolicyFunction;
+export function rolePolicy(...args: any[]): AuthorizationPolicyFunction {
   return ({ user }) => {
     const userRoleClaim = user.claims.get("role");
 

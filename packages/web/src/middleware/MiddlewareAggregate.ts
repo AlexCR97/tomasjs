@@ -1,6 +1,6 @@
 import {
   AuthenticationPolicyFunction,
-  AuthorizationPolicy,
+  AuthorizationPolicyFunction,
   authentication,
   authorization,
 } from "@/auth";
@@ -16,7 +16,7 @@ export interface IMiddlewareAggregate {
   addInterceptor(...interceptors: InterceptorFunction[]): this;
   addGuard(...guards: GuardFunction[]): this;
   addAuthentication(...policies: AuthenticationPolicyFunction[]): this;
-  addAuthorization(...policies: AuthorizationPolicy[]): this;
+  addAuthorization(...policies: AuthorizationPolicyFunction[]): this;
   addEndpoint(...endpoints: PlainEndpoint[]): this;
   get(): MiddlewareFunction[];
 }
@@ -50,7 +50,7 @@ export class MiddlewareAggregate implements IMiddlewareAggregate {
     return this;
   }
 
-  addAuthorization(...policies: AuthorizationPolicy[]): this {
+  addAuthorization(...policies: AuthorizationPolicyFunction[]): this {
     for (const policy of policies) {
       const middlewares = authorization(policy);
       this.addMiddleware(...middlewares);

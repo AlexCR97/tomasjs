@@ -1,5 +1,5 @@
 import { HttpMethod, IHttpContent, PlainHttpHeaders } from "@tomasjs/core/http";
-import { AuthenticationPolicyFunction, AuthorizationPolicy, IUserReader } from "@/auth";
+import { AuthenticationPolicyFunction, AuthorizationPolicyFunction, IUserReader } from "@/auth";
 import { MiddlewareFunction } from "@/middleware";
 import { InterceptorFunction } from "@/interceptor";
 import { GuardFunction } from "@/guard";
@@ -58,7 +58,7 @@ export type EndpointOptions = {
   interceptors?: InterceptorFunction[];
   guards?: GuardFunction[];
   authentication?: AuthenticationPolicyFunction;
-  authorization?: AuthorizationPolicy;
+  authorization?: AuthorizationPolicyFunction;
 };
 
 export function isPlainEndpoint(obj: any): obj is PlainEndpoint {

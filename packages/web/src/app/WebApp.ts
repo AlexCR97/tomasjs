@@ -32,8 +32,14 @@ export class WebAppBuilder extends AppBuilder<WebApp> {
     const serverOptions = this.options?.serverOptions;
     const server = this.options?.server ?? new HttpServer(serverOptions);
 
-    const { middlewares, interceptors, guards, authenticationPolicies, endpoints } =
-      await this.pipeline.build(containerBuilder);
+    const {
+      middlewares,
+      interceptors,
+      guards,
+      authenticationPolicies,
+      authorizationPolicies,
+      endpoints,
+    } = await this.pipeline.build(containerBuilder);
 
     for (const middleware of middlewares) {
       server.use(middleware);
@@ -49,6 +55,10 @@ export class WebAppBuilder extends AppBuilder<WebApp> {
 
     for (const policy of authenticationPolicies) {
       server.useAuthentication(policy);
+    }
+
+    for (const policy of authorizationPolicies) {
+      server.useAuthorization(policy);
     }
 
     for (const endpoint of endpoints) {
