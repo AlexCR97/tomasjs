@@ -44,6 +44,14 @@ import {
   isIGuard,
   isIGuardFactory,
 } from "@/guard";
+import {
+  AuthenticationPolicyFunction,
+  IAuthenticationPolicy,
+  IAuthenticationPolicyFactory,
+  isAuthenticationPolicyFunction,
+  isIAuthenticationPolicy,
+  isIAuthenticationPolicyFactory,
+} from "@/auth";
 
 export type WebAppPipelineBuilderDelegate = (builder: IWebAppPipelineBuilder) => void;
 
@@ -70,6 +78,13 @@ type GuardType =
   | GuardFactoryFunction
   | IGuardFactory
   | Constructor<IGuardFactory>;
+
+type AuthenticationPolicyType =
+  | AuthenticationPolicyFunction
+  | IAuthenticationPolicy
+  | Constructor<IAuthenticationPolicy>
+  | IAuthenticationPolicyFactory
+  | Constructor<IAuthenticationPolicyFactory>;
 
 export interface IWebAppPipelineBuilder {
   delegate(delegate: WebAppPipelineBuilderDelegate): this;
@@ -98,6 +113,13 @@ export interface IWebAppPipelineBuilder {
   useGuard(guard: Constructor<IGuard>): this;
   useGuard(guard: Constructor<IGuardFactory>): this;
 
+  useAuthentication(policy: AuthenticationPolicyFunction): this;
+  useAuthentication(policy: IAuthenticationPolicy): this;
+  useAuthentication(policy: AuthenticationPolicyFunction | IAuthenticationPolicy): this;
+  useAuthentication(policy: IAuthenticationPolicyFactory): this;
+  useAuthentication(policy: Constructor<IAuthenticationPolicy>): this;
+  useAuthentication(policy: Constructor<IAuthenticationPolicyFactory>): this;
+
   // TODO Implement
   // useEndpoint(endpoint: WebAppEndpointBuilder): this;
   useEndpoint(endpoint: WebAppEndpoint): this;
@@ -117,6 +139,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   private readonly middlewares: MiddlewareType[] = [];
   private readonly interceptors: InterceptorType[] = [];
   private readonly guards: GuardType[] = [];
+  private readonly authenticationPolicies: AuthenticationPolicyType[] = [];
   private readonly endpoints: WebAppEndpoint[] = [];
   private readonly containerDelegates: ContainerBuilderDelegate[] = [];
 
@@ -182,6 +205,22 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     return this;
   }
 
+  useAuthentication(policy: AuthenticationPolicyFunction): this;
+  useAuthentication(policy: IAuthenticationPolicy): this;
+  useAuthentication(policy: AuthenticationPolicyFunction | IAuthenticationPolicy): this;
+  useAuthentication(policy: IAuthenticationPolicyFactory): this;
+  useAuthentication(policy: Constructor<IAuthenticationPolicy>): this;
+  useAuthentication(policy: Constructor<IAuthenticationPolicyFactory>): this;
+  useAuthentication(policy: any): this {
+    this.authenticationPolicies.push(policy);
+
+    if (isConstructor<IAuthenticationPolicy | IAuthenticationPolicyFactory>(policy)) {
+      this.containerDelegates.push((c) => c.add("singleton", policy));
+    }
+
+    return this;
+  }
+
   useEndpoint(endpoint: WebAppEndpoint): this;
   useEndpoint(method: HttpMethod, path: string, handler: WebAppEndpointHandler): this;
   useEndpoint(...args: unknown[]): this {
@@ -242,6 +281,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     middlewares: MiddlewareFunction[];
     interceptors: InterceptorFunction[];
     guards: GuardFunction[];
+    authenticationPolicies: AuthenticationPolicyFunction[];
     endpoints: PlainEndpoint[];
   }> {
     this.containerDelegates.forEach((delegate) => delegate(container));
@@ -250,12 +290,16 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     const middlewares = this.middlewares.map((x) => this.toMiddlewareFunction(x, services));
     const interceptors = this.interceptors.map((x) => this.toInterceptorFunction(x, services));
     const guards = this.guards.map((x) => this.toGuardFunction(x, services));
+    const authenticationPolicies = this.authenticationPolicies.map((x) =>
+      this.toAuthenticationPolicyFunction(x, services)
+    );
     const endpoints = this.endpoints.map((x) => this.toPlainEndpoint(x, services));
 
     return {
       middlewares,
       interceptors,
       guards,
+      authenticationPolicies,
       endpoints,
     };
   }
@@ -363,6 +407,40 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     if (isIGuardFactory(guardType)) {
       const guard = guardType.createGuard();
       return this.toGuardFunction(guard, services);
+    }
+
+    throw new InvalidOperationError();
+  }
+
+  private toAuthenticationPolicyFunction(
+    policyType: AuthenticationPolicyType,
+    services: IServiceProvider
+  ): AuthenticationPolicyFunction {
+    if (isConstructor<IAuthenticationPolicy | IAuthenticationPolicyFactory>(policyType)) {
+      return (req) => {
+        const service = services.getOrThrow<IAuthenticationPolicy | IAuthenticationPolicyFactory>(
+          policyType
+        );
+        const policy = this.toAuthenticationPolicyFunction(service, services);
+        return policy(req);
+      };
+    }
+
+    if (isAuthenticationPolicyFunction(policyType)) {
+      return (req) => {
+        return policyType(req);
+      };
+    }
+
+    if (isIAuthenticationPolicy(policyType)) {
+      return (req) => {
+        return policyType.authenticate(req);
+      };
+    }
+
+    if (isIAuthenticationPolicyFactory(policyType)) {
+      const guard = policyType.createAuthenticationPolicy();
+      return this.toAuthenticationPolicyFunction(guard, services);
     }
 
     throw new InvalidOperationError();

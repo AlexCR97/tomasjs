@@ -1,7 +1,7 @@
 import { JwtDecoder, JwtDecoderOptions } from "./JwtDecoder";
-import { AuthenticationPolicy } from "@/auth";
+import { AuthenticationPolicyFunction } from "@/auth";
 
-export function jwtPolicy(options: JwtDecoderOptions): AuthenticationPolicy {
+export function jwtPolicy(options: JwtDecoderOptions): AuthenticationPolicyFunction {
   return async (req) => {
     const authorization = req.headers["authorization"];
 

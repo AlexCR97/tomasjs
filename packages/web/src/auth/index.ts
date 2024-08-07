@@ -1,8 +1,13 @@
 export {
-  AuthenticationPolicy,
+  AuthenticationPolicyFunction,
   AuthenticationPolicyResult,
   AuthenticationPolicyResultExtended,
+  IAuthenticationPolicy,
+  IAuthenticationPolicyFactory,
   authentication,
+  isAuthenticationPolicyFunction,
+  isIAuthenticationPolicy,
+  isIAuthenticationPolicyFactory,
 } from "./Authentication";
 export { AuthorizationPolicy, authorization } from "./Authorization";
 export { ClaimNotFoundError, IClaims, Claims, PlainClaims } from "./Claims";

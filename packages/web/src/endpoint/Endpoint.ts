@@ -1,7 +1,7 @@
 import { HttpMethod } from "@tomasjs/core/http";
 import { EndpointHandler } from "./PlainEndpoint";
 import { PlainEndpoint } from "./PlainEndpoint";
-import { AuthenticationPolicy, AuthorizationPolicy } from "@/auth";
+import { AuthenticationPolicyFunction, AuthorizationPolicy } from "@/auth";
 import { GuardFunction } from "@/guard";
 import { InterceptorFunction } from "@/interceptor";
 import { MiddlewareFunction } from "@/middleware";
@@ -10,7 +10,7 @@ interface IEndpoint {
   use(middleware: MiddlewareFunction): this;
   useInterceptor(interceptor: InterceptorFunction): this;
   useGuard(guard: GuardFunction): this;
-  useAuthentication(policy: AuthenticationPolicy): this;
+  useAuthentication(policy: AuthenticationPolicyFunction): this;
   useAuthorization(policy: AuthorizationPolicy): this;
   toPlain(): PlainEndpoint;
 }
@@ -19,7 +19,7 @@ export class Endpoint implements IEndpoint {
   private readonly middlewares: MiddlewareFunction[] = [];
   private readonly interceptors: InterceptorFunction[] = [];
   private readonly guards: GuardFunction[] = [];
-  private authentication: AuthenticationPolicy | undefined;
+  private authentication: AuthenticationPolicyFunction | undefined;
   private authorization: AuthorizationPolicy | undefined;
 
   constructor(
@@ -63,7 +63,7 @@ export class Endpoint implements IEndpoint {
     return this;
   }
 
-  useAuthentication(policy: AuthenticationPolicy): this {
+  useAuthentication(policy: AuthenticationPolicyFunction): this {
     this.authentication = policy;
     return this;
   }
