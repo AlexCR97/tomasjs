@@ -11,7 +11,7 @@ import {
 } from "./HttpPipeline";
 import { MiddlewareFunction } from "@/middleware";
 import { RequestContext } from "./RequestContext";
-import { ErrorHandler } from "@/error-handler";
+import { ErrorHandlerFunction } from "@/error-handler";
 import { GuardFunction } from "@/guard";
 import { InterceptorFunction } from "@/interceptor";
 import { AuthenticationPolicyFunction, AuthorizationPolicyFunction } from "@/auth";
@@ -33,7 +33,7 @@ export interface IHttpServer {
     handler: EndpointHandler,
     options?: EndpointOptions
   ): this;
-  useErrorHandler(handler: ErrorHandler): this;
+  useErrorHandler(handler: ErrorHandlerFunction): this;
   start(): Promise<this>;
   stop(): Promise<void>;
 }
@@ -128,7 +128,7 @@ export class HttpServer implements IHttpServer {
     return this;
   }
 
-  useErrorHandler(handler: ErrorHandler): this {
+  useErrorHandler(handler: ErrorHandlerFunction): this {
     this.pipeline.useErrorHandler(handler);
     return this;
   }

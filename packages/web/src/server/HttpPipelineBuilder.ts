@@ -1,6 +1,6 @@
 import { AuthenticationPolicyFunction, AuthorizationPolicyFunction } from "@/auth";
 import { Endpoint, PlainEndpoint, EndpointHandler, EndpointOptions } from "@/endpoint";
-import { ErrorHandler } from "@/error-handler";
+import { ErrorHandlerFunction } from "@/error-handler";
 import { GuardFunction } from "@/guard";
 import { InterceptorFunction } from "@/interceptor";
 import { MiddlewareFunction, MiddlewareAggregate } from "@/middleware";
@@ -26,7 +26,7 @@ export interface IHttpPipelineBuilder {
     handler: EndpointHandler,
     options?: EndpointOptions
   ): this;
-  useErrorHandler(handler: ErrorHandler): this;
+  useErrorHandler(handler: ErrorHandlerFunction): this;
 }
 
 export class HttpPipelineBuilder implements IHttpPipelineBuilder {
@@ -36,9 +36,9 @@ export class HttpPipelineBuilder implements IHttpPipelineBuilder {
   private readonly authenticationPolicies: AuthenticationPolicyFunction[] = [];
   private readonly authorizationPolicies: AuthorizationPolicyFunction[] = [];
   private readonly endpoints: PlainEndpoint[] = [];
-  private errorHandler: ErrorHandler | undefined;
+  private errorHandler: ErrorHandlerFunction | undefined;
 
-  private readonly defaultErrorHandler: ErrorHandler = async (req, res, err) => {
+  private readonly defaultErrorHandler: ErrorHandlerFunction = async (req, res, err) => {
     const response = new HttpResponse({
       status: statusCode.internalServerError,
       content: PlainTextContent.from("An unexpected error occurred on the server"),
@@ -121,7 +121,7 @@ export class HttpPipelineBuilder implements IHttpPipelineBuilder {
     return this;
   }
 
-  useErrorHandler(handler: ErrorHandler): this {
+  useErrorHandler(handler: ErrorHandlerFunction): this {
     this.errorHandler = handler;
     return this;
   }

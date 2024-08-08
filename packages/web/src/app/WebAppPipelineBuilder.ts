@@ -58,6 +58,14 @@ import {
   isIAuthorizationPolicy,
   isIAuthorizationPolicyFactory,
 } from "@/auth";
+import {
+  ErrorHandlerFunction,
+  IErrorHandler,
+  IErrorHandlerFactory,
+  isErrorHandlerFunction,
+  isIErrorHandler,
+  isIErrorHandlerFactory,
+} from "@/error-handler";
 
 export type WebAppPipelineBuilderDelegate = (builder: IWebAppPipelineBuilder) => void;
 
@@ -98,6 +106,13 @@ type AuthorizationPolicyType =
   | Constructor<IAuthorizationPolicy>
   | IAuthorizationPolicyFactory
   | Constructor<IAuthorizationPolicyFactory>;
+
+type ErrorHandlerType =
+  | ErrorHandlerFunction
+  | IErrorHandler
+  | Constructor<IErrorHandler>
+  | IErrorHandlerFactory
+  | Constructor<IErrorHandlerFactory>;
 
 export interface IWebAppPipelineBuilder {
   delegate(delegate: WebAppPipelineBuilderDelegate): this;
@@ -153,16 +168,24 @@ export interface IWebAppPipelineBuilder {
   delete(path: string, handler: WebAppEndpointHandler): this;
   head(path: string, handler: WebAppEndpointHandler): this;
   options(path: string, handler: WebAppEndpointHandler): this;
+
+  useErrorHandler(errorHandler: ErrorHandlerFunction): this;
+  useErrorHandler(errorHandler: IErrorHandler): this;
+  useErrorHandler(errorHandler: ErrorHandlerFunction | IErrorHandler): this;
+  useErrorHandler(errorHandler: IErrorHandlerFactory): this;
+  useErrorHandler(errorHandler: Constructor<IErrorHandler>): this;
+  useErrorHandler(errorHandler: Constructor<IErrorHandlerFactory>): this;
 }
 
 export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
+  private readonly containerDelegates: ContainerBuilderDelegate[] = [];
   private readonly middlewares: MiddlewareType[] = [];
   private readonly interceptors: InterceptorType[] = [];
   private readonly guards: GuardType[] = [];
   private readonly authenticationPolicies: AuthenticationPolicyType[] = [];
   private readonly authorizationPolicies: AuthorizationPolicyType[] = [];
   private readonly endpoints: WebAppEndpoint[] = [];
-  private readonly containerDelegates: ContainerBuilderDelegate[] = [];
+  private errorHandler: ErrorHandlerType | undefined;
 
   delegate(delegate: WebAppPipelineBuilderDelegate): this {
     delegate(this);
@@ -314,6 +337,22 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     return this.useEndpoint("OPTIONS", path, handler);
   }
 
+  useErrorHandler(errorHandler: ErrorHandlerFunction): this;
+  useErrorHandler(errorHandler: IErrorHandler): this;
+  useErrorHandler(errorHandler: ErrorHandlerFunction | IErrorHandler): this;
+  useErrorHandler(errorHandler: IErrorHandlerFactory): this;
+  useErrorHandler(errorHandler: Constructor<IErrorHandler>): this;
+  useErrorHandler(errorHandler: Constructor<IErrorHandlerFactory>): this;
+  useErrorHandler(errorHandler: any): this {
+    this.errorHandler = errorHandler;
+
+    if (isConstructor<IErrorHandler | IErrorHandlerFactory>(errorHandler)) {
+      this.containerDelegates.push((c) => c.add("singleton", errorHandler));
+    }
+
+    return this;
+  }
+
   async build(container: IContainerBuilder): Promise<{
     middlewares: MiddlewareFunction[];
     interceptors: InterceptorFunction[];
@@ -321,6 +360,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     authenticationPolicies: AuthenticationPolicyFunction[];
     authorizationPolicies: AuthorizationPolicyFunction[];
     endpoints: PlainEndpoint[];
+    errorHandler: ErrorHandlerFunction | null;
   }> {
     this.containerDelegates.forEach((delegate) => delegate(container));
     const services = await container.buildServiceProvider();
@@ -336,6 +376,11 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     );
     const endpoints = this.endpoints.map((x) => this.toPlainEndpoint(x, services));
 
+    const errorHandler =
+      this.errorHandler !== undefined && this.errorHandler !== null
+        ? this.toErrorHandlerFunction(this.errorHandler, services)
+        : null;
+
     return {
       middlewares,
       interceptors,
@@ -343,6 +388,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
       authenticationPolicies,
       authorizationPolicies,
       endpoints,
+      errorHandler,
     };
   }
 
@@ -532,5 +578,37 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
       },
       options: undefined, // TODO Map options
     };
+  }
+
+  private toErrorHandlerFunction(
+    errorHandlerType: ErrorHandlerType,
+    services: IServiceProvider
+  ): ErrorHandlerFunction {
+    if (isConstructor<IErrorHandler | IErrorHandlerFactory>(errorHandlerType)) {
+      return (req, res, err) => {
+        const service = services.getOrThrow<IErrorHandler | IErrorHandlerFactory>(errorHandlerType);
+        const errorHandler = this.toErrorHandlerFunction(service, services);
+        return errorHandler(req, res, err);
+      };
+    }
+
+    if (isErrorHandlerFunction(errorHandlerType)) {
+      return (req, res, err) => {
+        return errorHandlerType(req, res, err);
+      };
+    }
+
+    if (isIErrorHandler(errorHandlerType)) {
+      return (req, res, err) => {
+        return errorHandlerType.catch(req, res, err);
+      };
+    }
+
+    if (isIErrorHandlerFactory(errorHandlerType)) {
+      const errorHandler = errorHandlerType.createErrorHandler();
+      return this.toErrorHandlerFunction(errorHandler, services);
+    }
+
+    throw new InvalidOperationError();
   }
 }

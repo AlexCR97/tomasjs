@@ -1,12 +1,14 @@
 import { ProblemDetailsContent } from "@/content";
-import { ErrorHandler } from "./ErrorHandlerMiddleware";
+import { ErrorHandlerFunction } from "./ErrorHandlerMiddleware";
 import { ProblemDetails } from "@/ProblemDetails";
 import { statusCode } from "@/StatusCode";
 import { IRequestContext } from "@/server";
 import { TomasError } from "@tomasjs/core/errors";
 import { httpStatus } from "@/HttpStatus";
 
-export function problemDetailsErrorHandler(options?: { includeError?: boolean }): ErrorHandler {
+export function problemDetailsErrorHandler(options?: {
+  includeError?: boolean;
+}): ErrorHandlerFunction {
   return async (req, res, err) => {
     const problemDetails = buildProblemDetails(req, err);
     const problemDetailsContent = ProblemDetailsContent.from(problemDetails);

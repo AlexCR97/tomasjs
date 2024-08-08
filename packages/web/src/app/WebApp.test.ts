@@ -1,6 +1,12 @@
 import "reflect-metadata";
 import { inject } from "@tomasjs/core/dependency-injection";
-import { HTTP_STATUS_CODES, HttpClient, HttpHeaders, IHttpClient } from "@tomasjs/core/http";
+import {
+  HTTP_STATUS_CODES,
+  HttpClient,
+  HttpHeaders,
+  IHttpClient,
+  PlainTextContent,
+} from "@tomasjs/core/http";
 import { ILogger, LOGGER } from "@tomasjs/core/logging";
 import {
   IMiddleware,
@@ -37,6 +43,7 @@ import {
   rolePolicy,
 } from "@/auth";
 import { jwtPolicy, JwtSigner } from "@/jwt";
+import { ErrorHandlerFunction, IErrorHandler, IErrorHandlerFactory } from "@/error-handler";
 
 // TODO Rename test suite
 describe("x-WebApp", () => {
@@ -860,6 +867,156 @@ describe("x-WebApp", () => {
       const response = await client.get("/");
 
       expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+  });
+
+  describe("useErrorHandler", () => {
+    const errorMessage = "Woops!";
+
+    it("should use an ErrorHandlerFunction", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useErrorHandler((req, res, err) => {
+            return res
+              .withStatus(HTTP_STATUS_CODES.internalServerError)
+              .withContent(PlainTextContent.from((err as Error).message))
+              .send();
+          });
+
+          pipeline.get("/", () => {
+            throw new Error(errorMessage);
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
+      expect(response.body.readData()).toMatch(errorMessage);
+    });
+
+    it("should use an IErrorHandler", async () => {
+      class MyErrorHandler implements IErrorHandler {
+        catch(req: IRequestContext, res: IResponseWriter, err: unknown): Promise<void> {
+          return res
+            .withStatus(HTTP_STATUS_CODES.internalServerError)
+            .withContent(PlainTextContent.from((err as Error).message))
+            .send();
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useErrorHandler(new MyErrorHandler());
+
+          pipeline.get("/", () => {
+            throw new Error(errorMessage);
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
+      expect(response.body.readData()).toMatch(errorMessage);
+    });
+
+    it("should use an IErrorHandler service", async () => {
+      class MyErrorHandler implements IErrorHandler {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        catch(req: IRequestContext, res: IResponseWriter, err: unknown): Promise<void> {
+          this.logger.error("IErrorHandler service works!");
+          return res
+            .withStatus(HTTP_STATUS_CODES.internalServerError)
+            .withContent(PlainTextContent.from((err as Error).message))
+            .send();
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useErrorHandler(MyErrorHandler);
+
+          pipeline.get("/", () => {
+            throw new Error(errorMessage);
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
+      expect(response.body.readData()).toMatch(errorMessage);
+    });
+
+    it("should use an IErrorHandlerFactory service", async () => {
+      class MyErrorHandler implements IErrorHandlerFactory {
+        createErrorHandler(): ErrorHandlerFunction {
+          return (req: IRequestContext, res: IResponseWriter, err: unknown) => {
+            return res
+              .withStatus(HTTP_STATUS_CODES.internalServerError)
+              .withContent(PlainTextContent.from((err as Error).message))
+              .send();
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useErrorHandler(new MyErrorHandler());
+
+          pipeline.get("/", () => {
+            throw new Error(errorMessage);
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
+      expect(response.body.readData()).toMatch(errorMessage);
+    });
+
+    it("should use an IErrorHandlerFactory service", async () => {
+      class MyErrorHandler implements IErrorHandlerFactory {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        createErrorHandler(): ErrorHandlerFunction {
+          return (req: IRequestContext, res: IResponseWriter, err: unknown) => {
+            this.logger.error("IErrorHandlerFactory service works!");
+            return res
+              .withStatus(HTTP_STATUS_CODES.internalServerError)
+              .withContent(PlainTextContent.from((err as Error).message))
+              .send();
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useErrorHandler(MyErrorHandler);
+
+          pipeline.get("/", () => {
+            throw new Error(errorMessage);
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
+      expect(response.body.readData()).toMatch(errorMessage);
     });
   });
 });

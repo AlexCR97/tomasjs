@@ -39,6 +39,7 @@ export class WebAppBuilder extends AppBuilder<WebApp> {
       authenticationPolicies,
       authorizationPolicies,
       endpoints,
+      errorHandler,
     } = await this.pipeline.build(containerBuilder);
 
     for (const middleware of middlewares) {
@@ -63,6 +64,10 @@ export class WebAppBuilder extends AppBuilder<WebApp> {
 
     for (const endpoint of endpoints) {
       server.useEndpoint(endpoint);
+    }
+
+    if (errorHandler !== null) {
+      server.useErrorHandler(errorHandler);
     }
 
     const services = await containerBuilder.buildServiceProvider();
