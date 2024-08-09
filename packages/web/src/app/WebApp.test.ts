@@ -1,0 +1,1022 @@
+import "reflect-metadata";
+import { inject } from "@tomasjs/core/dependency-injection";
+import {
+  HTTP_STATUS_CODES,
+  HttpClient,
+  HttpHeaders,
+  IHttpClient,
+  PlainTextContent,
+} from "@tomasjs/core/http";
+import { ILogger, LOGGER } from "@tomasjs/core/logging";
+import {
+  IMiddleware,
+  IMiddlewareFactory,
+  MiddlewareFactoryFunction,
+  MiddlewareFunction,
+  NextFunction,
+} from "@/middleware";
+import {
+  HttpResponse,
+  IHttpServer,
+  IRequestContext,
+  IRequestContextReader,
+  IResponseWriter,
+} from "@/server";
+import { testHttpServer } from "@/test";
+import { WebApp, WebAppBuilder } from "./WebApp";
+import {
+  IInterceptor,
+  IInterceptorFactory,
+  InterceptorFactoryFunction,
+  InterceptorFunction,
+} from "@/interceptor";
+import { GuardFactoryFunction, GuardFunction, GuardResult, IGuard, IGuardFactory } from "@/guard";
+import {
+  AuthenticationPolicyFunction,
+  AuthenticationPolicyResult,
+  AuthorizationPolicyFunction,
+  Claims,
+  IAuthenticationPolicy,
+  IAuthenticationPolicyFactory,
+  IAuthorizationPolicy,
+  IAuthorizationPolicyFactory,
+  rolePolicy,
+} from "@/auth";
+import { jwtPolicy, JwtSigner } from "@/jwt";
+import { ErrorHandlerFunction, IErrorHandler, IErrorHandlerFactory } from "@/error-handler";
+
+// TODO Rename test suite
+describe("x-WebApp", () => {
+  let client: IHttpClient;
+  let server: IHttpServer;
+  let app: WebApp | undefined;
+
+  beforeEach(async () => {
+    server = await testHttpServer();
+    client = new HttpClient({ baseUrl: `http://localhost:${server.port}` });
+  });
+
+  afterEach(async () => {
+    if (app) {
+      await app.stop();
+    }
+  });
+
+  describe("use", () => {
+    it("should use a MiddlewareFunction", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.use(async (req, res, next) => {
+            return await res.withStatus(HTTP_STATUS_CODES.ok).send();
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.isSuccess).toBe(true);
+    });
+
+    it("should use an IMiddleware", async () => {
+      class MyMiddleware implements IMiddleware {
+        async run(req: IRequestContext, res: IResponseWriter, next: NextFunction): Promise<void> {
+          return await res.withStatus(HTTP_STATUS_CODES.ok).send();
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.use(new MyMiddleware());
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.isSuccess).toBe(true);
+    });
+
+    it("should use an IMiddleware service", async () => {
+      class MyMiddleware implements IMiddleware {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        async run(req: IRequestContext, res: IResponseWriter, next: NextFunction): Promise<void> {
+          this.logger.debug("IMiddleware service works!");
+          return await res.withStatus(HTTP_STATUS_CODES.ok).send();
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.use(MyMiddleware);
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.isSuccess).toBe(true);
+    });
+
+    it("should use a MiddlewareFactoryFunction", async () => {
+      const middleware: MiddlewareFactoryFunction = () => {
+        return async (req, res, next) => {
+          return await res.withStatus(HTTP_STATUS_CODES.ok).send();
+        };
+      };
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.use(middleware);
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.isSuccess).toBe(true);
+    });
+
+    it("should use an IMiddlewareFactory", async () => {
+      class MyMiddlewareFactory implements IMiddlewareFactory {
+        createMiddleware(): MiddlewareFunction | IMiddleware {
+          return async (req, res, next) => {
+            return await res.withStatus(HTTP_STATUS_CODES.ok).send();
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.use(new MyMiddlewareFactory());
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.isSuccess).toBe(true);
+    });
+
+    it("should use an IMiddlewareFactory service", async () => {
+      class MyMiddlewareFactory implements IMiddlewareFactory {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        createMiddleware(): MiddlewareFunction | IMiddleware {
+          return async (req, res, next) => {
+            this.logger.debug("It works!");
+            return await res.withStatus(HTTP_STATUS_CODES.ok).send();
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.use(MyMiddlewareFactory);
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.isSuccess).toBe(true);
+    });
+  });
+
+  describe("useInterceptor", () => {
+    it("should use an InterceptorFunction", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useInterceptor((req) => {
+            req.user.authenticate();
+          });
+
+          pipeline.get("/", ({ user }) => {
+            const status = user.authenticated
+              ? HTTP_STATUS_CODES.ok
+              : HTTP_STATUS_CODES.unauthorized;
+
+            return new HttpResponse({ status });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IInterceptor", async () => {
+      class MyInterceptor implements IInterceptor {
+        intercept(req: IRequestContext): void {
+          req.user.authenticate();
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useInterceptor(new MyInterceptor());
+
+          pipeline.get("/", ({ user }) => {
+            const status = user.authenticated
+              ? HTTP_STATUS_CODES.ok
+              : HTTP_STATUS_CODES.unauthorized;
+
+            return new HttpResponse({ status });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IInterceptor service", async () => {
+      class MyInterceptor implements IInterceptor {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        intercept(req: IRequestContext): void {
+          this.logger.debug("IInterceptor service works!");
+          req.user.authenticate();
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useInterceptor(MyInterceptor);
+
+          pipeline.get("/", ({ user }) => {
+            const status = user.authenticated
+              ? HTTP_STATUS_CODES.ok
+              : HTTP_STATUS_CODES.unauthorized;
+
+            return new HttpResponse({ status });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an InterceptorFactoryFunction", async () => {
+      const interceptor: InterceptorFactoryFunction = () => {
+        return async (req) => {
+          req.user.authenticate();
+        };
+      };
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useInterceptor(interceptor);
+
+          pipeline.get("/", ({ user }) => {
+            const status = user.authenticated
+              ? HTTP_STATUS_CODES.ok
+              : HTTP_STATUS_CODES.unauthorized;
+
+            return new HttpResponse({ status });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.isSuccess).toBe(true);
+    });
+
+    it("should use an IInterceptorFactory", async () => {
+      class MyInterceptor implements IInterceptorFactory {
+        createInterceptor(): InterceptorFunction {
+          return async (req) => {
+            req.user.authenticate();
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useInterceptor(new MyInterceptor());
+
+          pipeline.get("/", ({ user }) => {
+            const status = user.authenticated
+              ? HTTP_STATUS_CODES.ok
+              : HTTP_STATUS_CODES.unauthorized;
+
+            return new HttpResponse({ status });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.isSuccess).toBe(true);
+    });
+
+    it("should use an IInterceptorFactory service", async () => {
+      class MyInterceptor implements IInterceptorFactory {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        createInterceptor(): InterceptorFunction {
+          return async (req) => {
+            this.logger.debug("IInterceptorFactory service works!");
+            req.user.authenticate();
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useInterceptor(MyInterceptor);
+
+          pipeline.get("/", ({ user }) => {
+            const status = user.authenticated
+              ? HTTP_STATUS_CODES.ok
+              : HTTP_STATUS_CODES.unauthorized;
+
+            return new HttpResponse({ status });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.isSuccess).toBe(true);
+    });
+  });
+
+  describe("useGuard", () => {
+    const secretHeaderKey = "x-foo";
+    const secretHeaderValue = "bar";
+    const headers = new HttpHeaders().add(secretHeaderKey, secretHeaderValue);
+
+    it("should use a GuardFunction", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useGuard((req) => {
+            return req.headers[secretHeaderKey] === secretHeaderValue;
+          });
+
+          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IGuard", async () => {
+      class MyGuard implements IGuard {
+        protect(req: IRequestContext): GuardResult {
+          return req.headers[secretHeaderKey] === secretHeaderValue;
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useGuard(new MyGuard());
+
+          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IGuard service", async () => {
+      class MyGuard implements IGuard {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        protect(req: IRequestContext): GuardResult {
+          this.logger.debug("IGuard service works!");
+          return req.headers[secretHeaderKey] === secretHeaderValue;
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useGuard(MyGuard);
+
+          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use a GuardFactoryFunction", async () => {
+      const myGuard: GuardFactoryFunction = () => {
+        return (req: IRequestContext) => {
+          return req.headers[secretHeaderKey] === secretHeaderValue;
+        };
+      };
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useGuard(myGuard);
+
+          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IGuardFactory", async () => {
+      class MyGuard implements IGuardFactory {
+        createGuard(): GuardFunction | IGuard {
+          return (req) => {
+            return req.headers[secretHeaderKey] === secretHeaderValue;
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useGuard(new MyGuard());
+
+          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IGuardFactory service", async () => {
+      class MyGuard implements IGuardFactory {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        createGuard(): GuardFunction {
+          return (req) => {
+            this.logger.debug("IGuardFactory service works!");
+            return req.headers[secretHeaderKey] === secretHeaderValue;
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useGuard(MyGuard);
+
+          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+  });
+
+  describe("useAuthentication", () => {
+    const secret = "foo bar fizz buzz";
+    const claims = new Claims({ foo: "bar", fizz: "buzz" });
+    const token = new JwtSigner({ secret }).sign(claims);
+
+    it("should use an AuthenticationPolicyFunction", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useAuthentication(jwtPolicy({ secret }));
+
+          pipeline.get("/", ({ user }) => {
+            expect(user.authenticated).toBe(true);
+            expect(user.claims.toPlain()).toMatchObject(claims.toPlain());
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers: { authorization: `Bearer ${token}` } });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IAuthenticationPolicy", async () => {
+      class MyPolicy implements IAuthenticationPolicy {
+        authenticate(
+          req: IRequestContext
+        ): AuthenticationPolicyResult | Promise<AuthenticationPolicyResult> {
+          const policy = jwtPolicy({ secret });
+          return policy(req);
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useAuthentication(new MyPolicy());
+
+          pipeline.get("/", ({ user }) => {
+            expect(user.authenticated).toBe(true);
+            expect(user.claims.toPlain()).toMatchObject(claims.toPlain());
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers: { authorization: `Bearer ${token}` } });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IAuthenticationPolicy service", async () => {
+      class MyPolicy implements IAuthenticationPolicy {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        authenticate(
+          req: IRequestContext
+        ): AuthenticationPolicyResult | Promise<AuthenticationPolicyResult> {
+          this.logger.debug("IAuthenticationPolicy service works!");
+          const policy = jwtPolicy({ secret });
+          return policy(req);
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useAuthentication(MyPolicy);
+
+          pipeline.get("/", ({ user }) => {
+            expect(user.authenticated).toBe(true);
+            expect(user.claims.toPlain()).toMatchObject(claims.toPlain());
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers: { authorization: `Bearer ${token}` } });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IAuthenticationPolicyFactory ", async () => {
+      class MyPolicy implements IAuthenticationPolicyFactory {
+        createAuthenticationPolicy(): AuthenticationPolicyFunction | IAuthenticationPolicy {
+          return jwtPolicy({ secret });
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useAuthentication(new MyPolicy());
+
+          pipeline.get("/", ({ user }) => {
+            expect(user.authenticated).toBe(true);
+            expect(user.claims.toPlain()).toMatchObject(claims.toPlain());
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers: { authorization: `Bearer ${token}` } });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IAuthenticationPolicyFactory service", async () => {
+      class MyPolicy implements IAuthenticationPolicyFactory {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        createAuthenticationPolicy(): AuthenticationPolicyFunction | IAuthenticationPolicy {
+          this.logger.debug("IAuthenticationPolicyFactory service works!");
+          return jwtPolicy({ secret });
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useAuthentication(MyPolicy);
+
+          pipeline.get("/", ({ user }) => {
+            expect(user.authenticated).toBe(true);
+            expect(user.claims.toPlain()).toMatchObject(claims.toPlain());
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers: { authorization: `Bearer ${token}` } });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+  });
+
+  describe("useAuthorization", () => {
+    const secret = "foo bar fizz buzz";
+    const role = "admin";
+    const claims = new Claims({ role });
+    const token = new JwtSigner({ secret }).sign(claims);
+
+    it("should use an AuthorizationPolicyFunction", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useAuthentication(jwtPolicy({ secret }));
+
+          pipeline.useAuthorization(rolePolicy(role));
+
+          pipeline.get("/", ({ user }) => {
+            expect(user.authenticated).toBe(true);
+            expect(user.authorized).toBe(true);
+            expect(user.claims.has("role")).toBe(true);
+            expect(user.claims.get("role")).toMatch(role);
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers: { authorization: `Bearer ${token}` } });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IAuthorizationPolicy", async () => {
+      class MyPolicy implements IAuthorizationPolicy {
+        authorize(req: IRequestContextReader): boolean | Promise<boolean> {
+          const policy = rolePolicy(role);
+          return policy(req);
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useAuthentication(jwtPolicy({ secret }));
+
+          pipeline.useAuthorization(new MyPolicy());
+
+          pipeline.get("/", ({ user }) => {
+            expect(user.authenticated).toBe(true);
+            expect(user.authorized).toBe(true);
+            expect(user.claims.has("role")).toBe(true);
+            expect(user.claims.get("role")).toMatch(role);
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers: { authorization: `Bearer ${token}` } });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IAuthorizationPolicy service", async () => {
+      class MyPolicy implements IAuthorizationPolicy {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        authorize(req: IRequestContextReader): boolean | Promise<boolean> {
+          this.logger.debug("IAuthorizationPolicy service works!");
+          const policy = rolePolicy(role);
+          return policy(req);
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useAuthentication(jwtPolicy({ secret }));
+
+          pipeline.useAuthorization(MyPolicy);
+
+          pipeline.get("/", ({ user }) => {
+            expect(user.authenticated).toBe(true);
+            expect(user.authorized).toBe(true);
+            expect(user.claims.has("role")).toBe(true);
+            expect(user.claims.get("role")).toMatch(role);
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers: { authorization: `Bearer ${token}` } });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IAuthorizationPolicyFactory", async () => {
+      class MyPolicy implements IAuthorizationPolicyFactory {
+        createAuthorizationPolicy(): AuthorizationPolicyFunction {
+          return rolePolicy(role);
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useAuthentication(jwtPolicy({ secret }));
+
+          pipeline.useAuthorization(new MyPolicy());
+
+          pipeline.get("/", ({ user }) => {
+            expect(user.authenticated).toBe(true);
+            expect(user.authorized).toBe(true);
+            expect(user.claims.has("role")).toBe(true);
+            expect(user.claims.get("role")).toMatch(role);
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers: { authorization: `Bearer ${token}` } });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should use an IAuthorizationPolicyFactory service", async () => {
+      class MyPolicy implements IAuthorizationPolicyFactory {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+        createAuthorizationPolicy(): AuthorizationPolicyFunction {
+          this.logger.debug("IAuthorizationPolicyFactory service works!");
+          return rolePolicy(role);
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useAuthentication(jwtPolicy({ secret }));
+
+          pipeline.useAuthorization(MyPolicy);
+
+          pipeline.get("/", ({ user }) => {
+            expect(user.authenticated).toBe(true);
+            expect(user.authorized).toBe(true);
+            expect(user.claims.has("role")).toBe(true);
+            expect(user.claims.get("role")).toMatch(role);
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/", { headers: { authorization: `Bearer ${token}` } });
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+  });
+
+  describe("useEndpoint", () => {
+    it("should map an endpoint", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useEndpoint({
+            method: "GET",
+            path: "/",
+            handler: ({ services }) => {
+              const logger = services.getOrThrow<ILogger>(LOGGER);
+              logger.debug("Endpoints work!");
+              return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+            },
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should map an endpoint with the shorthand", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useEndpoint("GET", "/", ({ services }) => {
+            const logger = services.getOrThrow<ILogger>(LOGGER);
+            logger.debug("Endpoint with shorthand works!");
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should map an endpoint with the GET shorthand", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", ({ services }) => {
+            const logger = services.getOrThrow<ILogger>(LOGGER);
+            logger.debug("Endpoint with GET shorthand works!");
+            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+  });
+
+  describe("useErrorHandler", () => {
+    const errorMessage = "Woops!";
+
+    it("should use an ErrorHandlerFunction", async () => {
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useErrorHandler((req, res, err) => {
+            return res
+              .withStatus(HTTP_STATUS_CODES.internalServerError)
+              .withContent(PlainTextContent.from((err as Error).message))
+              .send();
+          });
+
+          pipeline.get("/", () => {
+            throw new Error(errorMessage);
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
+      expect(response.body.readData()).toMatch(errorMessage);
+    });
+
+    it("should use an IErrorHandler", async () => {
+      class MyErrorHandler implements IErrorHandler {
+        catch(req: IRequestContext, res: IResponseWriter, err: unknown): Promise<void> {
+          return res
+            .withStatus(HTTP_STATUS_CODES.internalServerError)
+            .withContent(PlainTextContent.from((err as Error).message))
+            .send();
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useErrorHandler(new MyErrorHandler());
+
+          pipeline.get("/", () => {
+            throw new Error(errorMessage);
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
+      expect(response.body.readData()).toMatch(errorMessage);
+    });
+
+    it("should use an IErrorHandler service", async () => {
+      class MyErrorHandler implements IErrorHandler {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        catch(req: IRequestContext, res: IResponseWriter, err: unknown): Promise<void> {
+          this.logger.error("IErrorHandler service works!");
+          return res
+            .withStatus(HTTP_STATUS_CODES.internalServerError)
+            .withContent(PlainTextContent.from((err as Error).message))
+            .send();
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useErrorHandler(MyErrorHandler);
+
+          pipeline.get("/", () => {
+            throw new Error(errorMessage);
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
+      expect(response.body.readData()).toMatch(errorMessage);
+    });
+
+    it("should use an IErrorHandlerFactory service", async () => {
+      class MyErrorHandler implements IErrorHandlerFactory {
+        createErrorHandler(): ErrorHandlerFunction {
+          return (req: IRequestContext, res: IResponseWriter, err: unknown) => {
+            return res
+              .withStatus(HTTP_STATUS_CODES.internalServerError)
+              .withContent(PlainTextContent.from((err as Error).message))
+              .send();
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useErrorHandler(new MyErrorHandler());
+
+          pipeline.get("/", () => {
+            throw new Error(errorMessage);
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
+      expect(response.body.readData()).toMatch(errorMessage);
+    });
+
+    it("should use an IErrorHandlerFactory service", async () => {
+      class MyErrorHandler implements IErrorHandlerFactory {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+        createErrorHandler(): ErrorHandlerFunction {
+          return (req: IRequestContext, res: IResponseWriter, err: unknown) => {
+            this.logger.error("IErrorHandlerFactory service works!");
+            return res
+              .withStatus(HTTP_STATUS_CODES.internalServerError)
+              .withContent(PlainTextContent.from((err as Error).message))
+              .send();
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useErrorHandler(MyErrorHandler);
+
+          pipeline.get("/", () => {
+            throw new Error(errorMessage);
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+
+      expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
+      expect(response.body.readData()).toMatch(errorMessage);
+    });
+  });
+});

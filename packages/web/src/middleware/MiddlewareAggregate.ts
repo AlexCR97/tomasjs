@@ -1,0 +1,69 @@
+import {
+  AuthenticationPolicyFunction,
+  AuthorizationPolicyFunction,
+  authentication,
+  authorization,
+} from "@/auth";
+import { ErrorHandlerFunction, errorHandler } from "@/error-handler";
+import { GuardFunction, guard } from "@/guard";
+import { InterceptorFunction, interceptor } from "@/interceptor";
+import { MiddlewareFunction } from "./Middleware";
+import { PlainEndpoint, endpoints as endpointsMiddleware } from "@/endpoint";
+
+export interface IMiddlewareAggregate {
+  addErrorHandler(...errorHandlers: ErrorHandlerFunction[]): this;
+  addMiddleware(...middlewares: MiddlewareFunction[]): this;
+  addInterceptor(...interceptors: InterceptorFunction[]): this;
+  addGuard(...guards: GuardFunction[]): this;
+  addAuthentication(...policies: AuthenticationPolicyFunction[]): this;
+  addAuthorization(...policies: AuthorizationPolicyFunction[]): this;
+  addEndpoint(...endpoints: PlainEndpoint[]): this;
+  get(): MiddlewareFunction[];
+}
+
+export class MiddlewareAggregate implements IMiddlewareAggregate {
+  private readonly middlewares: MiddlewareFunction[] = [];
+
+  addErrorHandler(...errorHandlers: ErrorHandlerFunction[]): this {
+    return this.addMiddleware(...errorHandlers.map(errorHandler));
+  }
+
+  addMiddleware(...middlewares: MiddlewareFunction[]): this {
+    this.middlewares.push(...middlewares);
+    return this;
+  }
+
+  addInterceptor(...interceptors: InterceptorFunction[]): this {
+    return this.addMiddleware(...interceptors.map(interceptor));
+  }
+
+  addGuard(...guards: GuardFunction[]): this {
+    return this.addMiddleware(...guards.map(guard));
+  }
+
+  addAuthentication(...policies: AuthenticationPolicyFunction[]): this {
+    for (const policy of policies) {
+      const middlewares = authentication(policy);
+      this.addMiddleware(...middlewares);
+    }
+
+    return this;
+  }
+
+  addAuthorization(...policies: AuthorizationPolicyFunction[]): this {
+    for (const policy of policies) {
+      const middlewares = authorization(policy);
+      this.addMiddleware(...middlewares);
+    }
+
+    return this;
+  }
+
+  addEndpoint(...endpoints: PlainEndpoint[]): this {
+    return this.addMiddleware(endpointsMiddleware(endpoints));
+  }
+
+  get(): MiddlewareFunction[] {
+    return this.middlewares;
+  }
+}

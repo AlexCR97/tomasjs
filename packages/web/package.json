@@ -1,0 +1,47 @@
+{
+  "name": "@tomasjs/web",
+  "version": "2.0.0-beta",
+  "description": "TomasJS web",
+  "author": "viex",
+  "license": "ISC",
+  "types": "./**/*.d.ts",
+  "keywords": [
+    "tomas",
+    "tomasjs",
+    "web",
+    "viex",
+    "typescript"
+  ],
+  "scripts": {
+    "build": "del dist /s /q && tsc -b ./tsconfig.build.json && tsc-alias && node ./dist/package.js",
+    "test": "jest",
+    "publish": "cd ./dist && npm publish --access public",
+    "pack": "cd ./dist && npm pack",
+    "link": "cd ./dist && npm link"
+  },
+  "dependencies": {
+    "@tomasjs/core": "^2.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "reflect-metadata": "^0.2.1",
+    "url-pattern": "^1.0.3"
+  },
+  "peerDependencies": {
+    "@tomasjs/core": "^2.5.0",
+    "jsonwebtoken": "^9.0.2",
+    "reflect-metadata": "^0.2.1",
+    "url-pattern": "^1.0.3"
+  },
+  "devDependencies": {
+    "@tsconfig/node18": "^18.2.2",
+    "@types/jest": "^29.5.12",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/node": "^20.11.30",
+    "jest": "^29.7.0",
+    "nodemon": "^3.1.0",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.8",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.4.3"
+  }
+}
