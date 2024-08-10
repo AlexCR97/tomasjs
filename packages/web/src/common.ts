@@ -25,3 +25,10 @@ export function hasLength(obj: NonNullable<unknown>): obj is { length: number } 
 export function isInRange(num: number, min: number, max: number): boolean {
   return num >= min && num <= max;
 }
+
+// TODO Move to @tomasjs/core/system
+export async function timeout(milliseconds: number): Promise<void> {
+  return new Promise<void>((resolve) => {
+    setTimeout(() => resolve(), milliseconds);
+  });
+}

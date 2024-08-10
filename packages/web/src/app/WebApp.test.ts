@@ -7,7 +7,7 @@ import {
   IHttpClient,
   PlainTextContent,
 } from "@tomasjs/core/http";
-import { ILogger, LOGGER } from "@tomasjs/core/logging";
+import { ILogger, LOGGER, LoggerConfiguration } from "@tomasjs/core/logging";
 import {
   IMiddleware,
   IMiddlewareFactory,
@@ -47,6 +47,12 @@ import { ErrorHandlerFunction, IErrorHandler, IErrorHandlerFactory } from "@/err
 
 // TODO Rename test suite
 describe("x-WebApp", () => {
+  const loggerConfig: LoggerConfiguration = {
+    default: {
+      level: "fatal",
+    },
+  };
+
   let client: IHttpClient;
   let server: IHttpServer;
   let app: WebApp | undefined;
@@ -65,6 +71,7 @@ describe("x-WebApp", () => {
   describe("use", () => {
     it("should use a MiddlewareFunction", async () => {
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.use(async (req, res, next) => {
             return await res.withStatus(HTTP_STATUS_CODES.ok).send();
@@ -87,6 +94,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.use(new MyMiddleware());
         })
@@ -110,6 +118,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.use(MyMiddleware);
         })
@@ -130,6 +139,7 @@ describe("x-WebApp", () => {
       };
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.use(middleware);
         })
@@ -152,6 +162,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.use(new MyMiddlewareFactory());
         })
@@ -177,6 +188,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.use(MyMiddlewareFactory);
         })
@@ -193,6 +205,7 @@ describe("x-WebApp", () => {
   describe("useInterceptor", () => {
     it("should use an InterceptorFunction", async () => {
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useInterceptor((req) => {
             req.user.authenticate();
@@ -223,6 +236,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useInterceptor(new MyInterceptor());
 
@@ -254,6 +268,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useInterceptor(MyInterceptor);
 
@@ -282,6 +297,7 @@ describe("x-WebApp", () => {
       };
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useInterceptor(interceptor);
 
@@ -312,6 +328,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useInterceptor(new MyInterceptor());
 
@@ -345,6 +362,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useInterceptor(MyInterceptor);
 
@@ -373,6 +391,7 @@ describe("x-WebApp", () => {
 
     it("should use a GuardFunction", async () => {
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useGuard((req) => {
             return req.headers[secretHeaderKey] === secretHeaderValue;
@@ -397,6 +416,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useGuard(new MyGuard());
 
@@ -422,6 +442,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useGuard(MyGuard);
 
@@ -444,6 +465,7 @@ describe("x-WebApp", () => {
       };
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useGuard(myGuard);
 
@@ -468,6 +490,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useGuard(new MyGuard());
 
@@ -495,6 +518,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useGuard(MyGuard);
 
@@ -517,6 +541,7 @@ describe("x-WebApp", () => {
 
     it("should use an AuthenticationPolicyFunction", async () => {
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useAuthentication(jwtPolicy({ secret }));
 
@@ -546,6 +571,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useAuthentication(new MyPolicy());
 
@@ -578,6 +604,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useAuthentication(MyPolicy);
 
@@ -604,6 +631,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useAuthentication(new MyPolicy());
 
@@ -633,6 +661,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useAuthentication(MyPolicy);
 
@@ -660,6 +689,7 @@ describe("x-WebApp", () => {
 
     it("should use an AuthorizationPolicyFunction", async () => {
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useAuthentication(jwtPolicy({ secret }));
 
@@ -691,6 +721,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useAuthentication(jwtPolicy({ secret }));
 
@@ -725,6 +756,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useAuthentication(jwtPolicy({ secret }));
 
@@ -755,6 +787,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useAuthentication(jwtPolicy({ secret }));
 
@@ -787,6 +820,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useAuthentication(jwtPolicy({ secret }));
 
@@ -813,6 +847,7 @@ describe("x-WebApp", () => {
   describe("useEndpoint", () => {
     it("should map an endpoint", async () => {
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useEndpoint({
             method: "GET",
@@ -835,6 +870,7 @@ describe("x-WebApp", () => {
 
     it("should map an endpoint with the shorthand", async () => {
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useEndpoint("GET", "/", ({ services }) => {
             const logger = services.getOrThrow<ILogger>(LOGGER);
@@ -853,6 +889,7 @@ describe("x-WebApp", () => {
 
     it("should map an endpoint with the GET shorthand", async () => {
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.get("/", ({ services }) => {
             const logger = services.getOrThrow<ILogger>(LOGGER);
@@ -875,6 +912,7 @@ describe("x-WebApp", () => {
 
     it("should use an ErrorHandlerFunction", async () => {
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useErrorHandler((req, res, err) => {
             return res
@@ -908,6 +946,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useErrorHandler(new MyErrorHandler());
 
@@ -939,6 +978,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useErrorHandler(MyErrorHandler);
 
@@ -969,6 +1009,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useErrorHandler(new MyErrorHandler());
 
@@ -1002,6 +1043,7 @@ describe("x-WebApp", () => {
       }
 
       app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useErrorHandler(MyErrorHandler);
 

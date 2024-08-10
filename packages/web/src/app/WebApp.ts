@@ -3,6 +3,7 @@ import { AppBuilder, environmentToken, IApp, IEnvironment } from "@tomasjs/core/
 import { configurationToken, IConfiguration } from "@tomasjs/core/configuration";
 import { IContainerBuilder, IServiceProvider } from "@tomasjs/core/dependency-injection";
 import { WebAppPipelineBuilder, WebAppPipelineBuilderDelegate } from "./WebAppPipelineBuilder";
+import { ILogger, ILoggerBuilder, LOGGER_BUILDER } from "@tomasjs/core/logging";
 
 export type WebAppBuilderOptions = {
   server?: IHttpServer;
@@ -73,7 +74,9 @@ export class WebAppBuilder extends AppBuilder<WebApp> {
     const services = await containerBuilder.buildServiceProvider();
     const configuration = services.getOrThrow<IConfiguration>(configurationToken);
     const environment = services.getOrThrow<IEnvironment>(environmentToken);
-    return new WebApp(configuration, environment, services, server);
+    const loggerBuilder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
+    const logger = loggerBuilder.withCategory("@tomasjs/web/WebApp").build();
+    return new WebApp(configuration, environment, services, server, logger);
   }
 }
 
@@ -82,14 +85,25 @@ export class WebApp implements IApp {
     readonly configuration: IConfiguration,
     readonly environment: IEnvironment,
     readonly services: IServiceProvider,
-    readonly server: IHttpServer
+    readonly server: IHttpServer,
+    readonly logger: ILogger
   ) {}
 
   async start(): Promise<void> {
+    this.logger.info("Starting application...");
+
     await this.server.start();
+
+    this.logger.info("Application listening at {address}", {
+      address: `http://localhost:${this.server.port}`,
+    });
   }
 
   async stop(): Promise<void> {
+    this.logger.warn("Stopping application...");
+
     await this.server.stop();
+
+    this.logger.warn("Application stopped.");
   }
 }

@@ -22,6 +22,7 @@ export interface IRequestContext {
   readonly query: IQueryParams;
   readonly body: IHttpContent<unknown>;
   readonly user: IUser;
+  toString(): string;
 }
 
 export interface IRequestContextReader {
@@ -44,6 +45,11 @@ export class RequestContext implements IRequestContext {
     readonly body: IHttpContent<unknown>,
     readonly user: IUser
   ) {}
+
+  toString(): string {
+    // TODO Implement
+    return "TODO";
+  }
 
   static async from(req: IncomingMessage): Promise<RequestContext> {
     const urlParser = UrlParser.from(req);
