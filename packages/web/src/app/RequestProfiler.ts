@@ -2,44 +2,44 @@ import { IMiddlewareFactory, MiddlewareFunction } from "@/middleware";
 import { IQueryParams } from "@/server";
 import { ContainerSetupFunction, inject } from "@tomasjs/core/dependency-injection";
 import { IHttpContent, PlainHttpHeaders } from "@tomasjs/core/http";
-import { ILogger, ILoggerBuilder, LOGGER_BUILDER, NullLogger } from "@tomasjs/core/logging";
+import { ILogger, ILoggerBuilder, LOGGER_BUILDER } from "@tomasjs/core/logging";
 import { pipe } from "@tomasjs/core/system";
 
-const REQUEST_LOGGER_OPTIONS = "@tomasjs/web/RequestLoggerOptions";
+const REQUEST_PROFILER_OPTIONS = "@tomasjs/web/RequestProfilerOptions";
 
 const DEFAULT_PADDING = 4;
 
-export type RequestLoggerOptions = {
+export type RequestProfilerOptions = {
   headers: boolean;
   query: boolean;
   body: boolean;
   padding: number;
 };
 
-export function requestLoggerOptions(
-  options: Partial<RequestLoggerOptions>
+export function requestProfilerOptions(
+  options: Partial<RequestProfilerOptions>
 ): ContainerSetupFunction {
   return (container) => {
-    container.add("singleton", REQUEST_LOGGER_OPTIONS, options);
+    container.add("singleton", REQUEST_PROFILER_OPTIONS, options);
   };
 }
 
-export class RequestLogger implements IMiddlewareFactory {
+export class RequestProfiler implements IMiddlewareFactory {
   constructor(
-    @inject(REQUEST_LOGGER_OPTIONS, { multiple: true })
-    private readonly options: RequestLoggerOptions[],
+    @inject(REQUEST_PROFILER_OPTIONS, { multiple: true })
+    private readonly options: RequestProfilerOptions[],
 
     @inject(LOGGER_BUILDER)
     private readonly loggerBuilder: ILoggerBuilder
   ) {}
 
   createMiddleware(): MiddlewareFunction {
-    const logger = this.loggerBuilder.withCategory(`@tomasjs/web/${RequestLogger.name}`).build();
+    const logger = this.loggerBuilder.withCategory(`@tomasjs/web/${RequestProfiler.name}`).build();
     const options = this.getOptions();
-    return requestLogger({ logger, ...options });
+    return requestProfiler({ logger, ...options });
   }
 
-  private getOptions(): RequestLoggerOptions {
+  private getOptions(): RequestProfilerOptions {
     if (this.options.length === 0) {
       return {
         headers: false,
@@ -57,8 +57,8 @@ export class RequestLogger implements IMiddlewareFactory {
   }
 }
 
-export function requestLogger(
-  options: { logger: ILogger } & Partial<RequestLoggerOptions>
+export function requestProfiler(
+  options: { logger: ILogger } & Partial<RequestProfilerOptions>
 ): MiddlewareFunction {
   const logger = options.logger;
   const logHeaders: boolean = options.headers ?? false;

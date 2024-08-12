@@ -3,11 +3,11 @@ import { HttpResponse, IHttpServer } from "@/server";
 import { HTTP_STATUS_CODES, HttpClient, IHttpClient, JsonContent } from "@tomasjs/core/http";
 import { WebApp, WebAppBuilder } from "./WebApp";
 import { testHttpServer } from "@/test";
-import { RequestLogger, requestLoggerOptions } from "./RequestLogger";
+import { RequestProfiler, requestProfilerOptions } from "./RequestProfiler";
 import { timeout } from "@/common";
 
 // TODO Rename test suite
-describe("xx-RequestLogger", () => {
+describe("xx-RequestProfiler", () => {
   let client: IHttpClient;
   let server: IHttpServer;
   let app: WebApp | undefined;
@@ -23,11 +23,11 @@ describe("xx-RequestLogger", () => {
     }
   });
 
-  it("should log an http request", async () => {
+  it("should profile an http request", async () => {
     app = await new WebAppBuilder({ server })
       .setupContainer((container) => {
         container.setup(
-          requestLoggerOptions({
+          requestProfilerOptions({
             headers: true,
             query: true,
             body: true,
@@ -35,15 +35,15 @@ describe("xx-RequestLogger", () => {
         );
       })
       .setupHttpPipeline((pipeline) => {
-        pipeline.use(RequestLogger);
+        pipeline.use(RequestProfiler);
 
         pipeline.get("/ok", async () => {
-          await timeout(500);
+          await timeout(100);
           return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
         });
 
         pipeline.post("/accepted", async () => {
-          await timeout(1000);
+          await timeout(250);
           return new HttpResponse({ status: HTTP_STATUS_CODES.accepted });
         });
       })
