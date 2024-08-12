@@ -5,6 +5,7 @@ import {
   HttpClient,
   HttpHeaders,
   IHttpClient,
+  JsonContent,
   PlainTextContent,
 } from "@tomasjs/core/http";
 import { ILogger, LOGGER, LoggerConfiguration } from "@tomasjs/core/logging";
@@ -904,6 +905,43 @@ describe("x-WebApp", () => {
       const response = await client.get("/");
 
       expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+    });
+
+    it("should receive a route parameter", async () => {
+      const testParams = {
+        userId: "22",
+        orderId: "47",
+      } as const;
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/users/:userId/orders/:orderId", ({ params, services }) => {
+            const logger = services.getOrThrow<ILogger>(LOGGER);
+
+            const userId = params.getOrThrow("userId");
+            logger.debug("User ID: {userId}", { userId });
+            expect(userId).toMatch(testParams.userId);
+
+            const orderId = params.getOrThrow("orderId");
+            logger.debug("Order ID: {orderId}", { orderId });
+            expect(orderId).toMatch(testParams.orderId);
+
+            return new HttpResponse({
+              status: HTTP_STATUS_CODES.ok,
+              content: JsonContent.from(params.toPlain()),
+            });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get(`/users/${testParams.userId}/orders/${testParams.orderId}`);
+      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
+
+      const responseContent = await response.body.readData();
+      expect(responseContent).toMatchObject(testParams);
     });
   });
 
