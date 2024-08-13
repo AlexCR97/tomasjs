@@ -1,39 +1,29 @@
+import { InvalidOperationError } from "@tomasjs/core/errors";
+import { HttpMethod } from "@tomasjs/core/http";
+import { isHttpMethod } from "@tomasjs/core/http/HttpMethod";
+import { Constructor, isConstructor } from "@tomasjs/core/system";
 import {
   ContainerBuilderDelegate,
   IContainerBuilder,
   IServiceProvider,
 } from "@tomasjs/core/dependency-injection";
-import { InvalidOperationError } from "@tomasjs/core/errors";
-import { Constructor, isConstructor } from "@tomasjs/core/system";
-import {
-  IMiddleware,
-  IMiddlewareFactory,
-  isIMiddleware,
-  isIMiddlewareFactory,
-  isMiddlewareFactoryFunction,
-  isMiddlewareFunction,
-  MiddlewareFactoryFunction,
-  MiddlewareFunction,
-} from "@/middleware";
-import { InterceptorFunction } from "@/interceptor";
 import {
   IInterceptor,
   IInterceptorFactory,
   InterceptorFactoryFunction,
+  InterceptorFunction,
   isIInterceptor,
   isIInterceptorFactory,
   isInterceptorFactoryFunction,
   isInterceptorFunction,
-} from "@/interceptor/Interceptor";
+} from "@/interceptor";
 import { isPlainEndpoint, PlainEndpoint } from "@/endpoint";
-import { HttpMethod } from "@tomasjs/core/http";
 import {
   isWebAppEndpointHandler,
   WebAppEndpoint,
   WebAppEndpointContext,
   WebAppEndpointHandler,
 } from "./WebAppEndpoint";
-import { isHttpMethod } from "@tomasjs/core/http/HttpMethod";
 import {
   GuardFactoryFunction,
   GuardFunction,
@@ -66,6 +56,16 @@ import {
   isIErrorHandler,
   isIErrorHandlerFactory,
 } from "@/error-handler";
+import {
+  IMiddleware,
+  IMiddlewareFactory,
+  isIMiddleware,
+  isIMiddlewareFactory,
+  isMiddlewareFunction,
+  MiddlewareFunction,
+} from "./Middleware";
+import { RequestContext } from "./RequestContext";
+import { MiddlewareFunction as ServerMiddlewareFunction } from "@/middleware";
 
 export type WebAppPipelineBuilderDelegate = (builder: IWebAppPipelineBuilder) => void;
 
@@ -73,7 +73,6 @@ type MiddlewareType =
   | MiddlewareFunction
   | IMiddleware
   | Constructor<IMiddleware>
-  | MiddlewareFactoryFunction
   | IMiddlewareFactory
   | Constructor<IMiddlewareFactory>;
 
@@ -120,7 +119,6 @@ export interface IWebAppPipelineBuilder {
   use(middleware: MiddlewareFunction): this;
   use(middleware: IMiddleware): this;
   use(middleware: MiddlewareFunction | IMiddleware): this;
-  use(middleware: MiddlewareFactoryFunction): this;
   use(middleware: IMiddlewareFactory): this;
   use(middleware: Constructor<IMiddleware>): this;
   use(middleware: Constructor<IMiddlewareFactory>): this;
@@ -195,7 +193,6 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   use(middleware: MiddlewareFunction): this;
   use(middleware: IMiddleware): this;
   use(middleware: MiddlewareFunction | IMiddleware): this;
-  use(middleware: MiddlewareFactoryFunction): this;
   use(middleware: IMiddlewareFactory): this;
   use(middleware: Constructor<IMiddleware>): this;
   use(middleware: Constructor<IMiddlewareFactory>): this;
@@ -354,7 +351,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   }
 
   async build(container: IContainerBuilder): Promise<{
-    middlewares: MiddlewareFunction[];
+    middlewares: ServerMiddlewareFunction[];
     interceptors: InterceptorFunction[];
     guards: GuardFunction[];
     authenticationPolicies: AuthenticationPolicyFunction[];
@@ -395,7 +392,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   private toMiddlewareFunction(
     middlewareType: MiddlewareType,
     services: IServiceProvider
-  ): MiddlewareFunction {
+  ): ServerMiddlewareFunction {
     if (isConstructor<IMiddleware | IMiddlewareFactory>(middlewareType)) {
       return (req, res, next) => {
         const service = services.getOrThrow<IMiddleware | IMiddlewareFactory>(middlewareType);
@@ -404,20 +401,17 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
       };
     }
 
-    if (isMiddlewareFactoryFunction(middlewareType)) {
-      const middleware = middlewareType();
-      return this.toMiddlewareFunction(middleware, services);
-    }
-
     if (isMiddlewareFunction(middlewareType)) {
       return (req, res, next) => {
-        return middlewareType(req, res, next);
+        const requestContext = RequestContext.from(req, services);
+        return middlewareType(requestContext, res, next);
       };
     }
 
     if (isIMiddleware(middlewareType)) {
       return (req, res, next) => {
-        return middlewareType.run(req, res, next);
+        const requestContext = RequestContext.from(req, services);
+        return middlewareType.run(requestContext, res, next);
       };
     }
 

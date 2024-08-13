@@ -9,13 +9,7 @@ import {
   PlainTextContent,
 } from "@tomasjs/core/http";
 import { ILogger, LOGGER, LoggerConfiguration } from "@tomasjs/core/logging";
-import {
-  IMiddleware,
-  IMiddlewareFactory,
-  MiddlewareFactoryFunction,
-  MiddlewareFunction,
-  NextFunction,
-} from "@/middleware";
+import { MiddlewareFunction, NextFunction } from "@/middleware";
 import {
   HttpResponse,
   IHttpServer,
@@ -45,12 +39,13 @@ import {
 } from "@/auth";
 import { jwtPolicy, JwtSigner } from "@/jwt";
 import { ErrorHandlerFunction, IErrorHandler, IErrorHandlerFactory } from "@/error-handler";
+import { IMiddleware, IMiddlewareFactory } from "./Middleware";
 
 // TODO Rename test suite
 describe("x-WebApp", () => {
   const loggerConfig: LoggerConfiguration = {
     default: {
-      level: "fatal",
+      level: "verbose",
     },
   };
 
@@ -75,6 +70,8 @@ describe("x-WebApp", () => {
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.use(async (req, res, next) => {
+            const logger = req.services.getOrThrow<ILogger>(LOGGER);
+            logger.debug("MiddlewareFunction works!");
             return await res.withStatus(HTTP_STATUS_CODES.ok).send();
           });
         })
@@ -122,27 +119,6 @@ describe("x-WebApp", () => {
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.use(MyMiddleware);
-        })
-        .build();
-
-      await app.start();
-
-      const response = await client.get("/");
-
-      expect(response.isSuccess).toBe(true);
-    });
-
-    it("should use a MiddlewareFactoryFunction", async () => {
-      const middleware: MiddlewareFactoryFunction = () => {
-        return async (req, res, next) => {
-          return await res.withStatus(HTTP_STATUS_CODES.ok).send();
-        };
-      };
-
-      app = await new WebAppBuilder({ server })
-        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
-        .setupHttpPipeline((pipeline) => {
-          pipeline.use(middleware);
         })
         .build();
 

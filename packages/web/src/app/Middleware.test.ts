@@ -2,13 +2,11 @@ import { IRequestContext, IResponseWriter } from "@/server";
 import {
   IMiddleware,
   IMiddlewareFactory,
-  isMiddlewareFunction,
   isIMiddleware,
-  MiddlewareFactoryFunction,
+  isIMiddlewareFactory,
+  isMiddlewareFunction,
   MiddlewareFunction,
   NextFunction,
-  isMiddlewareFactoryFunction,
-  isIMiddlewareFactory,
 } from "./Middleware";
 import { HTTP_STATUS_CODES } from "@tomasjs/core/http";
 
@@ -89,66 +87,6 @@ describe("Middleware", () => {
       };
 
       expect(isIMiddleware(middleware)).toBe(true);
-    });
-  });
-
-  describe(isMiddlewareFactoryFunction.name, () => {
-    it("should return true for named functions", () => {
-      const arrowFunction: MiddlewareFactoryFunction = () => {
-        return (req, res, next) => {};
-      };
-      expect(isMiddlewareFactoryFunction(arrowFunction)).toBe(true);
-
-      const inlineFunction: MiddlewareFactoryFunction = function (): MiddlewareFunction {
-        return (req, res, next) => {};
-      };
-      expect(isMiddlewareFactoryFunction(inlineFunction)).toBe(true);
-
-      function declaredFunction(): MiddlewareFunction {
-        return (req, res, next) => {};
-      }
-      expect(isMiddlewareFactoryFunction(declaredFunction)).toBe(true);
-    });
-
-    it("should return true for anonymous functions", () => {
-      expect(
-        isMiddlewareFactoryFunction(() => {
-          return (req: IRequestContext, res: IResponseWriter, next: NextFunction) => {};
-        })
-      ).toBe(true);
-
-      expect(
-        isMiddlewareFactoryFunction(function (): MiddlewareFunction {
-          return function (req: IRequestContext, res: IResponseWriter, next: NextFunction) {};
-        })
-      ).toBe(true);
-    });
-
-    it("should return true for functions with params in range", () => {
-      expect(
-        isMiddlewareFactoryFunction(() => {
-          return (req: IRequestContext, res: IResponseWriter, next: NextFunction) => {};
-        })
-      ).toBe(true);
-    });
-
-    it("should return false for functions with params out of range", () => {
-      expect(
-        isMiddlewareFactoryFunction((arg1: any) => {
-          return (req: IRequestContext, res: IResponseWriter, next: NextFunction) => {};
-        })
-      ).toBe(false);
-
-      expect(
-        isMiddlewareFactoryFunction((arg1: any, arg2: any) => {
-          return (req: IRequestContext, res: IResponseWriter, next: NextFunction) => {};
-        })
-      ).toBe(false);
-      expect(
-        isMiddlewareFactoryFunction((arg1: any, arg2: any, arg3: any) => {
-          return (req: IRequestContext, res: IResponseWriter, next: NextFunction) => {};
-        })
-      ).toBe(false);
     });
   });
 
