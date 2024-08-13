@@ -1,6 +1,7 @@
 import { hasLength, isFunction, isNotNull } from "@/common";
-import { MiddlewareFunction } from "@/middleware";
-import { IRequestContext, IResponseWriter } from "@/server";
+import { IResponseWriter } from "@/server";
+import { IRequestContext } from "./RequestContext";
+import { MiddlewareFunction } from "./Middleware";
 
 export type ErrorHandlerFunction = (
   req: IRequestContext,

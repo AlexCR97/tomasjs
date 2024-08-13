@@ -1,5 +1,5 @@
 import { ProblemDetailsContent } from "@/content";
-import { ErrorHandlerFunction } from "./ErrorHandlerMiddleware";
+import { ErrorHandlerFunction } from "./ErrorHandler";
 import { ProblemDetails } from "@/ProblemDetails";
 import { statusCode } from "@/StatusCode";
 import { IRequestContext } from "@/server";

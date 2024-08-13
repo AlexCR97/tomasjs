@@ -38,8 +38,8 @@ import {
   rolePolicy,
 } from "@/auth";
 import { jwtPolicy, JwtSigner } from "@/jwt";
-import { ErrorHandlerFunction, IErrorHandler, IErrorHandlerFactory } from "@/error-handler";
 import { IMiddleware, IMiddlewareFactory } from "./Middleware";
+import { ErrorHandlerFunction, IErrorHandler, IErrorHandlerFactory } from "./ErrorHandler";
 
 // TODO Rename test suite
 describe("x-WebApp", () => {
@@ -929,6 +929,8 @@ describe("x-WebApp", () => {
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useErrorHandler((req, res, err) => {
+            const logger = req.services.getOrThrow<ILogger>(LOGGER);
+            logger.error("ErrorHandlerFunction service works!");
             return res
               .withStatus(HTTP_STATUS_CODES.internalServerError)
               .withContent(PlainTextContent.from((err as Error).message))

@@ -1,10 +1,2 @@
-export {
-  ErrorHandlerFunction,
-  IErrorHandler,
-  IErrorHandlerFactory,
-  errorHandler,
-  isErrorHandlerFunction,
-  isIErrorHandler,
-  isIErrorHandlerFactory,
-} from "./ErrorHandlerMiddleware";
+export { ErrorHandlerFunction, errorHandler, isErrorHandlerFunction } from "./ErrorHandler";
 export { problemDetailsErrorHandler } from "./ProblemDetailsErrorHandler";

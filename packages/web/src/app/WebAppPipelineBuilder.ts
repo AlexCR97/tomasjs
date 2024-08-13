@@ -49,14 +49,6 @@ import {
   isIAuthorizationPolicyFactory,
 } from "@/auth";
 import {
-  ErrorHandlerFunction,
-  IErrorHandler,
-  IErrorHandlerFactory,
-  isErrorHandlerFunction,
-  isIErrorHandler,
-  isIErrorHandlerFactory,
-} from "@/error-handler";
-import {
   IMiddleware,
   IMiddlewareFactory,
   isIMiddleware,
@@ -66,6 +58,15 @@ import {
 } from "./Middleware";
 import { RequestContext } from "./RequestContext";
 import { MiddlewareFunction as ServerMiddlewareFunction } from "@/middleware";
+import {
+  ErrorHandlerFunction,
+  IErrorHandler,
+  IErrorHandlerFactory,
+  isErrorHandlerFunction,
+  isIErrorHandler,
+  isIErrorHandlerFactory,
+} from "./ErrorHandler";
+import { ErrorHandlerFunction as ServerErrorHandlerFunction } from "@/error-handler";
 
 export type WebAppPipelineBuilderDelegate = (builder: IWebAppPipelineBuilder) => void;
 
@@ -357,7 +358,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     authenticationPolicies: AuthenticationPolicyFunction[];
     authorizationPolicies: AuthorizationPolicyFunction[];
     endpoints: PlainEndpoint[];
-    errorHandler: ErrorHandlerFunction | null;
+    errorHandler: ServerErrorHandlerFunction | null;
   }> {
     this.containerDelegates.forEach((delegate) => delegate(container));
     const services = await container.buildServiceProvider();
@@ -577,7 +578,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   private toErrorHandlerFunction(
     errorHandlerType: ErrorHandlerType,
     services: IServiceProvider
-  ): ErrorHandlerFunction {
+  ): ServerErrorHandlerFunction {
     if (isConstructor<IErrorHandler | IErrorHandlerFactory>(errorHandlerType)) {
       return (req, res, err) => {
         const service = services.getOrThrow<IErrorHandler | IErrorHandlerFactory>(errorHandlerType);
@@ -588,13 +589,15 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
 
     if (isErrorHandlerFunction(errorHandlerType)) {
       return (req, res, err) => {
-        return errorHandlerType(req, res, err);
+        const requestContext = RequestContext.from(req, services);
+        return errorHandlerType(requestContext, res, err);
       };
     }
 
     if (isIErrorHandler(errorHandlerType)) {
       return (req, res, err) => {
-        return errorHandlerType.catch(req, res, err);
+        const requestContext = RequestContext.from(req, services);
+        return errorHandlerType.catch(requestContext, res, err);
       };
     }
 
