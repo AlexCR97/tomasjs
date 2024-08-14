@@ -2,12 +2,8 @@ export {
   AuthenticationPolicyFunction,
   AuthenticationPolicyResult,
   AuthenticationPolicyResultExtended,
-  IAuthenticationPolicy,
-  IAuthenticationPolicyFactory,
   authentication,
   isAuthenticationPolicyFunction,
-  isIAuthenticationPolicy,
-  isIAuthenticationPolicyFactory,
 } from "./Authentication";
 export {
   AuthorizationPolicyFunction,

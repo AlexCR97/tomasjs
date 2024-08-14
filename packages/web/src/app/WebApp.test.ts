@@ -24,8 +24,6 @@ import {
   AuthenticationPolicyResult,
   AuthorizationPolicyFunction,
   Claims,
-  IAuthenticationPolicy,
-  IAuthenticationPolicyFactory,
   IAuthorizationPolicy,
   IAuthorizationPolicyFactory,
   rolePolicy,
@@ -35,6 +33,7 @@ import { IMiddleware, IMiddlewareFactory } from "./Middleware";
 import { ErrorHandlerFunction, IErrorHandler, IErrorHandlerFactory } from "./ErrorHandler";
 import { IInterceptor, IInterceptorFactory, InterceptorFunction } from "./Interceptor";
 import { GuardFunction, GuardResult, IGuard, IGuardFactory } from "./Guard";
+import { IAuthenticationPolicy, IAuthenticationPolicyFactory } from "./Authentication";
 
 // TODO Rename test suite
 describe("x-WebApp", () => {
@@ -469,7 +468,9 @@ describe("x-WebApp", () => {
         .setupHttpPipeline((pipeline) => {
           pipeline.useAuthentication(jwtPolicy({ secret }));
 
-          pipeline.get("/", ({ user }) => {
+          pipeline.get("/", ({ services, user }) => {
+            const logger = services.getOrThrow<ILogger>(LOGGER);
+            logger.debug("AuthenticationPolicyFunction works!");
             expect(user.authenticated).toBe(true);
             expect(user.claims.toPlain()).toMatchObject(claims.toPlain());
             return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
