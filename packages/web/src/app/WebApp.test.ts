@@ -19,7 +19,6 @@ import {
 } from "@/server";
 import { testHttpServer } from "@/test";
 import { WebApp, WebAppBuilder } from "./WebApp";
-import { GuardFactoryFunction, GuardFunction, GuardResult, IGuard, IGuardFactory } from "@/guard";
 import {
   AuthenticationPolicyFunction,
   AuthenticationPolicyResult,
@@ -35,6 +34,7 @@ import { jwtPolicy, JwtSigner } from "@/jwt";
 import { IMiddleware, IMiddlewareFactory } from "./Middleware";
 import { ErrorHandlerFunction, IErrorHandler, IErrorHandlerFactory } from "./ErrorHandler";
 import { IInterceptor, IInterceptorFactory, InterceptorFunction } from "./Interceptor";
+import { GuardFunction, GuardResult, IGuard, IGuardFactory } from "./Guard";
 
 // TODO Rename test suite
 describe("x-WebApp", () => {
@@ -339,6 +339,8 @@ describe("x-WebApp", () => {
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useGuard((req) => {
+            const logger = req.services.getOrThrow<ILogger>(LOGGER);
+            logger.debug("GuardFunction works!");
             return req.headers[secretHeaderKey] === secretHeaderValue;
           });
 
@@ -402,32 +404,9 @@ describe("x-WebApp", () => {
       expect(response.status).toBe(HTTP_STATUS_CODES.ok);
     });
 
-    it("should use a GuardFactoryFunction", async () => {
-      const myGuard: GuardFactoryFunction = () => {
-        return (req: IRequestContext) => {
-          return req.headers[secretHeaderKey] === secretHeaderValue;
-        };
-      };
-
-      app = await new WebAppBuilder({ server })
-        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
-        .setupHttpPipeline((pipeline) => {
-          pipeline.useGuard(myGuard);
-
-          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
-        })
-        .build();
-
-      await app.start();
-
-      const response = await client.get("/", { headers });
-
-      expect(response.status).toBe(HTTP_STATUS_CODES.ok);
-    });
-
     it("should use an IGuardFactory", async () => {
       class MyGuard implements IGuardFactory {
-        createGuard(): GuardFunction | IGuard {
+        createGuard(): GuardFunction {
           return (req) => {
             return req.headers[secretHeaderKey] === secretHeaderValue;
           };

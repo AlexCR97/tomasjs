@@ -15,28 +15,6 @@ export function isGuardFunction(obj: unknown): obj is GuardFunction {
   return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 1;
 }
 
-export interface IGuard {
-  protect(req: IRequestContext): GuardResult | Promise<GuardResult>;
-}
-
-export function isIGuard(obj: unknown): obj is IGuard {
-  return isNotNull(obj) && isGuardFunction((obj as IGuard)["protect"]);
-}
-
-export type GuardFactoryFunction = () => GuardFunction | IGuard;
-
-export function isGuardFactoryFunction(obj: unknown): obj is GuardFactoryFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 0;
-}
-
-export interface IGuardFactory {
-  createGuard(): GuardFunction | IGuard;
-}
-
-export function isIGuardFactory(obj: unknown): obj is IGuardFactory {
-  return isNotNull(obj) && isGuardFactoryFunction((obj as IGuardFactory)["createGuard"]);
-}
-
 export function guard(guard: GuardFunction): MiddlewareFunction {
   return async (req, res, next) => {
     const result = await guard(req);

@@ -15,16 +15,6 @@ import {
   WebAppEndpointHandler,
 } from "./WebAppEndpoint";
 import {
-  GuardFactoryFunction,
-  GuardFunction,
-  IGuard,
-  IGuardFactory,
-  isGuardFactoryFunction,
-  isGuardFunction,
-  isIGuard,
-  isIGuardFactory,
-} from "@/guard";
-import {
   AuthenticationPolicyFunction,
   AuthorizationPolicyFunction,
   IAuthenticationPolicy,
@@ -66,6 +56,15 @@ import {
   isIInterceptorFactory,
   isInterceptorFunction,
 } from "./Interceptor";
+import { GuardFunction as ServerGuardFunction } from "@/guard";
+import {
+  GuardFunction,
+  IGuard,
+  IGuardFactory,
+  isGuardFunction,
+  isIGuard,
+  isIGuardFactory,
+} from "./Guard";
 
 export type WebAppPipelineBuilderDelegate = (builder: IWebAppPipelineBuilder) => void;
 
@@ -87,7 +86,6 @@ type GuardType =
   | GuardFunction
   | IGuard
   | Constructor<IGuard>
-  | GuardFactoryFunction
   | IGuardFactory
   | Constructor<IGuardFactory>;
 
@@ -132,7 +130,6 @@ export interface IWebAppPipelineBuilder {
   useGuard(guard: GuardFunction): this;
   useGuard(guard: IGuard): this;
   useGuard(guard: GuardFunction | IGuard): this;
-  useGuard(guard: GuardFactoryFunction): this;
   useGuard(guard: IGuardFactory): this;
   useGuard(guard: Constructor<IGuard>): this;
   useGuard(guard: Constructor<IGuardFactory>): this;
@@ -227,7 +224,6 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   useGuard(guard: GuardFunction): this;
   useGuard(guard: IGuard): this;
   useGuard(guard: GuardFunction | IGuard): this;
-  useGuard(guard: GuardFactoryFunction): this;
   useGuard(guard: IGuardFactory): this;
   useGuard(guard: Constructor<IGuard>): this;
   useGuard(guard: Constructor<IGuardFactory>): this;
@@ -350,7 +346,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   async build(container: IContainerBuilder): Promise<{
     middlewares: ServerMiddlewareFunction[];
     interceptors: ServerInterceptorFunction[];
-    guards: GuardFunction[];
+    guards: ServerGuardFunction[];
     authenticationPolicies: AuthenticationPolicyFunction[];
     authorizationPolicies: AuthorizationPolicyFunction[];
     endpoints: PlainEndpoint[];
@@ -459,7 +455,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     throw new InvalidOperationError();
   }
 
-  private toGuardFunction(guardType: GuardType, services: IServiceProvider): GuardFunction {
+  private toGuardFunction(guardType: GuardType, services: IServiceProvider): ServerGuardFunction {
     if (isConstructor<IGuard | IGuardFactory>(guardType)) {
       return (req) => {
         const service = services.getOrThrow<IGuard | IGuardFactory>(guardType);
@@ -468,20 +464,17 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
       };
     }
 
-    if (isGuardFactoryFunction(guardType)) {
-      const guard = guardType();
-      return this.toGuardFunction(guard, services);
-    }
-
     if (isGuardFunction(guardType)) {
       return (req) => {
-        return guardType(req);
+        const requestContext = RequestContext.from(req, services);
+        return guardType(requestContext);
       };
     }
 
     if (isIGuard(guardType)) {
       return (req) => {
-        return guardType.protect(req);
+        const requestContext = RequestContext.from(req, services);
+        return guardType.protect(requestContext);
       };
     }
 
