@@ -19,12 +19,6 @@ import {
 } from "@/server";
 import { testHttpServer } from "@/test";
 import { WebApp, WebAppBuilder } from "./WebApp";
-import {
-  IInterceptor,
-  IInterceptorFactory,
-  InterceptorFactoryFunction,
-  InterceptorFunction,
-} from "@/interceptor";
 import { GuardFactoryFunction, GuardFunction, GuardResult, IGuard, IGuardFactory } from "@/guard";
 import {
   AuthenticationPolicyFunction,
@@ -40,12 +34,13 @@ import {
 import { jwtPolicy, JwtSigner } from "@/jwt";
 import { IMiddleware, IMiddlewareFactory } from "./Middleware";
 import { ErrorHandlerFunction, IErrorHandler, IErrorHandlerFactory } from "./ErrorHandler";
+import { IInterceptor, IInterceptorFactory, InterceptorFunction } from "./Interceptor";
 
 // TODO Rename test suite
 describe("x-WebApp", () => {
   const loggerConfig: LoggerConfiguration = {
     default: {
-      level: "verbose",
+      level: "fatal",
     },
   };
 
@@ -185,6 +180,8 @@ describe("x-WebApp", () => {
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useInterceptor((req) => {
+            const logger = req.services.getOrThrow<ILogger>(LOGGER);
+            logger.debug("InterceptorFunction works!");
             req.user.authenticate();
           });
 
@@ -264,35 +261,6 @@ describe("x-WebApp", () => {
       const response = await client.get("/");
 
       expect(response.status).toBe(HTTP_STATUS_CODES.ok);
-    });
-
-    it("should use an InterceptorFactoryFunction", async () => {
-      const interceptor: InterceptorFactoryFunction = () => {
-        return async (req) => {
-          req.user.authenticate();
-        };
-      };
-
-      app = await new WebAppBuilder({ server })
-        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
-        .setupHttpPipeline((pipeline) => {
-          pipeline.useInterceptor(interceptor);
-
-          pipeline.get("/", ({ user }) => {
-            const status = user.authenticated
-              ? HTTP_STATUS_CODES.ok
-              : HTTP_STATUS_CODES.unauthorized;
-
-            return new HttpResponse({ status });
-          });
-        })
-        .build();
-
-      await app.start();
-
-      const response = await client.get("/");
-
-      expect(response.isSuccess).toBe(true);
     });
 
     it("should use an IInterceptorFactory", async () => {

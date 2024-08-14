@@ -7,16 +7,6 @@ import {
   IContainerBuilder,
   IServiceProvider,
 } from "@tomasjs/core/dependency-injection";
-import {
-  IInterceptor,
-  IInterceptorFactory,
-  InterceptorFactoryFunction,
-  InterceptorFunction,
-  isIInterceptor,
-  isIInterceptorFactory,
-  isInterceptorFactoryFunction,
-  isInterceptorFunction,
-} from "@/interceptor";
 import { isPlainEndpoint, PlainEndpoint } from "@/endpoint";
 import {
   isWebAppEndpointHandler,
@@ -67,6 +57,15 @@ import {
   isIErrorHandlerFactory,
 } from "./ErrorHandler";
 import { ErrorHandlerFunction as ServerErrorHandlerFunction } from "@/error-handler";
+import { InterceptorFunction as ServerInterceptorFunction } from "@/interceptor";
+import {
+  IInterceptor,
+  IInterceptorFactory,
+  InterceptorFunction,
+  isIInterceptor,
+  isIInterceptorFactory,
+  isInterceptorFunction,
+} from "./Interceptor";
 
 export type WebAppPipelineBuilderDelegate = (builder: IWebAppPipelineBuilder) => void;
 
@@ -81,7 +80,6 @@ type InterceptorType =
   | InterceptorFunction
   | IInterceptor
   | Constructor<IInterceptor>
-  | InterceptorFactoryFunction
   | IInterceptorFactory
   | Constructor<IInterceptorFactory>;
 
@@ -127,7 +125,6 @@ export interface IWebAppPipelineBuilder {
   useInterceptor(interceptor: InterceptorFunction): this;
   useInterceptor(interceptor: IInterceptor): this;
   useInterceptor(interceptor: InterceptorFunction | IInterceptor): this;
-  useInterceptor(interceptor: InterceptorFactoryFunction): this;
   useInterceptor(interceptor: IInterceptorFactory): this;
   useInterceptor(interceptor: Constructor<IInterceptor>): this;
   useInterceptor(interceptor: Constructor<IInterceptorFactory>): this;
@@ -212,7 +209,6 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   useInterceptor(interceptor: InterceptorFunction): this;
   useInterceptor(interceptor: IInterceptor): this;
   useInterceptor(interceptor: InterceptorFunction | IInterceptor): this;
-  useInterceptor(interceptor: InterceptorFactoryFunction): this;
   useInterceptor(interceptor: IInterceptorFactory): this;
   useInterceptor(interceptor: Constructor<IInterceptor>): this;
   useInterceptor(interceptor: Constructor<IInterceptorFactory>): this;
@@ -353,7 +349,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
 
   async build(container: IContainerBuilder): Promise<{
     middlewares: ServerMiddlewareFunction[];
-    interceptors: InterceptorFunction[];
+    interceptors: ServerInterceptorFunction[];
     guards: GuardFunction[];
     authenticationPolicies: AuthenticationPolicyFunction[];
     authorizationPolicies: AuthorizationPolicyFunction[];
@@ -364,14 +360,19 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     const services = await container.buildServiceProvider();
 
     const middlewares = this.middlewares.map((x) => this.toMiddlewareFunction(x, services));
+
     const interceptors = this.interceptors.map((x) => this.toInterceptorFunction(x, services));
+
     const guards = this.guards.map((x) => this.toGuardFunction(x, services));
+
     const authenticationPolicies = this.authenticationPolicies.map((x) =>
       this.toAuthenticationPolicyFunction(x, services)
     );
+
     const authorizationPolicies = this.authorizationPolicies.map((x) =>
       this.toAuthorizationPolicyFunction(x, services)
     );
+
     const endpoints = this.endpoints.map((x) => this.toPlainEndpoint(x, services));
 
     const errorHandler =
@@ -427,7 +428,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   private toInterceptorFunction(
     interceptorType: InterceptorType,
     services: IServiceProvider
-  ): InterceptorFunction {
+  ): ServerInterceptorFunction {
     if (isConstructor<IInterceptor | IInterceptorFactory>(interceptorType)) {
       return (req) => {
         const service = services.getOrThrow<IInterceptor | IInterceptorFactory>(interceptorType);
@@ -436,20 +437,17 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
       };
     }
 
-    if (isInterceptorFactoryFunction(interceptorType)) {
-      const interceptor = interceptorType();
-      return this.toInterceptorFunction(interceptor, services);
-    }
-
     if (isInterceptorFunction(interceptorType)) {
       return (req) => {
-        return interceptorType(req);
+        const requestContext = RequestContext.from(req, services);
+        return interceptorType(requestContext);
       };
     }
 
     if (isIInterceptor(interceptorType)) {
       return (req) => {
-        return interceptorType.intercept(req);
+        const requestContext = RequestContext.from(req, services);
+        return interceptorType.intercept(requestContext);
       };
     }
 
