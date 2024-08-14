@@ -16,12 +16,7 @@ import {
 } from "./WebAppEndpoint";
 import {
   AuthenticationPolicyFunction as ServerAuthenticationPolicyFunction,
-  AuthorizationPolicyFunction,
-  IAuthorizationPolicy,
-  IAuthorizationPolicyFactory,
-  isAuthorizationPolicyFunction,
-  isIAuthorizationPolicy,
-  isIAuthorizationPolicyFactory,
+  AuthorizationPolicyFunction as ServerAuthorizationPolicyFunction,
 } from "@/auth";
 import {
   IMiddleware,
@@ -31,7 +26,7 @@ import {
   isMiddlewareFunction,
   MiddlewareFunction,
 } from "./Middleware";
-import { RequestContext } from "./RequestContext";
+import { RequestContext, RequestContextReader } from "./RequestContext";
 import { MiddlewareFunction as ServerMiddlewareFunction } from "@/middleware";
 import {
   ErrorHandlerFunction,
@@ -62,14 +57,20 @@ import {
 } from "./Guard";
 import {
   AuthenticationPolicyFunction,
-  AuthenticationPolicyResult,
-  AuthenticationPolicyResultExtended,
   IAuthenticationPolicy,
   IAuthenticationPolicyFactory,
   isAuthenticationPolicyFunction,
   isIAuthenticationPolicy,
   isIAuthenticationPolicyFactory,
 } from "./Authentication";
+import {
+  AuthorizationPolicyFunction,
+  IAuthorizationPolicy,
+  IAuthorizationPolicyFactory,
+  isAuthorizationPolicyFunction,
+  isIAuthorizationPolicy,
+  isIAuthorizationPolicyFactory,
+} from "./Authorization";
 
 export type WebAppPipelineBuilderDelegate = (builder: IWebAppPipelineBuilder) => void;
 
@@ -353,7 +354,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     interceptors: ServerInterceptorFunction[];
     guards: ServerGuardFunction[];
     authenticationPolicies: ServerAuthenticationPolicyFunction[];
-    authorizationPolicies: AuthorizationPolicyFunction[];
+    authorizationPolicies: ServerAuthorizationPolicyFunction[];
     endpoints: PlainEndpoint[];
     errorHandler: ServerErrorHandlerFunction | null;
   }> {
@@ -530,7 +531,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   private toAuthorizationPolicyFunction(
     policyType: AuthorizationPolicyType,
     services: IServiceProvider
-  ): AuthorizationPolicyFunction {
+  ): ServerAuthorizationPolicyFunction {
     if (isConstructor<IAuthorizationPolicy | IAuthorizationPolicyFactory>(policyType)) {
       return (req) => {
         const service = services.getOrThrow<IAuthorizationPolicy | IAuthorizationPolicyFactory>(
@@ -543,13 +544,15 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
 
     if (isAuthorizationPolicyFunction(policyType)) {
       return (req) => {
-        return policyType(req);
+        const context = RequestContextReader.from(req, services);
+        return policyType(context);
       };
     }
 
     if (isIAuthorizationPolicy(policyType)) {
       return (req) => {
-        return policyType.authorize(req);
+        const context = RequestContextReader.from(req, services);
+        return policyType.authorize(context);
       };
     }
 

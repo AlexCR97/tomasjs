@@ -24,8 +24,6 @@ import {
   AuthenticationPolicyResult,
   AuthorizationPolicyFunction,
   Claims,
-  IAuthorizationPolicy,
-  IAuthorizationPolicyFactory,
   rolePolicy,
 } from "@/auth";
 import { jwtPolicy, JwtSigner } from "@/jwt";
@@ -34,6 +32,7 @@ import { ErrorHandlerFunction, IErrorHandler, IErrorHandlerFactory } from "./Err
 import { IInterceptor, IInterceptorFactory, InterceptorFunction } from "./Interceptor";
 import { GuardFunction, GuardResult, IGuard, IGuardFactory } from "./Guard";
 import { IAuthenticationPolicy, IAuthenticationPolicyFactory } from "./Authentication";
+import { IAuthorizationPolicy, IAuthorizationPolicyFactory } from "./Authorization";
 
 // TODO Rename test suite
 describe("x-WebApp", () => {
@@ -466,11 +465,14 @@ describe("x-WebApp", () => {
       app = await new WebAppBuilder({ server })
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
-          pipeline.useAuthentication(jwtPolicy({ secret }));
+          pipeline.useAuthentication((context) => {
+            const logger = context.services.getOrThrow<ILogger>(LOGGER);
+            logger.debug("AuthenticationPolicyFunction works!");
+            const policy = jwtPolicy({ secret });
+            return policy(context);
+          });
 
           pipeline.get("/", ({ services, user }) => {
-            const logger = services.getOrThrow<ILogger>(LOGGER);
-            logger.debug("AuthenticationPolicyFunction works!");
             expect(user.authenticated).toBe(true);
             expect(user.claims.toPlain()).toMatchObject(claims.toPlain());
             return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
@@ -618,7 +620,12 @@ describe("x-WebApp", () => {
         .setupHttpPipeline((pipeline) => {
           pipeline.useAuthentication(jwtPolicy({ secret }));
 
-          pipeline.useAuthorization(rolePolicy(role));
+          pipeline.useAuthorization((context) => {
+            const logger = context.services.getOrThrow<ILogger>(LOGGER);
+            logger.debug("AuthorizationPolicyFunction works!");
+            const policy = rolePolicy(role);
+            return policy(context);
+          });
 
           pipeline.get("/", ({ user }) => {
             expect(user.authenticated).toBe(true);

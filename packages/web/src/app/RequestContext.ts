@@ -53,7 +53,10 @@ export class RequestContextReader implements IRequestContextReader {
     readonly services: IServiceProvider
   ) {}
 
-  static from(context: IRequestContext): RequestContextReader {
+  static from(
+    context: ServerRequestContextReader,
+    services: IServiceProvider
+  ): RequestContextReader {
     return new RequestContextReader(
       context.method,
       context.url,
@@ -61,8 +64,8 @@ export class RequestContextReader implements IRequestContextReader {
       context.headers,
       context.query,
       context.body,
-      new UserReader(context.user),
-      context.services
+      context.user,
+      services
     );
   }
 }
