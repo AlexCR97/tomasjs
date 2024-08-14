@@ -1,7 +1,6 @@
 import { hasLength, isFunction, isNotNull } from "@/common";
 import { IResponseWriter } from "@/server";
 import { IRequestContext } from "./RequestContext";
-import { MiddlewareFunction } from "./Middleware";
 
 export type ErrorHandlerFunction = (
   req: IRequestContext,
@@ -34,14 +33,4 @@ export function isIErrorHandlerFactory(obj: unknown): obj is IErrorHandlerFactor
   function isErrorHandlerFactoryFunction(obj: unknown): boolean {
     return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 0;
   }
-}
-
-export function errorHandler(handler: ErrorHandlerFunction): MiddlewareFunction {
-  return async (req, res, next) => {
-    try {
-      await next();
-    } catch (err) {
-      return await handler(req, res, err);
-    }
-  };
 }

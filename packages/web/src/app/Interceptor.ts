@@ -1,5 +1,4 @@
 import { hasLength, isFunction, isNotNull } from "@/common";
-import { MiddlewareFunction } from "./Middleware";
 import { IRequestContext } from "./RequestContext";
 
 export type InterceptorFunction = (req: IRequestContext) => void | Promise<void>;
@@ -29,11 +28,4 @@ export function isIInterceptorFactory(obj: unknown): obj is IInterceptorFactory 
   function isInterceptorFactoryFunction(obj: unknown): obj is boolean {
     return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 0;
   }
-}
-
-export function interceptor(interceptor: InterceptorFunction): MiddlewareFunction {
-  return async (req, _, next) => {
-    await interceptor(req);
-    return await next();
-  };
 }
