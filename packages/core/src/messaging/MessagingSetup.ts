@@ -52,7 +52,7 @@ export function messaging(options?: MessagingOptions): ContainerSetupFunction {
 
             await consumer.consume(message);
 
-            logger.debug('Successfully Consumed message of type "{type}"', { type });
+            logger.debug('Successfully consumed message of type "{type}"', { type });
           } catch (err: unknown) {
             const error = err instanceof Error ? err.message : `${err}`;
 
@@ -75,7 +75,6 @@ export function messaging(options?: MessagingOptions): ContainerSetupFunction {
 
 export interface IMessagingSetup {
   withConsumer<T extends Message>(type: string, consumer: IConsumer<T>): this;
-  build(): ContainerSetupFunction;
 }
 
 export class MessagingSetup implements IMessagingSetup {

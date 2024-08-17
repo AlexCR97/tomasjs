@@ -8,11 +8,17 @@ import {
 } from "@/dependency-injection";
 import { LoggerSetup } from "@/logging";
 import { Environment, IEnvironment, environmentToken } from "./Environment";
+import { IMessagingSetup, MessagingSetup } from "@/messaging";
 
 export interface IAppBuilder<TApp extends IApp> {
   setupConfiguration(delegate: ConfigurationSetupDelegate): this;
   setupLogging(delegate: LoggerSetupDelegate): this;
+
+  // TODO Deprecate this in favor of setupMessaging
   setupBus(delegate: BusSetupDelegate): this;
+
+  setupMessaging(delegate: MessagingSetupDelegate): this;
+
   setupContainer(delegate: ContainerBuilderDelegate): this;
   build(): Promise<TApp>;
 }
@@ -31,10 +37,13 @@ export type LoggerSetupDelegate = (builder: LoggerSetup) => void;
 
 export type BusSetupDelegate = (builder: BusSetup) => void;
 
+export type MessagingSetupDelegate = (builder: IMessagingSetup) => void;
+
 export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp> {
   private readonly configurationSetupDelegates: ConfigurationSetupDelegate[] = [];
   private readonly loggerSetupDelegates: LoggerSetupDelegate[] = [];
   private readonly busSetupDelegates: BusSetupDelegate[] = [];
+  private readonly messagingSetupDelegates: MessagingSetupDelegate[] = [];
   private readonly containerBuilderDelegates: ContainerBuilderDelegate[] = [];
 
   constructor() {
@@ -61,6 +70,11 @@ export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp>
 
   setupBus(delegate: BusSetupDelegate): this {
     this.busSetupDelegates.push(delegate);
+    return this;
+  }
+
+  setupMessaging(delegate: MessagingSetupDelegate): this {
+    this.messagingSetupDelegates.push(delegate);
     return this;
   }
 
@@ -97,6 +111,15 @@ export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp>
         }
 
         builder.setup(busSetup.build());
+      })
+      .delegate((builder) => {
+        const messagingSetup = new MessagingSetup();
+
+        for (const delegate of this.messagingSetupDelegates) {
+          delegate(messagingSetup);
+        }
+
+        builder.setup(messagingSetup.build());
       })
       .delegate((builder) => {
         for (const delegate of this.containerBuilderDelegates) {

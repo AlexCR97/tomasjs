@@ -1,11 +1,10 @@
 import "reflect-metadata";
 import { ConsoleAppBuilder } from "@/console";
-import { MessagingSetup } from "./MessagingSetup";
 import { IConsumer } from "./Consumer";
 import { Message } from "./Message";
 import { IProducer, PRODUCER } from "./Producer";
 
-describe("messaging/Messages", () => {
+describe("messaging", () => {
   it("should produce and consume a message", async () => {
     const PING_MESSAGE = "ping";
 
@@ -22,8 +21,8 @@ describe("messaging/Messages", () => {
     }
 
     const app = await new ConsoleAppBuilder()
-      .setupContainer((container) => {
-        container.setup(new MessagingSetup().withConsumer(PING_MESSAGE, new MyConsumer()).build());
+      .setupMessaging((messaging) => {
+        messaging.withConsumer(PING_MESSAGE, new MyConsumer());
       })
       .addEntryPoint(({ services }) => {
         const producer = services.getOrThrow<IProducer>(PRODUCER);

@@ -5,5 +5,6 @@ export {
   IApp,
   IAppBuilder,
   LoggerSetupDelegate,
+  MessagingSetupDelegate,
 } from "./AppBuilder";
 export { Environment, IEnvironment, environmentToken } from "./Environment";

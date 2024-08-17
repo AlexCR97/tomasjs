@@ -4,8 +4,7 @@ import { IContainerBuilder, IServiceProvider } from "@/dependency-injection";
 import { InvalidOperationError, TomasError } from "@/errors";
 import { Constructor, isConstructor } from "@/system";
 
-// TODO Normalize token
-const entryPointToken = "@tomasjs/core/EntryPoint";
+const ENTRY_POINT = "@tomasjs/core/console/EntryPoint";
 
 export interface IConsoleAppBuilder extends IAppBuilder<ConsoleApp> {
   addEntryPoint(entryPoint: EntryPoint): this;
@@ -15,9 +14,9 @@ export class ConsoleAppBuilder extends AppBuilder<ConsoleApp> implements IConsol
   addEntryPoint(entryPoint: EntryPoint): this {
     this.setupContainer((services) => {
       if (isConstructor(entryPoint)) {
-        services.add("scoped", entryPointToken, entryPoint);
+        services.add("scoped", ENTRY_POINT, entryPoint);
       } else if (isEntryPointFunction(entryPoint)) {
-        services.addValue("scoped", entryPointToken, entryPoint);
+        services.addValue("scoped", ENTRY_POINT, entryPoint);
       } else {
         throw new InvalidOperationError();
       }
@@ -41,7 +40,7 @@ export class ConsoleApp implements IApp {
   ) {}
 
   async start(): Promise<void> {
-    const entryPoint = this.services.get(entryPointToken);
+    const entryPoint = this.services.get(ENTRY_POINT);
 
     if (entryPoint === undefined) {
       throw new ConsoleAppEntryPointError();
