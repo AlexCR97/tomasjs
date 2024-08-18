@@ -4,10 +4,15 @@ import { ILogger, ILoggerBuilder, LOGGER_BUILDER, NullLogger } from "@/logging";
 import { IConsumer } from "./Consumer";
 import { Message } from "./Message";
 import { IProducer, PRODUCER, Producer } from "./Producer";
+import { IProcessor, PROCESSOR } from "./Processor";
+import { ISender, Sender, SENDER } from "./Sender";
 
 export type MessagingOptions = {
+  processors?: ProcessorOption[];
   consumers?: ConsumerOption[];
 };
+
+export type ProcessorOption = { type: string; processor: IProcessor<Message, unknown> };
 
 export type ConsumerOption = { type: string; consumer: IConsumer<Message> };
 
@@ -24,6 +29,17 @@ export function messaging(options?: MessagingOptions): ContainerSetupFunction {
       }
 
       return loggerBuilder.withCategory(MESSAGING_LOGGER).build();
+    });
+
+    if (options && options.processors && options.processors.length > 0) {
+      for (const { type, processor } of options.processors) {
+        container.add("scoped", PROCESSOR(type), processor);
+      }
+    }
+
+    container.add<ISender>("singleton", SENDER, (services: IServiceProvider) => {
+      const logger = services.getOrThrow<ILogger>(MESSAGING_LOGGER);
+      return new Sender(logger, services);
     });
 
     container.add<EventEmitter>("singleton", EVENT_EMITTER, (services: IServiceProvider) => {
@@ -74,11 +90,25 @@ export function messaging(options?: MessagingOptions): ContainerSetupFunction {
 }
 
 export interface IMessagingSetup {
+  withProcessor<TMessage extends Message, TResponse>(
+    type: string,
+    processor: IProcessor<TMessage, TResponse>
+  ): this;
+
   withConsumer<T extends Message>(type: string, consumer: IConsumer<T>): this;
 }
 
 export class MessagingSetup implements IMessagingSetup {
+  private readonly processors: ProcessorOption[] = [];
   private readonly consumers: ConsumerOption[] = [];
+
+  withProcessor<TMessage extends Message, TResponse>(
+    type: string,
+    processor: IProcessor<TMessage, TResponse>
+  ): this {
+    this.processors.push({ type, processor });
+    return this;
+  }
 
   withConsumer<T extends Message>(type: string, consumer: IConsumer<T>): this {
     this.consumers.push({ type, consumer });
@@ -87,6 +117,7 @@ export class MessagingSetup implements IMessagingSetup {
 
   build(): ContainerSetupFunction {
     return messaging({
+      processors: this.processors,
       consumers: this.consumers,
     });
   }
