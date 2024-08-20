@@ -40,6 +40,6 @@ export class Sender implements ISender {
 
   private resolveProcessor<TResponse>(type: string): IProcessor<Message, TResponse> {
     const token = PROCESSOR(type);
-    return this.services.getOrThrow<IProcessor<Message, TResponse>>(token);
+    return this.services.lastOrThrow<IProcessor<Message, TResponse>>(token);
   }
 }

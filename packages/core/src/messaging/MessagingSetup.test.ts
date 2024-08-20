@@ -6,6 +6,7 @@ import { IProducer, PRODUCER } from "./Producer";
 import { ISender, SENDER } from "./Sender";
 import { IProcessor } from "./Processor";
 import { timeout } from "@/system";
+import { ILogger, LOGGER } from "@/logging";
 
 describe("messaging", () => {
   it("should produce a message and consume it", async () => {
@@ -31,6 +32,54 @@ describe("messaging", () => {
         const producer = services.getOrThrow<IProducer>(PRODUCER);
         const message = new PingMessage();
         producer.produce(message);
+      })
+      .build();
+
+    await app.start();
+  });
+
+  it("should produce a message and consume it with multiple consumers", async () => {
+    const COUNT_EVENT = "CountEvent";
+
+    class CountEvent implements Message {
+      readonly type: string = COUNT_EVENT;
+
+      private _count = 0;
+
+      get count() {
+        return this._count;
+      }
+
+      increase() {
+        this._count += 1;
+      }
+    }
+
+    class CountEventConsumerA implements IConsumer<CountEvent> {
+      consume(message: CountEvent): void {
+        message.increase();
+      }
+    }
+
+    class CountEventConsumerB implements IConsumer<CountEvent> {
+      consume(message: CountEvent): void {
+        message.increase();
+      }
+    }
+
+    const app = await new ConsoleAppBuilder()
+      .setupMessaging((messaging) => {
+        messaging
+          .withConsumer(COUNT_EVENT, new CountEventConsumerA())
+          .withConsumer(COUNT_EVENT, new CountEventConsumerB());
+      })
+      .addEntryPoint(({ services }) => {
+        const logger = services.getOrThrow<ILogger>(LOGGER);
+        const producer = services.getOrThrow<IProducer>(PRODUCER);
+        const message = new CountEvent();
+        producer.produce(message);
+        logger.debug("Count: {count}", { count: message.count });
+        expect(message.count).toBe(2);
       })
       .build();
 
@@ -102,6 +151,42 @@ describe("messaging", () => {
         const response = await sender.send<Pong>(message);
         expect(response.pingedAt).toBe(message.requestedAt);
         expect(response.respondedAt).toBeGreaterThan(response.pingedAt);
+      })
+      .build();
+
+    await app.start();
+  });
+
+  it("should process a message with the last registered processor", async () => {
+    const MESSAGE_TYPE = "MessageType";
+
+    class MyMessage implements Message {
+      readonly type: string = MESSAGE_TYPE;
+    }
+
+    class MyMessageProcessorA implements IProcessor<MyMessage, string> {
+      async process(message: MyMessage): Promise<string> {
+        return "A";
+      }
+    }
+
+    class MyMessageProcessorB implements IProcessor<MyMessage, string> {
+      async process(message: MyMessage): Promise<string> {
+        return "B";
+      }
+    }
+
+    const app = await new ConsoleAppBuilder()
+      .setupMessaging((messaging) => {
+        messaging
+          .withProcessor(MESSAGE_TYPE, new MyMessageProcessorA())
+          .withProcessor(MESSAGE_TYPE, new MyMessageProcessorB());
+      })
+      .addEntryPoint(async ({ services }) => {
+        const sender = services.getOrThrow<ISender>(SENDER);
+        const message = new MyMessage();
+        const response = await sender.send<string>(message);
+        expect(response).toBe("B");
       })
       .build();
 
