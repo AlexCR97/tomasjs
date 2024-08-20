@@ -5,10 +5,11 @@ import { Message } from "./Message";
 import { IProducer, PRODUCER } from "./Producer";
 import { ISender, SENDER } from "./Sender";
 import { IProcessor } from "./Processor";
+import { timeout } from "@/system";
 
 describe("messaging", () => {
   it("should produce a message and consume it", async () => {
-    const PING_MESSAGE = "ping";
+    const PING_MESSAGE = "PingEvent";
 
     class PingMessage implements Message {
       readonly type: string = PING_MESSAGE;
@@ -36,8 +37,41 @@ describe("messaging", () => {
     await app.start();
   });
 
-  it("should send a message and receive a response", async () => {
-    const PING_MESSAGE = "ping";
+  it("should process a message", async () => {
+    const PING_MESSAGE = "Ping";
+
+    class Ping implements Message {
+      readonly type: string = PING_MESSAGE;
+      readonly requestedAt: number = Date.now();
+    }
+
+    let pinged = false;
+    class PingProcessor implements IProcessor<Ping> {
+      async process(message: Ping): Promise<void> {
+        pinged = true;
+      }
+    }
+
+    const app = await new ConsoleAppBuilder()
+      .setupMessaging((messaging) => {
+        messaging.withProcessor(PING_MESSAGE, new PingProcessor());
+      })
+      .addEntryPoint(async ({ services }) => {
+        const sender = services.getOrThrow<ISender>(SENDER);
+        const message = new Ping();
+
+        const response = await sender.send(message);
+        expect(response).toBeUndefined();
+
+        expect(pinged).toBe(true);
+      })
+      .build();
+
+    await app.start();
+  });
+
+  it("should process a message and receive a response", async () => {
+    const PING_MESSAGE = "PingPong";
 
     class Ping implements Message {
       readonly type: string = PING_MESSAGE;
@@ -62,6 +96,9 @@ describe("messaging", () => {
       .addEntryPoint(async ({ services }) => {
         const sender = services.getOrThrow<ISender>(SENDER);
         const message = new Ping();
+
+        await timeout(100); // Make time so the "respondedAt" field makes sense
+
         const response = await sender.send<Pong>(message);
         expect(response.pingedAt).toBe(message.requestedAt);
         expect(response.respondedAt).toBeGreaterThan(response.pingedAt);

@@ -6,13 +6,13 @@ import { IServiceProvider } from "@/dependency-injection";
 export const SENDER = "@tomasjs/core/messaging/Sender";
 
 export interface ISender {
-  send<TResponse>(message: Message): Promise<TResponse>;
+  send<TResponse = void>(message: Message): Promise<TResponse>;
 }
 
 export class Sender implements ISender {
   constructor(private readonly logger: ILogger, private readonly services: IServiceProvider) {}
 
-  async send<TResponse>(message: Message): Promise<TResponse> {
+  async send<TResponse = void>(message: Message): Promise<TResponse> {
     try {
       this.logger.debug('Processing message of type "{type}": {message}', {
         type: message.type,

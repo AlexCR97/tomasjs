@@ -7,3 +7,4 @@ export { dot } from "./dot";
 export { flatten } from "./flatten";
 export { merge } from "./merge";
 export { pipe } from "./pipe";
+export { timeout } from "./timeout";
