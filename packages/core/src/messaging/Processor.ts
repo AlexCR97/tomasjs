@@ -2,7 +2,8 @@ import { IServiceProvider } from "@/dependency-injection";
 import { Constructor, isFunction, isNotNull } from "@/system";
 import { Message } from "./Message";
 
-export const PROCESSOR = (type: string) => `@tomasjs/core/messaging/Processor/${type}` as const;
+export const PROCESSOR = <T extends string>(type: T) =>
+  `@tomasjs/core/messaging/Processor/${type}` as const;
 
 export type ProcessorType<TMessage extends Message, TResponse> =
   | ProcessorFunction<TMessage, TResponse>

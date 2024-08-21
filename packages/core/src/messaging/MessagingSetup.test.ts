@@ -39,48 +39,170 @@ describe("messaging", () => {
     await app.start();
   });
 
-  it("should produce a message and consume it with multiple consumers", async () => {
-    const COUNT_EVENT = "CountEvent";
+  it("should produce a message and consume it with multiple function consumers", async () => {
+    const EVENT_TYPE = "FunctionEvent";
 
-    class CountEvent implements Message {
-      readonly type: string = COUNT_EVENT;
+    class MyEvent implements Message {
+      readonly type: string = EVENT_TYPE;
 
-      private _count = 0;
+      private _result: string[] = [];
 
-      get count() {
-        return this._count;
+      get result(): readonly string[] {
+        return this._result;
       }
 
-      increase() {
-        this._count += 1;
-      }
-    }
-
-    class CountEventConsumerA implements IConsumer<CountEvent> {
-      consume(message: CountEvent): void {
-        message.increase();
-      }
-    }
-
-    class CountEventConsumerB implements IConsumer<CountEvent> {
-      consume(message: CountEvent): void {
-        message.increase();
+      push(item: string) {
+        this._result.push(item);
       }
     }
 
     const app = await new ConsoleAppBuilder()
       .setupMessaging((messaging) => {
         messaging
-          .withConsumer(COUNT_EVENT, new CountEventConsumerA())
-          .withConsumer(COUNT_EVENT, new CountEventConsumerB());
+          .withConsumer<MyEvent>(EVENT_TYPE, ({ services, message }) => {
+            const logger = services.getOrThrow<ILogger>(LOGGER);
+            message.push("A");
+            logger.debug("[ConsumerA] Snapshot: {snapshot}", { snapshot: message.result });
+          })
+          .withConsumer<MyEvent>(EVENT_TYPE, ({ services, message }) => {
+            const logger = services.getOrThrow<ILogger>(LOGGER);
+            message.push("B");
+            logger.debug("[ConsumerB] Snapshot: {snapshot}", { snapshot: message.result });
+          })
+          .withConsumer<MyEvent>(EVENT_TYPE, ({ services, message }) => {
+            const logger = services.getOrThrow<ILogger>(LOGGER);
+            message.push("C");
+            logger.debug("[ConsumerC] Snapshot: {snapshot}", { snapshot: message.result });
+          })
+          .withConsumer<MyEvent>(EVENT_TYPE, ({ message }) => {
+            expect(message.result).toMatchObject(["A", "B", "C"]);
+          });
       })
       .addEntryPoint(({ services }) => {
-        const logger = services.getOrThrow<ILogger>(LOGGER);
         const producer = services.getOrThrow<IProducer>(PRODUCER);
-        const message = new CountEvent();
-        producer.produce(message);
-        logger.debug("Count: {count}", { count: message.count });
-        expect(message.count).toBe(2);
+        producer.produce(new MyEvent());
+      })
+      .build();
+
+    await app.start();
+  });
+
+  it("should produce a message and consume it with multiple class consumers", async () => {
+    const EVENT_TYPE = "ClassEvent";
+
+    class MyEvent implements Message {
+      readonly type: string = EVENT_TYPE;
+
+      private _result: string[] = [];
+
+      get result(): readonly string[] {
+        return this._result;
+      }
+
+      push(item: string) {
+        this._result.push(item);
+      }
+    }
+
+    class ConsumerA implements IConsumer<MyEvent> {
+      consume(message: MyEvent): void {
+        message.push("A");
+      }
+    }
+
+    class ConsumerB implements IConsumer<MyEvent> {
+      consume(message: MyEvent): void {
+        message.push("B");
+      }
+    }
+
+    class ConsumerC implements IConsumer<MyEvent> {
+      consume(message: MyEvent): void {
+        message.push("C");
+      }
+    }
+
+    class ConsumerD implements IConsumer<MyEvent> {
+      consume(message: MyEvent): void {
+        expect(message.result).toMatchObject(["A", "B", "C"]);
+      }
+    }
+
+    const app = await new ConsoleAppBuilder()
+      .setupMessaging((messaging) => {
+        messaging
+          .withConsumer(EVENT_TYPE, new ConsumerA())
+          .withConsumer(EVENT_TYPE, new ConsumerB())
+          .withConsumer(EVENT_TYPE, new ConsumerC())
+          .withConsumer(EVENT_TYPE, new ConsumerD());
+      })
+      .addEntryPoint(({ services }) => {
+        const producer = services.getOrThrow<IProducer>(PRODUCER);
+        producer.produce(new MyEvent());
+      })
+      .build();
+
+    await app.start();
+  });
+
+  it("should produce a message and consume it with multiple service consumers", async () => {
+    const EVENT_TYPE = "ClassEvent";
+
+    class MyEvent implements Message {
+      readonly type: string = EVENT_TYPE;
+
+      private _result: string[] = [];
+
+      get result(): readonly string[] {
+        return this._result;
+      }
+
+      push(item: string) {
+        this._result.push(item);
+      }
+    }
+
+    class ConsumerA implements IConsumer<MyEvent> {
+      constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+      consume(message: MyEvent): void {
+        message.push("A");
+        this.logger.debug("[ConsumerA] Snapshot: {snapshot}", { snapshot: message.result });
+      }
+    }
+
+    class ConsumerB implements IConsumer<MyEvent> {
+      constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+      consume(message: MyEvent): void {
+        message.push("B");
+        this.logger.debug("[ConsumerB] Snapshot: {snapshot}", { snapshot: message.result });
+      }
+    }
+
+    class ConsumerC implements IConsumer<MyEvent> {
+      constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+      consume(message: MyEvent): void {
+        message.push("C");
+        this.logger.debug("[ConsumerC] Snapshot: {snapshot}", { snapshot: message.result });
+      }
+    }
+
+    class ConsumerD implements IConsumer<MyEvent> {
+      consume(message: MyEvent): void {
+        expect(message.result).toMatchObject(["A", "B", "C"]);
+      }
+    }
+
+    const app = await new ConsoleAppBuilder()
+      .setupMessaging((messaging) => {
+        messaging
+          .withConsumer(EVENT_TYPE, ConsumerA)
+          .withConsumer(EVENT_TYPE, ConsumerB)
+          .withConsumer(EVENT_TYPE, ConsumerC)
+          .withConsumer(EVENT_TYPE, ConsumerD);
+      })
+      .addEntryPoint(({ services }) => {
+        const producer = services.getOrThrow<IProducer>(PRODUCER);
+        producer.produce(new MyEvent());
       })
       .build();
 

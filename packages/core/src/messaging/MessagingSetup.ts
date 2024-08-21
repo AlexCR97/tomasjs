@@ -1,7 +1,14 @@
 import { EventEmitter } from "node:events";
 import { ContainerSetupFunction, IServiceProvider } from "@/dependency-injection";
 import { ILogger, ILoggerBuilder, LOGGER_BUILDER, NullLogger } from "@/logging";
-import { IConsumer } from "./Consumer";
+import {
+  CONSUMER,
+  ConsumerFunction,
+  ConsumerType,
+  IConsumer,
+  isConsumerFunction,
+  isIConsumer,
+} from "./Consumer";
 import { Message } from "./Message";
 import { IProducer, PRODUCER, Producer } from "./Producer";
 import {
@@ -14,6 +21,8 @@ import {
 } from "./Processor";
 import { ISender, Sender, SENDER } from "./Sender";
 import { isConstructor } from "@/system";
+import { groupBy } from "@/system/groupBy";
+import { tick } from "@/system/tick";
 
 export type MessagingOptions = {
   processors?: ProcessorOption[];
@@ -22,7 +31,7 @@ export type MessagingOptions = {
 
 export type ProcessorOption = { type: string; processor: ProcessorType<Message, unknown> };
 
-export type ConsumerOption = { type: string; consumer: IConsumer<Message> };
+export type ConsumerOption = { type: string; consumer: ConsumerType<Message> };
 
 export function messaging(options?: MessagingOptions): ContainerSetupFunction {
   return (container) => {
@@ -40,9 +49,10 @@ export function messaging(options?: MessagingOptions): ContainerSetupFunction {
     });
 
     if (options && options.processors && options.processors.length > 0) {
-      for (const { type, processor } of options.processors) {
-        const PROCESSOR_CONSTRUCTOR = (type: string) => `${PROCESSOR(type)}/Constructor` as const;
+      const PROCESSOR_CONSTRUCTOR = <T extends string>(type: T) =>
+        `${PROCESSOR(type)}/Constructor` as const;
 
+      for (const { type, processor } of options.processors) {
         if (isConstructor(processor)) {
           container.add("scoped", PROCESSOR_CONSTRUCTOR(type), processor);
         }
@@ -88,38 +98,85 @@ export function messaging(options?: MessagingOptions): ContainerSetupFunction {
       const logger = services.getOrThrow<ILogger>(MESSAGING_LOGGER);
 
       if (options?.consumers && options.consumers.length > 0) {
-        for (const { type, consumer } of options.consumers) {
-          registerConsumer({ emitter, logger, type, consumer });
+        const CONSUMER_CONSTRUCTOR = <T extends string>(type: T) =>
+          `${CONSUMER(type)}/Constructor` as const;
+
+        const consumerOptionsByType = groupBy(options.consumers, "type");
+        const messageTypes = Object.keys(consumerOptionsByType);
+
+        for (const type of messageTypes) {
+          const consumerOptions = consumerOptionsByType[type];
+          const consumerTypes = consumerOptions.map((x) => x.consumer);
+
+          for (const consumer of consumerTypes) {
+            if (isConstructor(consumer)) {
+              container.add("scoped", CONSUMER_CONSTRUCTOR(type), consumer);
+            }
+
+            container.add<IConsumer<Message>>(
+              "scoped",
+              CONSUMER(type),
+              (services: IServiceProvider) => {
+                if (isConstructor(consumer)) {
+                  return services.getOrThrow<IConsumer<Message>>(CONSUMER_CONSTRUCTOR(type));
+                }
+
+                if (isIConsumer(consumer)) {
+                  return consumer;
+                }
+
+                if (isConsumerFunction(consumer)) {
+                  class ConsumerDelegate implements IConsumer<Message> {
+                    constructor(private readonly consumer: ConsumerFunction<Message>) {}
+                    async consume(message: Message): Promise<void> {
+                      await this.consumer({ services, message });
+                    }
+                  }
+
+                  return new ConsumerDelegate(consumer);
+                }
+
+                throw new TypeError(`Unknown consumer type: ${consumer}`);
+              }
+            );
+          }
+
+          emitter.on(type, async (message) => {
+            // NOTE: Purposefully wait until the next tick in the event loop.
+            // This way, all events are consumed asynchronously after being producing.
+            await tick();
+
+            const consumers = services.find<IConsumer<Message>>(CONSUMER(type));
+
+            logger.debug('Found {count} consumers for message of type "{type}"', {
+              count: consumers.length,
+              type,
+            });
+
+            for (const consumer of consumers) {
+              try {
+                logger.debug('Consuming message of type "{type}": {message}', {
+                  type,
+                  message,
+                });
+
+                await consumer.consume(message);
+
+                logger.debug('Successfully consumed message of type "{type}"', { type });
+              } catch (err: unknown) {
+                const error = err instanceof Error ? err.message : `${err}`;
+
+                logger.error('Failed to consume message of type "{type}": {error}', {
+                  type,
+                  error,
+                });
+              }
+            }
+          });
         }
       }
 
       return emitter;
-
-      function registerConsumer(options: {
-        emitter: EventEmitter;
-        logger: ILogger;
-        type: string;
-        consumer: IConsumer<Message>;
-      }) {
-        const { emitter, logger, type, consumer } = options;
-
-        emitter.on(type, async (message) => {
-          try {
-            logger.debug('Consuming message of type "{type}": {message}', { type, message });
-
-            await consumer.consume(message);
-
-            logger.debug('Successfully consumed message of type "{type}"', { type });
-          } catch (err: unknown) {
-            const error = err instanceof Error ? err.message : `${err}`;
-
-            logger.error('Failed to consume message of type "{type}": {error}', {
-              type,
-              error,
-            });
-          }
-        });
-      }
     });
 
     container.add<IProducer>("singleton", PRODUCER, (services: IServiceProvider) => {
@@ -136,7 +193,7 @@ export interface IMessagingSetup {
     processor: ProcessorType<TMessage, TResponse>
   ): this;
 
-  withConsumer<T extends Message>(type: string, consumer: IConsumer<T>): this;
+  withConsumer<T extends Message>(type: string, consumer: ConsumerType<T>): this;
 }
 
 export class MessagingSetup implements IMessagingSetup {
@@ -151,8 +208,8 @@ export class MessagingSetup implements IMessagingSetup {
     return this;
   }
 
-  withConsumer<T extends Message>(type: string, consumer: IConsumer<T>): this {
-    this.consumers.push({ type, consumer });
+  withConsumer<T extends Message>(type: string, consumer: ConsumerType<T>): this {
+    this.consumers.push({ type, consumer: consumer as ConsumerType<Message> });
     return this;
   }
 
