@@ -4,15 +4,23 @@ import { ILogger, ILoggerBuilder, LOGGER_BUILDER, NullLogger } from "@/logging";
 import { IConsumer } from "./Consumer";
 import { Message } from "./Message";
 import { IProducer, PRODUCER, Producer } from "./Producer";
-import { IProcessor, PROCESSOR } from "./Processor";
+import {
+  IProcessor,
+  isIProcessor,
+  isProcessorFunction,
+  PROCESSOR,
+  ProcessorFunction,
+  ProcessorType,
+} from "./Processor";
 import { ISender, Sender, SENDER } from "./Sender";
+import { isConstructor } from "@/system";
 
 export type MessagingOptions = {
   processors?: ProcessorOption[];
   consumers?: ConsumerOption[];
 };
 
-export type ProcessorOption = { type: string; processor: IProcessor<Message, unknown> };
+export type ProcessorOption = { type: string; processor: ProcessorType<Message, unknown> };
 
 export type ConsumerOption = { type: string; consumer: IConsumer<Message> };
 
@@ -33,7 +41,40 @@ export function messaging(options?: MessagingOptions): ContainerSetupFunction {
 
     if (options && options.processors && options.processors.length > 0) {
       for (const { type, processor } of options.processors) {
-        container.add("scoped", PROCESSOR(type), processor);
+        const PROCESSOR_CONSTRUCTOR = (type: string) => `${PROCESSOR(type)}/Constructor` as const;
+
+        if (isConstructor(processor)) {
+          container.add("scoped", PROCESSOR_CONSTRUCTOR(type), processor);
+        }
+
+        container.add<IProcessor<Message, unknown>>(
+          "scoped",
+          PROCESSOR(type),
+          (services: IServiceProvider) => {
+            if (isConstructor(processor)) {
+              return services.lastOrThrow<IProcessor<Message, unknown>>(
+                PROCESSOR_CONSTRUCTOR(type)
+              );
+            }
+
+            if (isIProcessor(processor)) {
+              return processor;
+            }
+
+            if (isProcessorFunction(processor)) {
+              class ProcessorDelegate implements IProcessor<Message, unknown> {
+                constructor(private readonly processor: ProcessorFunction<Message, unknown>) {}
+                process(message: Message): Promise<unknown> {
+                  return this.processor({ services, message });
+                }
+              }
+
+              return new ProcessorDelegate(processor);
+            }
+
+            throw new TypeError(`Unknown processor type: ${processor}`);
+          }
+        );
       }
     }
 
@@ -92,7 +133,7 @@ export function messaging(options?: MessagingOptions): ContainerSetupFunction {
 export interface IMessagingSetup {
   withProcessor<TMessage extends Message, TResponse>(
     type: string,
-    processor: IProcessor<TMessage, TResponse>
+    processor: ProcessorType<TMessage, TResponse>
   ): this;
 
   withConsumer<T extends Message>(type: string, consumer: IConsumer<T>): this;
@@ -104,9 +145,9 @@ export class MessagingSetup implements IMessagingSetup {
 
   withProcessor<TMessage extends Message, TResponse>(
     type: string,
-    processor: IProcessor<TMessage, TResponse>
+    processor: ProcessorType<TMessage, TResponse>
   ): this {
-    this.processors.push({ type, processor });
+    this.processors.push({ type, processor: processor as ProcessorType<Message, unknown> });
     return this;
   }
 

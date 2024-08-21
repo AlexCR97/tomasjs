@@ -7,6 +7,7 @@ import { ISender, SENDER } from "./Sender";
 import { IProcessor } from "./Processor";
 import { timeout } from "@/system";
 import { ILogger, LOGGER } from "@/logging";
+import { inject } from "@/dependency-injection";
 
 describe("messaging", () => {
   it("should produce a message and consume it", async () => {
@@ -187,6 +188,138 @@ describe("messaging", () => {
         const message = new MyMessage();
         const response = await sender.send<string>(message);
         expect(response).toBe("B");
+      })
+      .build();
+
+    await app.start();
+  });
+
+  it("should process a message using a function", async () => {
+    const MESSAGE_TYPE = "FunctionMessage";
+
+    class MyMessage implements Message {
+      readonly type: string = MESSAGE_TYPE;
+    }
+
+    class MyResponse {}
+
+    const app = await new ConsoleAppBuilder()
+      .setupMessaging((messaging) => {
+        messaging.withProcessor(MESSAGE_TYPE, async ({ services, message }) => {
+          const logger = services.getOrThrow<ILogger>(LOGGER);
+          logger.debug("Message type: {type}", { type: message.type });
+          return new MyResponse();
+        });
+      })
+      .addEntryPoint(async ({ services }) => {
+        const sender = services.getOrThrow<ISender>(SENDER);
+        const message = new MyMessage();
+        const response = await sender.send(message);
+        expect(response).toBeInstanceOf(MyResponse);
+      })
+      .build();
+
+    await app.start();
+  });
+
+  it("should process a message using a class", async () => {
+    const MESSAGE_TYPE = "ClassMessage";
+
+    class MyMessage implements Message {
+      readonly type: string = MESSAGE_TYPE;
+    }
+
+    class MyResponse {}
+
+    class MyProcessor implements IProcessor<MyMessage, MyResponse> {
+      async process(message: MyMessage): Promise<MyResponse> {
+        return new MyResponse();
+      }
+    }
+
+    const app = await new ConsoleAppBuilder()
+      .setupMessaging((messaging) => {
+        messaging.withProcessor(MESSAGE_TYPE, new MyProcessor());
+      })
+      .addEntryPoint(async ({ services }) => {
+        const sender = services.getOrThrow<ISender>(SENDER);
+        const message = new MyMessage();
+        const response = await sender.send(message);
+        expect(response).toBeInstanceOf(MyResponse);
+      })
+      .build();
+
+    await app.start();
+  });
+
+  it("should process a message using a service", async () => {
+    const MESSAGE_TYPE = "ServiceMessage";
+
+    class MyMessage implements Message {
+      readonly type: string = MESSAGE_TYPE;
+    }
+
+    class MyResponse {}
+
+    class MyProcessor implements IProcessor<MyMessage, MyResponse> {
+      constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+      async process(message: MyMessage): Promise<MyResponse> {
+        this.logger.debug("Message type: {type}", { type: message.type });
+        return new MyResponse();
+      }
+    }
+
+    const app = await new ConsoleAppBuilder()
+      .setupMessaging((messaging) => {
+        messaging.withProcessor(MESSAGE_TYPE, MyProcessor);
+      })
+      .addEntryPoint(async ({ services }) => {
+        const sender = services.getOrThrow<ISender>(SENDER);
+        const message = new MyMessage();
+        const response = await sender.send(message);
+        expect(response).toBeInstanceOf(MyResponse);
+      })
+      .build();
+
+    await app.start();
+  });
+
+  it("should process a message using the last service", async () => {
+    const MESSAGE_TYPE = "ServiceMessage";
+
+    class MyMessage implements Message {
+      readonly type: string = MESSAGE_TYPE;
+    }
+
+    class MyResponse {
+      constructor(readonly result: string) {}
+    }
+
+    class MyProcessorA implements IProcessor<MyMessage, MyResponse> {
+      async process(message: MyMessage): Promise<MyResponse> {
+        return new MyResponse("A");
+      }
+    }
+
+    class MyProcessorB implements IProcessor<MyMessage, MyResponse> {
+      async process(message: MyMessage): Promise<MyResponse> {
+        return new MyResponse("B");
+      }
+    }
+
+    const app = await new ConsoleAppBuilder()
+      .setupMessaging((messaging) => {
+        messaging
+          .withProcessor(MESSAGE_TYPE, MyProcessorA)
+          .withProcessor(MESSAGE_TYPE, MyProcessorB);
+      })
+      .addEntryPoint(async ({ services }) => {
+        const sender = services.getOrThrow<ISender>(SENDER);
+        const message = new MyMessage();
+        const response = await sender.send<MyResponse>(message);
+        expect(response).toBeInstanceOf(MyResponse);
+        expect(response.result).toMatch("B");
       })
       .build();
 
