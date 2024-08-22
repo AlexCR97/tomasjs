@@ -1,5 +1,4 @@
 import { ConfigurationSetup, IConfiguration } from "@/configuration";
-import { BusSetup } from "@/cqrs";
 import {
   ContainerBuilder,
   ContainerBuilderDelegate,
@@ -13,12 +12,7 @@ import { IMessagingSetup, MessagingSetup } from "@/messaging";
 export interface IAppBuilder<TApp extends IApp> {
   setupConfiguration(delegate: ConfigurationSetupDelegate): this;
   setupLogging(delegate: LoggerSetupDelegate): this;
-
-  // TODO Deprecate this in favor of setupMessaging
-  setupBus(delegate: BusSetupDelegate): this;
-
   setupMessaging(delegate: MessagingSetupDelegate): this;
-
   setupContainer(delegate: ContainerBuilderDelegate): this;
   build(): Promise<TApp>;
 }
@@ -35,14 +29,11 @@ export type ConfigurationSetupDelegate = (builder: ConfigurationSetup) => void;
 
 export type LoggerSetupDelegate = (builder: LoggerSetup) => void;
 
-export type BusSetupDelegate = (builder: BusSetup) => void;
-
 export type MessagingSetupDelegate = (builder: IMessagingSetup) => void;
 
 export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp> {
   private readonly configurationSetupDelegates: ConfigurationSetupDelegate[] = [];
   private readonly loggerSetupDelegates: LoggerSetupDelegate[] = [];
-  private readonly busSetupDelegates: BusSetupDelegate[] = [];
   private readonly messagingSetupDelegates: MessagingSetupDelegate[] = [];
   private readonly containerBuilderDelegates: ContainerBuilderDelegate[] = [];
 
@@ -65,11 +56,6 @@ export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp>
 
   setupLogging(delegate: LoggerSetupDelegate): this {
     this.loggerSetupDelegates.push(delegate);
-    return this;
-  }
-
-  setupBus(delegate: BusSetupDelegate): this {
-    this.busSetupDelegates.push(delegate);
     return this;
   }
 
@@ -102,15 +88,6 @@ export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp>
         }
 
         builder.setup(setup.build());
-      })
-      .delegate((builder) => {
-        const busSetup = new BusSetup();
-
-        for (const delegate of this.busSetupDelegates) {
-          delegate(busSetup);
-        }
-
-        builder.setup(busSetup.build());
       })
       .delegate((builder) => {
         const messagingSetup = new MessagingSetup();

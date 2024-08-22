@@ -1,6 +1,5 @@
 export {
   AppBuilder,
-  BusSetupDelegate,
   ConfigurationSetupDelegate,
   IApp,
   IAppBuilder,
