@@ -1,11 +1,11 @@
 import "reflect-metadata";
-import { ConsoleAppBuilder } from "@/console";
+import { ConsoleAppBuilder, IEntryPoint } from "@/console";
 import { IConsumer } from "./Consumer";
 import { Message } from "./Message";
 import { IProducer, PRODUCER } from "./Producer";
 import { ISender, SENDER } from "./Sender";
 import { IProcessor } from "./Processor";
-import { timeout } from "@/system";
+import { Guid, timeout } from "@/system";
 import { ILogger, LOGGER } from "@/logging";
 import { inject } from "@/dependency-injection";
 
@@ -443,6 +443,62 @@ describe("messaging", () => {
         expect(response).toBeInstanceOf(MyResponse);
         expect(response.result).toMatch("B");
       })
+      .build();
+
+    await app.start();
+  });
+
+  it("should be useful for real-world scenarios", async () => {
+    class Main implements IEntryPoint {
+      constructor(@inject(SENDER) private readonly sender: ISender) {}
+
+      async main(args: string[]): Promise<void> {
+        const request = new UserSignUpRequest("test@domain.com", "123456");
+        const response = await this.sender.send<UserSignedUpResponse>(request);
+        expect(response).toBeInstanceOf(UserSignedUpResponse);
+      }
+    }
+
+    class UserSignUpRequest implements Message {
+      type: string = UserSignUpRequest.name;
+      constructor(readonly email: string, readonly password: string) {}
+    }
+
+    class UserSignedUpResponse {
+      constructor(readonly userId: Guid) {}
+    }
+
+    class UserSignedUpEvent implements Message {
+      type: string = UserSignedUpEvent.name;
+      constructor(readonly userId: Guid) {}
+    }
+
+    class UserSignUpRequestProcessor
+      implements IProcessor<UserSignUpRequest, UserSignedUpResponse>
+    {
+      constructor(@inject(PRODUCER) private readonly producer: IProducer) {}
+
+      async process(message: UserSignUpRequest): Promise<UserSignedUpResponse> {
+        const userId = Guid.new();
+        const response = new UserSignedUpResponse(userId);
+        this.producer.produce(new UserSignedUpEvent(userId));
+        return response;
+      }
+    }
+
+    class UserSignedUpEventConsumer implements IConsumer<UserSignedUpEvent> {
+      consume(message: UserSignedUpEvent): void | Promise<void> {
+        expect(message).toBeInstanceOf(UserSignedUpEvent);
+      }
+    }
+
+    const app = await new ConsoleAppBuilder()
+      .setupMessaging((messaging) => {
+        messaging
+          .withProcessor(UserSignUpRequest.name, UserSignUpRequestProcessor)
+          .withConsumer(UserSignedUpEvent.name, UserSignedUpEventConsumer);
+      })
+      .addEntryPoint(Main)
       .build();
 
     await app.start();
