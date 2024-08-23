@@ -7,8 +7,12 @@ import {
   IContainerBuilder,
   IServiceProvider,
 } from "@tomasjs/core/dependency-injection";
-import { isPlainEndpoint, PlainEndpoint } from "@/endpoint";
+import { EndpointOptions as ServerEndpointOptions, PlainEndpoint } from "@/endpoint";
 import {
+  Endpoint,
+  EndpointOptions,
+  isEndpoint,
+  isWebAppEndpoint,
   isWebAppEndpointHandler,
   WebAppEndpoint,
   WebAppEndpointContext,
@@ -155,8 +159,8 @@ export interface IWebAppPipelineBuilder {
   useAuthorization(policy: Constructor<IAuthorizationPolicyFactory>): this;
 
   // TODO Implement
-  // useEndpoint(endpoint: WebAppEndpointBuilder): this;
   useEndpoint(endpoint: WebAppEndpoint): this;
+  useEndpoint(endpoint: Endpoint): this;
   useEndpoint(method: HttpMethod, path: string, handler: WebAppEndpointHandler): this;
 
   // Endpoint shorthands
@@ -278,11 +282,19 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   }
 
   useEndpoint(endpoint: WebAppEndpoint): this;
+  useEndpoint(endpoint: Endpoint): this;
   useEndpoint(method: HttpMethod, path: string, handler: WebAppEndpointHandler): this;
   useEndpoint(...args: unknown[]): this {
-    if (args.length === 1 && isPlainEndpoint(args[0])) {
-      const endpoint: WebAppEndpoint = args[0];
-      return this.useWebAppEndpoint(endpoint);
+    if (args.length === 1) {
+      if (isEndpoint(args[0])) {
+        const endpoint: Endpoint = args[0];
+        return this.useWebAppEndpoint(endpoint.toPlain());
+      }
+
+      if (isWebAppEndpoint(args[0])) {
+        const endpoint: WebAppEndpoint = args[0];
+        return this.useWebAppEndpoint(endpoint);
+      }
     }
 
     if (
@@ -572,7 +584,28 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
         const newContext = WebAppEndpointContext.from(context, services);
         return await endpoint.handler(newContext);
       },
-      options: undefined, // TODO Map options
+      options: this.toPlainEndpointOptions(endpoint.options, services),
+    };
+  }
+
+  private toPlainEndpointOptions(
+    options: EndpointOptions | undefined,
+    services: IServiceProvider
+  ): ServerEndpointOptions | undefined {
+    if (options === undefined) {
+      return undefined;
+    }
+
+    return {
+      middlewares: options.middlewares?.map((x) => this.toMiddlewareFunction(x, services)),
+      interceptors: options.interceptors?.map((x) => this.toInterceptorFunction(x, services)),
+      guards: options.guards?.map((x) => this.toGuardFunction(x, services)),
+      authentication: options.authentication
+        ? this.toAuthenticationPolicyFunction(options.authentication, services)
+        : undefined,
+      authorization: options.authorization
+        ? this.toAuthorizationPolicyFunction(options.authorization, services)
+        : undefined,
     };
   }
 

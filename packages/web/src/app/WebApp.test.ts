@@ -33,6 +33,7 @@ import { IInterceptor, IInterceptorFactory, InterceptorFunction } from "./Interc
 import { GuardFunction, GuardResult, IGuard, IGuardFactory } from "./Guard";
 import { IAuthenticationPolicy, IAuthenticationPolicyFactory } from "./Authentication";
 import { IAuthorizationPolicy, IAuthorizationPolicyFactory } from "./Authorization";
+import { Endpoint } from "./WebAppEndpoint";
 
 // TODO Rename test suite
 describe("x-WebApp", () => {
@@ -873,6 +874,95 @@ describe("x-WebApp", () => {
 
       const responseContent = await response.body.readData();
       expect(responseContent).toMatchObject(testParams);
+    });
+
+    it("should apply middleware at the endpoint level", async () => {
+      const aggregation: string[] = [];
+
+      function myMiddleware(prefix: string): MiddlewareFunction {
+        return (req, res, next) => {
+          aggregation.push(`${prefix}-middleware`);
+          return next();
+        };
+      }
+
+      function myInterceptor(prefix: string): InterceptorFunction {
+        return (req) => {
+          aggregation.push(`${prefix}-interceptor`);
+        };
+      }
+
+      function myGuard(prefix: string): GuardFunction {
+        return (req) => {
+          aggregation.push(`${prefix}-guard`);
+          return true;
+        };
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.use(myMiddleware("global"));
+
+          pipeline.useInterceptor(myInterceptor("global"));
+
+          pipeline.useGuard(myGuard("global"));
+
+          pipeline.useEndpoint(
+            Endpoint.get("/a", () => {
+              return new HttpResponse({
+                status: HTTP_STATUS_CODES.ok,
+                content: JsonContent.from(aggregation),
+              });
+            })
+              .use(myMiddleware("endpoint-a"))
+              .useInterceptor(myInterceptor("endpoint-a"))
+              .useGuard(myGuard("endpoint-a"))
+          );
+
+          pipeline.useEndpoint(
+            Endpoint.get("/b", () => {
+              return new HttpResponse({
+                status: HTTP_STATUS_CODES.ok,
+                content: JsonContent.from(aggregation),
+              });
+            })
+              .use(myMiddleware("endpoint-b"))
+              .useInterceptor(myInterceptor("endpoint-b"))
+              .useGuard(myGuard("endpoint-b"))
+          );
+        })
+        .build();
+
+      await app.start();
+
+      const responseA = await client.getJson<string[]>("/a");
+
+      expect(responseA).toMatchObject([
+        "global-middleware",
+        "global-interceptor",
+        "global-guard",
+        "endpoint-a-middleware",
+        "endpoint-a-interceptor",
+        "endpoint-a-guard",
+      ]);
+
+      const responseB = await client.getJson<string[]>("/b");
+
+      expect(responseB).toMatchObject([
+        "global-middleware",
+        "global-interceptor",
+        "global-guard",
+        "endpoint-a-middleware",
+        "endpoint-a-interceptor",
+        "endpoint-a-guard",
+        "global-middleware",
+        "global-interceptor",
+        "global-guard",
+        "endpoint-b-middleware",
+        "endpoint-b-interceptor",
+        "endpoint-b-guard",
+      ]);
     });
   });
 
