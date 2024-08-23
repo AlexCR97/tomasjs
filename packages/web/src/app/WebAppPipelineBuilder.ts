@@ -84,6 +84,7 @@ import {
   isIAuthorizationPolicy,
   isIAuthorizationPolicyFactory,
 } from "./Authorization";
+import { isInRange } from "@/common";
 
 export type WebAppPipelineBuilderDelegate = (builder: IWebAppPipelineBuilder) => void;
 
@@ -125,19 +126,22 @@ export interface IWebAppPipelineBuilder {
   useAuthorization(policy: Constructor<IAuthorizationPolicy>): this;
   useAuthorization(policy: Constructor<IAuthorizationPolicyFactory>): this;
 
-  // TODO Implement
   useEndpoint(endpoint: PlainEndpoint): this;
   useEndpoint(endpoint: Endpoint): this;
-  useEndpoint(method: HttpMethod, path: string, handler: EndpointHandler): this;
+  useEndpoint(
+    method: HttpMethod,
+    path: string,
+    handler: EndpointHandler,
+    options?: EndpointOptions
+  ): this;
 
-  // Endpoint shorthands
-  get(path: string, handler: EndpointHandler): this;
-  post(path: string, handler: EndpointHandler): this;
-  put(path: string, handler: EndpointHandler): this;
-  patch(path: string, handler: EndpointHandler): this;
-  delete(path: string, handler: EndpointHandler): this;
-  head(path: string, handler: EndpointHandler): this;
-  options(path: string, handler: EndpointHandler): this;
+  get(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  post(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  put(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  patch(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  delete(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  head(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  options(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
 
   useErrorHandler(errorHandler: ErrorHandlerFunction): this;
   useErrorHandler(errorHandler: IErrorHandler): this;
@@ -250,7 +254,12 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
 
   useEndpoint(endpoint: PlainEndpoint): this;
   useEndpoint(endpoint: Endpoint): this;
-  useEndpoint(method: HttpMethod, path: string, handler: EndpointHandler): this;
+  useEndpoint(
+    method: HttpMethod,
+    path: string,
+    handler: EndpointHandler,
+    options?: EndpointOptions
+  ): this;
   useEndpoint(...args: unknown[]): this {
     if (args.length === 1) {
       if (isEndpoint(args[0])) {
@@ -265,7 +274,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     }
 
     if (
-      args.length === 3 &&
+      isInRange(args.length, 3, 4) &&
       isHttpMethod(args[0]) &&
       typeof args[1] === "string" &&
       isEndpointHandler(args[2])
@@ -273,10 +282,11 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
       const method: HttpMethod = args[0];
       const path: string = args[1];
       const handler: EndpointHandler = args[2];
-      return this.useWebAppEndpoint({ method, path, handler });
+      const options: EndpointOptions = args[3] as EndpointOptions;
+      return this.useWebAppEndpoint({ method, path, handler, options });
     }
 
-    throw new InvalidOperationError();
+    throw new TypeError(`Unknown endpoint type: ${args}`);
   }
 
   private useWebAppEndpoint(endpoint: PlainEndpoint): this {
@@ -284,32 +294,32 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     return this;
   }
 
-  get(path: string, handler: EndpointHandler): this {
-    return this.useEndpoint("GET", path, handler);
+  get(path: string, handler: EndpointHandler, options?: EndpointOptions): this {
+    return this.useEndpoint("GET", path, handler, options);
   }
 
-  post(path: string, handler: EndpointHandler): this {
-    return this.useEndpoint("POST", path, handler);
+  post(path: string, handler: EndpointHandler, options?: EndpointOptions): this {
+    return this.useEndpoint("POST", path, handler, options);
   }
 
-  put(path: string, handler: EndpointHandler): this {
-    return this.useEndpoint("PUT", path, handler);
+  put(path: string, handler: EndpointHandler, options?: EndpointOptions): this {
+    return this.useEndpoint("PUT", path, handler, options);
   }
 
-  patch(path: string, handler: EndpointHandler): this {
-    return this.useEndpoint("PATCH", path, handler);
+  patch(path: string, handler: EndpointHandler, options?: EndpointOptions): this {
+    return this.useEndpoint("PATCH", path, handler, options);
   }
 
-  delete(path: string, handler: EndpointHandler): this {
-    return this.useEndpoint("DELETE", path, handler);
+  delete(path: string, handler: EndpointHandler, options?: EndpointOptions): this {
+    return this.useEndpoint("DELETE", path, handler, options);
   }
 
-  head(path: string, handler: EndpointHandler): this {
-    return this.useEndpoint("HEAD", path, handler);
+  head(path: string, handler: EndpointHandler, options?: EndpointOptions): this {
+    return this.useEndpoint("HEAD", path, handler, options);
   }
 
-  options(path: string, handler: EndpointHandler): this {
-    return this.useEndpoint("OPTIONS", path, handler);
+  options(path: string, handler: EndpointHandler, options?: EndpointOptions): this {
+    return this.useEndpoint("OPTIONS", path, handler, options);
   }
 
   useErrorHandler(errorHandler: ErrorHandlerFunction): this;
@@ -437,10 +447,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
       return this.toInterceptorFunction(interceptor, services);
     }
 
-    // TODO Use constructor with message once available
-    const err = new InvalidOperationError();
-    err.message = `Unknown interceptor type: ${interceptorType}`;
-    throw err;
+    throw new TypeError(`Unknown interceptor type: ${interceptorType}`);
   }
 
   private toGuardFunction(guardType: GuardType, services: IServiceProvider): ServerGuardFunction {

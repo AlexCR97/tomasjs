@@ -802,11 +802,18 @@ describe("x-WebApp", () => {
       app = await new WebAppBuilder({ server })
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
-          pipeline.useEndpoint("GET", "/", ({ services }) => {
-            const logger = services.getOrThrow<ILogger>(LOGGER);
-            logger.debug("Endpoint with shorthand works!");
-            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
-          });
+          pipeline.useEndpoint(
+            "GET",
+            "/",
+            ({ services }) => {
+              const logger = services.getOrThrow<ILogger>(LOGGER);
+              logger.debug("Endpoint with shorthand works!");
+              return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+            },
+            {
+              guards: [() => true],
+            }
+          );
         })
         .build();
 
@@ -821,11 +828,17 @@ describe("x-WebApp", () => {
       app = await new WebAppBuilder({ server })
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
-          pipeline.get("/", ({ services }) => {
-            const logger = services.getOrThrow<ILogger>(LOGGER);
-            logger.debug("Endpoint with GET shorthand works!");
-            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
-          });
+          pipeline.get(
+            "/",
+            ({ services }) => {
+              const logger = services.getOrThrow<ILogger>(LOGGER);
+              logger.debug("Endpoint with GET shorthand works!");
+              return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+            },
+            {
+              guards: [() => true],
+            }
+          );
         })
         .build();
 
