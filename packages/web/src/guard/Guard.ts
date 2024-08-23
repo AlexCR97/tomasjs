@@ -16,7 +16,7 @@ export function isGuardFunction(obj: unknown): obj is GuardFunction {
 }
 
 export function guard(guard: GuardFunction): MiddlewareFunction {
-  return async (req, res, next) => {
+  return async ({ req, res, next }) => {
     const result = await guard(req);
 
     if (result === true) {

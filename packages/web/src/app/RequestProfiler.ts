@@ -67,7 +67,7 @@ export function requestProfiler(
   const logBody: boolean = options.body ?? false;
   const padding: number = options.padding ?? DEFAULT_PADDING;
 
-  return async (req, res, next) => {
+  return async ({ req, res, next }) => {
     logger.info("HTTP {method} {path} executing...", {
       method: req.method,
       path: req.path,

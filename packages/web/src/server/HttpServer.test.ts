@@ -143,17 +143,17 @@ describe("Server", () => {
     let counterForAfter = 0;
 
     await server
-      .use(async (req, res, next) => {
+      .use(async ({ next }) => {
         counterForBefore++;
         await next();
         counterForAfter++;
       })
-      .use(async (req, res, next) => {
+      .use(async ({ next }) => {
         counterForBefore++;
         await next();
         counterForAfter++;
       })
-      .use(async (req, res, next) => {
+      .use(async ({ next }) => {
         counterForBefore++;
         await next();
         counterForAfter++;
@@ -174,7 +174,7 @@ describe("Server", () => {
 
   it("should provide RequestContext in the middleware", async () => {
     await server
-      .use((req, _, next) => {
+      .use(({ req, next }) => {
         expect(req).toBeInstanceOf(RequestContext);
         return next();
       })
@@ -185,7 +185,7 @@ describe("Server", () => {
 
   it("should provide ResponseWriter in the middleware", async () => {
     await server
-      .use((_, res, next) => {
+      .use(({ res, next }) => {
         expect(res).toBeInstanceOf(ResponseWriter);
         return next();
       })

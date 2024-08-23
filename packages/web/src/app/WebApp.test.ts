@@ -12,7 +12,12 @@ import { ILogger, LOGGER, LoggerConfiguration } from "@tomasjs/core/logging";
 import { testHttpServer } from "@/test";
 import { WebApp, WebAppBuilder } from "./WebApp";
 import { jwtPolicy, JwtSigner } from "@/jwt";
-import { IMiddleware, IMiddlewareFactory, MiddlewareFunction, NextFunction } from "./Middleware";
+import {
+  IMiddleware,
+  IMiddlewareFactory,
+  MiddlewareContext,
+  MiddlewareFunction,
+} from "./Middleware";
 import { ErrorHandlerFunction, IErrorHandler, IErrorHandlerFactory } from "./ErrorHandler";
 import { IInterceptor, IInterceptorFactory, InterceptorFunction } from "./Interceptor";
 import { GuardFunction, GuardResult, IGuard, IGuardFactory } from "./Guard";
@@ -60,7 +65,7 @@ describe("x-WebApp", () => {
       app = await new WebAppBuilder({ server })
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
-          pipeline.use(async (req, res, next) => {
+          pipeline.use(async ({ req, res }) => {
             const logger = req.services.getOrThrow<ILogger>(LOGGER);
             logger.debug("MiddlewareFunction works!");
             return await res.withStatus(HTTP_STATUS_CODES.ok).send();
@@ -77,7 +82,7 @@ describe("x-WebApp", () => {
 
     it("should use an IMiddleware", async () => {
       class MyMiddleware implements IMiddleware {
-        async run(req: IRequestContext, res: IResponseWriter, next: NextFunction): Promise<void> {
+        async run({ res }: MiddlewareContext): Promise<void> {
           return await res.withStatus(HTTP_STATUS_CODES.ok).send();
         }
       }
@@ -99,8 +104,7 @@ describe("x-WebApp", () => {
     it("should use an IMiddleware service", async () => {
       class MyMiddleware implements IMiddleware {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
-
-        async run(req: IRequestContext, res: IResponseWriter, next: NextFunction): Promise<void> {
+        async run({ res }: MiddlewareContext): Promise<void> {
           this.logger.debug("IMiddleware service works!");
           return await res.withStatus(HTTP_STATUS_CODES.ok).send();
         }
@@ -123,7 +127,7 @@ describe("x-WebApp", () => {
     it("should use an IMiddlewareFactory", async () => {
       class MyMiddlewareFactory implements IMiddlewareFactory {
         createMiddleware(): MiddlewareFunction | IMiddleware {
-          return async (req, res, next) => {
+          return async ({ req, res, next }) => {
             return await res.withStatus(HTTP_STATUS_CODES.ok).send();
           };
         }
@@ -148,7 +152,7 @@ describe("x-WebApp", () => {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
 
         createMiddleware(): MiddlewareFunction | IMiddleware {
-          return async (req, res, next) => {
+          return async ({ req, res, next }) => {
             this.logger.debug("It works!");
             return await res.withStatus(HTTP_STATUS_CODES.ok).send();
           };
@@ -890,7 +894,7 @@ describe("x-WebApp", () => {
       const aggregation: string[] = [];
 
       function myMiddleware(prefix: string): MiddlewareFunction {
-        return (req, res, next) => {
+        return ({ req, res, next }) => {
           aggregation.push(`${prefix}-middleware`);
           return next();
         };
@@ -1019,7 +1023,7 @@ describe("x-WebApp", () => {
 
       class MyMiddleware implements IMiddleware {
         constructor(private readonly prefix: string) {}
-        run(req: IRequestContext, res: IResponseWriter, next: NextFunction): void | Promise<void> {
+        async run({ next }: MiddlewareContext): Promise<void> {
           aggregation.push(`${this.prefix}-middleware`);
           return next();
         }
@@ -1154,7 +1158,7 @@ describe("x-WebApp", () => {
 
       class MyMiddleware implements IMiddleware {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
-        run(req: IRequestContext, res: IResponseWriter, next: NextFunction): void | Promise<void> {
+        run({ next }: MiddlewareContext): void | Promise<void> {
           this.logger.debug("Middleware works");
           aggregation.push(`middleware`);
           return next();
@@ -1295,7 +1299,7 @@ describe("x-WebApp", () => {
       class MyMiddleware implements IMiddlewareFactory {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
         createMiddleware(): MiddlewareFunction | IMiddleware {
-          return (req, res, next) => {
+          return ({ req, res, next }) => {
             this.logger.debug("Middleware works");
             aggregation.push(`middleware`);
             return next();

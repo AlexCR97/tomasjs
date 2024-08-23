@@ -13,7 +13,7 @@ export function isErrorHandlerFunction(obj: unknown): obj is ErrorHandlerFunctio
 }
 
 export function errorHandler(handler: ErrorHandlerFunction): MiddlewareFunction {
-  return async (req, res, next) => {
+  return async ({ req, res, next }) => {
     try {
       await next();
     } catch (err) {

@@ -24,14 +24,18 @@ export class RecursiveHttpPipeline implements IHttpPipeline {
   }
 
   private async runPipeline(
-    request: IRequestContext,
-    response: IResponseWriter,
+    req: IRequestContext,
+    res: IResponseWriter,
     current: MiddlewareFunction,
     nextIndex: number
   ): Promise<void> {
-    return await current(request, response, async () => {
-      const next = this.middlewares.at(nextIndex) ?? this.terminalMiddleware;
-      return await this.runPipeline(request, response, next, nextIndex + 1);
+    return await current({
+      req,
+      res,
+      next: async () => {
+        const next = this.middlewares.at(nextIndex) ?? this.terminalMiddleware;
+        return await this.runPipeline(req, res, next, nextIndex + 1);
+      },
     });
   }
 }
@@ -48,15 +52,15 @@ export class IterativeHttpPipeline implements IHttpPipeline {
     };
   }
 
-  async run(request: IRequestContext, response: IResponseWriter): Promise<void> {
+  async run(req: IRequestContext, res: IResponseWriter): Promise<void> {
     let currentIndex = 0;
 
     const next = async () => {
       if (currentIndex < this.middlewares.length) {
         const current = this.middlewares[currentIndex++];
-        await current(request, response, next);
+        await current({ req, res, next });
       } else {
-        await this.terminalMiddleware(request, response, async () => {});
+        await this.terminalMiddleware({ req, res, next: async () => {} });
       }
     };
 

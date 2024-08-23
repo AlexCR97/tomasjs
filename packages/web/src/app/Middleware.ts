@@ -1,9 +1,8 @@
-import { isNotNull, hasLength, isInRange, isFunction } from "@/common";
+import { isNotNull, hasLength, isFunction, isInRange } from "@/common";
 import { IResponseWriter } from "@/server";
 import { IRequestContext } from "./RequestContext";
 import { Constructor } from "@tomasjs/core/system";
-
-export type NextFunction = () => Promise<void>;
+import { IServiceProvider } from "@tomasjs/core/dependency-injection";
 
 export type MiddlewareType =
   | MiddlewareFunction
@@ -12,18 +11,23 @@ export type MiddlewareType =
   | IMiddlewareFactory
   | Constructor<IMiddlewareFactory>;
 
-export type MiddlewareFunction = (
-  req: IRequestContext,
-  res: IResponseWriter,
-  next: NextFunction
-) => void | Promise<void>;
+export type NextFunction = () => Promise<void>;
+
+export type MiddlewareFunction = (context: MiddlewareContext) => void | Promise<void>;
+
+export type MiddlewareContext = {
+  req: IRequestContext;
+  res: IResponseWriter;
+  next: NextFunction;
+  services: IServiceProvider;
+};
 
 export function isMiddlewareFunction(obj: unknown): obj is MiddlewareFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 3);
+  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
 }
 
 export interface IMiddleware {
-  run(req: IRequestContext, res: IResponseWriter, next: NextFunction): void | Promise<void>;
+  run(context: MiddlewareContext): void | Promise<void>;
 }
 
 export function isIMiddleware(obj: unknown): obj is IMiddleware {

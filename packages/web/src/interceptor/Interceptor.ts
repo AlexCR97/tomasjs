@@ -9,7 +9,7 @@ export function isInterceptorFunction(obj: unknown): obj is InterceptorFunction 
 }
 
 export function interceptor(interceptor: InterceptorFunction): MiddlewareFunction {
-  return async (req, _, next) => {
+  return async ({ req, next }) => {
     await interceptor(req);
     return await next();
   };

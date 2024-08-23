@@ -33,7 +33,7 @@ describe("Endpoint", () => {
   it("should apply middleware at the endpoint level", async () => {
     let aggregation: number[] = [];
 
-    const first: MiddlewareFunction = (req, res, next) => {
+    const first: MiddlewareFunction = ({ next }) => {
       aggregation.push(1);
       return next();
     };

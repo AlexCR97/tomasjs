@@ -51,7 +51,7 @@ export class HttpPipelineBuilder implements IHttpPipelineBuilder {
       .send();
   };
 
-  private readonly terminalMiddleware: MiddlewareFunction = async (_, res) => {
+  private readonly terminalMiddleware: MiddlewareFunction = async ({ res }) => {
     if (res.sent) {
       return;
     }

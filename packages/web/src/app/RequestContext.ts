@@ -12,7 +12,7 @@ export interface IRequestContext extends ServerRequestContext {
 }
 
 export interface IRequestContextReader extends ServerRequestContextReader {
-  readonly services: IServiceProvider;
+  readonly services: IServiceProvider; // TODO Remove this
 }
 
 export class RequestContext implements IRequestContext {

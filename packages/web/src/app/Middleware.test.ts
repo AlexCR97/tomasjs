@@ -1,61 +1,47 @@
-import { IRequestContext, IResponseWriter } from "@/server";
+import { HTTP_STATUS_CODES } from "@tomasjs/core/http";
 import {
   IMiddleware,
   IMiddlewareFactory,
   isIMiddleware,
   isIMiddlewareFactory,
   isMiddlewareFunction,
+  MiddlewareContext,
   MiddlewareFunction,
-  NextFunction,
 } from "./Middleware";
-import { HTTP_STATUS_CODES } from "@tomasjs/core/http";
 
 describe("Middleware", () => {
   describe(isMiddlewareFunction.name, () => {
     it("should return true for named functions", () => {
-      const arrowFunction: MiddlewareFunction = (req, res, next) => {};
+      const arrowFunction: MiddlewareFunction = ({ req, res, next }) => {};
       expect(isMiddlewareFunction(arrowFunction)).toBe(true);
 
-      const inlineFunction: MiddlewareFunction = function (req, res, next) {};
+      const inlineFunction: MiddlewareFunction = function ({ req, res, next }) {};
       expect(isMiddlewareFunction(inlineFunction)).toBe(true);
 
-      function declaredFunction(req: IRequestContext, res: IResponseWriter, next: NextFunction) {}
+      function declaredFunction(context: MiddlewareContext) {}
       expect(isMiddlewareFunction(declaredFunction)).toBe(true);
     });
 
     it("should return true for anonymous functions", () => {
-      expect(
-        isMiddlewareFunction((req: IRequestContext, res: IResponseWriter, next: NextFunction) => {})
-      ).toBe(true);
+      expect(isMiddlewareFunction((context: MiddlewareContext) => {})).toBe(true);
 
-      expect(
-        isMiddlewareFunction(function (
-          req: IRequestContext,
-          res: IResponseWriter,
-          next: NextFunction
-        ) {})
-      ).toBe(true);
+      expect(isMiddlewareFunction(function (context: MiddlewareContext) {})).toBe(true);
     });
 
     it("should return true for functions with params in range", () => {
       expect(isMiddlewareFunction(() => {})).toBe(true);
-      expect(isMiddlewareFunction((req: IRequestContext) => {})).toBe(true);
-      expect(isMiddlewareFunction((req: IRequestContext, res: IResponseWriter) => {})).toBe(true);
+      expect(isMiddlewareFunction((context: MiddlewareContext) => {})).toBe(true);
     });
 
     it("should return false for functions with params out of range", () => {
-      expect(
-        isMiddlewareFunction(
-          (req: IRequestContext, res: IResponseWriter, next: NextFunction, invalid: any) => {}
-        )
-      ).toBe(false);
+      expect(isMiddlewareFunction((context: MiddlewareContext, invalid: any) => {})).toBe(false);
     });
   });
 
   describe(isIMiddleware.name, () => {
     it("should return true for a middleware instance", () => {
       class TestMiddleware implements IMiddleware {
-        run(req: IRequestContext, res: IResponseWriter, next: NextFunction): void {}
+        run(context: MiddlewareContext): void {}
       }
 
       const middleware = new TestMiddleware();
@@ -64,7 +50,7 @@ describe("Middleware", () => {
 
     it("should return true for a middleware instance with an async method", () => {
       class TestMiddleware implements IMiddleware {
-        async run(req: IRequestContext, res: IResponseWriter, next: NextFunction): Promise<void> {
+        async run({ res }: MiddlewareContext): Promise<void> {
           return await res.withStatus(HTTP_STATUS_CODES.ok).send();
         }
       }
@@ -75,7 +61,7 @@ describe("Middleware", () => {
 
     it("should return true for a middleware object with an arrow function", () => {
       const middleware: IMiddleware = {
-        run: (req, res, next) => {},
+        run: ({ req, res, next }) => {},
       };
 
       expect(isIMiddleware(middleware)).toBe(true);
@@ -83,7 +69,7 @@ describe("Middleware", () => {
 
     it("should return true for a middleware object with a declared function", () => {
       const middleware: IMiddleware = {
-        run(req, res, next) {},
+        run({ req, res, next }: MiddlewareContext) {},
       };
 
       expect(isIMiddleware(middleware)).toBe(true);
@@ -94,7 +80,7 @@ describe("Middleware", () => {
     it("should return true for an instance", () => {
       class TestMiddleware implements IMiddlewareFactory {
         createMiddleware(): MiddlewareFunction {
-          return (req, res, next) => {};
+          return ({ req, res, next }) => {};
         }
       }
 
@@ -105,7 +91,7 @@ describe("Middleware", () => {
     it("should return true for an object with an arrow function", () => {
       const middleware: IMiddlewareFactory = {
         createMiddleware: () => {
-          return (req, res, next) => {};
+          return ({ req, res, next }) => {};
         },
       };
 
@@ -115,7 +101,7 @@ describe("Middleware", () => {
     it("should return true for an object with a declared function", () => {
       const middleware: IMiddlewareFactory = {
         createMiddleware() {
-          return (req, res, next) => {};
+          return ({ req, res, next }) => {};
         },
       };
 

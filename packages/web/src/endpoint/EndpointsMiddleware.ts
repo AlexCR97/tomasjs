@@ -4,7 +4,7 @@ import { MiddlewareFunction, MiddlewareAggregate } from "@/middleware";
 import { IRequestContext, IResponseWriter, UrlParser, HttpPipeline, HttpResponse } from "@/server";
 
 export function endpoints(endpoints: PlainEndpoint[]): MiddlewareFunction {
-  return async (req, res, next) => {
+  return async ({ req, res, next }) => {
     const httpResponse = await handleRequest(req, res);
 
     if (httpResponse !== null) {

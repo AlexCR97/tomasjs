@@ -44,7 +44,7 @@ describe.skip("HttpPipeline", () => {
     const server = await testHttpServer();
 
     for (let i = 0; i < middlewareCount; i++) {
-      server.use(async (req, res, next) => await next());
+      server.use(async ({ next }) => await next());
     }
 
     return server;

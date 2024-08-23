@@ -387,24 +387,24 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     services: IServiceProvider
   ): ServerMiddlewareFunction {
     if (isConstructor<IMiddleware | IMiddlewareFactory>(middlewareType)) {
-      return (req, res, next) => {
+      return ({ req, res, next }) => {
         const service = services.getOrThrow<IMiddleware | IMiddlewareFactory>(middlewareType);
         const middleware = this.toMiddlewareFunction(service, services);
-        return middleware(req, res, next);
+        return middleware({ req, res, next });
       };
     }
 
     if (isMiddlewareFunction(middlewareType)) {
-      return (req, res, next) => {
+      return ({ req, res, next }) => {
         const requestContext = RequestContext.from(req, services);
-        return middlewareType(requestContext, res, next);
+        return middlewareType({ req: requestContext, res, next, services });
       };
     }
 
     if (isIMiddleware(middlewareType)) {
-      return (req, res, next) => {
+      return ({ req, res, next }) => {
         const requestContext = RequestContext.from(req, services);
-        return middlewareType.run(requestContext, res, next);
+        return middlewareType.run({ req: requestContext, res, next, services });
       };
     }
 
