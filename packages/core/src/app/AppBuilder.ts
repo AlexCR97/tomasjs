@@ -1,18 +1,18 @@
 import { ConfigurationSetup, IConfiguration } from "@/configuration";
-import { BusSetup } from "@/cqrs";
 import {
   ContainerBuilder,
   ContainerBuilderDelegate,
   IContainerBuilder,
   IServiceProvider,
 } from "@/dependency-injection";
-import { LoggerSetup } from "@/logging";
+import { ILoggerSetup, LoggerSetup } from "@/logging";
 import { Environment, IEnvironment, environmentToken } from "./Environment";
+import { IMessagingSetup, MessagingSetup } from "@/messaging";
 
 export interface IAppBuilder<TApp extends IApp> {
   setupConfiguration(delegate: ConfigurationSetupDelegate): this;
   setupLogging(delegate: LoggerSetupDelegate): this;
-  setupBus(delegate: BusSetupDelegate): this;
+  setupMessaging(delegate: MessagingSetupDelegate): this;
   setupContainer(delegate: ContainerBuilderDelegate): this;
   build(): Promise<TApp>;
 }
@@ -27,14 +27,14 @@ export interface IApp {
 
 export type ConfigurationSetupDelegate = (builder: ConfigurationSetup) => void;
 
-export type LoggerSetupDelegate = (builder: LoggerSetup) => void;
+export type LoggerSetupDelegate = (builder: ILoggerSetup) => void;
 
-export type BusSetupDelegate = (builder: BusSetup) => void;
+export type MessagingSetupDelegate = (builder: IMessagingSetup) => void;
 
 export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp> {
   private readonly configurationSetupDelegates: ConfigurationSetupDelegate[] = [];
   private readonly loggerSetupDelegates: LoggerSetupDelegate[] = [];
-  private readonly busSetupDelegates: BusSetupDelegate[] = [];
+  private readonly messagingSetupDelegates: MessagingSetupDelegate[] = [];
   private readonly containerBuilderDelegates: ContainerBuilderDelegate[] = [];
 
   constructor() {
@@ -59,8 +59,8 @@ export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp>
     return this;
   }
 
-  setupBus(delegate: BusSetupDelegate): this {
-    this.busSetupDelegates.push(delegate);
+  setupMessaging(delegate: MessagingSetupDelegate): this {
+    this.messagingSetupDelegates.push(delegate);
     return this;
   }
 
@@ -90,13 +90,13 @@ export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp>
         builder.setup(setup.build());
       })
       .delegate((builder) => {
-        const busSetup = new BusSetup();
+        const messagingSetup = new MessagingSetup();
 
-        for (const delegate of this.busSetupDelegates) {
-          delegate(busSetup);
+        for (const delegate of this.messagingSetupDelegates) {
+          delegate(messagingSetup);
         }
 
-        builder.setup(busSetup.build());
+        builder.setup(messagingSetup.build());
       })
       .delegate((builder) => {
         for (const delegate of this.containerBuilderDelegates) {

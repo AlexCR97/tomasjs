@@ -8,6 +8,8 @@ import {
   RawConfigurationSource,
 } from "./ConfigurationSource";
 
+export const CONFIGURATION = "@tomasjs/core/Configuration";
+
 export class ConfigurationSetup {
   private readonly sources: ConfigurationSource[] = [];
 
@@ -35,10 +37,7 @@ export class ConfigurationSetup {
 
       const configuration = new Configuration(roots);
 
-      container.add("singleton", configurationToken, configuration);
+      container.add("singleton", CONFIGURATION, configuration);
     };
   }
 }
-
-// TODO Change for Symbol
-export const configurationToken = "@tomasjs/core/Configuration";
