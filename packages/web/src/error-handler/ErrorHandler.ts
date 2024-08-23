@@ -1,15 +1,17 @@
-import { hasLength, isFunction, isNotNull } from "@/common";
+import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
 import { MiddlewareFunction } from "@/middleware";
 import { IRequestContext, IResponseWriter } from "@/server";
 
-export type ErrorHandlerFunction = (
-  req: IRequestContext,
-  res: IResponseWriter,
-  err: unknown
-) => void | Promise<void>;
+export type ErrorHandlerFunction = (context: ErrorHandlerContext) => void | Promise<void>;
+
+export type ErrorHandlerContext = {
+  req: IRequestContext;
+  res: IResponseWriter;
+  err: unknown;
+};
 
 export function isErrorHandlerFunction(obj: unknown): obj is ErrorHandlerFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 3;
+  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
 }
 
 export function errorHandler(handler: ErrorHandlerFunction): MiddlewareFunction {
@@ -17,7 +19,7 @@ export function errorHandler(handler: ErrorHandlerFunction): MiddlewareFunction 
     try {
       await next();
     } catch (err) {
-      return await handler(req, res, err);
+      return await handler({ req, res, err });
     }
   };
 }

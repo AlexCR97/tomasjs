@@ -594,22 +594,22 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     services: IServiceProvider
   ): ServerErrorHandlerFunction {
     if (isConstructor<IErrorHandler | IErrorHandlerFactory>(errorHandlerType)) {
-      return (req, res, err) => {
+      return ({ req, res, err }) => {
         const service = services.getOrThrow<IErrorHandler | IErrorHandlerFactory>(errorHandlerType);
         const errorHandler = this.toErrorHandlerFunction(service, services);
-        return errorHandler(req, res, err);
+        return errorHandler({ req, res, err });
       };
     }
 
     if (isErrorHandlerFunction(errorHandlerType)) {
-      return (req, res, err) => {
+      return ({ req, res, err }) => {
         const requestContext = RequestContext.from(req, services);
-        return errorHandlerType(requestContext, res, err);
+        return errorHandlerType({ req: requestContext, res, err, services });
       };
     }
 
     if (isIErrorHandler(errorHandlerType)) {
-      return (req, res, err) => {
+      return ({ req, res, err }) => {
         const requestContext = RequestContext.from(req, services);
         return errorHandlerType.catch(requestContext, res, err);
       };

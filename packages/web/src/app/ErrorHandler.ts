@@ -2,6 +2,7 @@ import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
 import { IResponseWriter } from "@/server";
 import { IRequestContext } from "./RequestContext";
 import { Constructor } from "@tomasjs/core/system";
+import { IServiceProvider } from "@tomasjs/core/dependency-injection";
 
 export type ErrorHandlerType =
   | ErrorHandlerFunction
@@ -10,11 +11,14 @@ export type ErrorHandlerType =
   | IErrorHandlerFactory
   | Constructor<IErrorHandlerFactory>;
 
-export type ErrorHandlerFunction = (
-  req: IRequestContext,
-  res: IResponseWriter,
-  err: unknown
-) => void | Promise<void>;
+export type ErrorHandlerFunction = (context: ErrorHandlerContext) => void | Promise<void>;
+
+export type ErrorHandlerContext = {
+  req: IRequestContext;
+  res: IResponseWriter;
+  err: unknown;
+  services: IServiceProvider;
+};
 
 export function isErrorHandlerFunction(obj: unknown): obj is ErrorHandlerFunction {
   return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 3);

@@ -1354,7 +1354,7 @@ describe("x-WebApp", () => {
       app = await new WebAppBuilder({ server })
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
-          pipeline.useErrorHandler((req, res, err) => {
+          pipeline.useErrorHandler(({ err }) => {
             throw err;
           });
 
@@ -1453,7 +1453,7 @@ describe("x-WebApp", () => {
       app = await new WebAppBuilder({ server })
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
-          pipeline.useErrorHandler((req, res, err) => {
+          pipeline.useErrorHandler(({ req, res, err }) => {
             const logger = req.services.getOrThrow<ILogger>(LOGGER);
             logger.error("ErrorHandlerFunction service works!");
             return res
@@ -1540,7 +1540,7 @@ describe("x-WebApp", () => {
     it("should use an IErrorHandlerFactory service", async () => {
       class MyErrorHandler implements IErrorHandlerFactory {
         createErrorHandler(): ErrorHandlerFunction {
-          return (req: IRequestContext, res: IResponseWriter, err: unknown) => {
+          return ({ res, err }) => {
             return res
               .withStatus(HTTP_STATUS_CODES.internalServerError)
               .withContent(PlainTextContent.from((err as Error).message))
@@ -1573,7 +1573,7 @@ describe("x-WebApp", () => {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
 
         createErrorHandler(): ErrorHandlerFunction {
-          return (req: IRequestContext, res: IResponseWriter, err: unknown) => {
+          return ({ res, err }) => {
             this.logger.error("IErrorHandlerFactory service works!");
             return res
               .withStatus(HTTP_STATUS_CODES.internalServerError)

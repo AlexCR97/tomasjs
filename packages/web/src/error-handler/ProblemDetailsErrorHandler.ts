@@ -6,10 +6,11 @@ import { IRequestContext } from "@/server";
 import { TomasError } from "@tomasjs/core/errors";
 import { httpStatus } from "@/HttpStatus";
 
+// TODO Improve this
 export function problemDetailsErrorHandler(options?: {
   includeError?: boolean;
 }): ErrorHandlerFunction {
-  return async (req, res, err) => {
+  return async ({ req, res, err }) => {
     const problemDetails = buildProblemDetails(req, err);
     const problemDetailsContent = ProblemDetailsContent.from(problemDetails);
 

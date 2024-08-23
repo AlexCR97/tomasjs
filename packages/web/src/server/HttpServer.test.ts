@@ -233,7 +233,7 @@ describe("Server", () => {
       .useEndpoint("GET", "/", () => {
         throw new Error("This is a custom error!");
       })
-      .useErrorHandler(async (req, res, err) => {
+      .useErrorHandler(async ({ res, err }) => {
         const error = err as Error;
 
         const errorResponse: ErrorResponse = {

@@ -38,7 +38,7 @@ export class HttpPipelineBuilder implements IHttpPipelineBuilder {
   private readonly endpoints: PlainEndpoint[] = [];
   private errorHandler: ErrorHandlerFunction | undefined;
 
-  private readonly defaultErrorHandler: ErrorHandlerFunction = async (req, res, err) => {
+  private readonly defaultErrorHandler: ErrorHandlerFunction = async ({ res }) => {
     const response = new HttpResponse({
       status: statusCode.internalServerError,
       content: PlainTextContent.from("An unexpected error occurred on the server"),
