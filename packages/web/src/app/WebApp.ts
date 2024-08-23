@@ -1,6 +1,6 @@
 import { HttpServer, HttpServerOptions, IHttpServer } from "@/server";
 import { AppBuilder, environmentToken, IApp, IEnvironment } from "@tomasjs/core/app";
-import { configurationToken, IConfiguration } from "@tomasjs/core/configuration";
+import { CONFIGURATION, IConfiguration } from "@tomasjs/core/configuration";
 import { IContainerBuilder, IServiceProvider } from "@tomasjs/core/dependency-injection";
 import { WebAppPipelineBuilder, WebAppPipelineBuilderDelegate } from "./WebAppPipelineBuilder";
 import { ILogger, ILoggerBuilder, LOGGER_BUILDER } from "@tomasjs/core/logging";
@@ -72,7 +72,7 @@ export class WebAppBuilder extends AppBuilder<WebApp> {
     }
 
     const services = await containerBuilder.buildServiceProvider();
-    const configuration = services.getOrThrow<IConfiguration>(configurationToken);
+    const configuration = services.getOrThrow<IConfiguration>(CONFIGURATION);
     const environment = services.getOrThrow<IEnvironment>(environmentToken);
     const loggerBuilder = services.getOrThrow<ILoggerBuilder>(LOGGER_BUILDER);
     const logger = loggerBuilder.withCategory("@tomasjs/web/WebApp").build();
