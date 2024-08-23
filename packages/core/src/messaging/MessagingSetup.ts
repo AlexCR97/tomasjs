@@ -143,7 +143,7 @@ export function messaging(options?: MessagingOptions): ContainerSetupFunction {
 
           emitter.on(type, async (message) => {
             // NOTE: Purposefully wait until the next tick in the event loop.
-            // This way, all events are consumed asynchronously after being producing.
+            // This way, all events are consumed asynchronously after being produced.
             await tick();
 
             const consumers = services.find<IConsumer<Message>>(CONSUMER(type));

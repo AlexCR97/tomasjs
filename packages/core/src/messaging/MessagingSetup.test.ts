@@ -503,4 +503,61 @@ describe("messaging", () => {
 
     await app.start();
   });
+
+  it("should work", async () => {
+    class MyMessage implements Message {
+      readonly type: string = MyMessage.name;
+      readonly createdAt = new Date();
+    }
+
+    class MyResponse {
+      readonly respondedAt = new Date();
+    }
+
+    class MyProcessor implements IProcessor<MyMessage, MyResponse> {
+      constructor(
+        @inject(LOGGER) private readonly logger: ILogger,
+        @inject(PRODUCER) private readonly producer: IProducer
+      ) {}
+
+      async process(message: MyMessage): Promise<MyResponse> {
+        this.logger.debug("Received message: {message}", { message });
+        const response = new MyResponse();
+
+        this.producer.produce(new MessageProcessedEvent());
+
+        return response;
+      }
+    }
+
+    class MessageProcessedEvent implements Message {
+      readonly type: string = MessageProcessedEvent.name;
+      readonly occurredAt = new Date();
+    }
+
+    class MessageProcessedEventConsumer implements IConsumer<MessageProcessedEvent> {
+      constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+      consume(message: MessageProcessedEvent): void {
+        this.logger.debug("An event occurred at {occurredAt}", { occurredAt: message.occurredAt });
+      }
+    }
+
+    const app = await new ConsoleAppBuilder()
+      .setupMessaging((messaging) => {
+        messaging
+          .withProcessor<Message, MyResponse>(MyMessage.name, MyProcessor)
+          .withConsumer<MessageProcessedEvent>(
+            MessageProcessedEvent.name,
+            MessageProcessedEventConsumer
+          );
+      })
+      .addEntryPoint(async ({ services }) => {
+        const sender = services.getOrThrow<ISender>(SENDER);
+        const response = await sender.send(new MyMessage());
+        expect(response).toBeInstanceOf(MyResponse);
+      })
+      .build();
+
+    await app.start();
+  });
 });
