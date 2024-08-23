@@ -429,16 +429,16 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     }
 
     if (isInterceptorFunction(interceptorType)) {
-      return (req) => {
+      return ({ req }) => {
         const requestContext = RequestContext.from(req, services);
-        return interceptorType(requestContext);
+        return interceptorType({ req: requestContext });
       };
     }
 
     if (isIInterceptor(interceptorType)) {
-      return (req) => {
+      return ({ req }) => {
         const requestContext = RequestContext.from(req, services);
-        return interceptorType.intercept(requestContext);
+        return interceptorType.intercept({ req: requestContext });
       };
     }
 

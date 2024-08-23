@@ -20,7 +20,7 @@ export function isAuthenticationPolicyFunction(obj: unknown): obj is Authenticat
 
 export function authentication(policy: AuthenticationPolicyFunction): MiddlewareFunction[] {
   return new MiddlewareAggregate()
-    .addInterceptor(async (req) => {
+    .addInterceptor(async ({ req }) => {
       const result = await policy(req);
 
       return typeof result === "boolean"

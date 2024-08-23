@@ -12,7 +12,7 @@ export function isAuthorizationPolicyFunction(obj: unknown): obj is Authorizatio
 
 export function authorization(policy: AuthorizationPolicyFunction): MiddlewareFunction[] {
   return new MiddlewareAggregate()
-    .addInterceptor(async (req) => {
+    .addInterceptor(async ({ req }) => {
       if (!req.user.authenticated) {
         return;
       }

@@ -9,14 +9,18 @@ export type InterceptorType =
   | IInterceptorFactory
   | Constructor<IInterceptorFactory>;
 
-export type InterceptorFunction = (req: IRequestContext) => void | Promise<void>;
+export type InterceptorFunction = (context: InterceptorContext) => void | Promise<void>;
+
+export type InterceptorContext = {
+  req: IRequestContext;
+};
 
 export function isInterceptorFunction(obj: unknown): obj is InterceptorFunction {
   return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
 }
 
 export interface IInterceptor {
-  intercept(req: IRequestContext): void | Promise<void>;
+  intercept(context: InterceptorContext): void | Promise<void>;
 }
 
 export function isIInterceptor(obj: unknown): obj is IInterceptor {

@@ -19,7 +19,12 @@ import {
   MiddlewareFunction,
 } from "./Middleware";
 import { ErrorHandlerFunction, IErrorHandler, IErrorHandlerFactory } from "./ErrorHandler";
-import { IInterceptor, IInterceptorFactory, InterceptorFunction } from "./Interceptor";
+import {
+  IInterceptor,
+  IInterceptorFactory,
+  InterceptorContext,
+  InterceptorFunction,
+} from "./Interceptor";
 import { GuardFunction, GuardResult, IGuard, IGuardFactory } from "./Guard";
 import {
   AuthenticationPolicyFunction,
@@ -179,7 +184,7 @@ describe("x-WebApp", () => {
       app = await new WebAppBuilder({ server })
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
-          pipeline.useInterceptor((req) => {
+          pipeline.useInterceptor(({ req }) => {
             const logger = req.services.getOrThrow<ILogger>(LOGGER);
             logger.debug("InterceptorFunction works!");
             req.user.authenticate();
@@ -204,7 +209,7 @@ describe("x-WebApp", () => {
 
     it("should use an IInterceptor", async () => {
       class MyInterceptor implements IInterceptor {
-        intercept(req: IRequestContext): void {
+        intercept({ req }: InterceptorContext): void | Promise<void> {
           req.user.authenticate();
         }
       }
@@ -234,8 +239,7 @@ describe("x-WebApp", () => {
     it("should use an IInterceptor service", async () => {
       class MyInterceptor implements IInterceptor {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
-
-        intercept(req: IRequestContext): void {
+        intercept({ req }: InterceptorContext): void | Promise<void> {
           this.logger.debug("IInterceptor service works!");
           req.user.authenticate();
         }
@@ -266,7 +270,7 @@ describe("x-WebApp", () => {
     it("should use an IInterceptorFactory", async () => {
       class MyInterceptor implements IInterceptorFactory {
         createInterceptor(): InterceptorFunction {
-          return async (req) => {
+          return async ({ req }) => {
             req.user.authenticate();
           };
         }
@@ -299,7 +303,7 @@ describe("x-WebApp", () => {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
 
         createInterceptor(): InterceptorFunction {
-          return async (req) => {
+          return async ({ req }) => {
             this.logger.debug("IInterceptorFactory service works!");
             req.user.authenticate();
           };
@@ -1031,7 +1035,7 @@ describe("x-WebApp", () => {
 
       class MyInterceptor implements IInterceptor {
         constructor(private readonly prefix: string) {}
-        intercept(req: IRequestContext): void | Promise<void> {
+        intercept({ req }: InterceptorContext): void | Promise<void> {
           aggregation.push(`${this.prefix}-interceptor`);
         }
       }
@@ -1167,7 +1171,7 @@ describe("x-WebApp", () => {
 
       class MyInterceptor implements IInterceptor {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
-        intercept(req: IRequestContext): void | Promise<void> {
+        intercept(context: InterceptorContext): void | Promise<void> {
           this.logger.debug("Interceptor works");
           aggregation.push(`interceptor`);
         }

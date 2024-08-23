@@ -1,1 +1,6 @@
-export { InterceptorFunction, interceptor, isInterceptorFunction } from "./Interceptor";
+export {
+  InterceptorContext,
+  InterceptorFunction,
+  interceptor,
+  isInterceptorFunction,
+} from "./Interceptor";

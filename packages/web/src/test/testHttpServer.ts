@@ -29,7 +29,7 @@ export async function testHttpServer(): Promise<IHttpServer> {
     }
 
     function getRandomPort(): number {
-      return Math.floor(Math.random() * (maxPort - minPort + 1)) + minPort;
+      return Math.floor(Math.random() * (maxPort - minPort)) + minPort;
     }
 
     function isPortAvailable(port: number): Promise<boolean> {

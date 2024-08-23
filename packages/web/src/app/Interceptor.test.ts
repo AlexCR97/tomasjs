@@ -2,6 +2,7 @@ import { IRequestContext } from "@/server";
 import {
   IInterceptor,
   IInterceptorFactory,
+  InterceptorContext,
   InterceptorFunction,
   isIInterceptor,
   isIInterceptorFactory,
@@ -35,7 +36,7 @@ describe("app/Interceptor", () => {
   describe(isIInterceptor.name, () => {
     it("should return true for an interceptor instance", () => {
       class TestInterceptor implements IInterceptor {
-        intercept(req: IRequestContext): void {}
+        intercept(context: InterceptorContext): void | Promise<void> {}
       }
 
       const myInterceptor = new TestInterceptor();
@@ -44,7 +45,7 @@ describe("app/Interceptor", () => {
 
     it("should return true for an interceptor instance with an async method", () => {
       class TestInterceptor implements IInterceptor {
-        async intercept(req: IRequestContext): Promise<void> {}
+        intercept(context: InterceptorContext): void | Promise<void> {}
       }
 
       const myInterceptor = new TestInterceptor();

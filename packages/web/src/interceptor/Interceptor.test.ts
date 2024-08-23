@@ -7,7 +7,7 @@ import { InterceptorFunction, interceptor } from "./Interceptor";
 describe("server/Interceptor", () => {
   const client = new HttpClient();
 
-  const myInterceptor: InterceptorFunction = (req) => {
+  const myInterceptor: InterceptorFunction = ({ req }) => {
     req.user.authenticate();
   };
 
