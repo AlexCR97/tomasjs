@@ -33,7 +33,7 @@ import { IInterceptor, IInterceptorFactory, InterceptorFunction } from "./Interc
 import { GuardFunction, GuardResult, IGuard, IGuardFactory } from "./Guard";
 import { IAuthenticationPolicy, IAuthenticationPolicyFactory } from "./Authentication";
 import { IAuthorizationPolicy, IAuthorizationPolicyFactory } from "./Authorization";
-import { Endpoint } from "./WebAppEndpoint";
+import { Endpoint } from "./Endpoint";
 
 // TODO Rename test suite
 describe("x-WebApp", () => {

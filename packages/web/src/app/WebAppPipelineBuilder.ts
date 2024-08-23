@@ -20,7 +20,7 @@ import {
   PlainEndpoint,
   EndpointContext,
   EndpointHandler,
-} from "./WebAppEndpoint";
+} from "./Endpoint";
 import {
   AuthenticationPolicyFunction as ServerAuthenticationPolicyFunction,
   AuthorizationPolicyFunction as ServerAuthorizationPolicyFunction,
