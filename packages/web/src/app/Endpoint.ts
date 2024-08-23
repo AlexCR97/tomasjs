@@ -5,11 +5,11 @@ import { IUserReader } from "@/auth";
 import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
 import { IEndpointContext as ServerEndpointContext } from "@/endpoint";
 import { HttpResponse, IQueryParams, IRouteParams } from "@/server";
-import { AuthenticationPolicyFunction } from "./Authentication";
-import { AuthorizationPolicyFunction } from "./Authorization";
-import { GuardFunction } from "./Guard";
-import { InterceptorFunction } from "./Interceptor";
-import { MiddlewareFunction } from "./Middleware";
+import { AuthenticationPolicyType } from "./Authentication";
+import { AuthorizationPolicyType } from "./Authorization";
+import { GuardType } from "./Guard";
+import { InterceptorType } from "./Interceptor";
+import { MiddlewareType } from "./Middleware";
 
 export type PlainEndpoint = {
   method: HttpMethod;
@@ -53,11 +53,11 @@ export class EndpointContext implements IEndpointContext {
 }
 
 export type EndpointOptions = {
-  middlewares?: MiddlewareFunction[]; // TODO Support other middleware types
-  interceptors?: InterceptorFunction[]; // TODO Support other interceptor types
-  guards?: GuardFunction[]; // TODO Support other guard types
-  authentication?: AuthenticationPolicyFunction; // TODO Support other policy types
-  authorization?: AuthorizationPolicyFunction; // TODO Support other policy types
+  middlewares?: MiddlewareType[];
+  interceptors?: InterceptorType[];
+  guards?: GuardType[];
+  authentication?: AuthenticationPolicyType;
+  authorization?: AuthorizationPolicyType;
 };
 
 export function isPlainEndpoint(obj: unknown): obj is PlainEndpoint {
@@ -74,20 +74,19 @@ export function isEndpointHandler(obj: unknown): obj is EndpointHandler {
 }
 
 export interface IEndpoint {
-  use(middleware: MiddlewareFunction): this;
-  useInterceptor(interceptor: InterceptorFunction): this;
-  useGuard(guard: GuardFunction): this;
-  useAuthentication(policy: AuthenticationPolicyFunction): this;
-  useAuthorization(policy: AuthorizationPolicyFunction): this;
+  use(middleware: MiddlewareType): this;
+  useInterceptor(interceptor: InterceptorType): this;
+  useGuard(guard: GuardType): this;
+  useAuthentication(policy: AuthenticationPolicyType): this;
+  useAuthorization(policy: AuthorizationPolicyType): this;
 }
 
 export class Endpoint implements IEndpoint {
-  // TODO Support other types
-  private readonly middlewares: MiddlewareFunction[] = [];
-  private readonly interceptors: InterceptorFunction[] = [];
-  private readonly guards: GuardFunction[] = [];
-  private authentication: AuthenticationPolicyFunction | undefined;
-  private authorization: AuthorizationPolicyFunction | undefined;
+  private readonly middlewares: MiddlewareType[] = [];
+  private readonly interceptors: InterceptorType[] = [];
+  private readonly guards: GuardType[] = [];
+  private authentication: AuthenticationPolicyType | undefined;
+  private authorization: AuthorizationPolicyType | undefined;
 
   constructor(
     private readonly method: HttpMethod,
@@ -115,27 +114,27 @@ export class Endpoint implements IEndpoint {
     return new Endpoint("DELETE", path, handler);
   }
 
-  use(middleware: MiddlewareFunction): this {
+  use(middleware: MiddlewareType): this {
     this.middlewares.push(middleware);
     return this;
   }
 
-  useInterceptor(interceptor: InterceptorFunction): this {
+  useInterceptor(interceptor: InterceptorType): this {
     this.interceptors.push(interceptor);
     return this;
   }
 
-  useGuard(guard: GuardFunction): this {
+  useGuard(guard: GuardType): this {
     this.guards.push(guard);
     return this;
   }
 
-  useAuthentication(policy: AuthenticationPolicyFunction): this {
+  useAuthentication(policy: AuthenticationPolicyType): this {
     this.authentication = policy;
     return this;
   }
 
-  useAuthorization(policy: AuthorizationPolicyFunction): this {
+  useAuthorization(policy: AuthorizationPolicyType): this {
     this.authorization = policy;
     return this;
   }

@@ -1,8 +1,16 @@
 import { isNotNull, hasLength, isInRange, isFunction } from "@/common";
 import { IResponseWriter } from "@/server";
 import { IRequestContext } from "./RequestContext";
+import { Constructor } from "@tomasjs/core/system";
 
 export type NextFunction = () => Promise<void>;
+
+export type MiddlewareType =
+  | MiddlewareFunction
+  | IMiddleware
+  | Constructor<IMiddleware>
+  | IMiddlewareFactory
+  | Constructor<IMiddlewareFactory>;
 
 export type MiddlewareFunction = (
   req: IRequestContext,

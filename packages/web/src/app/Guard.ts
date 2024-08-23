@@ -1,12 +1,20 @@
-import { isNotNull, hasLength, isFunction } from "@/common";
+import { isNotNull, hasLength, isFunction, isInRange } from "@/common";
 import { IRequestContext } from "./RequestContext";
+import { Constructor } from "@tomasjs/core/system";
 
-export type GuardResult = boolean | 401 | 403;
+export type GuardType =
+  | GuardFunction
+  | IGuard
+  | Constructor<IGuard>
+  | IGuardFactory
+  | Constructor<IGuardFactory>;
 
 export type GuardFunction = (request: IRequestContext) => GuardResult | Promise<GuardResult>;
 
+export type GuardResult = boolean | 401 | 403;
+
 export function isGuardFunction(obj: unknown): obj is GuardFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 1;
+  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
 }
 
 export interface IGuard {

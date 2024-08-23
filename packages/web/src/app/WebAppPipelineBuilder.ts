@@ -32,11 +32,13 @@ import {
   isIMiddlewareFactory,
   isMiddlewareFunction,
   MiddlewareFunction,
+  MiddlewareType,
 } from "./Middleware";
 import { RequestContext, RequestContextReader } from "./RequestContext";
 import { MiddlewareFunction as ServerMiddlewareFunction } from "@/middleware";
 import {
   ErrorHandlerFunction,
+  ErrorHandlerType,
   IErrorHandler,
   IErrorHandlerFactory,
   isErrorHandlerFunction,
@@ -49,6 +51,7 @@ import {
   IInterceptor,
   IInterceptorFactory,
   InterceptorFunction,
+  InterceptorType,
   isIInterceptor,
   isIInterceptorFactory,
   isInterceptorFunction,
@@ -56,6 +59,7 @@ import {
 import { GuardFunction as ServerGuardFunction } from "@/guard";
 import {
   GuardFunction,
+  GuardType,
   IGuard,
   IGuardFactory,
   isGuardFunction,
@@ -64,6 +68,7 @@ import {
 } from "./Guard";
 import {
   AuthenticationPolicyFunction,
+  AuthenticationPolicyType,
   IAuthenticationPolicy,
   IAuthenticationPolicyFactory,
   isAuthenticationPolicyFunction,
@@ -72,6 +77,7 @@ import {
 } from "./Authentication";
 import {
   AuthorizationPolicyFunction,
+  AuthorizationPolicyType,
   IAuthorizationPolicy,
   IAuthorizationPolicyFactory,
   isAuthorizationPolicyFunction,
@@ -80,48 +86,6 @@ import {
 } from "./Authorization";
 
 export type WebAppPipelineBuilderDelegate = (builder: IWebAppPipelineBuilder) => void;
-
-type MiddlewareType =
-  | MiddlewareFunction
-  | IMiddleware
-  | Constructor<IMiddleware>
-  | IMiddlewareFactory
-  | Constructor<IMiddlewareFactory>;
-
-type InterceptorType =
-  | InterceptorFunction
-  | IInterceptor
-  | Constructor<IInterceptor>
-  | IInterceptorFactory
-  | Constructor<IInterceptorFactory>;
-
-type GuardType =
-  | GuardFunction
-  | IGuard
-  | Constructor<IGuard>
-  | IGuardFactory
-  | Constructor<IGuardFactory>;
-
-type AuthenticationPolicyType =
-  | AuthenticationPolicyFunction
-  | IAuthenticationPolicy
-  | Constructor<IAuthenticationPolicy>
-  | IAuthenticationPolicyFactory
-  | Constructor<IAuthenticationPolicyFactory>;
-
-type AuthorizationPolicyType =
-  | AuthorizationPolicyFunction
-  | IAuthorizationPolicy
-  | Constructor<IAuthorizationPolicy>
-  | IAuthorizationPolicyFactory
-  | Constructor<IAuthorizationPolicyFactory>;
-
-type ErrorHandlerType =
-  | ErrorHandlerFunction
-  | IErrorHandler
-  | Constructor<IErrorHandler>
-  | IErrorHandlerFactory
-  | Constructor<IErrorHandlerFactory>;
 
 export interface IWebAppPipelineBuilder {
   delegate(delegate: WebAppPipelineBuilderDelegate): this;
@@ -473,7 +437,10 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
       return this.toInterceptorFunction(interceptor, services);
     }
 
-    throw new InvalidOperationError();
+    // TODO Use constructor with message once available
+    const err = new InvalidOperationError();
+    err.message = `Unknown interceptor type: ${interceptorType}`;
+    throw err;
   }
 
   private toGuardFunction(guardType: GuardType, services: IServiceProvider): ServerGuardFunction {

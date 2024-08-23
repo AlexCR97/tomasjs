@@ -1,10 +1,18 @@
-import { hasLength, isFunction, isNotNull } from "@/common";
+import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
 import { IRequestContext } from "./RequestContext";
+import { Constructor } from "@tomasjs/core/system";
+
+export type InterceptorType =
+  | InterceptorFunction
+  | IInterceptor
+  | Constructor<IInterceptor>
+  | IInterceptorFactory
+  | Constructor<IInterceptorFactory>;
 
 export type InterceptorFunction = (req: IRequestContext) => void | Promise<void>;
 
 export function isInterceptorFunction(obj: unknown): obj is InterceptorFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 1;
+  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
 }
 
 export interface IInterceptor {

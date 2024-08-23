@@ -1,6 +1,14 @@
 import { IClaims } from "@/auth";
-import { hasLength, isFunction, isNotNull } from "@/common";
+import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
 import { IRequestContext } from "./RequestContext";
+import { Constructor } from "@tomasjs/core/system";
+
+export type AuthenticationPolicyType =
+  | AuthenticationPolicyFunction
+  | IAuthenticationPolicy
+  | Constructor<IAuthenticationPolicy>
+  | IAuthenticationPolicyFactory
+  | Constructor<IAuthenticationPolicyFactory>;
 
 export type AuthenticationPolicyResult = boolean | AuthenticationPolicyResultExtended;
 
@@ -14,7 +22,7 @@ export type AuthenticationPolicyFunction = (
 ) => AuthenticationPolicyResult | Promise<AuthenticationPolicyResult>;
 
 export function isAuthenticationPolicyFunction(obj: unknown): obj is AuthenticationPolicyFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 1;
+  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
 }
 
 export interface IAuthenticationPolicy {

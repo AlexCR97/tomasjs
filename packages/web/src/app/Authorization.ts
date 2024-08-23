@@ -1,13 +1,21 @@
-import { isNotNull, hasLength, isFunction } from "@/common";
+import { isNotNull, hasLength, isFunction, isInRange } from "@/common";
 import { isGuardFunction } from "@/guard";
 import { IRequestContextReader } from "./RequestContext";
+import { Constructor } from "@tomasjs/core/system";
+
+export type AuthorizationPolicyType =
+  | AuthorizationPolicyFunction
+  | IAuthorizationPolicy
+  | Constructor<IAuthorizationPolicy>
+  | IAuthorizationPolicyFactory
+  | Constructor<IAuthorizationPolicyFactory>;
 
 export type AuthorizationPolicyFunction = (
   req: IRequestContextReader
 ) => boolean | Promise<boolean>;
 
 export function isAuthorizationPolicyFunction(obj: unknown): obj is AuthorizationPolicyFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 1;
+  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
 }
 
 export interface IAuthorizationPolicy {

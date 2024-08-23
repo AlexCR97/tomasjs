@@ -1,6 +1,14 @@
-import { hasLength, isFunction, isNotNull } from "@/common";
+import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
 import { IResponseWriter } from "@/server";
 import { IRequestContext } from "./RequestContext";
+import { Constructor } from "@tomasjs/core/system";
+
+export type ErrorHandlerType =
+  | ErrorHandlerFunction
+  | IErrorHandler
+  | Constructor<IErrorHandler>
+  | IErrorHandlerFactory
+  | Constructor<IErrorHandlerFactory>;
 
 export type ErrorHandlerFunction = (
   req: IRequestContext,
@@ -9,7 +17,7 @@ export type ErrorHandlerFunction = (
 ) => void | Promise<void>;
 
 export function isErrorHandlerFunction(obj: unknown): obj is ErrorHandlerFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 3;
+  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 3);
 }
 
 export interface IErrorHandler {

@@ -9,31 +9,28 @@ import {
   PlainTextContent,
 } from "@tomasjs/core/http";
 import { ILogger, LOGGER, LoggerConfiguration } from "@tomasjs/core/logging";
-import { MiddlewareFunction, NextFunction } from "@/middleware";
-import {
-  HttpResponse,
-  IHttpServer,
-  IRequestContext,
-  IRequestContextReader,
-  IResponseWriter,
-} from "@/server";
 import { testHttpServer } from "@/test";
 import { WebApp, WebAppBuilder } from "./WebApp";
-import {
-  AuthenticationPolicyFunction,
-  AuthenticationPolicyResult,
-  AuthorizationPolicyFunction,
-  Claims,
-  rolePolicy,
-} from "@/auth";
 import { jwtPolicy, JwtSigner } from "@/jwt";
-import { IMiddleware, IMiddlewareFactory } from "./Middleware";
+import { IMiddleware, IMiddlewareFactory, MiddlewareFunction, NextFunction } from "./Middleware";
 import { ErrorHandlerFunction, IErrorHandler, IErrorHandlerFactory } from "./ErrorHandler";
 import { IInterceptor, IInterceptorFactory, InterceptorFunction } from "./Interceptor";
 import { GuardFunction, GuardResult, IGuard, IGuardFactory } from "./Guard";
-import { IAuthenticationPolicy, IAuthenticationPolicyFactory } from "./Authentication";
-import { IAuthorizationPolicy, IAuthorizationPolicyFactory } from "./Authorization";
+import {
+  AuthenticationPolicyFunction,
+  AuthenticationPolicyResult,
+  IAuthenticationPolicy,
+  IAuthenticationPolicyFactory,
+} from "./Authentication";
+import {
+  AuthorizationPolicyFunction,
+  IAuthorizationPolicy,
+  IAuthorizationPolicyFactory,
+} from "./Authorization";
 import { Endpoint } from "./Endpoint";
+import { IRequestContext, IRequestContextReader } from "./RequestContext";
+import { HttpResponse, IHttpServer, IResponseWriter } from "@/server";
+import { Claims, rolePolicy } from "@/auth";
 
 // TODO Rename test suite
 describe("x-WebApp", () => {
@@ -553,7 +550,7 @@ describe("x-WebApp", () => {
 
     it("should use an IAuthenticationPolicyFactory ", async () => {
       class MyPolicy implements IAuthenticationPolicyFactory {
-        createAuthenticationPolicy(): AuthenticationPolicyFunction | IAuthenticationPolicy {
+        createAuthenticationPolicy(): AuthenticationPolicyFunction {
           return jwtPolicy({ secret });
         }
       }
@@ -876,7 +873,7 @@ describe("x-WebApp", () => {
       expect(responseContent).toMatchObject(testParams);
     });
 
-    it("should apply middleware at the endpoint level", async () => {
+    it("should apply middleware at the endpoint level with functions", async () => {
       const aggregation: string[] = [];
 
       function myMiddleware(prefix: string): MiddlewareFunction {
@@ -899,6 +896,21 @@ describe("x-WebApp", () => {
         };
       }
 
+      function myAuthenticationPolicy(prefix: string): AuthenticationPolicyFunction {
+        return ({ user }) => {
+          aggregation.push(`${prefix}-authentication`);
+          user.authenticate();
+          return true;
+        };
+      }
+
+      function myAuthorizationPolicy(prefix: string): AuthorizationPolicyFunction {
+        return () => {
+          aggregation.push(`${prefix}-authorization`);
+          return true;
+        };
+      }
+
       app = await new WebAppBuilder({ server })
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
@@ -908,8 +920,14 @@ describe("x-WebApp", () => {
 
           pipeline.useGuard(myGuard("global"));
 
+          pipeline.useAuthentication(myAuthenticationPolicy("global"));
+
+          pipeline.useAuthorization(myAuthorizationPolicy("global"));
+
           pipeline.useEndpoint(
-            Endpoint.get("/a", () => {
+            Endpoint.get("/a", ({ user }) => {
+              expect(user.authenticated).toBe(true);
+              expect(user.authorized).toBe(true);
               return new HttpResponse({
                 status: HTTP_STATUS_CODES.ok,
                 content: JsonContent.from(aggregation),
@@ -918,10 +936,14 @@ describe("x-WebApp", () => {
               .use(myMiddleware("endpoint-a"))
               .useInterceptor(myInterceptor("endpoint-a"))
               .useGuard(myGuard("endpoint-a"))
+              .useAuthentication(myAuthenticationPolicy("endpoint-a"))
+              .useAuthorization(myAuthorizationPolicy("endpoint-a"))
           );
 
           pipeline.useEndpoint(
-            Endpoint.get("/b", () => {
+            Endpoint.get("/b", ({ user }) => {
+              expect(user.authenticated).toBe(true);
+              expect(user.authorized).toBe(true);
               return new HttpResponse({
                 status: HTTP_STATUS_CODES.ok,
                 content: JsonContent.from(aggregation),
@@ -930,6 +952,8 @@ describe("x-WebApp", () => {
               .use(myMiddleware("endpoint-b"))
               .useInterceptor(myInterceptor("endpoint-b"))
               .useGuard(myGuard("endpoint-b"))
+              .useAuthentication(myAuthenticationPolicy("endpoint-b"))
+              .useAuthorization(myAuthorizationPolicy("endpoint-b"))
           );
         })
         .build();
@@ -942,9 +966,13 @@ describe("x-WebApp", () => {
         "global-middleware",
         "global-interceptor",
         "global-guard",
+        "global-authentication",
+        "global-authorization",
         "endpoint-a-middleware",
         "endpoint-a-interceptor",
         "endpoint-a-guard",
+        "endpoint-a-authentication",
+        "endpoint-a-authorization",
       ]);
 
       const responseB = await client.getJson<string[]>("/b");
@@ -953,15 +981,450 @@ describe("x-WebApp", () => {
         "global-middleware",
         "global-interceptor",
         "global-guard",
+        "global-authentication",
+        "global-authorization",
         "endpoint-a-middleware",
         "endpoint-a-interceptor",
         "endpoint-a-guard",
+        "endpoint-a-authentication",
+        "endpoint-a-authorization",
         "global-middleware",
         "global-interceptor",
         "global-guard",
+        "global-authentication",
+        "global-authorization",
         "endpoint-b-middleware",
         "endpoint-b-interceptor",
         "endpoint-b-guard",
+        "endpoint-b-authentication",
+        "endpoint-b-authorization",
+      ]);
+    });
+
+    it("should apply middleware at the endpoint level with interfaces", async () => {
+      const aggregation: string[] = [];
+
+      class MyMiddleware implements IMiddleware {
+        constructor(private readonly prefix: string) {}
+        run(req: IRequestContext, res: IResponseWriter, next: NextFunction): void | Promise<void> {
+          aggregation.push(`${this.prefix}-middleware`);
+          return next();
+        }
+      }
+
+      class MyInterceptor implements IInterceptor {
+        constructor(private readonly prefix: string) {}
+        intercept(req: IRequestContext): void | Promise<void> {
+          aggregation.push(`${this.prefix}-interceptor`);
+        }
+      }
+
+      class MyGuard implements IGuard {
+        constructor(private readonly prefix: string) {}
+        protect(req: IRequestContext): GuardResult | Promise<GuardResult> {
+          aggregation.push(`${this.prefix}-guard`);
+          return true;
+        }
+      }
+
+      class MyAuthenticationPolicy implements IAuthenticationPolicy {
+        constructor(private readonly prefix: string) {}
+        authenticate({
+          user,
+        }: IRequestContext): AuthenticationPolicyResult | Promise<AuthenticationPolicyResult> {
+          aggregation.push(`${this.prefix}-authentication`);
+          user.authenticate();
+          return true;
+        }
+      }
+
+      class MyAuthorizationPolicy implements IAuthorizationPolicy {
+        constructor(private readonly prefix: string) {}
+        authorize(req: IRequestContextReader): boolean | Promise<boolean> {
+          aggregation.push(`${this.prefix}-authorization`);
+          return true;
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.use(new MyMiddleware("global"));
+
+          pipeline.useInterceptor(new MyInterceptor("global"));
+
+          pipeline.useGuard(new MyGuard("global"));
+
+          pipeline.useAuthentication(new MyAuthenticationPolicy("global"));
+
+          pipeline.useAuthorization(new MyAuthorizationPolicy("global"));
+
+          pipeline.useEndpoint(
+            Endpoint.get("/a", ({ user }) => {
+              expect(user.authenticated).toBe(true);
+              expect(user.authorized).toBe(true);
+              return new HttpResponse({
+                status: HTTP_STATUS_CODES.ok,
+                content: JsonContent.from(aggregation),
+              });
+            })
+              .use(new MyMiddleware("endpoint-a"))
+              .useInterceptor(new MyInterceptor("endpoint-a"))
+              .useGuard(new MyGuard("endpoint-a"))
+              .useAuthentication(new MyAuthenticationPolicy("endpoint-a"))
+              .useAuthorization(new MyAuthorizationPolicy("endpoint-a"))
+          );
+
+          pipeline.useEndpoint(
+            Endpoint.get("/b", ({ user }) => {
+              expect(user.authenticated).toBe(true);
+              expect(user.authorized).toBe(true);
+              return new HttpResponse({
+                status: HTTP_STATUS_CODES.ok,
+                content: JsonContent.from(aggregation),
+              });
+            })
+              .use(new MyMiddleware("endpoint-b"))
+              .useInterceptor(new MyInterceptor("endpoint-b"))
+              .useGuard(new MyGuard("endpoint-b"))
+              .useAuthentication(new MyAuthenticationPolicy("endpoint-b"))
+              .useAuthorization(new MyAuthorizationPolicy("endpoint-b"))
+          );
+        })
+        .build();
+
+      await app.start();
+
+      const responseA = await client.getJson<string[]>("/a");
+
+      expect(responseA).toMatchObject([
+        "global-middleware",
+        "global-interceptor",
+        "global-guard",
+        "global-authentication",
+        "global-authorization",
+        "endpoint-a-middleware",
+        "endpoint-a-interceptor",
+        "endpoint-a-guard",
+        "endpoint-a-authentication",
+        "endpoint-a-authorization",
+      ]);
+
+      const responseB = await client.getJson<string[]>("/b");
+
+      expect(responseB).toMatchObject([
+        "global-middleware",
+        "global-interceptor",
+        "global-guard",
+        "global-authentication",
+        "global-authorization",
+        "endpoint-a-middleware",
+        "endpoint-a-interceptor",
+        "endpoint-a-guard",
+        "endpoint-a-authentication",
+        "endpoint-a-authorization",
+        "global-middleware",
+        "global-interceptor",
+        "global-guard",
+        "global-authentication",
+        "global-authorization",
+        "endpoint-b-middleware",
+        "endpoint-b-interceptor",
+        "endpoint-b-guard",
+        "endpoint-b-authentication",
+        "endpoint-b-authorization",
+      ]);
+    });
+
+    it("should apply middleware at the endpoint level with services", async () => {
+      const aggregation: string[] = [];
+
+      class MyMiddleware implements IMiddleware {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+        run(req: IRequestContext, res: IResponseWriter, next: NextFunction): void | Promise<void> {
+          this.logger.debug("Middleware works");
+          aggregation.push(`middleware`);
+          return next();
+        }
+      }
+
+      class MyInterceptor implements IInterceptor {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+        intercept(req: IRequestContext): void | Promise<void> {
+          this.logger.debug("Interceptor works");
+          aggregation.push(`interceptor`);
+        }
+      }
+
+      class MyGuard implements IGuard {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+        protect(req: IRequestContext): GuardResult | Promise<GuardResult> {
+          this.logger.debug("Guard works");
+          aggregation.push(`guard`);
+          return true;
+        }
+      }
+
+      class MyAuthenticationPolicy implements IAuthenticationPolicy {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+        authenticate({
+          user,
+        }: IRequestContext): AuthenticationPolicyResult | Promise<AuthenticationPolicyResult> {
+          this.logger.debug("Authentication works");
+          aggregation.push(`authentication`);
+          user.authenticate();
+          return true;
+        }
+      }
+
+      class MyAuthorizationPolicy implements IAuthorizationPolicy {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+        authorize(req: IRequestContextReader): boolean | Promise<boolean> {
+          this.logger.debug("Authorization works");
+          aggregation.push(`authorization`);
+          return true;
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.use(MyMiddleware);
+
+          pipeline.useInterceptor(MyInterceptor);
+
+          pipeline.useGuard(MyGuard);
+
+          pipeline.useAuthentication(MyAuthenticationPolicy);
+
+          pipeline.useAuthorization(MyAuthorizationPolicy);
+
+          pipeline.useEndpoint(
+            Endpoint.get("/a", ({ user }) => {
+              expect(user.authenticated).toBe(true);
+              expect(user.authorized).toBe(true);
+              return new HttpResponse({
+                status: HTTP_STATUS_CODES.ok,
+                content: JsonContent.from(aggregation),
+              });
+            })
+              .use(MyMiddleware)
+              .useInterceptor(MyInterceptor)
+              .useGuard(MyGuard)
+              .useAuthentication(MyAuthenticationPolicy)
+              .useAuthorization(MyAuthorizationPolicy)
+          );
+
+          pipeline.useEndpoint(
+            Endpoint.get("/b", ({ user }) => {
+              expect(user.authenticated).toBe(true);
+              expect(user.authorized).toBe(true);
+              return new HttpResponse({
+                status: HTTP_STATUS_CODES.ok,
+                content: JsonContent.from(aggregation),
+              });
+            })
+              .use(MyMiddleware)
+              .useInterceptor(MyInterceptor)
+              .useGuard(MyGuard)
+              .useAuthentication(MyAuthenticationPolicy)
+              .useAuthorization(MyAuthorizationPolicy)
+          );
+        })
+        .build();
+
+      await app.start();
+
+      const responseA = await client.getJson<string[]>("/a");
+
+      expect(responseA).toMatchObject([
+        "middleware",
+        "interceptor",
+        "guard",
+        "authentication",
+        "authorization",
+        "middleware",
+        "interceptor",
+        "guard",
+        "authentication",
+        "authorization",
+      ]);
+
+      const responseB = await client.getJson<string[]>("/b");
+
+      expect(responseB).toMatchObject([
+        "middleware",
+        "interceptor",
+        "guard",
+        "authentication",
+        "authorization",
+        "middleware",
+        "interceptor",
+        "guard",
+        "authentication",
+        "authorization",
+        "middleware",
+        "interceptor",
+        "guard",
+        "authentication",
+        "authorization",
+        "middleware",
+        "interceptor",
+        "guard",
+        "authentication",
+        "authorization",
+      ]);
+    });
+
+    it("should apply middleware at the endpoint level with factory services", async () => {
+      const aggregation: string[] = [];
+
+      class MyMiddleware implements IMiddlewareFactory {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+        createMiddleware(): MiddlewareFunction | IMiddleware {
+          return (req, res, next) => {
+            this.logger.debug("Middleware works");
+            aggregation.push(`middleware`);
+            return next();
+          };
+        }
+      }
+
+      class MyInterceptor implements IInterceptorFactory {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+        createInterceptor(): InterceptorFunction | IInterceptor {
+          return () => {
+            this.logger.debug("Interceptor works");
+            aggregation.push(`interceptor`);
+          };
+        }
+      }
+
+      class MyGuard implements IGuardFactory {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+        createGuard(): GuardFunction | IGuard {
+          return (req) => {
+            this.logger.debug("Guard works");
+            aggregation.push(`guard`);
+            return true;
+          };
+        }
+      }
+
+      class MyAuthenticationPolicy implements IAuthenticationPolicyFactory {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+        createAuthenticationPolicy(): AuthenticationPolicyFunction | IAuthenticationPolicy {
+          return ({ user }) => {
+            this.logger.debug("Authentication works");
+            aggregation.push(`authentication`);
+            user.authenticate();
+            return true;
+          };
+        }
+      }
+
+      class MyAuthorizationPolicy implements IAuthorizationPolicyFactory {
+        constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+        createAuthorizationPolicy(): AuthorizationPolicyFunction | IAuthorizationPolicy {
+          return () => {
+            this.logger.debug("Authorization works");
+            aggregation.push(`authorization`);
+            return true;
+          };
+        }
+      }
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.useErrorHandler((req, res, err) => {
+            throw err;
+          });
+
+          pipeline.use(MyMiddleware);
+
+          pipeline.useInterceptor(MyInterceptor);
+
+          pipeline.useGuard(MyGuard);
+
+          pipeline.useAuthentication(MyAuthenticationPolicy);
+
+          pipeline.useAuthorization(MyAuthorizationPolicy);
+
+          pipeline.useEndpoint(
+            Endpoint.get("/a", ({ user }) => {
+              expect(user.authenticated).toBe(true);
+              expect(user.authorized).toBe(true);
+              return new HttpResponse({
+                status: HTTP_STATUS_CODES.ok,
+                content: JsonContent.from(aggregation),
+              });
+            })
+              .use(MyMiddleware)
+              .useInterceptor(MyInterceptor)
+              .useGuard(MyGuard)
+              .useAuthentication(MyAuthenticationPolicy)
+              .useAuthorization(MyAuthorizationPolicy)
+          );
+
+          pipeline.useEndpoint(
+            Endpoint.get("/b", ({ user }) => {
+              expect(user.authenticated).toBe(true);
+              expect(user.authorized).toBe(true);
+              return new HttpResponse({
+                status: HTTP_STATUS_CODES.ok,
+                content: JsonContent.from(aggregation),
+              });
+            })
+              .use(MyMiddleware)
+              .useInterceptor(MyInterceptor)
+              .useGuard(MyGuard)
+              .useAuthentication(MyAuthenticationPolicy)
+              .useAuthorization(MyAuthorizationPolicy)
+          );
+        })
+        .build();
+
+      await app.start();
+
+      const responseA = await client.getJson<string[]>("/a");
+
+      expect(responseA).toMatchObject([
+        "middleware",
+        "interceptor",
+        "guard",
+        "authentication",
+        "authorization",
+        "middleware",
+        "interceptor",
+        "guard",
+        "authentication",
+        "authorization",
+      ]);
+
+      const responseB = await client.getJson<string[]>("/b");
+
+      expect(responseB).toMatchObject([
+        "middleware",
+        "interceptor",
+        "guard",
+        "authentication",
+        "authorization",
+        "middleware",
+        "interceptor",
+        "guard",
+        "authentication",
+        "authorization",
+        "middleware",
+        "interceptor",
+        "guard",
+        "authentication",
+        "authorization",
+        "middleware",
+        "interceptor",
+        "guard",
+        "authentication",
+        "authorization",
       ]);
     });
   });
