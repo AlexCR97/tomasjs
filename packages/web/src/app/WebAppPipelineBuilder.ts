@@ -7,16 +7,19 @@ import {
   IContainerBuilder,
   IServiceProvider,
 } from "@tomasjs/core/dependency-injection";
-import { EndpointOptions as ServerEndpointOptions, PlainEndpoint } from "@/endpoint";
+import {
+  EndpointOptions as ServerEndpointOptions,
+  PlainEndpoint as ServerPlainEndpoint,
+} from "@/endpoint";
 import {
   Endpoint,
   EndpointOptions,
   isEndpoint,
-  isWebAppEndpoint,
-  isWebAppEndpointHandler,
-  WebAppEndpoint,
-  WebAppEndpointContext,
-  WebAppEndpointHandler,
+  isPlainEndpoint,
+  isEndpointHandler,
+  PlainEndpoint,
+  EndpointContext,
+  EndpointHandler,
 } from "./WebAppEndpoint";
 import {
   AuthenticationPolicyFunction as ServerAuthenticationPolicyFunction,
@@ -159,18 +162,18 @@ export interface IWebAppPipelineBuilder {
   useAuthorization(policy: Constructor<IAuthorizationPolicyFactory>): this;
 
   // TODO Implement
-  useEndpoint(endpoint: WebAppEndpoint): this;
+  useEndpoint(endpoint: PlainEndpoint): this;
   useEndpoint(endpoint: Endpoint): this;
-  useEndpoint(method: HttpMethod, path: string, handler: WebAppEndpointHandler): this;
+  useEndpoint(method: HttpMethod, path: string, handler: EndpointHandler): this;
 
   // Endpoint shorthands
-  get(path: string, handler: WebAppEndpointHandler): this;
-  post(path: string, handler: WebAppEndpointHandler): this;
-  put(path: string, handler: WebAppEndpointHandler): this;
-  patch(path: string, handler: WebAppEndpointHandler): this;
-  delete(path: string, handler: WebAppEndpointHandler): this;
-  head(path: string, handler: WebAppEndpointHandler): this;
-  options(path: string, handler: WebAppEndpointHandler): this;
+  get(path: string, handler: EndpointHandler): this;
+  post(path: string, handler: EndpointHandler): this;
+  put(path: string, handler: EndpointHandler): this;
+  patch(path: string, handler: EndpointHandler): this;
+  delete(path: string, handler: EndpointHandler): this;
+  head(path: string, handler: EndpointHandler): this;
+  options(path: string, handler: EndpointHandler): this;
 
   useErrorHandler(errorHandler: ErrorHandlerFunction): this;
   useErrorHandler(errorHandler: IErrorHandler): this;
@@ -187,7 +190,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   private readonly guards: GuardType[] = [];
   private readonly authenticationPolicies: AuthenticationPolicyType[] = [];
   private readonly authorizationPolicies: AuthorizationPolicyType[] = [];
-  private readonly endpoints: WebAppEndpoint[] = [];
+  private readonly endpoints: PlainEndpoint[] = [];
   private errorHandler: ErrorHandlerType | undefined;
 
   delegate(delegate: WebAppPipelineBuilderDelegate): this {
@@ -281,9 +284,9 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     return this;
   }
 
-  useEndpoint(endpoint: WebAppEndpoint): this;
+  useEndpoint(endpoint: PlainEndpoint): this;
   useEndpoint(endpoint: Endpoint): this;
-  useEndpoint(method: HttpMethod, path: string, handler: WebAppEndpointHandler): this;
+  useEndpoint(method: HttpMethod, path: string, handler: EndpointHandler): this;
   useEndpoint(...args: unknown[]): this {
     if (args.length === 1) {
       if (isEndpoint(args[0])) {
@@ -291,8 +294,8 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
         return this.useWebAppEndpoint(endpoint.toPlain());
       }
 
-      if (isWebAppEndpoint(args[0])) {
-        const endpoint: WebAppEndpoint = args[0];
+      if (isPlainEndpoint(args[0])) {
+        const endpoint: PlainEndpoint = args[0];
         return this.useWebAppEndpoint(endpoint);
       }
     }
@@ -301,47 +304,47 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
       args.length === 3 &&
       isHttpMethod(args[0]) &&
       typeof args[1] === "string" &&
-      isWebAppEndpointHandler(args[2])
+      isEndpointHandler(args[2])
     ) {
       const method: HttpMethod = args[0];
       const path: string = args[1];
-      const handler: WebAppEndpointHandler = args[2];
+      const handler: EndpointHandler = args[2];
       return this.useWebAppEndpoint({ method, path, handler });
     }
 
     throw new InvalidOperationError();
   }
 
-  private useWebAppEndpoint(endpoint: WebAppEndpoint): this {
+  private useWebAppEndpoint(endpoint: PlainEndpoint): this {
     this.endpoints.push(endpoint);
     return this;
   }
 
-  get(path: string, handler: WebAppEndpointHandler): this {
+  get(path: string, handler: EndpointHandler): this {
     return this.useEndpoint("GET", path, handler);
   }
 
-  post(path: string, handler: WebAppEndpointHandler): this {
+  post(path: string, handler: EndpointHandler): this {
     return this.useEndpoint("POST", path, handler);
   }
 
-  put(path: string, handler: WebAppEndpointHandler): this {
+  put(path: string, handler: EndpointHandler): this {
     return this.useEndpoint("PUT", path, handler);
   }
 
-  patch(path: string, handler: WebAppEndpointHandler): this {
+  patch(path: string, handler: EndpointHandler): this {
     return this.useEndpoint("PATCH", path, handler);
   }
 
-  delete(path: string, handler: WebAppEndpointHandler): this {
+  delete(path: string, handler: EndpointHandler): this {
     return this.useEndpoint("DELETE", path, handler);
   }
 
-  head(path: string, handler: WebAppEndpointHandler): this {
+  head(path: string, handler: EndpointHandler): this {
     return this.useEndpoint("HEAD", path, handler);
   }
 
-  options(path: string, handler: WebAppEndpointHandler): this {
+  options(path: string, handler: EndpointHandler): this {
     return this.useEndpoint("OPTIONS", path, handler);
   }
 
@@ -367,7 +370,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     guards: ServerGuardFunction[];
     authenticationPolicies: ServerAuthenticationPolicyFunction[];
     authorizationPolicies: ServerAuthorizationPolicyFunction[];
-    endpoints: PlainEndpoint[];
+    endpoints: ServerPlainEndpoint[];
     errorHandler: ServerErrorHandlerFunction | null;
   }> {
     this.containerDelegates.forEach((delegate) => delegate(container));
@@ -576,12 +579,15 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     throw new InvalidOperationError();
   }
 
-  private toPlainEndpoint(endpoint: WebAppEndpoint, services: IServiceProvider): PlainEndpoint {
+  private toPlainEndpoint(
+    endpoint: PlainEndpoint,
+    services: IServiceProvider
+  ): ServerPlainEndpoint {
     return {
       method: endpoint.method,
       path: endpoint.path,
       handler: async (context) => {
-        const newContext = WebAppEndpointContext.from(context, services);
+        const newContext = EndpointContext.from(context, services);
         return await endpoint.handler(newContext);
       },
       options: this.toPlainEndpointOptions(endpoint.options, services),
