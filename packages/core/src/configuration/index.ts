@@ -4,7 +4,7 @@ export {
   ConfigurationSectionNotFoundError as ConfigurationSectionError,
   IConfigurationSection,
 } from "./ConfigurationSection";
-export { ConfigurationSetup, configurationToken } from "./ConfigurationSetup";
+export { CONFIGURATION, ConfigurationSetup } from "./ConfigurationSetup";
 export {
   ConfigurationSource,
   ConfigurationSourceType,

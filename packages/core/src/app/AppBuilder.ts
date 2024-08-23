@@ -5,7 +5,7 @@ import {
   IContainerBuilder,
   IServiceProvider,
 } from "@/dependency-injection";
-import { LoggerSetup } from "@/logging";
+import { ILoggerSetup, LoggerSetup } from "@/logging";
 import { Environment, IEnvironment, environmentToken } from "./Environment";
 import { IMessagingSetup, MessagingSetup } from "@/messaging";
 
@@ -27,7 +27,7 @@ export interface IApp {
 
 export type ConfigurationSetupDelegate = (builder: ConfigurationSetup) => void;
 
-export type LoggerSetupDelegate = (builder: LoggerSetup) => void;
+export type LoggerSetupDelegate = (builder: ILoggerSetup) => void;
 
 export type MessagingSetupDelegate = (builder: IMessagingSetup) => void;
 
