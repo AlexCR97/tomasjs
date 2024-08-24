@@ -34,7 +34,6 @@ import {
   MiddlewareFunction,
   MiddlewareType,
 } from "./Middleware";
-import { RequestContext, RequestContextReader } from "./RequestContext";
 import { MiddlewareFunction as ServerMiddlewareFunction } from "@/middleware";
 import {
   ErrorHandlerFunction,
@@ -396,15 +395,13 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
 
     if (isMiddlewareFunction(middlewareType)) {
       return ({ req, res, next }) => {
-        const requestContext = RequestContext.from(req, services);
-        return middlewareType({ req: requestContext, res, next, services });
+        return middlewareType({ req, res, next, services });
       };
     }
 
     if (isIMiddleware(middlewareType)) {
       return ({ req, res, next }) => {
-        const requestContext = RequestContext.from(req, services);
-        return middlewareType.run({ req: requestContext, res, next, services });
+        return middlewareType.run({ req, res, next, services });
       };
     }
 
@@ -430,15 +427,13 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
 
     if (isInterceptorFunction(interceptorType)) {
       return ({ req }) => {
-        const requestContext = RequestContext.from(req, services);
-        return interceptorType({ req: requestContext });
+        return interceptorType({ req, services });
       };
     }
 
     if (isIInterceptor(interceptorType)) {
       return ({ req }) => {
-        const requestContext = RequestContext.from(req, services);
-        return interceptorType.intercept({ req: requestContext });
+        return interceptorType.intercept({ req, services });
       };
     }
 
@@ -461,15 +456,13 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
 
     if (isGuardFunction(guardType)) {
       return ({ req }) => {
-        const requestContext = RequestContext.from(req, services);
-        return guardType({ req: requestContext });
+        return guardType({ req, services });
       };
     }
 
     if (isIGuard(guardType)) {
       return ({ req }) => {
-        const requestContext = RequestContext.from(req, services);
-        return guardType.protect({ req: requestContext });
+        return guardType.protect({ req, services });
       };
     }
 
@@ -497,15 +490,13 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
 
     if (isAuthenticationPolicyFunction(policyType)) {
       return ({ req }) => {
-        const requestContext = RequestContext.from(req, services);
-        return policyType({ req: requestContext });
+        return policyType({ req, services });
       };
     }
 
     if (isIAuthenticationPolicy(policyType)) {
       return ({ req }) => {
-        const requestContext = RequestContext.from(req, services);
-        return policyType.authenticate({ req: requestContext });
+        return policyType.authenticate({ req, services });
       };
     }
 
@@ -533,15 +524,13 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
 
     if (isAuthorizationPolicyFunction(policyType)) {
       return ({ req }) => {
-        const reqReader = RequestContextReader.from(req, services);
-        return policyType({ req: reqReader });
+        return policyType({ req, services });
       };
     }
 
     if (isIAuthorizationPolicy(policyType)) {
       return ({ req }) => {
-        const reqReader = RequestContextReader.from(req, services);
-        return policyType.authorize({ req: reqReader });
+        return policyType.authorize({ req, services });
       };
     }
 
@@ -603,15 +592,13 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
 
     if (isErrorHandlerFunction(errorHandlerType)) {
       return ({ req, res, err }) => {
-        const requestContext = RequestContext.from(req, services);
-        return errorHandlerType({ req: requestContext, res, err, services });
+        return errorHandlerType({ req, res, err, services });
       };
     }
 
     if (isIErrorHandler(errorHandlerType)) {
       return ({ req, res, err }) => {
-        const requestContext = RequestContext.from(req, services);
-        return errorHandlerType.catch(requestContext, res, err);
+        return errorHandlerType.catch({ req, res, err, services });
       };
     }
 

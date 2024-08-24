@@ -1,7 +1,8 @@
+import { IServiceProvider } from "@tomasjs/core/dependency-injection";
+import { Constructor } from "@tomasjs/core/system";
 import { IClaims } from "@/auth";
 import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
-import { IRequestContext } from "./RequestContext";
-import { Constructor } from "@tomasjs/core/system";
+import { IRequestContext } from "@/server";
 
 export type AuthenticationPolicyType =
   | AuthenticationPolicyFunction
@@ -16,6 +17,7 @@ export type AuthenticationPolicyFunction = (
 
 export type AuthenticationContext = {
   req: IRequestContext;
+  services: IServiceProvider;
 };
 
 export type AuthenticationPolicyResult = boolean | AuthenticationPolicyResultExtended;

@@ -1,7 +1,8 @@
+import { IServiceProvider } from "@tomasjs/core/dependency-injection";
+import { Constructor } from "@tomasjs/core/system";
 import { isNotNull, hasLength, isFunction, isInRange } from "@/common";
 import { isGuardFunction } from "@/guard";
-import { IRequestContextReader } from "./RequestContext";
-import { Constructor } from "@tomasjs/core/system";
+import { IRequestContextReader } from "@/server";
 
 export type AuthorizationPolicyType =
   | AuthorizationPolicyFunction
@@ -16,6 +17,7 @@ export type AuthorizationPolicyFunction = (
 
 export type AuthorizationContext = {
   req: IRequestContextReader;
+  services: IServiceProvider;
 };
 
 export function isAuthorizationPolicyFunction(obj: unknown): obj is AuthorizationPolicyFunction {

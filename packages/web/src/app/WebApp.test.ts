@@ -18,7 +18,12 @@ import {
   MiddlewareContext,
   MiddlewareFunction,
 } from "./Middleware";
-import { ErrorHandlerFunction, IErrorHandler, IErrorHandlerFactory } from "./ErrorHandler";
+import {
+  ErrorHandlerContext,
+  ErrorHandlerFunction,
+  IErrorHandler,
+  IErrorHandlerFactory,
+} from "./ErrorHandler";
 import {
   IInterceptor,
   IInterceptorFactory,
@@ -40,7 +45,6 @@ import {
   IAuthorizationPolicyFactory,
 } from "./Authorization";
 import { Endpoint } from "./Endpoint";
-import { IRequestContext, IRequestContextReader } from "./RequestContext";
 import { HttpResponse, IHttpServer, IResponseWriter } from "@/server";
 import { Claims, rolePolicy } from "@/auth";
 
@@ -72,8 +76,8 @@ describe("x-WebApp", () => {
       app = await new WebAppBuilder({ server })
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
-          pipeline.use(async ({ req, res }) => {
-            const logger = req.services.getOrThrow<ILogger>(LOGGER);
+          pipeline.use(async ({ res, services }) => {
+            const logger = services.getOrThrow<ILogger>(LOGGER);
             logger.debug("MiddlewareFunction works!");
             return await res.withStatus(HTTP_STATUS_CODES.ok).send();
           });
@@ -186,8 +190,8 @@ describe("x-WebApp", () => {
       app = await new WebAppBuilder({ server })
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
-          pipeline.useInterceptor(({ req }) => {
-            const logger = req.services.getOrThrow<ILogger>(LOGGER);
+          pipeline.useInterceptor(({ req, services }) => {
+            const logger = services.getOrThrow<ILogger>(LOGGER);
             logger.debug("InterceptorFunction works!");
             req.user.authenticate();
           });
@@ -344,8 +348,8 @@ describe("x-WebApp", () => {
       app = await new WebAppBuilder({ server })
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
-          pipeline.useGuard(({ req }) => {
-            const logger = req.services.getOrThrow<ILogger>(LOGGER);
+          pipeline.useGuard(({ req, services }) => {
+            const logger = services.getOrThrow<ILogger>(LOGGER);
             logger.debug("GuardFunction works!");
             return req.headers[secretHeaderKey] === secretHeaderValue;
           });
@@ -474,7 +478,7 @@ describe("x-WebApp", () => {
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useAuthentication((context) => {
-            const logger = context.req.services.getOrThrow<ILogger>(LOGGER);
+            const logger = context.services.getOrThrow<ILogger>(LOGGER);
             logger.debug("AuthenticationPolicyFunction works!");
             const policy = jwtPolicy({ secret });
             return policy(context);
@@ -629,7 +633,7 @@ describe("x-WebApp", () => {
           pipeline.useAuthentication(jwtPolicy({ secret }));
 
           pipeline.useAuthorization((context) => {
-            const logger = context.req.services.getOrThrow<ILogger>(LOGGER);
+            const logger = context.services.getOrThrow<ILogger>(LOGGER);
             logger.debug("AuthorizationPolicyFunction works!");
             const policy = rolePolicy(role);
             return policy(context);
@@ -1463,8 +1467,8 @@ describe("x-WebApp", () => {
       app = await new WebAppBuilder({ server })
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
-          pipeline.useErrorHandler(({ req, res, err }) => {
-            const logger = req.services.getOrThrow<ILogger>(LOGGER);
+          pipeline.useErrorHandler(({ res, err, services }) => {
+            const logger = services.getOrThrow<ILogger>(LOGGER);
             logger.error("ErrorHandlerFunction service works!");
             return res
               .withStatus(HTTP_STATUS_CODES.internalServerError)
@@ -1488,7 +1492,7 @@ describe("x-WebApp", () => {
 
     it("should use an IErrorHandler", async () => {
       class MyErrorHandler implements IErrorHandler {
-        catch(req: IRequestContext, res: IResponseWriter, err: unknown): Promise<void> {
+        catch({ res, err }: ErrorHandlerContext): Promise<void> {
           return res
             .withStatus(HTTP_STATUS_CODES.internalServerError)
             .withContent(PlainTextContent.from((err as Error).message))
@@ -1519,7 +1523,7 @@ describe("x-WebApp", () => {
       class MyErrorHandler implements IErrorHandler {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
 
-        catch(req: IRequestContext, res: IResponseWriter, err: unknown): Promise<void> {
+        catch({ res, err }: ErrorHandlerContext): Promise<void> {
           this.logger.error("IErrorHandler service works!");
           return res
             .withStatus(HTTP_STATUS_CODES.internalServerError)

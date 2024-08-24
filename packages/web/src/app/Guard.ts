@@ -1,6 +1,7 @@
-import { isNotNull, hasLength, isFunction, isInRange } from "@/common";
-import { IRequestContext } from "./RequestContext";
+import { IServiceProvider } from "@tomasjs/core/dependency-injection";
 import { Constructor } from "@tomasjs/core/system";
+import { isNotNull, hasLength, isFunction, isInRange } from "@/common";
+import { IRequestContext } from "@/server";
 
 export type GuardType =
   | GuardFunction
@@ -11,7 +12,7 @@ export type GuardType =
 
 export type GuardFunction = (context: GuardContext) => GuardResult | Promise<GuardResult>;
 
-export type GuardContext = { req: IRequestContext };
+export type GuardContext = { req: IRequestContext; services: IServiceProvider };
 
 export type GuardResult = boolean | 401 | 403;
 

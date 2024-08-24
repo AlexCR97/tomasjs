@@ -1,6 +1,7 @@
-import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
-import { IRequestContext } from "./RequestContext";
+import { IServiceProvider } from "@tomasjs/core/dependency-injection";
 import { Constructor } from "@tomasjs/core/system";
+import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
+import { IRequestContext } from "@/server";
 
 export type InterceptorType =
   | InterceptorFunction
@@ -13,6 +14,7 @@ export type InterceptorFunction = (context: InterceptorContext) => void | Promis
 
 export type InterceptorContext = {
   req: IRequestContext;
+  services: IServiceProvider;
 };
 
 export function isInterceptorFunction(obj: unknown): obj is InterceptorFunction {

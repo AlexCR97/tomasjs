@@ -1,8 +1,7 @@
-import { isNotNull, hasLength, isFunction, isInRange } from "@/common";
-import { IResponseWriter } from "@/server";
-import { IRequestContext } from "./RequestContext";
-import { Constructor } from "@tomasjs/core/system";
 import { IServiceProvider } from "@tomasjs/core/dependency-injection";
+import { Constructor } from "@tomasjs/core/system";
+import { isNotNull, hasLength, isFunction, isInRange } from "@/common";
+import { IRequestContext, IResponseWriter } from "@/server";
 
 export type MiddlewareType =
   | MiddlewareFunction
