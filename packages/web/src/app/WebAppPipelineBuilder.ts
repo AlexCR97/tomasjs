@@ -496,16 +496,16 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     }
 
     if (isAuthenticationPolicyFunction(policyType)) {
-      return (req) => {
+      return ({ req }) => {
         const requestContext = RequestContext.from(req, services);
-        return policyType(requestContext);
+        return policyType({ req: requestContext });
       };
     }
 
     if (isIAuthenticationPolicy(policyType)) {
-      return (req) => {
+      return ({ req }) => {
         const requestContext = RequestContext.from(req, services);
-        return policyType.authenticate(requestContext);
+        return policyType.authenticate({ req: requestContext });
       };
     }
 

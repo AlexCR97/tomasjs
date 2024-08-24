@@ -27,6 +27,7 @@ import {
 } from "./Interceptor";
 import { GuardContext, GuardFunction, GuardResult, IGuard, IGuardFactory } from "./Guard";
 import {
+  AuthenticationContext,
   AuthenticationPolicyFunction,
   AuthenticationPolicyResult,
   IAuthenticationPolicy,
@@ -472,7 +473,7 @@ describe("x-WebApp", () => {
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
           pipeline.useAuthentication((context) => {
-            const logger = context.services.getOrThrow<ILogger>(LOGGER);
+            const logger = context.req.services.getOrThrow<ILogger>(LOGGER);
             logger.debug("AuthenticationPolicyFunction works!");
             const policy = jwtPolicy({ secret });
             return policy(context);
@@ -496,10 +497,10 @@ describe("x-WebApp", () => {
     it("should use an IAuthenticationPolicy", async () => {
       class MyPolicy implements IAuthenticationPolicy {
         authenticate(
-          req: IRequestContext
+          context: AuthenticationContext
         ): AuthenticationPolicyResult | Promise<AuthenticationPolicyResult> {
           const policy = jwtPolicy({ secret });
-          return policy(req);
+          return policy(context);
         }
       }
 
@@ -528,11 +529,11 @@ describe("x-WebApp", () => {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
 
         authenticate(
-          req: IRequestContext
+          context: AuthenticationContext
         ): AuthenticationPolicyResult | Promise<AuthenticationPolicyResult> {
           this.logger.debug("IAuthenticationPolicy service works!");
           const policy = jwtPolicy({ secret });
-          return policy(req);
+          return policy(context);
         }
       }
 
@@ -918,9 +919,9 @@ describe("x-WebApp", () => {
       }
 
       function myAuthenticationPolicy(prefix: string): AuthenticationPolicyFunction {
-        return ({ user }) => {
+        return ({ req }) => {
           aggregation.push(`${prefix}-authentication`);
-          user.authenticate();
+          req.user.authenticate();
           return true;
         };
       }
@@ -1051,10 +1052,12 @@ describe("x-WebApp", () => {
       class MyAuthenticationPolicy implements IAuthenticationPolicy {
         constructor(private readonly prefix: string) {}
         authenticate({
-          user,
-        }: IRequestContext): AuthenticationPolicyResult | Promise<AuthenticationPolicyResult> {
+          req,
+        }: AuthenticationContext):
+          | AuthenticationPolicyResult
+          | Promise<AuthenticationPolicyResult> {
           aggregation.push(`${this.prefix}-authentication`);
-          user.authenticate();
+          req.user.authenticate();
           return true;
         }
       }
@@ -1189,11 +1192,13 @@ describe("x-WebApp", () => {
       class MyAuthenticationPolicy implements IAuthenticationPolicy {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
         authenticate({
-          user,
-        }: IRequestContext): AuthenticationPolicyResult | Promise<AuthenticationPolicyResult> {
+          req,
+        }: AuthenticationContext):
+          | AuthenticationPolicyResult
+          | Promise<AuthenticationPolicyResult> {
           this.logger.debug("Authentication works");
           aggregation.push(`authentication`);
-          user.authenticate();
+          req.user.authenticate();
           return true;
         }
       }
@@ -1335,10 +1340,10 @@ describe("x-WebApp", () => {
       class MyAuthenticationPolicy implements IAuthenticationPolicyFactory {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
         createAuthenticationPolicy(): AuthenticationPolicyFunction | IAuthenticationPolicy {
-          return ({ user }) => {
+          return ({ req }) => {
             this.logger.debug("Authentication works");
             aggregation.push(`authentication`);
-            user.authenticate();
+            req.user.authenticate();
             return true;
           };
         }

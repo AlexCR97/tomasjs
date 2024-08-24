@@ -10,6 +10,14 @@ export type AuthenticationPolicyType =
   | IAuthenticationPolicyFactory
   | Constructor<IAuthenticationPolicyFactory>;
 
+export type AuthenticationPolicyFunction = (
+  context: AuthenticationContext
+) => AuthenticationPolicyResult | Promise<AuthenticationPolicyResult>;
+
+export type AuthenticationContext = {
+  req: IRequestContext;
+};
+
 export type AuthenticationPolicyResult = boolean | AuthenticationPolicyResultExtended;
 
 export type AuthenticationPolicyResultExtended = {
@@ -17,17 +25,13 @@ export type AuthenticationPolicyResultExtended = {
   claims?: IClaims;
 };
 
-export type AuthenticationPolicyFunction = (
-  req: IRequestContext
-) => AuthenticationPolicyResult | Promise<AuthenticationPolicyResult>;
-
 export function isAuthenticationPolicyFunction(obj: unknown): obj is AuthenticationPolicyFunction {
   return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
 }
 
 export interface IAuthenticationPolicy {
   authenticate(
-    req: IRequestContext
+    context: AuthenticationContext
   ): AuthenticationPolicyResult | Promise<AuthenticationPolicyResult>;
 }
 
