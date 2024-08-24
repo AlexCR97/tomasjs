@@ -34,6 +34,7 @@ import {
   IAuthenticationPolicyFactory,
 } from "./Authentication";
 import {
+  AuthorizationContext,
   AuthorizationPolicyFunction,
   IAuthorizationPolicy,
   IAuthorizationPolicyFactory,
@@ -628,7 +629,7 @@ describe("x-WebApp", () => {
           pipeline.useAuthentication(jwtPolicy({ secret }));
 
           pipeline.useAuthorization((context) => {
-            const logger = context.services.getOrThrow<ILogger>(LOGGER);
+            const logger = context.req.services.getOrThrow<ILogger>(LOGGER);
             logger.debug("AuthorizationPolicyFunction works!");
             const policy = rolePolicy(role);
             return policy(context);
@@ -653,9 +654,9 @@ describe("x-WebApp", () => {
 
     it("should use an IAuthorizationPolicy", async () => {
       class MyPolicy implements IAuthorizationPolicy {
-        authorize(req: IRequestContextReader): boolean | Promise<boolean> {
+        authorize(context: AuthorizationContext): boolean | Promise<boolean> {
           const policy = rolePolicy(role);
-          return policy(req);
+          return policy(context);
         }
       }
 
@@ -687,10 +688,10 @@ describe("x-WebApp", () => {
       class MyPolicy implements IAuthorizationPolicy {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
 
-        authorize(req: IRequestContextReader): boolean | Promise<boolean> {
+        authorize(context: AuthorizationContext): boolean | Promise<boolean> {
           this.logger.debug("IAuthorizationPolicy service works!");
           const policy = rolePolicy(role);
-          return policy(req);
+          return policy(context);
         }
       }
 
@@ -1064,7 +1065,7 @@ describe("x-WebApp", () => {
 
       class MyAuthorizationPolicy implements IAuthorizationPolicy {
         constructor(private readonly prefix: string) {}
-        authorize(req: IRequestContextReader): boolean | Promise<boolean> {
+        authorize(context: AuthorizationContext): boolean | Promise<boolean> {
           aggregation.push(`${this.prefix}-authorization`);
           return true;
         }
@@ -1205,7 +1206,7 @@ describe("x-WebApp", () => {
 
       class MyAuthorizationPolicy implements IAuthorizationPolicy {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
-        authorize(req: IRequestContextReader): boolean | Promise<boolean> {
+        authorize(context: AuthorizationContext): boolean | Promise<boolean> {
           this.logger.debug("Authorization works");
           aggregation.push(`authorization`);
           return true;

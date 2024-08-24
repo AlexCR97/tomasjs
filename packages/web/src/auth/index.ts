@@ -7,6 +7,7 @@ export {
   isAuthenticationPolicyFunction,
 } from "./Authentication";
 export {
+  AuthorizationContext,
   AuthorizationPolicyFunction,
   authorization,
   isAuthorizationPolicyFunction,

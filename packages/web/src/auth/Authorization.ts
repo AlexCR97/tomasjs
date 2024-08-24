@@ -3,8 +3,12 @@ import { MiddlewareFunction, MiddlewareAggregate } from "@/middleware";
 import { IRequestContextReader, RequestContextReader } from "@/server";
 
 export type AuthorizationPolicyFunction = (
-  req: IRequestContextReader
+  context: AuthorizationContext
 ) => boolean | Promise<boolean>;
+
+export type AuthorizationContext = {
+  req: IRequestContextReader;
+};
 
 export function isAuthorizationPolicyFunction(obj: unknown): obj is AuthorizationPolicyFunction {
   return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 1;
@@ -18,7 +22,7 @@ export function authorization(policy: AuthorizationPolicyFunction): MiddlewareFu
       }
 
       const reqReader = RequestContextReader.from(req);
-      const authorized = await policy(reqReader);
+      const authorized = await policy({ req: reqReader });
 
       if (authorized) {
         req.user.authorize();

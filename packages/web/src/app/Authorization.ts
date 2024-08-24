@@ -11,15 +11,19 @@ export type AuthorizationPolicyType =
   | Constructor<IAuthorizationPolicyFactory>;
 
 export type AuthorizationPolicyFunction = (
-  req: IRequestContextReader
+  context: AuthorizationContext
 ) => boolean | Promise<boolean>;
+
+export type AuthorizationContext = {
+  req: IRequestContextReader;
+};
 
 export function isAuthorizationPolicyFunction(obj: unknown): obj is AuthorizationPolicyFunction {
   return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
 }
 
 export interface IAuthorizationPolicy {
-  authorize(req: IRequestContextReader): boolean | Promise<boolean>;
+  authorize(context: AuthorizationContext): boolean | Promise<boolean>;
 }
 
 export function isIAuthorizationPolicy(obj: unknown): obj is IAuthorizationPolicy {

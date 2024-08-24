@@ -532,16 +532,16 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     }
 
     if (isAuthorizationPolicyFunction(policyType)) {
-      return (req) => {
-        const context = RequestContextReader.from(req, services);
-        return policyType(context);
+      return ({ req }) => {
+        const reqReader = RequestContextReader.from(req, services);
+        return policyType({ req: reqReader });
       };
     }
 
     if (isIAuthorizationPolicy(policyType)) {
-      return (req) => {
-        const context = RequestContextReader.from(req, services);
-        return policyType.authorize(context);
+      return ({ req }) => {
+        const reqReader = RequestContextReader.from(req, services);
+        return policyType.authorize({ req: reqReader });
       };
     }
 
