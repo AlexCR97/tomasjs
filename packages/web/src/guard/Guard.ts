@@ -1,11 +1,11 @@
 import { HttpResponse } from "@/server";
 import { MiddlewareFunction } from "@/middleware";
 import { ProblemDetailsContent } from "@/content";
-import { ProblemDetails } from "@/ProblemDetails";
 import { IRequestContext, IResponseWriter } from "@/server";
 import { InvalidOperationError } from "@tomasjs/core/errors";
 import { httpStatus } from "@/HttpStatus";
 import { isNotNull, hasLength, isFunction } from "@/common";
+import { ProblemDetails } from "@/problems";
 
 export type GuardFunction = (context: GuardContext) => GuardResult | Promise<GuardResult>;
 
@@ -55,23 +55,25 @@ export function guard(guard: GuardFunction): MiddlewareFunction {
   function buildProblemDetails(req: IRequestContext, status: 401 | 403): ProblemDetails {
     if (status === 401) {
       const { type, title, code: status, details } = httpStatus.unauthorized;
-      return new ProblemDetails({
+      return ProblemDetails.from({
         type,
         title,
         status,
         details,
         instance: req.path,
+        extensions: {},
       });
     }
 
     if (status === 403) {
       const { type, title, code: status, details } = httpStatus.forbidden;
-      return new ProblemDetails({
+      return ProblemDetails.from({
         type,
         title,
         status,
         details,
         instance: req.path,
+        extensions: {},
       });
     }
 

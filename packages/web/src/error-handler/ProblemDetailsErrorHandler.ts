@@ -1,10 +1,10 @@
 import { ProblemDetailsContent } from "@/content";
 import { ErrorHandlerFunction } from "./ErrorHandler";
-import { ProblemDetails } from "@/ProblemDetails";
 import { statusCode } from "@/StatusCode";
 import { IRequestContext } from "@/server";
 import { TomasError } from "@tomasjs/core/errors";
 import { httpStatus } from "@/HttpStatus";
+import { ProblemDetails } from "@/problems";
 
 // TODO Improve this
 export function problemDetailsErrorHandler(options?: {
@@ -26,17 +26,11 @@ export function problemDetailsErrorHandler(options?: {
   function buildProblemDetails(req: IRequestContext, err: any): ProblemDetails {
     const { type, title, code: status, details } = httpStatus.internalServerError;
 
-    const problemDetails = new ProblemDetails({
-      type,
-      title,
-      status,
-      details,
-      instance: req.path,
-    });
+    const problemDetails = new ProblemDetails(type, status, title, details, req.path, {});
 
     if (options?.includeError === true) {
       const error = buildError(err);
-      problemDetails.withExtension("error", error);
+      problemDetails.extensions!["error"] = error;
     }
 
     return problemDetails;

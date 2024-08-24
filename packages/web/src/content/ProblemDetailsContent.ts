@@ -1,16 +1,16 @@
-import { ProblemDetails } from "@/ProblemDetails";
+import { IProblemDetails, ProblemDetails } from "@/problems";
 import { HttpContentType, IHttpContent } from "@tomasjs/core/http";
 
-export class ProblemDetailsContent implements IHttpContent<ProblemDetails> {
+export class ProblemDetailsContent implements IHttpContent<IProblemDetails> {
   readonly type: HttpContentType = "application/problem+json";
 
   constructor(readonly data: Buffer) {}
 
-  readData(): ProblemDetails {
+  readData(): IProblemDetails {
     // TODO Add non-standard fields to extensions
     const json = this.data.toString();
     const problemDetails = JSON.parse(json);
-    return new ProblemDetails(problemDetails);
+    return ProblemDetails.from(problemDetails);
   }
 
   static from(problemDetails: ProblemDetails): ProblemDetailsContent {

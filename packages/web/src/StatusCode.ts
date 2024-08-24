@@ -1,5 +1,6 @@
 import { httpStatus } from "./HttpStatus";
 
+// TODO Deprecate this
 export const statusCode = {
   ok: httpStatus.ok.code,
   created: httpStatus.created.code,

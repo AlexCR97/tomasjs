@@ -1,3 +1,5 @@
+// TODO Improve this
+
 const successfulStatus = {
   ok: {
     code: 200,
