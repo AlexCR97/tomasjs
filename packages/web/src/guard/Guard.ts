@@ -7,9 +7,11 @@ import { InvalidOperationError } from "@tomasjs/core/errors";
 import { httpStatus } from "@/HttpStatus";
 import { isNotNull, hasLength, isFunction } from "@/common";
 
-export type GuardResult = boolean | 401 | 403;
+export type GuardFunction = (context: GuardContext) => GuardResult | Promise<GuardResult>;
 
-export type GuardFunction = (request: IRequestContext) => GuardResult | Promise<GuardResult>;
+export type GuardContext = { req: IRequestContext };
+
+export type GuardResult = boolean | 401 | 403;
 
 export function isGuardFunction(obj: unknown): obj is GuardFunction {
   return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 1;
@@ -17,7 +19,7 @@ export function isGuardFunction(obj: unknown): obj is GuardFunction {
 
 export function guard(guard: GuardFunction): MiddlewareFunction {
   return async ({ req, res, next }) => {
-    const result = await guard(req);
+    const result = await guard({ req });
 
     if (result === true) {
       return await next();

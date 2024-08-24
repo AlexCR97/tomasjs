@@ -1,5 +1,6 @@
 import { IRequestContext } from "@/server";
 import {
+  GuardContext,
   GuardFunction,
   GuardResult,
   IGuard,
@@ -44,7 +45,7 @@ describe("app/Guard", () => {
   describe(isIGuard.name, () => {
     it("should return true for a guard instance", () => {
       class MyGuard implements IGuard {
-        protect(req: IRequestContext): GuardResult {
+        protect(context: GuardContext): GuardResult {
           return true;
         }
       }
@@ -55,7 +56,7 @@ describe("app/Guard", () => {
 
     it("should return true for a guard instance with an async method", () => {
       class MyGuard implements IGuard {
-        async protect(req: IRequestContext): Promise<GuardResult> {
+        async protect(context: GuardContext): Promise<GuardResult> {
           return true;
         }
       }

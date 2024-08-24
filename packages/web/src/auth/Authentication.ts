@@ -33,7 +33,7 @@ export function authentication(policy: AuthenticationPolicyFunction): Middleware
         }
       }
     })
-    .addGuard((req) => {
+    .addGuard(({ req }) => {
       return req.user.authenticated ? true : 401;
     })
     .get();

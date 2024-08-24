@@ -460,16 +460,16 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     }
 
     if (isGuardFunction(guardType)) {
-      return (req) => {
+      return ({ req }) => {
         const requestContext = RequestContext.from(req, services);
-        return guardType(requestContext);
+        return guardType({ req: requestContext });
       };
     }
 
     if (isIGuard(guardType)) {
-      return (req) => {
+      return ({ req }) => {
         const requestContext = RequestContext.from(req, services);
-        return guardType.protect(requestContext);
+        return guardType.protect({ req: requestContext });
       };
     }
 

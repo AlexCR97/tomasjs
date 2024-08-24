@@ -24,7 +24,7 @@ export function authorization(policy: AuthorizationPolicyFunction): MiddlewareFu
         req.user.authorize();
       }
     })
-    .addGuard((req) => {
+    .addGuard(({ req }) => {
       return req.user.authenticated && req.user.authorized ? true : 403;
     })
     .get();

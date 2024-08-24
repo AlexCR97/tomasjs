@@ -9,7 +9,9 @@ export type GuardType =
   | IGuardFactory
   | Constructor<IGuardFactory>;
 
-export type GuardFunction = (request: IRequestContext) => GuardResult | Promise<GuardResult>;
+export type GuardFunction = (context: GuardContext) => GuardResult | Promise<GuardResult>;
+
+export type GuardContext = { req: IRequestContext };
 
 export type GuardResult = boolean | 401 | 403;
 
@@ -18,7 +20,7 @@ export function isGuardFunction(obj: unknown): obj is GuardFunction {
 }
 
 export interface IGuard {
-  protect(req: IRequestContext): GuardResult | Promise<GuardResult>;
+  protect(context: GuardContext): GuardResult | Promise<GuardResult>;
 }
 
 export function isIGuard(obj: unknown): obj is IGuard {

@@ -25,7 +25,7 @@ import {
   InterceptorContext,
   InterceptorFunction,
 } from "./Interceptor";
-import { GuardFunction, GuardResult, IGuard, IGuardFactory } from "./Guard";
+import { GuardContext, GuardFunction, GuardResult, IGuard, IGuardFactory } from "./Guard";
 import {
   AuthenticationPolicyFunction,
   AuthenticationPolicyResult,
@@ -342,7 +342,7 @@ describe("x-WebApp", () => {
       app = await new WebAppBuilder({ server })
         .setupLogging((logging) => logging.withConfiguration(loggerConfig))
         .setupHttpPipeline((pipeline) => {
-          pipeline.useGuard((req) => {
+          pipeline.useGuard(({ req }) => {
             const logger = req.services.getOrThrow<ILogger>(LOGGER);
             logger.debug("GuardFunction works!");
             return req.headers[secretHeaderKey] === secretHeaderValue;
@@ -361,7 +361,7 @@ describe("x-WebApp", () => {
 
     it("should use an IGuard", async () => {
       class MyGuard implements IGuard {
-        protect(req: IRequestContext): GuardResult {
+        protect({ req }: GuardContext): GuardResult {
           return req.headers[secretHeaderKey] === secretHeaderValue;
         }
       }
@@ -386,7 +386,7 @@ describe("x-WebApp", () => {
       class MyGuard implements IGuard {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
 
-        protect(req: IRequestContext): GuardResult {
+        protect({ req }: GuardContext): GuardResult {
           this.logger.debug("IGuard service works!");
           return req.headers[secretHeaderKey] === secretHeaderValue;
         }
@@ -411,7 +411,7 @@ describe("x-WebApp", () => {
     it("should use an IGuardFactory", async () => {
       class MyGuard implements IGuardFactory {
         createGuard(): GuardFunction {
-          return (req) => {
+          return ({ req }) => {
             return req.headers[secretHeaderKey] === secretHeaderValue;
           };
         }
@@ -438,7 +438,7 @@ describe("x-WebApp", () => {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
 
         createGuard(): GuardFunction {
-          return (req) => {
+          return ({ req }) => {
             this.logger.debug("IGuardFactory service works!");
             return req.headers[secretHeaderKey] === secretHeaderValue;
           };
@@ -1042,7 +1042,7 @@ describe("x-WebApp", () => {
 
       class MyGuard implements IGuard {
         constructor(private readonly prefix: string) {}
-        protect(req: IRequestContext): GuardResult | Promise<GuardResult> {
+        protect({ req }: GuardContext): GuardResult | Promise<GuardResult> {
           aggregation.push(`${this.prefix}-guard`);
           return true;
         }
@@ -1179,7 +1179,7 @@ describe("x-WebApp", () => {
 
       class MyGuard implements IGuard {
         constructor(@inject(LOGGER) private readonly logger: ILogger) {}
-        protect(req: IRequestContext): GuardResult | Promise<GuardResult> {
+        protect({ req }: GuardContext): GuardResult | Promise<GuardResult> {
           this.logger.debug("Guard works");
           aggregation.push(`guard`);
           return true;

@@ -1,1 +1,1 @@
-export { GuardFunction, GuardResult, guard, isGuardFunction } from "./Guard";
+export { GuardContext, GuardFunction, GuardResult, guard, isGuardFunction } from "./Guard";

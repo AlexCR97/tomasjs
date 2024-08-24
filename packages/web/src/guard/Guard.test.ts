@@ -42,7 +42,7 @@ describe("server/Guard", () => {
     const apiKeyHeader = "x-api-key";
     const apiKeyValue = "foo bar fizz buzz";
 
-    const myGuardFunction: GuardFunction = (req) => {
+    const myGuardFunction: GuardFunction = ({ req }) => {
       const apiKey = req.headers[apiKeyHeader];
       return apiKey === apiKeyValue;
     };
