@@ -1,5 +1,5 @@
-import { IProblemDetails, ProblemDetails } from "@/problems";
 import { HttpContentType, IHttpContent } from "@tomasjs/core/http";
+import { IProblemDetails, ProblemDetails } from "@/problems";
 
 export class ProblemDetailsContent implements IHttpContent<IProblemDetails> {
   readonly type: HttpContentType = "application/problem+json";
@@ -13,7 +13,8 @@ export class ProblemDetailsContent implements IHttpContent<IProblemDetails> {
     return ProblemDetails.from(problemDetails);
   }
 
-  static from(problemDetails: ProblemDetails): ProblemDetailsContent {
+  static from(problems: IProblemDetails): ProblemDetailsContent {
+    const problemDetails = ProblemDetails.from(problems);
     const plainProblemDetails = problemDetails.toPlain();
     const json = JSON.stringify(plainProblemDetails);
     const data = Buffer.from(json, "utf-8");

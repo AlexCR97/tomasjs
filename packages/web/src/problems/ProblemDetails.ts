@@ -38,8 +38,10 @@ export interface IProblemDetails {
    * Clients consuming problem details MUST ignore any such extensions that they don't recognize;
    * this allows problem types to evolve and include additional information in the future.
    */
-  readonly extensions: Record<string, any> | undefined;
+  readonly extensions: ProblemDetailsExtensions | undefined;
 }
+
+export type ProblemDetailsExtensions = Record<string, any>;
 
 export class ProblemDetails implements IProblemDetails {
   constructor(
@@ -48,7 +50,7 @@ export class ProblemDetails implements IProblemDetails {
     readonly title: string,
     readonly details: string | undefined,
     readonly instance: string,
-    readonly extensions: Record<string, any> | undefined
+    readonly extensions: ProblemDetailsExtensions | undefined
   ) {}
 
   toPlain(): Record<string, any> {
@@ -87,10 +89,9 @@ export interface IProblemDetailsBuilder {
   withTitle(title: string): this;
   withDetails(details: string | undefined): this;
   withInstance(instance: string): this;
-  withExtensions(extensions: Record<string, any> | undefined): this;
-  addExtensions(extensions: Record<string, any>): this;
+  withExtensions(extensions: ProblemDetailsExtensions | undefined): this;
+  addExtensions(extensions: ProblemDetailsExtensions): this;
   setExtension<T>(key: string, value: T): this;
-  build(): IProblemDetails;
 }
 
 export class ProblemDetailsBuilder implements IProblemDetailsBuilder {
@@ -99,7 +100,63 @@ export class ProblemDetailsBuilder implements IProblemDetailsBuilder {
   private title: string | undefined;
   private details: string | undefined;
   private instance: string | undefined;
-  private extensions: Record<string, any> | undefined;
+  private extensions: ProblemDetailsExtensions | undefined;
+
+  with(problem: ProblemDetails): this;
+  with(builder: ProblemDetailsBuilder): this;
+  with(arg: unknown): this {
+    if (arg instanceof ProblemDetails) {
+      return this.withProblemDetails(arg);
+    }
+
+    if (arg instanceof ProblemDetailsBuilder) {
+      return this.withProblemDetailsBuilder(arg);
+    }
+
+    throw new TypeError(`Unknown Problem Details type: ${arg}`);
+  }
+
+  private withProblemDetails(problem: ProblemDetails): this {
+    this.withType(problem.type)
+      .withStatus(problem.status)
+      .withTitle(problem.title)
+      .withDetails(problem.details)
+      .withInstance(problem.instance);
+
+    if (problem.extensions) {
+      this.addExtensions(problem.extensions);
+    }
+
+    return this;
+  }
+
+  private withProblemDetailsBuilder(builder: ProblemDetailsBuilder): this {
+    if (builder.type !== undefined) {
+      this.withType(builder.type);
+    }
+
+    if (builder.status !== undefined) {
+      this.withStatus(builder.status);
+    }
+
+    if (builder.title !== undefined) {
+      this.withTitle(builder.title);
+    }
+
+    if (builder.details !== undefined) {
+      this.withDetails(builder.details);
+    }
+
+    if (builder.instance !== undefined) {
+      this.withInstance(builder.instance);
+    }
+
+    if (builder.extensions !== undefined) {
+      this.addExtensions(builder.extensions);
+    }
+
+    return this;
+  }
 
   withType(type: string): this {
     this.type = type;
@@ -126,12 +183,12 @@ export class ProblemDetailsBuilder implements IProblemDetailsBuilder {
     return this;
   }
 
-  withExtensions(extensions: Record<string, any> | undefined): this {
+  withExtensions(extensions: ProblemDetailsExtensions | undefined): this {
     this.extensions = extensions;
     return this;
   }
 
-  addExtensions(extensions: Record<string, any>): this {
+  addExtensions(extensions: ProblemDetailsExtensions): this {
     this.extensions = { ...this.extensions, ...extensions };
     return this;
   }
