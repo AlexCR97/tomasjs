@@ -45,8 +45,21 @@ import {
   IAuthorizationPolicyFactory,
 } from "./Authorization";
 import { Endpoint } from "./Endpoint";
-import { HttpResponse, IHttpServer, IResponseWriter } from "@/server";
+import { HttpResponse, IHttpServer } from "@/server";
 import { Claims, rolePolicy } from "@/auth";
+import {
+  IProblemDetailsConfigure,
+  IProblemDetailsExtensions,
+  ProblemDetailsConfigureContext,
+  ProblemDetailsConfigureFunction,
+  ProblemDetailsConfigureResult,
+  ProblemDetailsErrorHandler,
+  ProblemDetailsExtensionsFactory,
+  ProblemDetailsExtensionsFactoryContext,
+} from "./ProblemDetailsErrorHandler";
+import { httpStatus } from "@/HttpStatus";
+import { ProblemDetails, ProblemDetailsExtensions } from "@/problems";
+import { TomasError } from "@tomasjs/core/errors";
 
 // TODO Rename test suite
 describe("x-WebApp", () => {
@@ -1614,6 +1627,352 @@ describe("x-WebApp", () => {
 
       expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
       expect(response.body.readData()).toMatch(errorMessage);
+    });
+
+    describe("Problem Details", () => {
+      const expected = ProblemDetails.from({
+        type: "foo",
+        status: HTTP_STATUS_CODES.badRequest,
+        title: "bar",
+        details: "Lorem ipsum",
+        instance: "/test",
+        extensions: {
+          fizz: "buzz",
+        },
+      });
+
+      it("should return a problem details response", async () => {
+        app = await new WebAppBuilder({ server })
+          .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+          .setupHttpPipeline((pipeline) => {
+            pipeline.useErrorHandler(new ProblemDetailsErrorHandler());
+
+            pipeline.get("/", () => {
+              throw new Error(errorMessage);
+            });
+          })
+          .build();
+
+        await app.start();
+
+        const response = await client.get("/");
+        expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
+
+        const responseStr = response.body.toString();
+        const responseJson = JSON.parse(responseStr);
+        expect(responseJson.type).toMatch(httpStatus.internalServerError.type);
+        expect(responseJson.status).toBe(httpStatus.internalServerError.code);
+        expect(responseJson.title).toMatch(httpStatus.internalServerError.title);
+        expect(responseJson.details).toMatch(httpStatus.internalServerError.details);
+        expect(responseJson.instance).toMatch("/");
+      });
+
+      it("should configure the problem details with a function", async () => {
+        app = await new WebAppBuilder({ server })
+          .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+          .setupHttpPipeline((pipeline) => {
+            pipeline.useErrorHandler(
+              new ProblemDetailsErrorHandler().configure(({ req, err, problem, services }) => {
+                return ProblemDetails.from(expected);
+              })
+            );
+
+            pipeline.get("/", () => {
+              throw new Error(errorMessage);
+            });
+          })
+          .build();
+
+        await app.start();
+
+        const response = await client.get("/");
+        expect(response.status).toBe(expected.status);
+
+        const responseStr = response.body.toString();
+        const responseJson = JSON.parse(responseStr);
+        expect(responseJson).toMatchObject(expected.toPlain());
+      });
+
+      it("should configure the problem details with a class", async () => {
+        class MyConfigure implements IProblemDetailsConfigure {
+          configure(
+            context: ProblemDetailsConfigureContext
+          ): ProblemDetailsConfigureResult | Promise<ProblemDetailsConfigureResult> {
+            return ProblemDetails.from(expected);
+          }
+        }
+
+        app = await new WebAppBuilder({ server })
+          .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+          .setupHttpPipeline((pipeline) => {
+            pipeline.useErrorHandler(new ProblemDetailsErrorHandler().configure(new MyConfigure()));
+
+            pipeline.get("/", () => {
+              throw new Error(errorMessage);
+            });
+          })
+          .build();
+
+        await app.start();
+
+        const response = await client.get("/");
+        expect(response.status).toBe(expected.status);
+
+        const responseStr = response.body.toString();
+        const responseJson = JSON.parse(responseStr);
+        expect(responseJson).toMatchObject(expected.toPlain());
+      });
+
+      it("should configure the problem details with a service", async () => {
+        class MyConfigure implements IProblemDetailsConfigure {
+          constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+          configure(
+            context: ProblemDetailsConfigureContext
+          ): ProblemDetailsConfigureResult | Promise<ProblemDetailsConfigureResult> {
+            this.logger.debug("IProblemDetailsConfigure service works!");
+            return ProblemDetails.from(expected);
+          }
+        }
+
+        app = await new WebAppBuilder({ server })
+          .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+          .setupContainer((container) => {
+            container.add("singleton", MyConfigure);
+          })
+          .setupHttpPipeline((pipeline) => {
+            pipeline.useErrorHandler(new ProblemDetailsErrorHandler().configure(MyConfigure));
+
+            pipeline.get("/", () => {
+              throw new Error(errorMessage);
+            });
+          })
+          .build();
+
+        await app.start();
+
+        const response = await client.get("/");
+        expect(response.status).toBe(expected.status);
+
+        const responseStr = response.body.toString();
+        const responseJson = JSON.parse(responseStr);
+        expect(responseJson).toMatchObject(expected.toPlain());
+      });
+
+      it("should configure the problem details with a service using the builder", async () => {
+        class MyConfigure implements IProblemDetailsConfigure {
+          constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+          configure({
+            problem,
+          }: ProblemDetailsConfigureContext):
+            | ProblemDetailsConfigureResult
+            | Promise<ProblemDetailsConfigureResult> {
+            this.logger.debug("IProblemDetailsConfigure service with builder works!");
+            return problem
+              .withType(expected.type)
+              .withStatus(expected.status)
+              .withTitle(expected.title)
+              .withDetails(expected.details)
+              .withInstance(expected.instance)
+              .withExtensions(expected.extensions);
+          }
+        }
+
+        app = await new WebAppBuilder({ server })
+          .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+          .setupContainer((container) => {
+            container.add("singleton", MyConfigure);
+          })
+          .setupHttpPipeline((pipeline) => {
+            pipeline.useErrorHandler(new ProblemDetailsErrorHandler().configure(MyConfigure));
+
+            pipeline.get("/", () => {
+              throw new Error(errorMessage);
+            });
+          })
+          .build();
+
+        await app.start();
+
+        const response = await client.get("/");
+        expect(response.status).toBe(expected.status);
+
+        const responseStr = response.body.toString();
+        const responseJson = JSON.parse(responseStr);
+        expect(responseJson).toMatchObject(expected.toPlain());
+      });
+
+      it("should extend the problem details with a value", async () => {
+        app = await new WebAppBuilder({ server })
+          .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+          .setupHttpPipeline((pipeline) => {
+            pipeline.useErrorHandler(
+              new ProblemDetailsErrorHandler().extend({ foo: "bar", fizz: "buzz" })
+            );
+
+            pipeline.get("/", () => {
+              throw new Error(errorMessage);
+            });
+          })
+          .build();
+
+        await app.start();
+
+        const response = await client.get("/");
+        expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
+
+        const responseStr = response.body.toString();
+        const responseJson = JSON.parse(responseStr);
+        expect(responseJson.foo).toMatch("bar");
+        expect(responseJson.fizz).toMatch("buzz");
+      });
+
+      it("should extend the problem details with a function", async () => {
+        app = await new WebAppBuilder({ server })
+          .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+          .setupHttpPipeline((pipeline) => {
+            pipeline.useErrorHandler(
+              new ProblemDetailsErrorHandler().extend(({ req, err, services }) => {
+                return { timestamp: Date.now() };
+              })
+            );
+
+            pipeline.get("/", () => {
+              throw new Error(errorMessage);
+            });
+          })
+          .build();
+
+        await app.start();
+
+        const response = await client.get("/");
+        expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
+
+        const responseStr = response.body.toString();
+        const responseJson = JSON.parse(responseStr);
+        expect(responseJson.timestamp).toBeLessThanOrEqual(Date.now());
+      });
+
+      it("should extend the problem details with a class", async () => {
+        class MyExtension implements IProblemDetailsExtensions {
+          extend({ services }: ProblemDetailsExtensionsFactoryContext): ProblemDetailsExtensions {
+            const logger = services.getOrThrow<ILogger>(LOGGER);
+            logger.debug("IProblemDetailsExtensions works!");
+            return { timestamp: Date.now() };
+          }
+        }
+
+        app = await new WebAppBuilder({ server })
+          .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+          .setupHttpPipeline((pipeline) => {
+            pipeline.useErrorHandler(new ProblemDetailsErrorHandler().extend(new MyExtension()));
+
+            pipeline.get("/", () => {
+              throw new Error(errorMessage);
+            });
+          })
+          .build();
+
+        await app.start();
+
+        const response = await client.get("/");
+        expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
+
+        const responseStr = response.body.toString();
+        const responseJson = JSON.parse(responseStr);
+        expect(responseJson.timestamp).toBeLessThanOrEqual(Date.now());
+      });
+
+      it("should extend the problem details with a service", async () => {
+        class MyExtension implements IProblemDetailsExtensions {
+          constructor(@inject(LOGGER) private readonly logger: ILogger) {}
+
+          extend(context: ProblemDetailsExtensionsFactoryContext): ProblemDetailsExtensions {
+            this.logger.debug("IProblemDetailsExtensions service works!");
+            return { timestamp: Date.now() };
+          }
+        }
+
+        app = await new WebAppBuilder({ server })
+          .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+          .setupContainer((container) => {
+            container.add("singleton", MyExtension);
+          })
+          .setupHttpPipeline((pipeline) => {
+            pipeline.useErrorHandler(new ProblemDetailsErrorHandler().extend(MyExtension));
+
+            pipeline.get("/", () => {
+              throw new Error(errorMessage);
+            });
+          })
+          .build();
+
+        await app.start();
+
+        const response = await client.get("/");
+        expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
+
+        const responseStr = response.body.toString();
+        const responseJson = JSON.parse(responseStr);
+        expect(responseJson.timestamp).toBeLessThanOrEqual(Date.now());
+      });
+
+      it("should configure and extend the problem details in a real-world scenario", async () => {
+        const applicationName = "@tomasjs/web/tests";
+        const errorCode = "not_found";
+
+        class NotFoundError extends TomasError {
+          constructor() {
+            super(errorCode, "The resource was not found");
+          }
+        }
+
+        const applicationExtension: ProblemDetailsExtensions = {
+          application: applicationName,
+        };
+
+        const timestampExtension: ProblemDetailsExtensionsFactory = () => {
+          return { timestamp: Date.now() };
+        };
+
+        const problemDetailsConfiguration: ProblemDetailsConfigureFunction = ({ err, problem }) => {
+          const myError = err as NotFoundError;
+
+          return problem
+            .withType(httpStatus.notFound.type)
+            .withStatus(HTTP_STATUS_CODES.notFound)
+            .withTitle(myError.code)
+            .withDetails(myError.message);
+        };
+
+        app = await new WebAppBuilder({ server })
+          .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+          .setupHttpPipeline((pipeline) => {
+            pipeline.useErrorHandler(
+              new ProblemDetailsErrorHandler()
+                .configure(problemDetailsConfiguration)
+                .extend(applicationExtension)
+                .extend(timestampExtension)
+            );
+
+            pipeline.get("/", () => {
+              throw new NotFoundError();
+            });
+          })
+          .build();
+
+        await app.start();
+
+        const response = await client.get("/");
+        expect(response.status).toBe(HTTP_STATUS_CODES.notFound);
+
+        const responseStr = response.body.toString();
+        const responseJson = JSON.parse(responseStr);
+        expect(responseJson.application).toMatch(applicationName);
+        expect(responseJson.timestamp).toBeLessThanOrEqual(Date.now());
+        expect(responseJson.title).toMatch(errorCode);
+      });
     });
   });
 });

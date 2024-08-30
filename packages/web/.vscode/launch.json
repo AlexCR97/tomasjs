@@ -12,7 +12,7 @@
         "--testTimeout",
         "300000",
         "--config=${workspaceRoot}/jest.config.ts",
-        "--testNamePattern=problems"
+        "--testNamePattern=x-WebApp"
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"

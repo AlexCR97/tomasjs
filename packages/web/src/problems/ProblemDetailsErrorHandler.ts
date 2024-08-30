@@ -12,11 +12,11 @@ import {
 } from "./ProblemDetails";
 
 export type ProblemDetailsOptions = {
-  configure?: ProblemDetailsConfigure;
+  configure?: ProblemDetailsConfigureFunction;
   extensions?: ProblemDetailsExtensionOption[];
 };
 
-export type ProblemDetailsConfigure = (
+export type ProblemDetailsConfigureFunction = (
   context: ProblemDetailsConfigureContext
 ) => ProblemDetailsConfigureResult | Promise<ProblemDetailsConfigureResult>;
 
@@ -77,7 +77,7 @@ export function problemDetails(options?: ProblemDetailsOptions): ErrorHandlerFun
     req: IRequestContext;
     err: unknown;
     problem: ProblemDetailsBuilder;
-    configure: ProblemDetailsConfigure;
+    configure: ProblemDetailsConfigureFunction;
   }): Promise<void> {
     const { req, err, problem, configure } = options;
 
