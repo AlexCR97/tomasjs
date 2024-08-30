@@ -2,7 +2,7 @@ import { IServiceProvider } from "@tomasjs/core/dependency-injection";
 import { HttpMethod, IHttpContent, PlainHttpHeaders } from "@tomasjs/core/http";
 import { isHttpMethod } from "@tomasjs/core/http/HttpMethod";
 import { IUserReader } from "@/auth";
-import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
+import { isFunction, isInRange, isNotNull } from "@tomasjs/core/system";
 import { IEndpointContext as ServerEndpointContext } from "@/server";
 import { HttpResponse, IQueryParams, IRouteParams } from "@/server";
 import { AuthenticationPolicyType } from "./Authentication";
@@ -70,7 +70,7 @@ export function isPlainEndpoint(obj: unknown): obj is PlainEndpoint {
 }
 
 export function isEndpointHandler(obj: unknown): obj is EndpointHandler {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
+  return isNotNull(obj) && isFunction(obj) && isInRange(obj.length, 0, 1);
 }
 
 export interface IEndpoint {

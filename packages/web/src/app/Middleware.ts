@@ -1,6 +1,6 @@
 import { IServiceProvider } from "@tomasjs/core/dependency-injection";
 import { Constructor } from "@tomasjs/core/system";
-import { isNotNull, hasLength, isFunction, isInRange } from "@/common";
+import { isNotNull, isFunction, isInRange } from "@tomasjs/core/system";
 import { IRequestContext, IResponseWriter } from "@/server";
 
 export type MiddlewareType =
@@ -22,7 +22,7 @@ export type MiddlewareContext = {
 };
 
 export function isMiddlewareFunction(obj: unknown): obj is MiddlewareFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
+  return isNotNull(obj) && isFunction(obj) && isInRange(obj.length, 0, 1);
 }
 
 export interface IMiddleware {
@@ -43,6 +43,6 @@ export function isIMiddlewareFactory(obj: unknown): obj is IMiddlewareFactory {
   );
 
   function isMiddlewareFactoryFunction(obj: unknown): boolean {
-    return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 0;
+    return isNotNull(obj) && isFunction(obj) && obj.length === 0;
   }
 }

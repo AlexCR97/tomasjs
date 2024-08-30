@@ -1,6 +1,5 @@
-import { HttpClient, JsonContent } from "@tomasjs/core/http";
+import { HTTP_STATUS_CODES, HttpClient, JsonContent } from "@tomasjs/core/http";
 import { HttpResponse, IHttpServer } from "@/server";
-import { statusCode } from "@/StatusCode";
 import { testHttpServer } from "@/test";
 import { Endpoint } from "./Endpoint";
 import { MiddlewareFunction } from "./Middleware";
@@ -51,7 +50,7 @@ describe("Endpoint", () => {
       .useEndpoint(
         Endpoint.get("/", () => {
           return new HttpResponse({
-            status: statusCode.ok,
+            status: HTTP_STATUS_CODES.ok,
             content: JsonContent.from({
               aggregation,
             }),

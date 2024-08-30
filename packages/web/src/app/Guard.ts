@@ -1,6 +1,6 @@
 import { IServiceProvider } from "@tomasjs/core/dependency-injection";
 import { Constructor } from "@tomasjs/core/system";
-import { isNotNull, hasLength, isFunction, isInRange } from "@/common";
+import { isNotNull, isFunction, isInRange } from "@tomasjs/core/system";
 import { IRequestContext } from "@/server";
 
 export type GuardType =
@@ -17,7 +17,7 @@ export type GuardContext = { req: IRequestContext; services: IServiceProvider };
 export type GuardResult = boolean | 401 | 403;
 
 export function isGuardFunction(obj: unknown): obj is GuardFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
+  return isNotNull(obj) && isFunction(obj) && isInRange(obj.length, 0, 1);
 }
 
 export interface IGuard {
@@ -36,6 +36,6 @@ export function isIGuardFactory(obj: unknown): obj is IGuardFactory {
   return isNotNull(obj) && isGuardFactoryFunction((obj as IGuardFactory)["createGuard"]);
 
   function isGuardFactoryFunction(obj: unknown): boolean {
-    return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 0;
+    return isNotNull(obj) && isFunction(obj) && obj.length === 0;
   }
 }

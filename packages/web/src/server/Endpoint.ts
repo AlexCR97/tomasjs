@@ -1,9 +1,8 @@
-import { HttpMethod, IHttpContent, PlainHttpHeaders } from "@tomasjs/core/http";
+import { HTTP_STATUS_CODES, HttpMethod, IHttpContent, PlainHttpHeaders } from "@tomasjs/core/http";
 import { AuthenticationPolicyFunction, AuthorizationPolicyFunction, IUserReader } from "@/auth";
 import { MiddlewareFunction } from "./Middleware";
 import { InterceptorFunction } from "./Interceptor";
 import { GuardFunction } from "./Guard";
-import { statusCode } from "@/StatusCode";
 import { MiddlewareAggregate } from "./MiddlewareAggregate";
 import { HttpResponse } from "./HttpResponse";
 import { IRequestContext, IRequestContextReader, RequestContext } from "./RequestContext";
@@ -182,7 +181,7 @@ export function endpoints(endpoints: PlainEndpoint[]): MiddlewareFunction {
 
     if (endpoint === undefined) {
       return new HttpResponse({
-        status: statusCode.notFound,
+        status: HTTP_STATUS_CODES.notFound,
       });
     }
 

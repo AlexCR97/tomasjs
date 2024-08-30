@@ -1,8 +1,8 @@
 import { HttpResponse } from "@/server";
 import { IRequestContext, IResponseWriter } from "@/server";
 import { InvalidOperationError } from "@tomasjs/core/errors";
-import { httpStatus } from "@/HttpStatus";
-import { isNotNull, hasLength, isFunction } from "@/common";
+import { HTTP_STATUS } from "@/HttpStatus";
+import { isFunction, isInRange, isNotNull } from "@tomasjs/core/system";
 import { ProblemDetails, ProblemDetailsContent } from "@/problems";
 import { MiddlewareFunction } from "./Middleware";
 
@@ -13,7 +13,7 @@ export type GuardContext = { req: IRequestContext };
 export type GuardResult = boolean | 401 | 403;
 
 export function isGuardFunction(obj: unknown): obj is GuardFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 1;
+  return isNotNull(obj) && isFunction(obj) && isInRange(obj.length, 0, 1);
 }
 
 export function guard(guard: GuardFunction): MiddlewareFunction {
@@ -53,7 +53,7 @@ export function guard(guard: GuardFunction): MiddlewareFunction {
 
   function buildProblemDetails(req: IRequestContext, status: 401 | 403): ProblemDetails {
     if (status === 401) {
-      const { type, title, code: status, details } = httpStatus.unauthorized;
+      const { type, title, code: status, details } = HTTP_STATUS.unauthorized;
       return ProblemDetails.from({
         type,
         title,
@@ -65,7 +65,7 @@ export function guard(guard: GuardFunction): MiddlewareFunction {
     }
 
     if (status === 403) {
-      const { type, title, code: status, details } = httpStatus.forbidden;
+      const { type, title, code: status, details } = HTTP_STATUS.forbidden;
       return ProblemDetails.from({
         type,
         title,

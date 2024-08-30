@@ -1,6 +1,6 @@
 import { IServiceProvider } from "@tomasjs/core/dependency-injection";
 import { Constructor } from "@tomasjs/core/system";
-import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
+import { isFunction, isInRange, isNotNull } from "@tomasjs/core/system";
 import { IRequestContext, IResponseWriter } from "@/server";
 
 export type ErrorHandlerType =
@@ -20,7 +20,7 @@ export type ErrorHandlerContext = {
 };
 
 export function isErrorHandlerFunction(obj: unknown): obj is ErrorHandlerFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
+  return isNotNull(obj) && isFunction(obj) && isInRange(obj.length, 0, 1);
 }
 
 export interface IErrorHandler {
@@ -42,6 +42,6 @@ export function isIErrorHandlerFactory(obj: unknown): obj is IErrorHandlerFactor
   );
 
   function isErrorHandlerFactoryFunction(obj: unknown): boolean {
-    return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 0;
+    return isNotNull(obj) && isFunction(obj) && obj.length === 0;
   }
 }

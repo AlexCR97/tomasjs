@@ -83,7 +83,7 @@ import {
   isIAuthorizationPolicy,
   isIAuthorizationPolicyFactory,
 } from "./Authorization";
-import { isInRange } from "@/common";
+import { isInRange } from "@tomasjs/core/system";
 
 export type WebAppPipelineBuilderDelegate = (builder: IWebAppPipelineBuilder) => void;
 

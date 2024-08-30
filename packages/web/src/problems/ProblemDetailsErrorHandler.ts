@@ -1,5 +1,5 @@
 import { isFunction, isInRange, isNotNull } from "@tomasjs/core/system";
-import { httpStatus } from "@/HttpStatus";
+import { HTTP_STATUS } from "@/HttpStatus";
 import { ErrorHandlerFunction, IRequestContext } from "@/server";
 import {
   IProblemDetails,
@@ -48,7 +48,7 @@ export function isProblemDetailsExtensionsFactory(
 
 export function problemDetails(options?: ProblemDetailsOptions): ErrorHandlerFunction {
   return async ({ req, res, err }) => {
-    const { type, title, code: status, details } = httpStatus.internalServerError;
+    const { type, title, code: status, details } = HTTP_STATUS.internalServerError;
 
     const problem = new ProblemDetailsBuilder()
       .withType(type)

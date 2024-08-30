@@ -4,10 +4,9 @@ import { HTTP_STATUS_CODES, HttpClient, IHttpClient, JsonContent } from "@tomasj
 import { WebApp, WebAppBuilder } from "./WebApp";
 import { testHttpServer } from "@/test";
 import { RequestProfiler, requestProfilerOptions } from "./RequestProfiler";
-import { timeout } from "@/common";
+import { timeout } from "@tomasjs/core/system";
 
-// TODO Rename test suite
-describe("xx-RequestProfiler", () => {
+describe("app/RequestProfiler", () => {
   let client: IHttpClient;
   let server: IHttpServer;
   let app: WebApp | undefined;

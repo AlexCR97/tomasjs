@@ -5,7 +5,7 @@ import { problemDetails } from "./ProblemDetailsErrorHandler";
 import { TomasError } from "@tomasjs/core/errors";
 import { ProblemDetails } from "./ProblemDetails";
 import { errorExtension } from "./ErrorExtension";
-import { httpStatus } from "@/HttpStatus";
+import { HTTP_STATUS } from "@/HttpStatus";
 
 describe("problems/ProblemDetailsErrorHandler", () => {
   let server: IHttpServer;
@@ -35,10 +35,10 @@ describe("problems/ProblemDetailsErrorHandler", () => {
 
     const responseStr = response.body.toString();
     const responseJson = JSON.parse(responseStr);
-    expect(responseJson.type).toMatch(httpStatus.internalServerError.type);
-    expect(responseJson.status).toBe(httpStatus.internalServerError.code);
-    expect(responseJson.title).toMatch(httpStatus.internalServerError.title);
-    expect(responseJson.details).toMatch(httpStatus.internalServerError.details);
+    expect(responseJson.type).toMatch(HTTP_STATUS.internalServerError.type);
+    expect(responseJson.status).toBe(HTTP_STATUS.internalServerError.code);
+    expect(responseJson.title).toMatch(HTTP_STATUS.internalServerError.title);
+    expect(responseJson.details).toMatch(HTTP_STATUS.internalServerError.details);
     expect(responseJson.instance).toMatch("/");
   });
 

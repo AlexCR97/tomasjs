@@ -11,8 +11,7 @@
         "--runInBand",
         "--testTimeout",
         "300000",
-        "--config=${workspaceRoot}/jest.config.ts",
-        "--testNamePattern=x-WebApp"
+        "--config=${workspaceRoot}/jest.config.ts"
       ],
       "console": "integratedTerminal",
       "internalConsoleOptions": "neverOpen"

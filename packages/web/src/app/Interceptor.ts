@@ -1,6 +1,6 @@
 import { IServiceProvider } from "@tomasjs/core/dependency-injection";
 import { Constructor } from "@tomasjs/core/system";
-import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
+import { isFunction, isInRange, isNotNull } from "@tomasjs/core/system";
 import { IRequestContext } from "@/server";
 
 export type InterceptorType =
@@ -18,7 +18,7 @@ export type InterceptorContext = {
 };
 
 export function isInterceptorFunction(obj: unknown): obj is InterceptorFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
+  return isNotNull(obj) && isFunction(obj) && isInRange(obj.length, 0, 1);
 }
 
 export interface IInterceptor {
@@ -40,6 +40,6 @@ export function isIInterceptorFactory(obj: unknown): obj is IInterceptorFactory 
   );
 
   function isInterceptorFactoryFunction(obj: unknown): obj is boolean {
-    return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 0;
+    return isNotNull(obj) && isFunction(obj) && obj.length === 0;
   }
 }

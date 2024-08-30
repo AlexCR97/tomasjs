@@ -1,4 +1,4 @@
-import { isNotNull, hasLength, isFunction } from "@/common";
+import { isFunction, isInRange, isNotNull } from "@tomasjs/core/system";
 import { IRequestContext, MiddlewareFunction, MiddlewareAggregate } from "@/server";
 import { IClaims } from "./Claims";
 
@@ -16,7 +16,7 @@ export type AuthenticationPolicyResultExtended = {
 };
 
 export function isAuthenticationPolicyFunction(obj: unknown): obj is AuthenticationPolicyFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 1;
+  return isNotNull(obj) && isFunction(obj) && obj.length === 1;
 }
 
 export function authentication(policy: AuthenticationPolicyFunction): MiddlewareFunction[] {

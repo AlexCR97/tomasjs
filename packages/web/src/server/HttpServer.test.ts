@@ -1,8 +1,7 @@
-import { HttpClient, JsonContent, PlainTextContent } from "@tomasjs/core/http";
+import { HTTP_STATUS_CODES, HttpClient, JsonContent, PlainTextContent } from "@tomasjs/core/http";
 import { IHttpServer } from "./HttpServer";
 import { QueryParams } from "./QueryParams";
 import { RouteParams } from "./RouteParams";
-import { statusCode } from "@/StatusCode";
 import { RequestContext } from "./RequestContext";
 import { ResponseWriter } from "./ResponseWriter";
 import { testHttpServer } from "@/test";
@@ -25,7 +24,9 @@ describe("Server", () => {
   });
 
   it("should accept connections", async () => {
-    await server.useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok })).start();
+    await server
+      .useEndpoint("GET", "/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }))
+      .start();
 
     const response = await client.get(`http://localhost:${server.port}`);
 
@@ -36,7 +37,7 @@ describe("Server", () => {
     await server
       .useEndpoint("GET", "/path/to/resource", () => {
         return new HttpResponse({
-          status: statusCode.ok,
+          status: HTTP_STATUS_CODES.ok,
           content: PlainTextContent.from("Hooray!"),
         });
       })
@@ -60,7 +61,7 @@ describe("Server", () => {
     await server
       .useEndpoint("GET", "/", ({ query }) => {
         return new HttpResponse({
-          status: statusCode.ok,
+          status: HTTP_STATUS_CODES.ok,
           content: JsonContent.from(query.toPlain()),
         });
       })
@@ -90,7 +91,7 @@ describe("Server", () => {
         expect(jsonBodyContent).toMatchObject(expectedBodyContent);
 
         return new HttpResponse({
-          status: statusCode.ok,
+          status: HTTP_STATUS_CODES.ok,
           content: JsonContent.from(jsonBodyContent),
         });
       })
@@ -119,7 +120,7 @@ describe("Server", () => {
         expect(params).toBeInstanceOf(RouteParams);
 
         return new HttpResponse({
-          status: statusCode.ok,
+          status: HTTP_STATUS_CODES.ok,
           content: JsonContent.from(params.toPlain()),
         });
       })
@@ -201,7 +202,7 @@ describe("Server", () => {
             path: "/",
             handler: () => {
               return new HttpResponse({
-                status: statusCode.ok,
+                status: HTTP_STATUS_CODES.ok,
               });
             },
           },
@@ -221,7 +222,7 @@ describe("Server", () => {
 
     const response = await client.get(`http://localhost:${server.port}`);
 
-    expect(response.status).toBe(statusCode.internalServerError);
+    expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
   });
 
   it("should use a custom error handler", async () => {
@@ -240,7 +241,7 @@ describe("Server", () => {
         };
 
         return await res
-          .withStatus(statusCode.internalServerError)
+          .withStatus(HTTP_STATUS_CODES.internalServerError)
           .withContent(JsonContent.from(errorResponse))
           .send();
       })
@@ -248,7 +249,7 @@ describe("Server", () => {
 
     const response = await client.get(`http://localhost:${server.port}`);
 
-    expect(response.status).toBe(statusCode.internalServerError);
+    expect(response.status).toBe(HTTP_STATUS_CODES.internalServerError);
 
     const responseJson = response.body.readData() as ErrorResponse;
 

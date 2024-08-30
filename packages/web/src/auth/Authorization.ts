@@ -1,4 +1,4 @@
-import { isNotNull, hasLength, isFunction } from "@/common";
+import { isFunction, isInRange, isNotNull } from "@tomasjs/core/system";
 import {
   IRequestContextReader,
   MiddlewareAggregate,
@@ -15,7 +15,7 @@ export type AuthorizationContext = {
 };
 
 export function isAuthorizationPolicyFunction(obj: unknown): obj is AuthorizationPolicyFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 1;
+  return isNotNull(obj) && isFunction(obj) && isInRange(obj.length, 0, 1);
 }
 
 export function authorization(policy: AuthorizationPolicyFunction): MiddlewareFunction[] {

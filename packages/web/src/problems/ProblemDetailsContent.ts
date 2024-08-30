@@ -1,5 +1,6 @@
 import { HttpContentType, IHttpContent } from "@tomasjs/core/http";
-import { IProblemDetails, ProblemDetails } from "@/problems";
+import { merge } from "@tomasjs/core/system";
+import { IProblemDetails, ProblemDetails, ProblemDetailsBuilder } from "@/problems";
 
 export class ProblemDetailsContent implements IHttpContent<IProblemDetails> {
   readonly type: HttpContentType = "application/problem+json";
@@ -7,10 +8,37 @@ export class ProblemDetailsContent implements IHttpContent<IProblemDetails> {
   constructor(readonly data: Buffer) {}
 
   readData(): IProblemDetails {
-    // TODO Add non-standard fields to extensions
+    const builder = new ProblemDetailsBuilder();
+
     const json = this.data.toString();
-    const problemDetails = JSON.parse(json);
-    return ProblemDetails.from(problemDetails);
+    const plainProblemDetails = JSON.parse(json);
+    builder.with(ProblemDetails.from(plainProblemDetails));
+
+    const extensions = extractExtensions(plainProblemDetails);
+
+    builder.withExtensions(extensions);
+
+    return builder.build();
+
+    function extractExtensions(plainProblemDetails: Record<string, unknown>) {
+      const standardFields: (keyof IProblemDetails)[] = [
+        "type",
+        "status",
+        "title",
+        "details",
+        "instance",
+      ];
+
+      const extensionFields = Object.keys(plainProblemDetails).filter(
+        (key) => !standardFields.includes(key as keyof IProblemDetails)
+      );
+
+      const extensions: Record<string, unknown>[] = extensionFields.map((key) => ({
+        [key]: plainProblemDetails[key],
+      }));
+
+      return merge(extensions);
+    }
   }
 
   static from(problems: IProblemDetails): ProblemDetailsContent {

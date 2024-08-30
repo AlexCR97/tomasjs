@@ -1,6 +1,6 @@
 import { IServiceProvider } from "@tomasjs/core/dependency-injection";
 import { Constructor } from "@tomasjs/core/system";
-import { isNotNull, hasLength, isFunction, isInRange } from "@/common";
+import { isNotNull, isFunction, isInRange } from "@tomasjs/core/system";
 import { IRequestContextReader } from "@/server";
 import { isGuardFunction } from "./Guard";
 
@@ -21,7 +21,7 @@ export type AuthorizationContext = {
 };
 
 export function isAuthorizationPolicyFunction(obj: unknown): obj is AuthorizationPolicyFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
+  return isNotNull(obj) && isFunction(obj) && isInRange(obj.length, 0, 1);
 }
 
 export interface IAuthorizationPolicy {
@@ -45,6 +45,6 @@ export function isIAuthorizationPolicyFactory(obj: unknown): obj is IAuthorizati
   );
 
   function isAuthorizationPolicyFactoryFunction(obj: unknown): boolean {
-    return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 0;
+    return isNotNull(obj) && isFunction(obj) && obj.length === 0;
   }
 }

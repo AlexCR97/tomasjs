@@ -11,7 +11,7 @@ import {
 } from "@/problems";
 import { IRequestContext } from "@/server";
 import { ErrorHandlerFunction, IErrorHandler, IErrorHandlerFactory } from "./ErrorHandler";
-import { httpStatus } from "@/HttpStatus";
+import { HTTP_STATUS } from "@/HttpStatus";
 
 export type ProblemDetailsOptions = {
   configure?: ProblemDetailsConfigure;
@@ -135,7 +135,7 @@ export class ProblemDetailsErrorHandler implements IErrorHandlerFactory {
           const service = services.lastOrThrow(configure);
           return service.configure({ req, err, problem, services });
         } catch (error) {
-          const { type, title, code: status, details } = httpStatus.internalServerError;
+          const { type, title, code: status, details } = HTTP_STATUS.internalServerError;
 
           const fallbackErrorExtensionFactory = errorExtension({ stack: true });
           const fallbackErrorExtension = await fallbackErrorExtensionFactory({ req, err: error });

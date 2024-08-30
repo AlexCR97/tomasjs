@@ -1,7 +1,7 @@
 import { IServiceProvider } from "@tomasjs/core/dependency-injection";
 import { Constructor } from "@tomasjs/core/system";
 import { IClaims } from "@/auth";
-import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
+import { isFunction, isInRange, isNotNull } from "@tomasjs/core/system";
 import { IRequestContext } from "@/server";
 
 export type AuthenticationPolicyType =
@@ -28,7 +28,7 @@ export type AuthenticationPolicyResultExtended = {
 };
 
 export function isAuthenticationPolicyFunction(obj: unknown): obj is AuthenticationPolicyFunction {
-  return isNotNull(obj) && isFunction(obj) && hasLength(obj) && isInRange(obj.length, 0, 1);
+  return isNotNull(obj) && isFunction(obj) && isInRange(obj.length, 0, 1);
 }
 
 export interface IAuthenticationPolicy {
@@ -56,6 +56,6 @@ export function isIAuthenticationPolicyFactory(obj: unknown): obj is IAuthentica
   );
 
   function isAuthenticationPolicyFactoryFunction(obj: unknown): boolean {
-    return isNotNull(obj) && isFunction(obj) && hasLength(obj) && obj.length === 0;
+    return isNotNull(obj) && isFunction(obj) && obj.length === 0;
   }
 }

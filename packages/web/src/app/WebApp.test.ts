@@ -57,12 +57,11 @@ import {
   ProblemDetailsExtensionsFactory,
   ProblemDetailsExtensionsFactoryContext,
 } from "./ProblemDetailsErrorHandler";
-import { httpStatus } from "@/HttpStatus";
+import { HTTP_STATUS } from "@/HttpStatus";
 import { ProblemDetails, ProblemDetailsExtensions } from "@/problems";
 import { TomasError } from "@tomasjs/core/errors";
 
-// TODO Rename test suite
-describe("x-WebApp", () => {
+describe("app/WebApp", () => {
   const loggerConfig: LoggerConfiguration = {
     default: {
       level: "fatal",
@@ -1660,10 +1659,10 @@ describe("x-WebApp", () => {
 
         const responseStr = response.body.toString();
         const responseJson = JSON.parse(responseStr);
-        expect(responseJson.type).toMatch(httpStatus.internalServerError.type);
-        expect(responseJson.status).toBe(httpStatus.internalServerError.code);
-        expect(responseJson.title).toMatch(httpStatus.internalServerError.title);
-        expect(responseJson.details).toMatch(httpStatus.internalServerError.details);
+        expect(responseJson.type).toMatch(HTTP_STATUS.internalServerError.type);
+        expect(responseJson.status).toBe(HTTP_STATUS.internalServerError.code);
+        expect(responseJson.title).toMatch(HTTP_STATUS.internalServerError.title);
+        expect(responseJson.details).toMatch(HTTP_STATUS.internalServerError.details);
         expect(responseJson.instance).toMatch("/");
       });
 
@@ -1940,7 +1939,7 @@ describe("x-WebApp", () => {
           const myError = err as NotFoundError;
 
           return problem
-            .withType(httpStatus.notFound.type)
+            .withType(HTTP_STATUS.notFound.type)
             .withStatus(HTTP_STATUS_CODES.notFound)
             .withTitle(myError.code)
             .withDetails(myError.message);
