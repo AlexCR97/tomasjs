@@ -2,10 +2,10 @@ import { HttpClient, JsonContent } from "@tomasjs/core/http";
 import { HttpResponse, IHttpServer } from "@/server";
 import { statusCode } from "@/StatusCode";
 import { testHttpServer } from "@/test";
-import { MiddlewareFunction } from "@/middleware";
-import { InterceptorFunction } from "@/interceptor";
-import { GuardFunction } from "@/guard";
 import { Endpoint } from "./Endpoint";
+import { MiddlewareFunction } from "./Middleware";
+import { InterceptorFunction } from "./Interceptor";
+import { GuardFunction } from "./Guard";
 
 describe("Endpoint", () => {
   const client = new HttpClient();

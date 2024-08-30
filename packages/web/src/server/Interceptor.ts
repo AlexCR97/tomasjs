@@ -1,6 +1,6 @@
 import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
-import { MiddlewareFunction } from "@/middleware";
-import { IRequestContext } from "@/server";
+import { IRequestContext } from "./RequestContext";
+import { MiddlewareFunction } from "./Middleware";
 
 export type InterceptorFunction = (context: InterceptorContext) => void | Promise<void>;
 

@@ -6,6 +6,7 @@ export {
   ProblemDetailsBuilder,
   ProblemDetailsExtensions,
 } from "./ProblemDetails";
+export { ProblemDetailsContent } from "./ProblemDetailsContent";
 export {
   ProblemDetailsConfigureContext,
   ProblemDetailsConfigureFunction,

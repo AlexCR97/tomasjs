@@ -1,8 +1,6 @@
 import { isFunction, isInRange, isNotNull } from "@tomasjs/core/system";
 import { httpStatus } from "@/HttpStatus";
-import { ProblemDetailsContent } from "@/content";
-import { ErrorHandlerFunction } from "@/error-handler";
-import { IRequestContext } from "@/server";
+import { ErrorHandlerFunction, IRequestContext } from "@/server";
 import {
   IProblemDetails,
   IProblemDetailsBuilder,
@@ -10,6 +8,7 @@ import {
   ProblemDetailsBuilder,
   ProblemDetailsExtensions,
 } from "./ProblemDetails";
+import { ProblemDetailsContent } from "./ProblemDetailsContent";
 
 export type ProblemDetailsOptions = {
   configure?: ProblemDetailsConfigureFunction;

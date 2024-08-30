@@ -1,6 +1,5 @@
 import { isNotNull, hasLength, isFunction } from "@/common";
-import { MiddlewareFunction, MiddlewareAggregate } from "@/middleware";
-import { IRequestContext } from "@/server";
+import { IRequestContext, MiddlewareFunction, MiddlewareAggregate } from "@/server";
 import { IClaims } from "./Claims";
 
 export type AuthenticationPolicyFunction = (

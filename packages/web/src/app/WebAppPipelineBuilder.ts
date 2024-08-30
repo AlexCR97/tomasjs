@@ -10,7 +10,7 @@ import {
 import {
   EndpointOptions as ServerEndpointOptions,
   PlainEndpoint as ServerPlainEndpoint,
-} from "@/endpoint";
+} from "@/server";
 import {
   Endpoint,
   EndpointOptions,
@@ -34,7 +34,7 @@ import {
   MiddlewareFunction,
   MiddlewareType,
 } from "./Middleware";
-import { MiddlewareFunction as ServerMiddlewareFunction } from "@/middleware";
+import { MiddlewareFunction as ServerMiddlewareFunction } from "@/server";
 import {
   ErrorHandlerFunction,
   ErrorHandlerType,
@@ -44,8 +44,8 @@ import {
   isIErrorHandler,
   isIErrorHandlerFactory,
 } from "./ErrorHandler";
-import { ErrorHandlerFunction as ServerErrorHandlerFunction } from "@/error-handler";
-import { InterceptorFunction as ServerInterceptorFunction } from "@/interceptor";
+import { ErrorHandlerFunction as ServerErrorHandlerFunction } from "@/server";
+import { InterceptorFunction as ServerInterceptorFunction } from "@/server";
 import {
   IInterceptor,
   IInterceptorFactory,
@@ -55,7 +55,7 @@ import {
   isIInterceptorFactory,
   isInterceptorFunction,
 } from "./Interceptor";
-import { GuardFunction as ServerGuardFunction } from "@/guard";
+import { GuardFunction as ServerGuardFunction } from "@/server";
 import {
   GuardFunction,
   GuardType,

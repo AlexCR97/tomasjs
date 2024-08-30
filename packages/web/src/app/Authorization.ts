@@ -1,8 +1,8 @@
 import { IServiceProvider } from "@tomasjs/core/dependency-injection";
 import { Constructor } from "@tomasjs/core/system";
 import { isNotNull, hasLength, isFunction, isInRange } from "@/common";
-import { isGuardFunction } from "@/guard";
 import { IRequestContextReader } from "@/server";
+import { isGuardFunction } from "./Guard";
 
 export type AuthorizationPolicyType =
   | AuthorizationPolicyFunction

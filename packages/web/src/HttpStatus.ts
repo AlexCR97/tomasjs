@@ -1,4 +1,4 @@
-// TODO Improve this
+// TODO Deprecate this
 
 const successfulStatus = {
   ok: {

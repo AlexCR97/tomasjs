@@ -1,11 +1,10 @@
 import { HttpResponse } from "@/server";
-import { MiddlewareFunction } from "@/middleware";
-import { ProblemDetailsContent } from "@/content";
 import { IRequestContext, IResponseWriter } from "@/server";
 import { InvalidOperationError } from "@tomasjs/core/errors";
 import { httpStatus } from "@/HttpStatus";
 import { isNotNull, hasLength, isFunction } from "@/common";
-import { ProblemDetails } from "@/problems";
+import { ProblemDetails, ProblemDetailsContent } from "@/problems";
+import { MiddlewareFunction } from "./Middleware";
 
 export type GuardFunction = (context: GuardContext) => GuardResult | Promise<GuardResult>;
 

@@ -1,6 +1,10 @@
 import { isNotNull, hasLength, isFunction } from "@/common";
-import { MiddlewareFunction, MiddlewareAggregate } from "@/middleware";
-import { IRequestContextReader, RequestContextReader } from "@/server";
+import {
+  IRequestContextReader,
+  MiddlewareAggregate,
+  MiddlewareFunction,
+  RequestContextReader,
+} from "@/server";
 
 export type AuthorizationPolicyFunction = (
   context: AuthorizationContext

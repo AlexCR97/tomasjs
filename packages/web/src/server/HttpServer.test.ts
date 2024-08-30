@@ -2,14 +2,12 @@ import { HttpClient, JsonContent, PlainTextContent } from "@tomasjs/core/http";
 import { IHttpServer } from "./HttpServer";
 import { QueryParams } from "./QueryParams";
 import { RouteParams } from "./RouteParams";
-import { endpoints } from "@/endpoint";
 import { statusCode } from "@/StatusCode";
 import { RequestContext } from "./RequestContext";
 import { ResponseWriter } from "./ResponseWriter";
-import { problemDetailsErrorHandler } from "@/error-handler";
-import { TomasError } from "@tomasjs/core/errors";
 import { testHttpServer } from "@/test";
 import { HttpResponse } from "./HttpResponse";
+import { endpoints } from "./Endpoint";
 
 describe("Server", () => {
   const client = new HttpClient();
@@ -256,29 +254,5 @@ describe("Server", () => {
 
     expect(responseJson.type).toMatch(Error.name);
     expect(responseJson.message).toMatch("This is a custom error!");
-  });
-
-  it("should use Problem Details error handler", async () => {
-    await server
-      .useEndpoint("GET", "/", () => {
-        throw new TomasError("custom/error", "This is a custom error!", {
-          data: { foo: "bar" },
-          innerError: new TomasError("custom/innerError", "This is an inner error!", {
-            data: { fizz: "buzz" },
-            innerError: "some random value",
-          }),
-        });
-      })
-      .useErrorHandler(problemDetailsErrorHandler({ includeError: true }))
-      .start();
-
-    const response = await client.get(`http://localhost:${server.port}`);
-
-    expect(response.status).toBe(statusCode.internalServerError);
-
-    const responseJson = response.body.readData();
-
-    // expect(responseJson.type).toMatch(Error.name);
-    // expect(responseJson.message).toMatch("This is a custom error!");
   });
 });

@@ -3,7 +3,7 @@ import { HttpMethod, IHttpContent, PlainHttpHeaders } from "@tomasjs/core/http";
 import { isHttpMethod } from "@tomasjs/core/http/HttpMethod";
 import { IUserReader } from "@/auth";
 import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
-import { IEndpointContext as ServerEndpointContext } from "@/endpoint";
+import { IEndpointContext as ServerEndpointContext } from "@/server";
 import { HttpResponse, IQueryParams, IRouteParams } from "@/server";
 import { AuthenticationPolicyType } from "./Authentication";
 import { AuthorizationPolicyType } from "./Authorization";

@@ -1,13 +1,14 @@
 import { AuthenticationPolicyFunction, AuthorizationPolicyFunction } from "@/auth";
-import { Endpoint, PlainEndpoint, EndpointHandler, EndpointOptions } from "@/endpoint";
-import { ErrorHandlerFunction } from "@/error-handler";
-import { GuardFunction } from "@/guard";
-import { InterceptorFunction } from "@/interceptor";
-import { MiddlewareFunction, MiddlewareAggregate } from "@/middleware";
 import { HttpResponse } from "@/server";
 import { statusCode } from "@/StatusCode";
 import { InvalidOperationError } from "@tomasjs/core/errors";
 import { HttpMethod, PlainTextContent } from "@tomasjs/core/http";
+import { MiddlewareFunction } from "./Middleware";
+import { InterceptorFunction } from "./Interceptor";
+import { GuardFunction } from "./Guard";
+import { Endpoint, EndpointHandler, EndpointOptions, PlainEndpoint } from "./Endpoint";
+import { ErrorHandlerFunction } from "./ErrorHandler";
+import { MiddlewareAggregate } from "./MiddlewareAggregate";
 
 export type HttpPipelineBuilderDelegate = (pipeline: IHttpPipelineBuilder) => void;
 

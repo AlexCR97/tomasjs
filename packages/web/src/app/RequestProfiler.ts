@@ -1,10 +1,9 @@
-import { MiddlewareFunction } from "@/middleware";
 import { IQueryParams } from "@/server";
 import { ContainerSetupFunction, inject } from "@tomasjs/core/dependency-injection";
 import { IHttpContent, PlainHttpHeaders } from "@tomasjs/core/http";
 import { ILogger, ILoggerBuilder, LOGGER_BUILDER } from "@tomasjs/core/logging";
 import { pipe } from "@tomasjs/core/system";
-import { IMiddlewareFactory } from "./Middleware";
+import { IMiddlewareFactory, MiddlewareFunction } from "./Middleware";
 
 const REQUEST_PROFILER_OPTIONS = "@tomasjs/web/RequestProfilerOptions";
 

@@ -1,6 +1,7 @@
 import { hasLength, isFunction, isInRange, isNotNull } from "@/common";
-import { MiddlewareFunction } from "@/middleware";
-import { IRequestContext, IResponseWriter } from "@/server";
+import { IRequestContext } from "./RequestContext";
+import { IResponseWriter } from "./ResponseWriter";
+import { MiddlewareFunction } from "./Middleware";
 
 export type ErrorHandlerFunction = (context: ErrorHandlerContext) => void | Promise<void>;
 
