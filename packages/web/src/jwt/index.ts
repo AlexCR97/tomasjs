@@ -1,3 +1,3 @@
-export { JwtDecoder, JwtDecoderOptions, JwtDecoderResult, JwtError } from "./JwtDecoder";
+export { IJwtDecoder, JwtDecoder, JwtDecoderOptions } from "./JwtDecoder";
 export { jwtPolicy } from "./JwtPolicy";
 export { JwtSigner, JwtSignerOptions } from "./JwtSigner";

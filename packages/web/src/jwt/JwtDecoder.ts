@@ -1,52 +1,57 @@
+import { Algorithm, verify } from "jsonwebtoken";
 import { Claims, IClaims } from "@/auth";
-import { ErrorOptions, TomasError } from "@tomasjs/core/errors";
-import { ResultFailure, ResultSuccess, Result } from "@tomasjs/core/system";
-import { VerifyOptions, verify } from "jsonwebtoken";
-
-export type JwtDecoderResult = ResultFailure<TomasError> | ResultSuccess<IClaims>;
+import { Result, ResultFailure, ResultSuccess } from "@tomasjs/core/system";
 
 export type JwtDecoderOptions = {
   secret: string;
-} & Pick<
-  VerifyOptions,
-  | "algorithms"
-  | "audience"
-  | "clockTimestamp"
-  | "clockTolerance"
-  | "issuer"
-  | "ignoreExpiration"
-  | "ignoreNotBefore"
-  | "jwtid"
-  | "nonce"
-  | "subject"
-  | "maxAge"
->;
+  algorithms?: Algorithm[];
+  audience?: string | RegExp | Array<string | RegExp>;
+  clockTimestamp?: number;
+  clockTolerance?: number;
+  issuer?: string | string[];
+  ignoreExpiration?: boolean;
+  ignoreNotBefore?: boolean;
+  jwtid?: string;
+  nonce?: string;
+  subject?: string;
+  maxAge?: string | number;
+};
 
-export class JwtDecoder {
+export interface IJwtDecoder {
+  decode(token: string): Promise<ResultFailure<unknown> | ResultSuccess<IClaims>>;
+  decodeOrThrow(token: string): Promise<IClaims>;
+}
+
+export class JwtDecoder implements IJwtDecoder {
   constructor(private readonly options: JwtDecoderOptions) {}
 
-  decode(token: string): Promise<JwtDecoderResult> {
-    return new Promise<JwtDecoderResult>((resolve) => {
-      verify(token, this.options.secret, this.options, (err, decodedToken) => {
+  async decode(token: string): Promise<ResultFailure<unknown> | ResultSuccess<IClaims>> {
+    try {
+      const decodedToken = await this.decodeOrThrow(token);
+      return Result.success(decodedToken);
+    } catch (err) {
+      return Result.failure(err);
+    }
+  }
+
+  decodeOrThrow(token: string): Promise<IClaims> {
+    return new Promise<IClaims>((resolve, reject) => {
+      return verify(token, this.options.secret, this.options, (err, decodedToken) => {
         if (err !== null) {
-          const result = Result.failure(new JwtError({ innerError: err }));
-          return resolve(result);
+          return reject(err);
         }
 
-        if (decodedToken === undefined || typeof decodedToken === "string") {
-          const result = Result.failure(new JwtError());
-          return resolve(result);
+        if (decodedToken === undefined) {
+          return reject(new TypeError("The jwt was undefined"));
+        }
+
+        if (typeof decodedToken === "string") {
+          return reject(new TypeError(`The jwt was a string: ${decodedToken}`));
         }
 
         const claims = new Claims(decodedToken);
-        return resolve(Result.success(claims));
+        return resolve(claims);
       });
     });
-  }
-}
-
-export class JwtError extends TomasError {
-  constructor(options?: ErrorOptions) {
-    super("web/Jwt", "Unable to perform jwt-related operation", options);
   }
 }

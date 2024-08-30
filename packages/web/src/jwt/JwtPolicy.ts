@@ -29,7 +29,7 @@ export function jwtPolicy(options: JwtDecoderOptions): AuthenticationPolicyFunct
 
     return {
       authenticated: true,
-      claims: result.data,
+      claims: result.data ?? undefined,
     };
   };
 }
