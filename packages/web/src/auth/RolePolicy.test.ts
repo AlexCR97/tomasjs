@@ -5,7 +5,7 @@ import { Claims } from "@/auth";
 import { JwtSigner, jwtPolicy } from "@/jwt";
 import { rolePolicy } from "./RolePolicy";
 
-describe("RolePolicy", () => {
+describe("auth/RolePolicy", () => {
   const client = new HttpClient();
   const secret = "foo bar fizz buzz";
   const myJwtPolicy = jwtPolicy({ secret });

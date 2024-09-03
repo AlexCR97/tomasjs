@@ -8,7 +8,7 @@ import { testHttpServer } from "@/test";
 import { HttpResponse } from "./HttpResponse";
 import { endpoints } from "./Endpoint";
 
-describe("Server", () => {
+describe("server/HttpServer", () => {
   const client = new HttpClient();
 
   let server: IHttpServer;

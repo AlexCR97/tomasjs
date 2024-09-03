@@ -6,7 +6,7 @@ import { testHttpServer } from "@/test";
 import { Claims } from "@/auth";
 import { jwtPolicy } from "./JwtPolicy";
 
-describe("JwtPolicy", () => {
+describe("jwt/JwtPolicy", () => {
   const client = new HttpClient();
   const secret = "foo bar fizz buzz";
   const claims = new Claims({ foo: "bar", fizz: "buzz" });

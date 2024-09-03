@@ -9,7 +9,7 @@ import {
   MiddlewareFunction,
 } from "./Middleware";
 
-describe("Middleware", () => {
+describe("app/Middleware", () => {
   describe(isMiddlewareFunction.name, () => {
     it("should return true for named functions", () => {
       const arrowFunction: MiddlewareFunction = ({ req, res, next }) => {};

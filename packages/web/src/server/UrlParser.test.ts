@@ -1,6 +1,6 @@
 import { UrlParser } from "./UrlParser";
 
-describe("UrlParser", () => {
+describe("server/UrlParser", () => {
   const pattern = "/tenants/:tenantId/users/:userId/organizations";
   const url = "/tenants/1/users/2/organizations?offset=10&limit=25";
   const urlParser = new UrlParser(url);

@@ -1,7 +1,7 @@
 import { Claims } from "./Claims";
 import { IUser, IUserReader, User, UserReader } from "./User";
 
-describe("User", () => {
+describe("auth/User", () => {
   const plainClaims = {
     foo: "bar",
     fizz: "buzz",

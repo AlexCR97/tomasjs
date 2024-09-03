@@ -6,7 +6,7 @@ import { MiddlewareFunction } from "./Middleware";
 import { InterceptorFunction } from "./Interceptor";
 import { GuardFunction } from "./Guard";
 
-describe("Endpoint", () => {
+describe("server/Endpoint", () => {
   const client = new HttpClient();
 
   let server: IHttpServer;
