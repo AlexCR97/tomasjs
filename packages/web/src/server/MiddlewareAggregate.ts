@@ -4,11 +4,11 @@ import {
   authentication,
   authorization,
 } from "@/auth";
-import { ErrorHandlerFunction, errorHandler } from "@/error-handler";
-import { GuardFunction, guard } from "@/guard";
-import { InterceptorFunction, interceptor } from "@/interceptor";
 import { MiddlewareFunction } from "./Middleware";
-import { PlainEndpoint, endpoints as endpointsMiddleware } from "@/endpoint";
+import { PlainEndpoint, endpoints as endpointsMiddleware } from "./Endpoint";
+import { errorHandler, ErrorHandlerFunction } from "./ErrorHandler";
+import { interceptor, InterceptorFunction } from "./Interceptor";
+import { guard, GuardFunction } from "./Guard";
 
 export interface IMiddlewareAggregate {
   addErrorHandler(...errorHandlers: ErrorHandlerFunction[]): this;

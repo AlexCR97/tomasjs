@@ -1,5 +1,4 @@
 import { Server, createServer } from "http";
-import { Endpoint, EndpointHandler, EndpointOptions, PlainEndpoint } from "@/endpoint";
 import { ResponseWriter } from "./ResponseWriter";
 import { HttpMethod } from "@tomasjs/core/http";
 import { InvalidOperationError } from "@tomasjs/core/errors";
@@ -9,13 +8,14 @@ import {
   IterativeHttpPipeline,
   RecursiveHttpPipeline,
 } from "./HttpPipeline";
-import { MiddlewareFunction } from "@/middleware";
 import { RequestContext } from "./RequestContext";
-import { ErrorHandlerFunction } from "@/error-handler";
-import { GuardFunction } from "@/guard";
-import { InterceptorFunction } from "@/interceptor";
 import { AuthenticationPolicyFunction, AuthorizationPolicyFunction } from "@/auth";
 import { HttpPipelineBuilder } from "./HttpPipelineBuilder";
+import { MiddlewareFunction } from "./Middleware";
+import { InterceptorFunction } from "./Interceptor";
+import { GuardFunction } from "./Guard";
+import { Endpoint, EndpointHandler, EndpointOptions, PlainEndpoint } from "./Endpoint";
+import { ErrorHandlerFunction } from "./ErrorHandler";
 
 export interface IHttpServer {
   readonly port: number;

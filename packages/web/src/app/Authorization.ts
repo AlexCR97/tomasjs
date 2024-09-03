@@ -1,0 +1,50 @@
+import { IServiceProvider } from "@tomasjs/core/dependency-injection";
+import { Constructor } from "@tomasjs/core/system";
+import { isNotNull, isFunction, isInRange } from "@tomasjs/core/system";
+import { IRequestContextReader } from "@/server";
+import { isGuardFunction } from "./Guard";
+
+export type AuthorizationPolicyType =
+  | AuthorizationPolicyFunction
+  | IAuthorizationPolicy
+  | Constructor<IAuthorizationPolicy>
+  | IAuthorizationPolicyFactory
+  | Constructor<IAuthorizationPolicyFactory>;
+
+export type AuthorizationPolicyFunction = (
+  context: AuthorizationContext
+) => boolean | Promise<boolean>;
+
+export type AuthorizationContext = {
+  req: IRequestContextReader;
+  services: IServiceProvider;
+};
+
+export function isAuthorizationPolicyFunction(obj: unknown): obj is AuthorizationPolicyFunction {
+  return isNotNull(obj) && isFunction(obj) && isInRange(obj.length, 0, 1);
+}
+
+export interface IAuthorizationPolicy {
+  authorize(context: AuthorizationContext): boolean | Promise<boolean>;
+}
+
+export function isIAuthorizationPolicy(obj: unknown): obj is IAuthorizationPolicy {
+  return isNotNull(obj) && isGuardFunction((obj as IAuthorizationPolicy)["authorize"]);
+}
+
+export interface IAuthorizationPolicyFactory {
+  createAuthorizationPolicy(): AuthorizationPolicyFunction | IAuthorizationPolicy;
+}
+
+export function isIAuthorizationPolicyFactory(obj: unknown): obj is IAuthorizationPolicyFactory {
+  return (
+    isNotNull(obj) &&
+    isAuthorizationPolicyFactoryFunction(
+      (obj as IAuthorizationPolicyFactory)["createAuthorizationPolicy"]
+    )
+  );
+
+  function isAuthorizationPolicyFactoryFunction(obj: unknown): boolean {
+    return isNotNull(obj) && isFunction(obj) && obj.length === 0;
+  }
+}

@@ -1,22 +1,16 @@
 export {
+  AuthenticationContext,
   AuthenticationPolicyFunction,
   AuthenticationPolicyResult,
   AuthenticationPolicyResultExtended,
-  IAuthenticationPolicy,
-  IAuthenticationPolicyFactory,
   authentication,
   isAuthenticationPolicyFunction,
-  isIAuthenticationPolicy,
-  isIAuthenticationPolicyFactory,
 } from "./Authentication";
 export {
+  AuthorizationContext,
   AuthorizationPolicyFunction,
-  IAuthorizationPolicy,
-  IAuthorizationPolicyFactory,
   authorization,
   isAuthorizationPolicyFunction,
-  isIAuthorizationPolicy,
-  isIAuthorizationPolicyFactory,
 } from "./Authorization";
 export { ClaimNotFoundError, IClaims, Claims, PlainClaims } from "./Claims";
 export { RolePolicyOptions, RolePolicyOptionsCheck, rolePolicy } from "./RolePolicy";

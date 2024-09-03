@@ -13,8 +13,8 @@ export function rolePolicy(
   options?: RolePolicyOptions
 ): AuthorizationPolicyFunction;
 export function rolePolicy(...args: any[]): AuthorizationPolicyFunction {
-  return ({ user }) => {
-    const userRoleClaim = user.claims.get("role");
+  return ({ req }) => {
+    const userRoleClaim = req.user.claims.get("role");
 
     if (userRoleClaim === null) {
       return false;

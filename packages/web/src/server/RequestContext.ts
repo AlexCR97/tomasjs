@@ -6,13 +6,13 @@ import {
   PlainHttpHeaders,
 } from "@tomasjs/core/http";
 import { IQueryParams } from "./QueryParams";
-import { ContentFactory } from "@/content";
 import { IncomingMessage } from "http";
 import { UrlParser } from "./UrlParser";
 import { InvalidOperationError } from "@tomasjs/core/errors";
 import { pipe } from "@tomasjs/core/system";
 import { IUser, IUserReader, User, UserReader } from "@/auth";
 import { isHttpMethod } from "@tomasjs/core/http/HttpMethod";
+import { ContentFactory } from "./ContentFactory";
 
 export interface IRequestContext {
   readonly method: HttpMethod;

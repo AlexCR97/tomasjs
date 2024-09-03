@@ -1,0 +1,66 @@
+import { HTTP_STATUS_CODES, HttpClient, JsonContent } from "@tomasjs/core/http";
+import { HttpResponse, IHttpServer } from "@/server";
+import { testHttpServer } from "@/test";
+import { InterceptorFunction, interceptor } from "./Interceptor";
+
+describe("server/Interceptor", () => {
+  const client = new HttpClient();
+
+  const myInterceptor: InterceptorFunction = ({ req }) => {
+    req.user.authenticate();
+  };
+
+  let server: IHttpServer;
+
+  beforeEach(async () => {
+    server = await testHttpServer();
+  });
+
+  afterEach(async () => {
+    if (server) {
+      await server.stop();
+    }
+  });
+
+  it("should use interceptor middleware", async () => {
+    await server
+      .use(interceptor(myInterceptor))
+      .useEndpoint("GET", "/", (req) => {
+        const response = { authenticated: req.user.authenticated } as const;
+        return new HttpResponse({
+          status: HTTP_STATUS_CODES.ok,
+          content: JsonContent.from(response),
+        });
+      })
+      .start();
+
+    const response = await client.get(`http://localhost:${server.port}`);
+
+    expect(response.isSuccess).toBe(true);
+
+    const responseJson = response.body.readData();
+
+    expect(responseJson).toMatchObject({ authenticated: true });
+  });
+
+  it("should use interceptor middleware shorthand", async () => {
+    await server
+      .useInterceptor(myInterceptor)
+      .useEndpoint("GET", "/", (req) => {
+        const response = { authenticated: req.user.authenticated } as const;
+        return new HttpResponse({
+          status: HTTP_STATUS_CODES.ok,
+          content: JsonContent.from(response),
+        });
+      })
+      .start();
+
+    const response = await client.get(`http://localhost:${server.port}`);
+
+    expect(response.isSuccess).toBe(true);
+
+    const responseJson = response.body.readData();
+
+    expect(responseJson).toMatchObject({ authenticated: true });
+  });
+});

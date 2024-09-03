@@ -3,6 +3,7 @@ import { HttpHeader, HttpHeaders, IHttpContent, PlainHttpHeaders } from "@tomasj
 import { ServerResponse } from "http";
 
 export interface IResponseWriter {
+  get status(): number | undefined;
   get sent(): boolean;
   withHeaders(headers: HttpHeader[] | PlainHttpHeaders | HttpHeaders | null | undefined): this;
   withStatus(status: number | null | undefined): this;
@@ -14,9 +15,13 @@ export class ResponseWriter implements IResponseWriter {
   private _sent = false;
   private content: IHttpContent<unknown> | null = null;
   private headers: HttpHeader[] | PlainHttpHeaders | HttpHeaders | null = null;
-  private status: number | null = null;
+  private _status: number | null = null;
 
   constructor(private readonly res: ServerResponse) {}
+
+  get status(): number | undefined {
+    return this._status ?? undefined;
+  }
 
   get sent(): boolean {
     return this._sent;
@@ -36,7 +41,7 @@ export class ResponseWriter implements IResponseWriter {
       throw new ResponseAlreadySentError();
     }
 
-    this.status = status ?? null;
+    this._status = status ?? null;
     return this;
   }
 
@@ -58,7 +63,7 @@ export class ResponseWriter implements IResponseWriter {
       try {
         // IMPORTANT: Order matters!
         this.setHeaders(this.headers);
-        this.setStatus(this.status);
+        this.setStatus(this._status);
         this.setContent(this.content);
         return this.res.end(() => {
           this._sent = true;

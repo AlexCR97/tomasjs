@@ -1,13 +1,13 @@
 import { AuthenticationPolicyFunction, AuthorizationPolicyFunction } from "@/auth";
-import { Endpoint, PlainEndpoint, EndpointHandler, EndpointOptions } from "@/endpoint";
-import { ErrorHandlerFunction } from "@/error-handler";
-import { GuardFunction } from "@/guard";
-import { InterceptorFunction } from "@/interceptor";
-import { MiddlewareFunction, MiddlewareAggregate } from "@/middleware";
 import { HttpResponse } from "@/server";
-import { statusCode } from "@/StatusCode";
 import { InvalidOperationError } from "@tomasjs/core/errors";
-import { HttpMethod, PlainTextContent } from "@tomasjs/core/http";
+import { HTTP_STATUS_CODES, HttpMethod, PlainTextContent } from "@tomasjs/core/http";
+import { MiddlewareFunction } from "./Middleware";
+import { InterceptorFunction } from "./Interceptor";
+import { GuardFunction } from "./Guard";
+import { Endpoint, EndpointHandler, EndpointOptions, PlainEndpoint } from "./Endpoint";
+import { ErrorHandlerFunction } from "./ErrorHandler";
+import { MiddlewareAggregate } from "./MiddlewareAggregate";
 
 export type HttpPipelineBuilderDelegate = (pipeline: IHttpPipelineBuilder) => void;
 
@@ -38,9 +38,9 @@ export class HttpPipelineBuilder implements IHttpPipelineBuilder {
   private readonly endpoints: PlainEndpoint[] = [];
   private errorHandler: ErrorHandlerFunction | undefined;
 
-  private readonly defaultErrorHandler: ErrorHandlerFunction = async (req, res, err) => {
+  private readonly defaultErrorHandler: ErrorHandlerFunction = async ({ res }) => {
     const response = new HttpResponse({
-      status: statusCode.internalServerError,
+      status: HTTP_STATUS_CODES.internalServerError,
       content: PlainTextContent.from("An unexpected error occurred on the server"),
     });
 
@@ -51,7 +51,7 @@ export class HttpPipelineBuilder implements IHttpPipelineBuilder {
       .send();
   };
 
-  private readonly terminalMiddleware: MiddlewareFunction = async (_, res) => {
+  private readonly terminalMiddleware: MiddlewareFunction = async ({ res }) => {
     if (res.sent) {
       return;
     }

@@ -1,12 +1,11 @@
-import { HttpClient, HttpHeaders } from "@tomasjs/core/http";
+import { HTTP_STATUS_CODES, HttpClient, HttpHeaders } from "@tomasjs/core/http";
 import { HttpResponse, IHttpServer } from "@/server";
 import { testHttpServer } from "@/test";
 import { Claims } from "@/auth";
 import { JwtSigner, jwtPolicy } from "@/jwt";
 import { rolePolicy } from "./RolePolicy";
-import { statusCode } from "@/StatusCode";
 
-describe("RolePolicy", () => {
+describe("auth/RolePolicy", () => {
   const client = new HttpClient();
   const secret = "foo bar fizz buzz";
   const myJwtPolicy = jwtPolicy({ secret });
@@ -42,28 +41,28 @@ describe("RolePolicy", () => {
     await server
       .useAuthentication(myJwtPolicy)
       .useAuthorization(adminRolePolicy)
-      .useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok }))
+      .useEndpoint("GET", "/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }))
       .start();
 
     const response = await client.get(`http://localhost:${server.port}`, {
       headers: new HttpHeaders().add("authorization", `Bearer ${readerToken}`),
     });
 
-    expect(response.status).toBe(statusCode.forbidden);
+    expect(response.status).toBe(HTTP_STATUS_CODES.forbidden);
   });
 
   it("should be authorized by admin role policy at global level", async () => {
     await server
       .useAuthentication(myJwtPolicy)
       .useAuthorization(adminRolePolicy)
-      .useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok }))
+      .useEndpoint("GET", "/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }))
       .start();
 
     const response = await client.get(`http://localhost:${server.port}`, {
       headers: new HttpHeaders().add("authorization", `Bearer ${adminToken}`),
     });
 
-    expect(response.status).toBe(statusCode.ok);
+    expect(response.status).toBe(HTTP_STATUS_CODES.ok);
   });
 
   it("should be unauthorized by admin role policy at endpoint level", async () => {
@@ -75,7 +74,7 @@ describe("RolePolicy", () => {
         "/",
         () => {
           counter += 1; // this should not be reached!
-          return new HttpResponse({ status: statusCode.ok });
+          return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
         },
         {
           authentication: myJwtPolicy,
@@ -88,7 +87,7 @@ describe("RolePolicy", () => {
       headers: new HttpHeaders().add("authorization", `Bearer ${readerToken}`),
     });
 
-    expect(response.status).toBe(statusCode.forbidden);
+    expect(response.status).toBe(HTTP_STATUS_CODES.forbidden);
     expect(counter).toBe(0);
   });
 
@@ -102,7 +101,7 @@ describe("RolePolicy", () => {
         ({ user }) => {
           expect(user.authorized).toBe(true);
           counter += 1;
-          return new HttpResponse({ status: statusCode.ok });
+          return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
         },
         {
           authentication: myJwtPolicy,
@@ -115,13 +114,13 @@ describe("RolePolicy", () => {
       headers: new HttpHeaders().add("authorization", `Bearer ${adminToken}`),
     });
 
-    expect(response.status).toBe(statusCode.ok);
+    expect(response.status).toBe(HTTP_STATUS_CODES.ok);
     expect(counter).toBe(1);
   });
 
   it("should be authorized by admin OR reader role policy at endpoint level", async () => {
     await server
-      .useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok }), {
+      .useEndpoint("GET", "/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }), {
         authentication: myJwtPolicy,
         authorization: adminOrReaderRolesPolicy,
       })
@@ -131,12 +130,12 @@ describe("RolePolicy", () => {
       headers: new HttpHeaders().add("authorization", `Bearer ${readerToken}`),
     });
 
-    expect(response.status).toBe(statusCode.ok);
+    expect(response.status).toBe(HTTP_STATUS_CODES.ok);
   });
 
   it("should be unauthorized by admin AND reader role policy at endpoint level", async () => {
     await server
-      .useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok }), {
+      .useEndpoint("GET", "/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }), {
         authentication: myJwtPolicy,
         authorization: adminAndReaderRolesPolicy,
       })
@@ -146,12 +145,12 @@ describe("RolePolicy", () => {
       headers: new HttpHeaders().add("authorization", `Bearer ${readerToken}`),
     });
 
-    expect(response.status).toBe(statusCode.forbidden);
+    expect(response.status).toBe(HTTP_STATUS_CODES.forbidden);
   });
 
   it("should be authorized by admin AND reader role policy at endpoint level", async () => {
     await server
-      .useEndpoint("GET", "/", () => new HttpResponse({ status: statusCode.ok }), {
+      .useEndpoint("GET", "/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }), {
         authentication: myJwtPolicy,
         authorization: adminAndReaderRolesPolicy,
       })
@@ -161,6 +160,6 @@ describe("RolePolicy", () => {
       headers: new HttpHeaders().add("authorization", `Bearer ${adminAndReaderToken}`),
     });
 
-    expect(response.status).toBe(statusCode.ok);
+    expect(response.status).toBe(HTTP_STATUS_CODES.ok);
   });
 });

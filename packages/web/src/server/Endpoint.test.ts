@@ -1,13 +1,12 @@
-import { HttpClient, JsonContent } from "@tomasjs/core/http";
+import { HTTP_STATUS_CODES, HttpClient, JsonContent } from "@tomasjs/core/http";
 import { HttpResponse, IHttpServer } from "@/server";
-import { statusCode } from "@/StatusCode";
 import { testHttpServer } from "@/test";
-import { MiddlewareFunction } from "@/middleware";
-import { InterceptorFunction } from "@/interceptor";
-import { GuardFunction } from "@/guard";
 import { Endpoint } from "./Endpoint";
+import { MiddlewareFunction } from "./Middleware";
+import { InterceptorFunction } from "./Interceptor";
+import { GuardFunction } from "./Guard";
 
-describe("Endpoint", () => {
+describe("server/Endpoint", () => {
   const client = new HttpClient();
 
   let server: IHttpServer;
@@ -33,7 +32,7 @@ describe("Endpoint", () => {
   it("should apply middleware at the endpoint level", async () => {
     let aggregation: number[] = [];
 
-    const first: MiddlewareFunction = (req, res, next) => {
+    const first: MiddlewareFunction = ({ next }) => {
       aggregation.push(1);
       return next();
     };
@@ -51,7 +50,7 @@ describe("Endpoint", () => {
       .useEndpoint(
         Endpoint.get("/", () => {
           return new HttpResponse({
-            status: statusCode.ok,
+            status: HTTP_STATUS_CODES.ok,
             content: JsonContent.from({
               aggregation,
             }),

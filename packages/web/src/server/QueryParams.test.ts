@@ -1,7 +1,7 @@
 import { ParsedUrlQuery } from "querystring";
 import { QueryParams, QueryParamNotFoundError } from "./QueryParams";
 
-describe("QueryParams", () => {
+describe("server/QueryParams", () => {
   const query: ParsedUrlQuery = {
     param1: "value1",
     param2: ["value2", "value3"],

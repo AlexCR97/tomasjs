@@ -1,118 +1,91 @@
+import { InvalidOperationError } from "@tomasjs/core/errors";
+import { HttpMethod } from "@tomasjs/core/http";
+import { isHttpMethod } from "@tomasjs/core/http/HttpMethod";
+import { Constructor, isConstructor } from "@tomasjs/core/system";
 import {
   ContainerBuilderDelegate,
   IContainerBuilder,
   IServiceProvider,
 } from "@tomasjs/core/dependency-injection";
-import { InvalidOperationError } from "@tomasjs/core/errors";
-import { Constructor, isConstructor } from "@tomasjs/core/system";
+import {
+  EndpointOptions as ServerEndpointOptions,
+  PlainEndpoint as ServerPlainEndpoint,
+} from "@/server";
+import {
+  Endpoint,
+  EndpointOptions,
+  isEndpoint,
+  isPlainEndpoint,
+  isEndpointHandler,
+  PlainEndpoint,
+  EndpointContext,
+  EndpointHandler,
+} from "./Endpoint";
+import {
+  AuthenticationPolicyFunction as ServerAuthenticationPolicyFunction,
+  AuthorizationPolicyFunction as ServerAuthorizationPolicyFunction,
+} from "@/auth";
 import {
   IMiddleware,
   IMiddlewareFactory,
   isIMiddleware,
   isIMiddlewareFactory,
-  isMiddlewareFactoryFunction,
   isMiddlewareFunction,
-  MiddlewareFactoryFunction,
   MiddlewareFunction,
-} from "@/middleware";
-import { InterceptorFunction } from "@/interceptor";
-import {
-  IInterceptor,
-  IInterceptorFactory,
-  InterceptorFactoryFunction,
-  isIInterceptor,
-  isIInterceptorFactory,
-  isInterceptorFactoryFunction,
-  isInterceptorFunction,
-} from "@/interceptor/Interceptor";
-import { isPlainEndpoint, PlainEndpoint } from "@/endpoint";
-import { HttpMethod } from "@tomasjs/core/http";
-import {
-  isWebAppEndpointHandler,
-  WebAppEndpoint,
-  WebAppEndpointContext,
-  WebAppEndpointHandler,
-} from "./WebAppEndpoint";
-import { isHttpMethod } from "@tomasjs/core/http/HttpMethod";
-import {
-  GuardFactoryFunction,
-  GuardFunction,
-  IGuard,
-  IGuardFactory,
-  isGuardFactoryFunction,
-  isGuardFunction,
-  isIGuard,
-  isIGuardFactory,
-} from "@/guard";
-import {
-  AuthenticationPolicyFunction,
-  AuthorizationPolicyFunction,
-  IAuthenticationPolicy,
-  IAuthenticationPolicyFactory,
-  IAuthorizationPolicy,
-  IAuthorizationPolicyFactory,
-  isAuthenticationPolicyFunction,
-  isAuthorizationPolicyFunction,
-  isIAuthenticationPolicy,
-  isIAuthenticationPolicyFactory,
-  isIAuthorizationPolicy,
-  isIAuthorizationPolicyFactory,
-} from "@/auth";
+  MiddlewareType,
+} from "./Middleware";
+import { MiddlewareFunction as ServerMiddlewareFunction } from "@/server";
 import {
   ErrorHandlerFunction,
+  ErrorHandlerType,
   IErrorHandler,
   IErrorHandlerFactory,
   isErrorHandlerFunction,
   isIErrorHandler,
   isIErrorHandlerFactory,
-} from "@/error-handler";
+} from "./ErrorHandler";
+import { ErrorHandlerFunction as ServerErrorHandlerFunction } from "@/server";
+import { InterceptorFunction as ServerInterceptorFunction } from "@/server";
+import {
+  IInterceptor,
+  IInterceptorFactory,
+  InterceptorFunction,
+  InterceptorType,
+  isIInterceptor,
+  isIInterceptorFactory,
+  isInterceptorFunction,
+} from "./Interceptor";
+import { GuardFunction as ServerGuardFunction } from "@/server";
+import {
+  GuardFunction,
+  GuardType,
+  IGuard,
+  IGuardFactory,
+  isGuardFunction,
+  isIGuard,
+  isIGuardFactory,
+} from "./Guard";
+import {
+  AuthenticationPolicyFunction,
+  AuthenticationPolicyType,
+  IAuthenticationPolicy,
+  IAuthenticationPolicyFactory,
+  isAuthenticationPolicyFunction,
+  isIAuthenticationPolicy,
+  isIAuthenticationPolicyFactory,
+} from "./Authentication";
+import {
+  AuthorizationPolicyFunction,
+  AuthorizationPolicyType,
+  IAuthorizationPolicy,
+  IAuthorizationPolicyFactory,
+  isAuthorizationPolicyFunction,
+  isIAuthorizationPolicy,
+  isIAuthorizationPolicyFactory,
+} from "./Authorization";
+import { isInRange } from "@tomasjs/core/system";
 
 export type WebAppPipelineBuilderDelegate = (builder: IWebAppPipelineBuilder) => void;
-
-type MiddlewareType =
-  | MiddlewareFunction
-  | IMiddleware
-  | Constructor<IMiddleware>
-  | MiddlewareFactoryFunction
-  | IMiddlewareFactory
-  | Constructor<IMiddlewareFactory>;
-
-type InterceptorType =
-  | InterceptorFunction
-  | IInterceptor
-  | Constructor<IInterceptor>
-  | InterceptorFactoryFunction
-  | IInterceptorFactory
-  | Constructor<IInterceptorFactory>;
-
-type GuardType =
-  | GuardFunction
-  | IGuard
-  | Constructor<IGuard>
-  | GuardFactoryFunction
-  | IGuardFactory
-  | Constructor<IGuardFactory>;
-
-type AuthenticationPolicyType =
-  | AuthenticationPolicyFunction
-  | IAuthenticationPolicy
-  | Constructor<IAuthenticationPolicy>
-  | IAuthenticationPolicyFactory
-  | Constructor<IAuthenticationPolicyFactory>;
-
-type AuthorizationPolicyType =
-  | AuthorizationPolicyFunction
-  | IAuthorizationPolicy
-  | Constructor<IAuthorizationPolicy>
-  | IAuthorizationPolicyFactory
-  | Constructor<IAuthorizationPolicyFactory>;
-
-type ErrorHandlerType =
-  | ErrorHandlerFunction
-  | IErrorHandler
-  | Constructor<IErrorHandler>
-  | IErrorHandlerFactory
-  | Constructor<IErrorHandlerFactory>;
 
 export interface IWebAppPipelineBuilder {
   delegate(delegate: WebAppPipelineBuilderDelegate): this;
@@ -120,7 +93,6 @@ export interface IWebAppPipelineBuilder {
   use(middleware: MiddlewareFunction): this;
   use(middleware: IMiddleware): this;
   use(middleware: MiddlewareFunction | IMiddleware): this;
-  use(middleware: MiddlewareFactoryFunction): this;
   use(middleware: IMiddlewareFactory): this;
   use(middleware: Constructor<IMiddleware>): this;
   use(middleware: Constructor<IMiddlewareFactory>): this;
@@ -128,7 +100,6 @@ export interface IWebAppPipelineBuilder {
   useInterceptor(interceptor: InterceptorFunction): this;
   useInterceptor(interceptor: IInterceptor): this;
   useInterceptor(interceptor: InterceptorFunction | IInterceptor): this;
-  useInterceptor(interceptor: InterceptorFactoryFunction): this;
   useInterceptor(interceptor: IInterceptorFactory): this;
   useInterceptor(interceptor: Constructor<IInterceptor>): this;
   useInterceptor(interceptor: Constructor<IInterceptorFactory>): this;
@@ -136,7 +107,6 @@ export interface IWebAppPipelineBuilder {
   useGuard(guard: GuardFunction): this;
   useGuard(guard: IGuard): this;
   useGuard(guard: GuardFunction | IGuard): this;
-  useGuard(guard: GuardFactoryFunction): this;
   useGuard(guard: IGuardFactory): this;
   useGuard(guard: Constructor<IGuard>): this;
   useGuard(guard: Constructor<IGuardFactory>): this;
@@ -155,19 +125,22 @@ export interface IWebAppPipelineBuilder {
   useAuthorization(policy: Constructor<IAuthorizationPolicy>): this;
   useAuthorization(policy: Constructor<IAuthorizationPolicyFactory>): this;
 
-  // TODO Implement
-  // useEndpoint(endpoint: WebAppEndpointBuilder): this;
-  useEndpoint(endpoint: WebAppEndpoint): this;
-  useEndpoint(method: HttpMethod, path: string, handler: WebAppEndpointHandler): this;
+  useEndpoint(endpoint: PlainEndpoint): this;
+  useEndpoint(endpoint: Endpoint): this;
+  useEndpoint(
+    method: HttpMethod,
+    path: string,
+    handler: EndpointHandler,
+    options?: EndpointOptions
+  ): this;
 
-  // Endpoint shorthands
-  get(path: string, handler: WebAppEndpointHandler): this;
-  post(path: string, handler: WebAppEndpointHandler): this;
-  put(path: string, handler: WebAppEndpointHandler): this;
-  patch(path: string, handler: WebAppEndpointHandler): this;
-  delete(path: string, handler: WebAppEndpointHandler): this;
-  head(path: string, handler: WebAppEndpointHandler): this;
-  options(path: string, handler: WebAppEndpointHandler): this;
+  get(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  post(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  put(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  patch(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  delete(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  head(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
+  options(path: string, handler: EndpointHandler, options?: EndpointOptions): this;
 
   useErrorHandler(errorHandler: ErrorHandlerFunction): this;
   useErrorHandler(errorHandler: IErrorHandler): this;
@@ -184,7 +157,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   private readonly guards: GuardType[] = [];
   private readonly authenticationPolicies: AuthenticationPolicyType[] = [];
   private readonly authorizationPolicies: AuthorizationPolicyType[] = [];
-  private readonly endpoints: WebAppEndpoint[] = [];
+  private readonly endpoints: PlainEndpoint[] = [];
   private errorHandler: ErrorHandlerType | undefined;
 
   delegate(delegate: WebAppPipelineBuilderDelegate): this {
@@ -195,7 +168,6 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   use(middleware: MiddlewareFunction): this;
   use(middleware: IMiddleware): this;
   use(middleware: MiddlewareFunction | IMiddleware): this;
-  use(middleware: MiddlewareFactoryFunction): this;
   use(middleware: IMiddlewareFactory): this;
   use(middleware: Constructor<IMiddleware>): this;
   use(middleware: Constructor<IMiddlewareFactory>): this;
@@ -214,7 +186,6 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   useInterceptor(interceptor: InterceptorFunction): this;
   useInterceptor(interceptor: IInterceptor): this;
   useInterceptor(interceptor: InterceptorFunction | IInterceptor): this;
-  useInterceptor(interceptor: InterceptorFactoryFunction): this;
   useInterceptor(interceptor: IInterceptorFactory): this;
   useInterceptor(interceptor: Constructor<IInterceptor>): this;
   useInterceptor(interceptor: Constructor<IInterceptorFactory>): this;
@@ -233,7 +204,6 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   useGuard(guard: GuardFunction): this;
   useGuard(guard: IGuard): this;
   useGuard(guard: GuardFunction | IGuard): this;
-  useGuard(guard: GuardFactoryFunction): this;
   useGuard(guard: IGuardFactory): this;
   useGuard(guard: Constructor<IGuard>): this;
   useGuard(guard: Constructor<IGuardFactory>): this;
@@ -281,60 +251,74 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     return this;
   }
 
-  useEndpoint(endpoint: WebAppEndpoint): this;
-  useEndpoint(method: HttpMethod, path: string, handler: WebAppEndpointHandler): this;
+  useEndpoint(endpoint: PlainEndpoint): this;
+  useEndpoint(endpoint: Endpoint): this;
+  useEndpoint(
+    method: HttpMethod,
+    path: string,
+    handler: EndpointHandler,
+    options?: EndpointOptions
+  ): this;
   useEndpoint(...args: unknown[]): this {
-    if (args.length === 1 && isPlainEndpoint(args[0])) {
-      const endpoint: WebAppEndpoint = args[0];
-      return this.useWebAppEndpoint(endpoint);
+    if (args.length === 1) {
+      if (isEndpoint(args[0])) {
+        const endpoint: Endpoint = args[0];
+        return this.useWebAppEndpoint(endpoint.toPlain());
+      }
+
+      if (isPlainEndpoint(args[0])) {
+        const endpoint: PlainEndpoint = args[0];
+        return this.useWebAppEndpoint(endpoint);
+      }
     }
 
     if (
-      args.length === 3 &&
+      isInRange(args.length, 3, 4) &&
       isHttpMethod(args[0]) &&
       typeof args[1] === "string" &&
-      isWebAppEndpointHandler(args[2])
+      isEndpointHandler(args[2])
     ) {
       const method: HttpMethod = args[0];
       const path: string = args[1];
-      const handler: WebAppEndpointHandler = args[2];
-      return this.useWebAppEndpoint({ method, path, handler });
+      const handler: EndpointHandler = args[2];
+      const options: EndpointOptions = args[3] as EndpointOptions;
+      return this.useWebAppEndpoint({ method, path, handler, options });
     }
 
-    throw new InvalidOperationError();
+    throw new TypeError(`Unknown endpoint type: ${args}`);
   }
 
-  private useWebAppEndpoint(endpoint: WebAppEndpoint): this {
+  private useWebAppEndpoint(endpoint: PlainEndpoint): this {
     this.endpoints.push(endpoint);
     return this;
   }
 
-  get(path: string, handler: WebAppEndpointHandler): this {
-    return this.useEndpoint("GET", path, handler);
+  get(path: string, handler: EndpointHandler, options?: EndpointOptions): this {
+    return this.useEndpoint("GET", path, handler, options);
   }
 
-  post(path: string, handler: WebAppEndpointHandler): this {
-    return this.useEndpoint("POST", path, handler);
+  post(path: string, handler: EndpointHandler, options?: EndpointOptions): this {
+    return this.useEndpoint("POST", path, handler, options);
   }
 
-  put(path: string, handler: WebAppEndpointHandler): this {
-    return this.useEndpoint("PUT", path, handler);
+  put(path: string, handler: EndpointHandler, options?: EndpointOptions): this {
+    return this.useEndpoint("PUT", path, handler, options);
   }
 
-  patch(path: string, handler: WebAppEndpointHandler): this {
-    return this.useEndpoint("PATCH", path, handler);
+  patch(path: string, handler: EndpointHandler, options?: EndpointOptions): this {
+    return this.useEndpoint("PATCH", path, handler, options);
   }
 
-  delete(path: string, handler: WebAppEndpointHandler): this {
-    return this.useEndpoint("DELETE", path, handler);
+  delete(path: string, handler: EndpointHandler, options?: EndpointOptions): this {
+    return this.useEndpoint("DELETE", path, handler, options);
   }
 
-  head(path: string, handler: WebAppEndpointHandler): this {
-    return this.useEndpoint("HEAD", path, handler);
+  head(path: string, handler: EndpointHandler, options?: EndpointOptions): this {
+    return this.useEndpoint("HEAD", path, handler, options);
   }
 
-  options(path: string, handler: WebAppEndpointHandler): this {
-    return this.useEndpoint("OPTIONS", path, handler);
+  options(path: string, handler: EndpointHandler, options?: EndpointOptions): this {
+    return this.useEndpoint("OPTIONS", path, handler, options);
   }
 
   useErrorHandler(errorHandler: ErrorHandlerFunction): this;
@@ -354,26 +338,31 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   }
 
   async build(container: IContainerBuilder): Promise<{
-    middlewares: MiddlewareFunction[];
-    interceptors: InterceptorFunction[];
-    guards: GuardFunction[];
-    authenticationPolicies: AuthenticationPolicyFunction[];
-    authorizationPolicies: AuthorizationPolicyFunction[];
-    endpoints: PlainEndpoint[];
-    errorHandler: ErrorHandlerFunction | null;
+    middlewares: ServerMiddlewareFunction[];
+    interceptors: ServerInterceptorFunction[];
+    guards: ServerGuardFunction[];
+    authenticationPolicies: ServerAuthenticationPolicyFunction[];
+    authorizationPolicies: ServerAuthorizationPolicyFunction[];
+    endpoints: ServerPlainEndpoint[];
+    errorHandler: ServerErrorHandlerFunction | null;
   }> {
     this.containerDelegates.forEach((delegate) => delegate(container));
     const services = await container.buildServiceProvider();
 
     const middlewares = this.middlewares.map((x) => this.toMiddlewareFunction(x, services));
+
     const interceptors = this.interceptors.map((x) => this.toInterceptorFunction(x, services));
+
     const guards = this.guards.map((x) => this.toGuardFunction(x, services));
+
     const authenticationPolicies = this.authenticationPolicies.map((x) =>
       this.toAuthenticationPolicyFunction(x, services)
     );
+
     const authorizationPolicies = this.authorizationPolicies.map((x) =>
       this.toAuthorizationPolicyFunction(x, services)
     );
+
     const endpoints = this.endpoints.map((x) => this.toPlainEndpoint(x, services));
 
     const errorHandler =
@@ -395,29 +384,24 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   private toMiddlewareFunction(
     middlewareType: MiddlewareType,
     services: IServiceProvider
-  ): MiddlewareFunction {
+  ): ServerMiddlewareFunction {
     if (isConstructor<IMiddleware | IMiddlewareFactory>(middlewareType)) {
-      return (req, res, next) => {
+      return ({ req, res, next }) => {
         const service = services.getOrThrow<IMiddleware | IMiddlewareFactory>(middlewareType);
         const middleware = this.toMiddlewareFunction(service, services);
-        return middleware(req, res, next);
+        return middleware({ req, res, next });
       };
     }
 
-    if (isMiddlewareFactoryFunction(middlewareType)) {
-      const middleware = middlewareType();
-      return this.toMiddlewareFunction(middleware, services);
-    }
-
     if (isMiddlewareFunction(middlewareType)) {
-      return (req, res, next) => {
-        return middlewareType(req, res, next);
+      return ({ req, res, next }) => {
+        return middlewareType({ req, res, next, services });
       };
     }
 
     if (isIMiddleware(middlewareType)) {
-      return (req, res, next) => {
-        return middlewareType.run(req, res, next);
+      return ({ req, res, next }) => {
+        return middlewareType.run({ req, res, next, services });
       };
     }
 
@@ -432,7 +416,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   private toInterceptorFunction(
     interceptorType: InterceptorType,
     services: IServiceProvider
-  ): InterceptorFunction {
+  ): ServerInterceptorFunction {
     if (isConstructor<IInterceptor | IInterceptorFactory>(interceptorType)) {
       return (req) => {
         const service = services.getOrThrow<IInterceptor | IInterceptorFactory>(interceptorType);
@@ -441,20 +425,15 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
       };
     }
 
-    if (isInterceptorFactoryFunction(interceptorType)) {
-      const interceptor = interceptorType();
-      return this.toInterceptorFunction(interceptor, services);
-    }
-
     if (isInterceptorFunction(interceptorType)) {
-      return (req) => {
-        return interceptorType(req);
+      return ({ req }) => {
+        return interceptorType({ req, services });
       };
     }
 
     if (isIInterceptor(interceptorType)) {
-      return (req) => {
-        return interceptorType.intercept(req);
+      return ({ req }) => {
+        return interceptorType.intercept({ req, services });
       };
     }
 
@@ -463,10 +442,10 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
       return this.toInterceptorFunction(interceptor, services);
     }
 
-    throw new InvalidOperationError();
+    throw new TypeError(`Unknown interceptor type: ${interceptorType}`);
   }
 
-  private toGuardFunction(guardType: GuardType, services: IServiceProvider): GuardFunction {
+  private toGuardFunction(guardType: GuardType, services: IServiceProvider): ServerGuardFunction {
     if (isConstructor<IGuard | IGuardFactory>(guardType)) {
       return (req) => {
         const service = services.getOrThrow<IGuard | IGuardFactory>(guardType);
@@ -475,20 +454,15 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
       };
     }
 
-    if (isGuardFactoryFunction(guardType)) {
-      const guard = guardType();
-      return this.toGuardFunction(guard, services);
-    }
-
     if (isGuardFunction(guardType)) {
-      return (req) => {
-        return guardType(req);
+      return ({ req }) => {
+        return guardType({ req, services });
       };
     }
 
     if (isIGuard(guardType)) {
-      return (req) => {
-        return guardType.protect(req);
+      return ({ req }) => {
+        return guardType.protect({ req, services });
       };
     }
 
@@ -503,7 +477,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   private toAuthenticationPolicyFunction(
     policyType: AuthenticationPolicyType,
     services: IServiceProvider
-  ): AuthenticationPolicyFunction {
+  ): ServerAuthenticationPolicyFunction {
     if (isConstructor<IAuthenticationPolicy | IAuthenticationPolicyFactory>(policyType)) {
       return (req) => {
         const service = services.getOrThrow<IAuthenticationPolicy | IAuthenticationPolicyFactory>(
@@ -515,14 +489,14 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     }
 
     if (isAuthenticationPolicyFunction(policyType)) {
-      return (req) => {
-        return policyType(req);
+      return ({ req }) => {
+        return policyType({ req, services });
       };
     }
 
     if (isIAuthenticationPolicy(policyType)) {
-      return (req) => {
-        return policyType.authenticate(req);
+      return ({ req }) => {
+        return policyType.authenticate({ req, services });
       };
     }
 
@@ -537,7 +511,7 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
   private toAuthorizationPolicyFunction(
     policyType: AuthorizationPolicyType,
     services: IServiceProvider
-  ): AuthorizationPolicyFunction {
+  ): ServerAuthorizationPolicyFunction {
     if (isConstructor<IAuthorizationPolicy | IAuthorizationPolicyFactory>(policyType)) {
       return (req) => {
         const service = services.getOrThrow<IAuthorizationPolicy | IAuthorizationPolicyFactory>(
@@ -549,14 +523,14 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     }
 
     if (isAuthorizationPolicyFunction(policyType)) {
-      return (req) => {
-        return policyType(req);
+      return ({ req }) => {
+        return policyType({ req, services });
       };
     }
 
     if (isIAuthorizationPolicy(policyType)) {
-      return (req) => {
-        return policyType.authorize(req);
+      return ({ req }) => {
+        return policyType.authorize({ req, services });
       };
     }
 
@@ -568,39 +542,63 @@ export class WebAppPipelineBuilder implements IWebAppPipelineBuilder {
     throw new InvalidOperationError();
   }
 
-  private toPlainEndpoint(endpoint: WebAppEndpoint, services: IServiceProvider): PlainEndpoint {
+  private toPlainEndpoint(
+    endpoint: PlainEndpoint,
+    services: IServiceProvider
+  ): ServerPlainEndpoint {
     return {
       method: endpoint.method,
       path: endpoint.path,
       handler: async (context) => {
-        const newContext = WebAppEndpointContext.from(context, services);
+        const newContext = EndpointContext.from(context, services);
         return await endpoint.handler(newContext);
       },
-      options: undefined, // TODO Map options
+      options: this.toPlainEndpointOptions(endpoint.options, services),
+    };
+  }
+
+  private toPlainEndpointOptions(
+    options: EndpointOptions | undefined,
+    services: IServiceProvider
+  ): ServerEndpointOptions | undefined {
+    if (options === undefined) {
+      return undefined;
+    }
+
+    return {
+      middlewares: options.middlewares?.map((x) => this.toMiddlewareFunction(x, services)),
+      interceptors: options.interceptors?.map((x) => this.toInterceptorFunction(x, services)),
+      guards: options.guards?.map((x) => this.toGuardFunction(x, services)),
+      authentication: options.authentication
+        ? this.toAuthenticationPolicyFunction(options.authentication, services)
+        : undefined,
+      authorization: options.authorization
+        ? this.toAuthorizationPolicyFunction(options.authorization, services)
+        : undefined,
     };
   }
 
   private toErrorHandlerFunction(
     errorHandlerType: ErrorHandlerType,
     services: IServiceProvider
-  ): ErrorHandlerFunction {
+  ): ServerErrorHandlerFunction {
     if (isConstructor<IErrorHandler | IErrorHandlerFactory>(errorHandlerType)) {
-      return (req, res, err) => {
+      return ({ req, res, err }) => {
         const service = services.getOrThrow<IErrorHandler | IErrorHandlerFactory>(errorHandlerType);
         const errorHandler = this.toErrorHandlerFunction(service, services);
-        return errorHandler(req, res, err);
+        return errorHandler({ req, res, err });
       };
     }
 
     if (isErrorHandlerFunction(errorHandlerType)) {
-      return (req, res, err) => {
-        return errorHandlerType(req, res, err);
+      return ({ req, res, err }) => {
+        return errorHandlerType({ req, res, err, services });
       };
     }
 
     if (isIErrorHandler(errorHandlerType)) {
-      return (req, res, err) => {
-        return errorHandlerType.catch(req, res, err);
+      return ({ req, res, err }) => {
+        return errorHandlerType.catch({ req, res, err, services });
       };
     }
 
