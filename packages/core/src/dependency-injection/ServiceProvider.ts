@@ -14,6 +14,8 @@ export interface IServiceProvider {
   find<T>(token: Token<T>): readonly T[];
   get<T>(token: Token<T>): T | undefined;
   getOrThrow<T>(token: Token<T>): T;
+  last<T>(token: Token<T>): T | undefined;
+  lastOrThrow<T>(token: Token<T>): T;
 }
 
 export class ServiceProvider implements IServiceProvider {
@@ -43,6 +45,26 @@ export class ServiceProvider implements IServiceProvider {
 
   getOrThrow<T>(token: Token<T>): T {
     const service = this.get(token);
+
+    if (service === undefined) {
+      throw new ServiceNotFoundError(token);
+    }
+
+    return service;
+  }
+
+  last<T>(token: Token<T>): T | undefined {
+    const serviceDescriptor = this.serviceDescriptors.findLast((sd) => sd.token === token);
+
+    if (serviceDescriptor === undefined) {
+      return undefined;
+    }
+
+    return this.resolve(serviceDescriptor);
+  }
+
+  lastOrThrow<T>(token: Token<T>): T {
+    const service = this.last(token);
 
     if (service === undefined) {
       throw new ServiceNotFoundError(token);

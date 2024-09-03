@@ -1,18 +1,22 @@
-import { IServiceProvider } from "@/dependency-injection";
+import { AppBuilder, IEnvironment, IApp, environmentToken, IAppBuilder } from "@/app";
+import { CONFIGURATION, IConfiguration } from "@/configuration";
+import { IContainerBuilder, IServiceProvider } from "@/dependency-injection";
 import { InvalidOperationError, TomasError } from "@/errors";
-import { IConfiguration } from "@/configuration";
 import { Constructor, isConstructor } from "@/system";
-import { AppBuilder, IEnvironment, IApp } from "@/app";
 
-const entryPointToken = "@tomasjs/core/EntryPoint";
+const ENTRY_POINT = "@tomasjs/core/console/EntryPoint";
 
-export class ConsoleAppBuilder extends AppBuilder<ConsoleApp> {
+export interface IConsoleAppBuilder extends IAppBuilder<ConsoleApp> {
+  addEntryPoint(entryPoint: EntryPoint): this;
+}
+
+export class ConsoleAppBuilder extends AppBuilder<ConsoleApp> implements IConsoleAppBuilder {
   addEntryPoint(entryPoint: EntryPoint): this {
     this.setupContainer((services) => {
       if (isConstructor(entryPoint)) {
-        services.add("scoped", entryPointToken, entryPoint);
+        services.add("scoped", ENTRY_POINT, entryPoint);
       } else if (isEntryPointFunction(entryPoint)) {
-        services.addValue("scoped", entryPointToken, entryPoint);
+        services.addValue("scoped", ENTRY_POINT, entryPoint);
       } else {
         throw new InvalidOperationError();
       }
@@ -20,11 +24,10 @@ export class ConsoleAppBuilder extends AppBuilder<ConsoleApp> {
     return this;
   }
 
-  protected override async buildApp(
-    configuration: IConfiguration,
-    environment: IEnvironment,
-    services: IServiceProvider
-  ): Promise<ConsoleApp> {
+  protected override async buildApp(containerBuilder: IContainerBuilder): Promise<ConsoleApp> {
+    const services = await containerBuilder.buildServiceProvider();
+    const configuration = services.getOrThrow<IConfiguration>(CONFIGURATION);
+    const environment = services.getOrThrow<IEnvironment>(environmentToken);
     return new ConsoleApp(configuration, environment, services);
   }
 }
@@ -37,7 +40,7 @@ export class ConsoleApp implements IApp {
   ) {}
 
   async start(): Promise<void> {
-    const entryPoint = this.services.get(entryPointToken);
+    const entryPoint = this.services.get(ENTRY_POINT);
 
     if (entryPoint === undefined) {
       throw new ConsoleAppEntryPointError();

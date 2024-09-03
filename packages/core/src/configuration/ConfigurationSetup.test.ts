@@ -1,6 +1,6 @@
 import "reflect-metadata";
 import { ContainerBuilder } from "@/dependency-injection";
-import { ConfigurationSetup, configurationToken } from "./ConfigurationSetup";
+import { CONFIGURATION, ConfigurationSetup } from "./ConfigurationSetup";
 import { Configuration } from "./Configuration";
 
 describe("ConfigurationSetup", () => {
@@ -9,7 +9,7 @@ describe("ConfigurationSetup", () => {
       .setup(new ConfigurationSetup().build())
       .buildServiceProvider();
 
-    const configuration = services.getOrThrow<Configuration>(configurationToken);
+    const configuration = services.getOrThrow<Configuration>(CONFIGURATION);
     expect(configuration).toBeInstanceOf(Configuration);
   });
 
@@ -24,7 +24,7 @@ describe("ConfigurationSetup", () => {
       .setup(new ConfigurationSetup().addRawSource(rawSource).build())
       .buildServiceProvider();
 
-    const configuration = services.getOrThrow<Configuration>(configurationToken);
+    const configuration = services.getOrThrow<Configuration>(CONFIGURATION);
 
     const configurationRootValue = configuration.valueOrThrow<typeof rawSource>("object");
 
@@ -36,7 +36,7 @@ describe("ConfigurationSetup", () => {
       .setup(new ConfigurationSetup().addEnvironmentSource().build())
       .buildServiceProvider();
 
-    const configuration = services.getOrThrow<Configuration>(configurationToken);
+    const configuration = services.getOrThrow<Configuration>(CONFIGURATION);
 
     const configurationRootValue = configuration.valueOrThrow("object");
 
@@ -48,7 +48,7 @@ describe("ConfigurationSetup", () => {
       .setup(new ConfigurationSetup().addJsonSource("./appconfig.test.json").build())
       .buildServiceProvider();
 
-    const configuration = services.getOrThrow<Configuration>(configurationToken);
+    const configuration = services.getOrThrow<Configuration>(CONFIGURATION);
 
     const configurationRootValue = configuration.valueOrThrow("object");
 
@@ -100,7 +100,7 @@ describe("ConfigurationSetup", () => {
       )
       .buildServiceProvider();
 
-    const configuration = services.getOrThrow<Configuration>(configurationToken);
+    const configuration = services.getOrThrow<Configuration>(CONFIGURATION);
 
     const configurationRootValue = configuration.valueOrThrow("object");
 

@@ -1,17 +1,18 @@
-import { ConfigurationSetup, IConfiguration, configurationToken } from "@/configuration";
-import { BusSetup } from "@/cqrs";
+import { ConfigurationSetup, IConfiguration } from "@/configuration";
 import {
   ContainerBuilder,
   ContainerBuilderDelegate,
+  IContainerBuilder,
   IServiceProvider,
 } from "@/dependency-injection";
+import { ILoggerSetup, LoggerSetup } from "@/logging";
 import { Environment, IEnvironment, environmentToken } from "./Environment";
-import { LoggerSetup } from "@/logging";
+import { IMessagingSetup, MessagingSetup } from "@/messaging";
 
-interface IAppBuilder<TApp extends IApp> {
+export interface IAppBuilder<TApp extends IApp> {
   setupConfiguration(delegate: ConfigurationSetupDelegate): this;
   setupLogging(delegate: LoggerSetupDelegate): this;
-  setupBus(delegate: BusSetupDelegate): this;
+  setupMessaging(delegate: MessagingSetupDelegate): this;
   setupContainer(delegate: ContainerBuilderDelegate): this;
   build(): Promise<TApp>;
 }
@@ -24,22 +25,28 @@ export interface IApp {
   stop(): Promise<void>;
 }
 
-type ConfigurationSetupDelegate = (builder: ConfigurationSetup) => void;
-type LoggerSetupDelegate = (builder: LoggerSetup) => void;
-type BusSetupDelegate = (builder: BusSetup) => void;
+export type ConfigurationSetupDelegate = (builder: ConfigurationSetup) => void;
+
+export type LoggerSetupDelegate = (builder: ILoggerSetup) => void;
+
+export type MessagingSetupDelegate = (builder: IMessagingSetup) => void;
 
 export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp> {
-  private configurationSetupDelegates: ConfigurationSetupDelegate[] = [];
-  private loggerSetupDelegates: LoggerSetupDelegate[] = [];
-  private busSetupDelegates: BusSetupDelegate[] = [];
-  private containerBuilderDelegates: ContainerBuilderDelegate[] = [];
+  private readonly configurationSetupDelegates: ConfigurationSetupDelegate[] = [];
+  private readonly loggerSetupDelegates: LoggerSetupDelegate[] = [];
+  private readonly messagingSetupDelegates: MessagingSetupDelegate[] = [];
+  private readonly containerBuilderDelegates: ContainerBuilderDelegate[] = [];
 
   constructor() {
     const env = Environment.current();
-    this.configurationSetupDelegates.push((config) => config.addRawSource(env));
-    this.containerBuilderDelegates.push((container) =>
-      container.add("singleton", environmentToken, env)
-    );
+
+    this.configurationSetupDelegates.push((config) => {
+      config.addRawSource(env);
+    });
+
+    this.containerBuilderDelegates.push((container) => {
+      container.add("singleton", environmentToken, env);
+    });
   }
 
   setupConfiguration(delegate: ConfigurationSetupDelegate): this {
@@ -52,8 +59,8 @@ export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp>
     return this;
   }
 
-  setupBus(delegate: BusSetupDelegate): this {
-    this.busSetupDelegates.push(delegate);
+  setupMessaging(delegate: MessagingSetupDelegate): this {
+    this.messagingSetupDelegates.push(delegate);
     return this;
   }
 
@@ -83,13 +90,13 @@ export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp>
         builder.setup(setup.build());
       })
       .delegate((builder) => {
-        const busSetup = new BusSetup();
+        const messagingSetup = new MessagingSetup();
 
-        for (const delegate of this.busSetupDelegates) {
-          delegate(busSetup);
+        for (const delegate of this.messagingSetupDelegates) {
+          delegate(messagingSetup);
         }
 
-        builder.setup(busSetup.build());
+        builder.setup(messagingSetup.build());
       })
       .delegate((builder) => {
         for (const delegate of this.containerBuilderDelegates) {
@@ -97,15 +104,8 @@ export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp>
         }
       });
 
-    const services = await containerBuilder.buildServiceProvider();
-    const configuration = services.getOrThrow<IConfiguration>(configurationToken);
-    const environment = services.getOrThrow<IEnvironment>(environmentToken);
-    return await this.buildApp(configuration, environment, services);
+    return await this.buildApp(containerBuilder);
   }
 
-  protected abstract buildApp(
-    configuration: IConfiguration,
-    environment: IEnvironment,
-    services: IServiceProvider
-  ): Promise<TApp>;
+  protected abstract buildApp(containerBuilder: IContainerBuilder): Promise<TApp>;
 }

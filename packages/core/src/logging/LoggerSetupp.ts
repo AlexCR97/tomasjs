@@ -3,7 +3,7 @@ import {
   ConfigurationSection,
   IConfiguration,
   IConfigurationSection,
-  configurationToken,
+  CONFIGURATION,
 } from "@/configuration";
 import { ContainerSetup, IServiceProvider } from "@/dependency-injection";
 import { InvalidOperationError } from "@/errors";
@@ -12,7 +12,7 @@ import { ILoggerBuilder, LoggerBuilder } from "./LoggerBuilder";
 import { ILogger, LoggerOptions } from "./Logger";
 import { LogLevel } from "./LogLevel";
 
-interface ILoggerSetup {
+export interface ILoggerSetup {
   withConfiguration(config: IConfiguration): this;
   withConfiguration(config: IConfigurationSection): this;
   withConfiguration(config: LoggerConfiguration): this;
@@ -66,7 +66,7 @@ export class LoggerSetup implements ILoggerSetup {
   build(): ContainerSetup {
     return (container) => {
       container.add<ILoggerBuilder>("singleton", LOGGER_BUILDER, (services: IServiceProvider) => {
-        const configuration = services.get<IConfiguration>(configurationToken);
+        const configuration = services.get<IConfiguration>(CONFIGURATION);
 
         const loggerConfig = this.getLoggerConfiguration(configuration);
         const defaultOptions = loggerConfig?.default;
