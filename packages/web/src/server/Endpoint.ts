@@ -1,4 +1,13 @@
-import { HTTP_STATUS_CODES, HttpMethod, IHttpContent, PlainHttpHeaders } from "@tomasjs/core/http";
+import {
+  HtmlContent,
+  HTTP_STATUS_CODES,
+  HttpMethod,
+  IHttpContent,
+  JsonContent,
+  PlainHttpHeaders,
+  PlainTextContent,
+  RawContent,
+} from "@tomasjs/core/http";
 import { AuthenticationPolicyFunction, AuthorizationPolicyFunction, IUserReader } from "@/auth";
 import { MiddlewareFunction } from "./Middleware";
 import { InterceptorFunction } from "./Interceptor";
@@ -11,6 +20,8 @@ import { IQueryParams } from "./QueryParams";
 import { UrlParser } from "./UrlParser";
 import { IResponseWriter } from "./ResponseWriter";
 import { HttpPipeline } from "./HttpPipeline";
+import { isNotNull } from "@tomasjs/core/system";
+import { ProblemDetails, ProblemDetailsContent } from "@/problems";
 
 export type PlainEndpoint = {
   method: HttpMethod;
@@ -19,11 +30,22 @@ export type PlainEndpoint = {
   options?: EndpointOptions;
 };
 
-export type EndpointHandler = (context: IEndpointContext) => HttpResponse | Promise<HttpResponse>;
+export type EndpointHandler = (
+  context: IEndpointContext
+) => EndpointHandlerResult | Promise<EndpointHandlerResult>;
 
 export interface IEndpointContext extends IRequestContextReader {
   params: IRouteParams;
 }
+
+export type EndpointHandlerResult =
+  | HttpResponse
+  | IHttpContent<unknown>
+  | ProblemDetails
+  | ProblemDetailsContent
+  | number
+  | string
+  | Record<any, unknown>;
 
 export class EndpointContext implements IEndpointContext {
   constructor(
@@ -209,6 +231,61 @@ export function endpoints(endpoints: PlainEndpoint[]): MiddlewareFunction {
     }
 
     const context = EndpointContext.from(endpoint, req);
-    return await endpoint.handler(context);
+    const result = await endpoint.handler(context);
+    return toHttpResponse(result);
+  }
+
+  function toHttpResponse(result: EndpointHandlerResult): HttpResponse {
+    if (result instanceof HttpResponse) {
+      return result;
+    }
+
+    if (isHttpContent(result)) {
+      return new HttpResponse({ status: HTTP_STATUS_CODES.ok, content: result });
+    }
+
+    if (result instanceof ProblemDetails) {
+      return new HttpResponse({
+        status: result.status,
+        content: ProblemDetailsContent.from(result),
+      });
+    }
+
+    if (result instanceof ProblemDetailsContent) {
+      const problems = result.readData();
+      return new HttpResponse({
+        status: problems.status,
+        content: result,
+      });
+    }
+
+    if (typeof result === "number") {
+      return new HttpResponse({ status: result });
+    }
+
+    if (typeof result === "string") {
+      return new HttpResponse({
+        status: HTTP_STATUS_CODES.ok,
+        content: PlainTextContent.from(result),
+      });
+    }
+
+    if (typeof result === "object" && isNotNull(result)) {
+      return new HttpResponse({
+        status: HTTP_STATUS_CODES.ok,
+        content: JsonContent.from(result),
+      });
+    }
+
+    throw new TypeError(`Unknown EndpointHandlerResult type: ${result}`);
+  }
+
+  function isHttpContent(obj: unknown): obj is IHttpContent<unknown> {
+    return (
+      obj instanceof RawContent ||
+      obj instanceof PlainTextContent ||
+      obj instanceof HtmlContent ||
+      obj instanceof JsonContent
+    );
   }
 }

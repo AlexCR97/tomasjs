@@ -1,32 +1,162 @@
-import { HTTP_STATUS_CODES, HttpClient, JsonContent } from "@tomasjs/core/http";
+import {
+  HtmlContent,
+  HTTP_CONTENT_TYPES,
+  HTTP_STATUS_CODES,
+  HttpClient,
+  HttpContentType,
+  IHttpClient,
+  JsonContent,
+  PlainTextContent,
+} from "@tomasjs/core/http";
 import { HttpResponse, IHttpServer } from "@/server";
 import { testHttpServer } from "@/test";
 import { Endpoint } from "./Endpoint";
 import { MiddlewareFunction } from "./Middleware";
 import { InterceptorFunction } from "./Interceptor";
 import { GuardFunction } from "./Guard";
+import { ProblemDetails, ProblemDetailsBuilder, ProblemDetailsContent } from "@/problems";
 
 describe("server/Endpoint", () => {
-  const client = new HttpClient();
-
   let server: IHttpServer;
+  let client: IHttpClient;
 
   beforeEach(async () => {
     server = await testHttpServer();
+    client = new HttpClient({ baseUrl: `http://localhost:${server.port}` });
   });
 
   afterEach(async () => {
     await server.stop();
   });
 
-  it("should use an endpoint", async () => {
+  it("should respond with an HttpResponse", async () => {
+    const expectedStatus = HTTP_STATUS_CODES.accepted;
+    const expectedContent = "HttpResponse works!";
+
     await server
-      .useEndpoint(
-        Endpoint.get("/", () => {
-          return new HttpResponse();
-        })
-      )
+      .useEndpoint("GET", "/", () => {
+        return new HttpResponse({
+          status: expectedStatus,
+          content: PlainTextContent.from(expectedContent),
+        });
+      })
+
       .start();
+
+    const response = await client.get("/");
+    expect(response.status).toBe(expectedStatus);
+    expect(response.body.toString()).toMatch(expectedContent);
+  });
+
+  it("should respond with HttpContent", async () => {
+    const expectedStatus = HTTP_STATUS_CODES.ok;
+    const expectedContent = HtmlContent.from(/*html*/ `<h1>Home</h1>`);
+
+    await server
+      .useEndpoint("GET", "/", () => {
+        return expectedContent;
+      })
+
+      .start();
+
+    const response = await client.get("/");
+    expect(response.status).toBe(expectedStatus);
+    expect(response.headers["content-type"]).toMatch(expectedContent.type);
+    expect(response.body.toString()).toMatch(expectedContent.toString());
+  });
+
+  it("should respond with ProblemDetails", async () => {
+    const problems = new ProblemDetailsBuilder()
+      .withStatus(HTTP_STATUS_CODES.conflict)
+      .withTitle("A conflict ocurred")
+      .build();
+
+    await server
+      .useEndpoint("GET", "/", () => {
+        return problems;
+      })
+      .start();
+
+    const response = await client.get("/");
+    expect(response.status).toBe(problems.status);
+    expect(response.headers["content-type"]).toMatch(<HttpContentType>"application/problem+json");
+
+    const responseJson = response.body.toString();
+    const responseProblems = JSON.parse(responseJson);
+    expect(responseProblems.status).toBe(problems.status);
+    expect(responseProblems.title).toMatch(problems.title);
+  });
+
+  it("should respond with ProblemDetailsContent", async () => {
+    const problems = new ProblemDetailsBuilder()
+      .withStatus(HTTP_STATUS_CODES.forbidden)
+      .withTitle("Permission denied")
+      .build();
+
+    const problemsContent = ProblemDetailsContent.from(problems);
+
+    await server
+      .useEndpoint("GET", "/", () => {
+        return problemsContent;
+      })
+      .start();
+
+    const response = await client.get("/");
+    expect(response.status).toBe(problems.status);
+    expect(response.headers["content-type"]).toMatch(<HttpContentType>"application/problem+json");
+
+    const responseJson = response.body.toString();
+    const responseProblems = JSON.parse(responseJson);
+    expect(responseProblems.status).toBe(problems.status);
+    expect(responseProblems.title).toMatch(problems.title);
+  });
+
+  it("should respond with a status", async () => {
+    const expectedStatus = HTTP_STATUS_CODES.noContent;
+
+    await server
+      .useEndpoint("GET", "/", () => {
+        return expectedStatus;
+      })
+      .start();
+
+    const response = await client.get("/");
+    expect(response.status).toBe(expectedStatus);
+  });
+
+  it("should respond with plain text", async () => {
+    const expectedStatus = HTTP_STATUS_CODES.ok;
+    const expectedContent = "Plain text works!";
+
+    await server
+      .useEndpoint("GET", "/", () => {
+        return expectedContent;
+      })
+      .start();
+
+    const response = await client.get("/");
+    expect(response.status).toBe(expectedStatus);
+    expect(response.headers["content-type"]).toMatch(<HttpContentType>"text/plain");
+    expect(response.body.toString()).toMatch(expectedContent);
+  });
+
+  it("should respond with json", async () => {
+    const expectedStatus = HTTP_STATUS_CODES.ok;
+    const expectedContent = { tenantId: 1, userId: "2" };
+
+    await server
+      .useEndpoint("GET", "/", () => {
+        return expectedContent;
+      })
+      .start();
+
+    const response = await client.get("/");
+    expect(response.status).toBe(expectedStatus);
+    expect(response.headers["content-type"]).toMatch(<HttpContentType>"application/json");
+
+    const responseJson = response.body.toString();
+    const responseContent = JSON.parse(responseJson);
+    expect(responseContent).toMatchObject(expectedContent);
   });
 
   it("should apply middleware at the endpoint level", async () => {
@@ -62,7 +192,7 @@ describe("server/Endpoint", () => {
       )
       .start();
 
-    const response = await client.get(`http://localhost:${server.port}`);
+    const response = await client.get("/");
 
     expect(response.isSuccess).toBe(true);
 

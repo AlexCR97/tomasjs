@@ -1,3 +1,5 @@
+// TODO Move this to @tomasjs/core/http
+
 /**
  * A machine-readable format for specifying errors in HTTP API responses based on https://tools.ietf.org/html/rfc7807.
  */
@@ -197,7 +199,7 @@ export class ProblemDetailsBuilder implements IProblemDetailsBuilder {
     return this.addExtensions({ [key]: value });
   }
 
-  build(): IProblemDetails {
+  build(): ProblemDetails {
     return new ProblemDetails(
       this.type ?? "Unknown",
       this.status ?? 0,

@@ -3,6 +3,7 @@ export {
   Endpoint,
   EndpointContext,
   EndpointHandler,
+  EndpointHandlerResult,
   EndpointOptions,
   IEndpoint,
   IEndpointContext,
