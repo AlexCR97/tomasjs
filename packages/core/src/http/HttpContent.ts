@@ -194,28 +194,6 @@ export function isJsonContent<T extends JsonRecord>(obj: unknown): obj is JsonCo
   return obj instanceof JsonContent;
 }
 
-export interface IHttpContentFactory {
-  from(contentType: HttpContentType, data: Buffer): IHttpContent<unknown>;
-}
-
-export const HttpContentFactory: IHttpContentFactory = {
-  from(contentType: HttpContentType, data: Buffer): IHttpContent<unknown> {
-    if (contentType.includes("text/plain")) {
-      return new PlainTextContent(data);
-    }
-
-    if (contentType.includes("text/html")) {
-      return new HtmlContent(data);
-    }
-
-    if (contentType.includes("application/json")) {
-      return new JsonContent(data);
-    }
-
-    return new RawContent(contentType, data);
-  },
-} as const;
-
 export class JsonContentError<T> extends TomasError {
   constructor(readonly content: IHttpContent<T>, options?: ErrorOptions) {
     super(

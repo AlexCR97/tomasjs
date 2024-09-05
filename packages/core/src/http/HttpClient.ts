@@ -10,13 +10,8 @@ import {
 import { request as sendHttpsRequest } from "node:https";
 import { InvalidOperationError } from "@/errors";
 import { ILogger, NullLogger } from "@/logging";
-import {
-  HttpContentFactory,
-  HttpContentType,
-  IHttpContent,
-  isJsonContent,
-  JsonRecord,
-} from "./HttpContent";
+import { HttpContentType, IHttpContent, JsonRecord } from "./HttpContent";
+import { HttpContentFactory } from "./HttpContentFactory";
 import {
   HttpHeaders,
   HttpHeaderValue,
@@ -28,7 +23,6 @@ import { HttpMethod, isHttpMethod } from "./HttpMethod";
 import { HttpRequest, HttpRequestError, IHttpRequest } from "./HttpRequest";
 import { HttpResponse, IHttpResponse } from "./HttpResponse";
 import { readToBuffer } from "@/system/streams";
-import { JsonResponseError } from "./JsonResponseError";
 import { pipe } from "@/system";
 
 export type IHttpClient = IHttpClientMethods & IHttpClientMethodsJson;

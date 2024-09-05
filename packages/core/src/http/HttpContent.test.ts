@@ -6,6 +6,8 @@ import {
   PlainTextContent,
   RawContent,
 } from "./HttpContent";
+import { HTTP_STATUS_CODES } from "./HttpStatus";
+import { ProblemDetails } from "./ProblemDetails";
 
 describe("http/HttpContent", () => {
   it("can parse raw plain text content", () => {
@@ -30,6 +32,38 @@ describe("http/HttpContent", () => {
     const content: IHttpContent<unknown> = new RawContent(
       "application/json",
       Buffer.from('{ "foo": "bar" }')
+    );
+
+    expect(content.readData()).toMatchObject(expectedData);
+    expect(content.readJson()).toMatchObject(expectedJson);
+    expect(content.readText()).toMatch(expectedText);
+    expect(content.toString()).toMatch(expectedString);
+  });
+
+  it("can parse raw problem details content", () => {
+    const problems = ProblemDetails.from({
+      type: "http://localhost:80/test",
+      status: HTTP_STATUS_CODES.badRequest,
+      title: "test",
+      details: "this is a test",
+      instance: "/",
+      extensions: {
+        foo: "bar",
+        fizz: "buzz",
+      },
+    });
+
+    const problemsJson = problems.toPlain();
+    const problemsJsonStr = JSON.stringify(problemsJson, undefined, 2);
+
+    const expectedData = Buffer.from(problemsJsonStr);
+    const expectedJson = { ...problemsJson };
+    const expectedText = problemsJsonStr;
+    const expectedString = problemsJsonStr;
+
+    const content: IHttpContent<unknown> = new RawContent(
+      "application/problem+json",
+      Buffer.from(problemsJsonStr)
     );
 
     expect(content.readData()).toMatchObject(expectedData);
