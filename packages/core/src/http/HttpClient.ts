@@ -455,12 +455,7 @@ export class HttpClient implements IHttpClient {
   ): Promise<TResponse>;
   async sendJson<TResponse extends JsonRecord, TRequest>(...args: any[]): Promise<TResponse> {
     const response = await getResponse(this, args);
-
-    if (isJsonContent<TResponse>(response.body)) {
-      return response.body.readData();
-    }
-
-    throw new JsonResponseError(response);
+    return response.body.readJson<TResponse>();
 
     async function getResponse<TResponse, TRequest>(
       thiz: HttpClient,
