@@ -38,5 +38,12 @@ export class Environment implements IEnvironment {
   }
 }
 
-// TODO Normalize token
+/**
+ * @deprecated since v2.7.0 - use `ENVIRONMENT` instead.
+ */
 export const environmentToken = "@tomasjs/core/Environment";
+
+/**
+ * @since v2.7.0
+ */
+export const ENVIRONMENT = "@tomasjs/core/Environment";
