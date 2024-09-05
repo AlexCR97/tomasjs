@@ -1,4 +1,4 @@
-import { HttpResponse } from "@/server";
+import { ServerResponse } from "@/server";
 import { IRequestContext, IResponseWriter } from "@/server";
 import { InvalidOperationError } from "@tomasjs/core/errors";
 import { HTTP_STATUS } from "@/HttpStatus";
@@ -36,7 +36,7 @@ export function guard(guard: GuardFunction): MiddlewareFunction {
   ) {
     const problemDetails = buildProblemDetails(req, status);
     const content = ProblemDetailsContent.from(problemDetails);
-    const response = new HttpResponse({
+    const response = new ServerResponse({
       status: problemDetails.status,
       content,
       headers: {

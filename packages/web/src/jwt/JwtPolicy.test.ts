@@ -1,7 +1,7 @@
 import { HTTP_STATUS_CODES, HttpClient, HttpHeaders } from "@tomasjs/core/http";
 import { JwtSigner } from "./JwtSigner";
 import { IHttpServer } from "@/server";
-import { HttpResponse } from "@/server";
+import { ServerResponse } from "@/server";
 import { testHttpServer } from "@/test";
 import { Claims } from "@/auth";
 import { jwtPolicy } from "./JwtPolicy";
@@ -28,7 +28,7 @@ describe("jwt/JwtPolicy", () => {
   it("should be denied by jwt policy at global level", async () => {
     await server
       .useAuthentication(myJwtPolicy)
-      .useEndpoint("GET", "/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }))
+      .useEndpoint("GET", "/", () => new ServerResponse({ status: HTTP_STATUS_CODES.ok }))
       .start();
 
     const response = await client.get(`http://localhost:${server.port}`);
@@ -42,7 +42,7 @@ describe("jwt/JwtPolicy", () => {
       .useEndpoint("GET", "/", ({ user }) => {
         expect(user.authenticated).toBe(true);
         expect(user.claims.toPlain()).toMatchObject(claims.toPlain());
-        return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+        return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
       })
       .start();
 
@@ -62,7 +62,7 @@ describe("jwt/JwtPolicy", () => {
         "/",
         () => {
           counter += 1; // this should not be reached!
-          return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
         },
         {
           authentication: myJwtPolicy,
@@ -88,7 +88,7 @@ describe("jwt/JwtPolicy", () => {
           expect(user.authenticated).toBe(true);
           expect(user.claims.toPlain()).toMatchObject(claims.toPlain());
           counter += 1;
-          return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
         },
         {
           authentication: myJwtPolicy,

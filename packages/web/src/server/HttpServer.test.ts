@@ -5,7 +5,7 @@ import { RouteParams } from "./RouteParams";
 import { RequestContext } from "./RequestContext";
 import { ResponseWriter } from "./ResponseWriter";
 import { testHttpServer } from "@/test";
-import { HttpResponse } from "./HttpResponse";
+import { ServerResponse } from "./ServerResponse";
 import { endpoints } from "./Endpoint";
 
 describe("server/HttpServer", () => {
@@ -25,7 +25,7 @@ describe("server/HttpServer", () => {
 
   it("should accept connections", async () => {
     await server
-      .useEndpoint("GET", "/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }))
+      .useEndpoint("GET", "/", () => new ServerResponse({ status: HTTP_STATUS_CODES.ok }))
       .start();
 
     const response = await client.get(`http://localhost:${server.port}`);
@@ -36,7 +36,7 @@ describe("server/HttpServer", () => {
   it("should route requests", async () => {
     await server
       .useEndpoint("GET", "/path/to/resource", () => {
-        return new HttpResponse({
+        return new ServerResponse({
           status: HTTP_STATUS_CODES.ok,
           content: PlainTextContent.from("Hooray!"),
         });
@@ -60,7 +60,7 @@ describe("server/HttpServer", () => {
 
     await server
       .useEndpoint("GET", "/", ({ query }) => {
-        return new HttpResponse({
+        return new ServerResponse({
           status: HTTP_STATUS_CODES.ok,
           content: JsonContent.from(query.toPlain()),
         });
@@ -90,7 +90,7 @@ describe("server/HttpServer", () => {
         const jsonBodyContent = jsonBody.readData();
         expect(jsonBodyContent).toMatchObject(expectedBodyContent);
 
-        return new HttpResponse({
+        return new ServerResponse({
           status: HTTP_STATUS_CODES.ok,
           content: JsonContent.from(jsonBodyContent),
         });
@@ -119,7 +119,7 @@ describe("server/HttpServer", () => {
       .useEndpoint("GET", "/path/to/:resource", ({ params }) => {
         expect(params).toBeInstanceOf(RouteParams);
 
-        return new HttpResponse({
+        return new ServerResponse({
           status: HTTP_STATUS_CODES.ok,
           content: JsonContent.from(params.toPlain()),
         });
@@ -201,7 +201,7 @@ describe("server/HttpServer", () => {
             method: "GET",
             path: "/",
             handler: () => {
-              return new HttpResponse({
+              return new ServerResponse({
                 status: HTTP_STATUS_CODES.ok,
               });
             },

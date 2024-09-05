@@ -29,7 +29,7 @@ export {
   HttpPipelineBuilderDelegate,
   IHttpPipelineBuilder,
 } from "./HttpPipelineBuilder";
-export { HttpResponse, HttpResponseOptions } from "./HttpResponse";
+export { ServerResponse, ServerResponseOptions } from "./ServerResponse";
 export { HttpServer, HttpServerOptions, IHttpServer } from "./HttpServer";
 export {
   InterceptorContext,

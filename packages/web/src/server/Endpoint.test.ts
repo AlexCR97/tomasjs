@@ -8,13 +8,13 @@ import {
   JsonContent,
   PlainTextContent,
 } from "@tomasjs/core/http";
-import { HttpResponse, IHttpServer } from "@/server";
+import { ServerResponse, IHttpServer } from "@/server";
 import { testHttpServer } from "@/test";
 import { Endpoint } from "./Endpoint";
 import { MiddlewareFunction } from "./Middleware";
 import { InterceptorFunction } from "./Interceptor";
 import { GuardFunction } from "./Guard";
-import { ProblemDetails, ProblemDetailsBuilder, ProblemDetailsContent } from "@/problems";
+import { ProblemDetailsBuilder, ProblemDetailsContent } from "@/problems";
 
 describe("server/Endpoint", () => {
   let server: IHttpServer;
@@ -35,7 +35,7 @@ describe("server/Endpoint", () => {
 
     await server
       .useEndpoint("GET", "/", () => {
-        return new HttpResponse({
+        return new ServerResponse({
           status: expectedStatus,
           content: PlainTextContent.from(expectedContent),
         });
@@ -179,7 +179,7 @@ describe("server/Endpoint", () => {
     await server
       .useEndpoint(
         Endpoint.get("/", () => {
-          return new HttpResponse({
+          return new ServerResponse({
             status: HTTP_STATUS_CODES.ok,
             content: JsonContent.from({
               aggregation,

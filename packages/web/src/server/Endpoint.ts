@@ -13,7 +13,7 @@ import { MiddlewareFunction } from "./Middleware";
 import { InterceptorFunction } from "./Interceptor";
 import { GuardFunction } from "./Guard";
 import { MiddlewareAggregate } from "./MiddlewareAggregate";
-import { HttpResponse } from "./HttpResponse";
+import { ServerResponse } from "./ServerResponse";
 import { IRequestContext, IRequestContextReader, RequestContext } from "./RequestContext";
 import { IRouteParams } from "./RouteParams";
 import { IQueryParams } from "./QueryParams";
@@ -39,7 +39,7 @@ export interface IEndpointContext extends IRequestContextReader {
 }
 
 export type EndpointHandlerResult =
-  | HttpResponse
+  | ServerResponse
   | IHttpContent<unknown>
   | ProblemDetails
   | ProblemDetailsContent
@@ -194,7 +194,7 @@ export function endpoints(endpoints: PlainEndpoint[]): MiddlewareFunction {
   async function handleRequest(
     req: IRequestContext,
     res: IResponseWriter
-  ): Promise<HttpResponse | null> {
+  ): Promise<ServerResponse | null> {
     const urlParser = new UrlParser(req.url);
 
     const endpoint = endpoints.find(({ method, path }) => {
@@ -202,7 +202,7 @@ export function endpoints(endpoints: PlainEndpoint[]): MiddlewareFunction {
     });
 
     if (endpoint === undefined) {
-      return new HttpResponse({
+      return new ServerResponse({
         status: HTTP_STATUS_CODES.notFound,
       });
     }
@@ -235,17 +235,17 @@ export function endpoints(endpoints: PlainEndpoint[]): MiddlewareFunction {
     return toHttpResponse(result);
   }
 
-  function toHttpResponse(result: EndpointHandlerResult): HttpResponse {
-    if (result instanceof HttpResponse) {
+  function toHttpResponse(result: EndpointHandlerResult): ServerResponse {
+    if (result instanceof ServerResponse) {
       return result;
     }
 
     if (isHttpContent(result)) {
-      return new HttpResponse({ status: HTTP_STATUS_CODES.ok, content: result });
+      return new ServerResponse({ status: HTTP_STATUS_CODES.ok, content: result });
     }
 
     if (result instanceof ProblemDetails) {
-      return new HttpResponse({
+      return new ServerResponse({
         status: result.status,
         content: ProblemDetailsContent.from(result),
       });
@@ -253,25 +253,25 @@ export function endpoints(endpoints: PlainEndpoint[]): MiddlewareFunction {
 
     if (result instanceof ProblemDetailsContent) {
       const problems = result.readData();
-      return new HttpResponse({
+      return new ServerResponse({
         status: problems.status,
         content: result,
       });
     }
 
     if (typeof result === "number") {
-      return new HttpResponse({ status: result });
+      return new ServerResponse({ status: result });
     }
 
     if (typeof result === "string") {
-      return new HttpResponse({
+      return new ServerResponse({
         status: HTTP_STATUS_CODES.ok,
         content: PlainTextContent.from(result),
       });
     }
 
     if (typeof result === "object" && isNotNull(result)) {
-      return new HttpResponse({
+      return new ServerResponse({
         status: HTTP_STATUS_CODES.ok,
         content: JsonContent.from(result),
       });

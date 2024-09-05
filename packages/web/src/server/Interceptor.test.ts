@@ -1,5 +1,5 @@
 import { HTTP_STATUS_CODES, HttpClient, JsonContent } from "@tomasjs/core/http";
-import { HttpResponse, IHttpServer } from "@/server";
+import { ServerResponse, IHttpServer } from "@/server";
 import { testHttpServer } from "@/test";
 import { InterceptorFunction, interceptor } from "./Interceptor";
 
@@ -27,7 +27,7 @@ describe("server/Interceptor", () => {
       .use(interceptor(myInterceptor))
       .useEndpoint("GET", "/", (req) => {
         const response = { authenticated: req.user.authenticated } as const;
-        return new HttpResponse({
+        return new ServerResponse({
           status: HTTP_STATUS_CODES.ok,
           content: JsonContent.from(response),
         });
@@ -48,7 +48,7 @@ describe("server/Interceptor", () => {
       .useInterceptor(myInterceptor)
       .useEndpoint("GET", "/", (req) => {
         const response = { authenticated: req.user.authenticated } as const;
-        return new HttpResponse({
+        return new ServerResponse({
           status: HTTP_STATUS_CODES.ok,
           content: JsonContent.from(response),
         });

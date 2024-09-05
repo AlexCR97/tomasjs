@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { HttpResponse, IHttpServer } from "@/server";
+import { ServerResponse, IHttpServer } from "@/server";
 import { HTTP_STATUS_CODES, HttpClient, IHttpClient, JsonContent } from "@tomasjs/core/http";
 import { WebApp, WebAppBuilder } from "./WebApp";
 import { testHttpServer } from "@/test";
@@ -38,12 +38,12 @@ describe("app/RequestProfiler", () => {
 
         pipeline.get("/ok", async () => {
           await timeout(100);
-          return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+          return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
         });
 
         pipeline.post("/accepted", async () => {
           await timeout(250);
-          return new HttpResponse({ status: HTTP_STATUS_CODES.accepted });
+          return new ServerResponse({ status: HTTP_STATUS_CODES.accepted });
         });
       })
       .build();
