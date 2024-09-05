@@ -26,7 +26,7 @@ export {
 export { HTTP_METHODS, HttpMethod, isHttpMethod } from "./HttpMethod";
 export { HttpRequest, HttpRequestError, IHttpRequest, IHttpRequestBuilder } from "./HttpRequest";
 export { HttpResponse, HttpResponseError, IHttpResponse } from "./HttpResponse";
-export { HTTP_STATUS_CODES, HTTP_STATUS_TEXT } from "./HttpStatus";
+export { HTTP_STATUS, HTTP_STATUS_CODES, HTTP_STATUS_TEXT } from "./HttpStatus";
 export {
   IProblemDetails,
   IProblemDetailsBuilder,
