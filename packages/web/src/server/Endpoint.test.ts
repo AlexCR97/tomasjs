@@ -1,6 +1,5 @@
 import {
   HtmlContent,
-  HTTP_CONTENT_TYPES,
   HTTP_STATUS_CODES,
   HttpClient,
   HttpContentType,
@@ -29,9 +28,9 @@ describe("server/Endpoint", () => {
     await server.stop();
   });
 
-  it("should respond with an HttpResponse", async () => {
+  it("should respond with a ServerResponse", async () => {
     const expectedStatus = HTTP_STATUS_CODES.accepted;
-    const expectedContent = "HttpResponse works!";
+    const expectedContent = "ServerResponse works!";
 
     await server
       .useEndpoint("GET", "/", () => {
@@ -40,7 +39,6 @@ describe("server/Endpoint", () => {
           content: PlainTextContent.from(expectedContent),
         });
       })
-
       .start();
 
     const response = await client.get("/");
@@ -143,6 +141,29 @@ describe("server/Endpoint", () => {
   it("should respond with json", async () => {
     const expectedStatus = HTTP_STATUS_CODES.ok;
     const expectedContent = { tenantId: 1, userId: "2" };
+
+    await server
+      .useEndpoint("GET", "/", () => {
+        return expectedContent;
+      })
+      .start();
+
+    const response = await client.get("/");
+    expect(response.status).toBe(expectedStatus);
+    expect(response.headers["content-type"]).toMatch(<HttpContentType>"application/json");
+
+    const responseJson = response.body.toString();
+    const responseContent = JSON.parse(responseJson);
+    expect(responseContent).toMatchObject(expectedContent);
+  });
+
+  it("should respond with json class", async () => {
+    class MyResponse {
+      constructor(readonly foo: string, readonly fizz: string) {}
+    }
+
+    const expectedStatus = HTTP_STATUS_CODES.ok;
+    const expectedContent = new MyResponse("bar", "buzz");
 
     await server
       .useEndpoint("GET", "/", () => {

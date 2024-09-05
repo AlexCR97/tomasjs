@@ -45,7 +45,8 @@ export type EndpointHandlerResult =
   | ProblemDetailsContent
   | number
   | string
-  | Record<any, unknown>;
+  | Record<any, unknown>
+  | unknown;
 
 export class EndpointContext implements IEndpointContext {
   constructor(
@@ -179,13 +180,13 @@ export class Endpoint implements IEndpoint {
 
 export function endpoints(endpoints: PlainEndpoint[]): MiddlewareFunction {
   return async ({ req, res, next }) => {
-    const httpResponse = await handleRequest(req, res);
+    const serverResponse = await handleRequest(req, res);
 
-    if (httpResponse !== null) {
+    if (serverResponse !== null) {
       res
-        .withContent(httpResponse.content)
-        .withHeaders(httpResponse.headers)
-        .withStatus(httpResponse.status);
+        .withContent(serverResponse.content)
+        .withHeaders(serverResponse.headers)
+        .withStatus(serverResponse.status);
     }
 
     return await next();
@@ -232,10 +233,12 @@ export function endpoints(endpoints: PlainEndpoint[]): MiddlewareFunction {
 
     const context = EndpointContext.from(endpoint, req);
     const result = await endpoint.handler(context);
-    return toHttpResponse(result);
+    return ServerResponseFactory.from(result);
   }
+}
 
-  function toHttpResponse(result: EndpointHandlerResult): ServerResponse {
+export const ServerResponseFactory = {
+  from(result: EndpointHandlerResult): ServerResponse {
     if (result instanceof ServerResponse) {
       return result;
     }
@@ -277,15 +280,18 @@ export function endpoints(endpoints: PlainEndpoint[]): MiddlewareFunction {
       });
     }
 
-    throw new TypeError(`Unknown EndpointHandlerResult type: ${result}`);
-  }
+    return new ServerResponse({
+      status: HTTP_STATUS_CODES.ok,
+      content: JsonContent.from(result as any),
+    });
 
-  function isHttpContent(obj: unknown): obj is IHttpContent<unknown> {
-    return (
-      obj instanceof RawContent ||
-      obj instanceof PlainTextContent ||
-      obj instanceof HtmlContent ||
-      obj instanceof JsonContent
-    );
-  }
-}
+    function isHttpContent(obj: unknown): obj is IHttpContent<unknown> {
+      return (
+        obj instanceof RawContent ||
+        obj instanceof PlainTextContent ||
+        obj instanceof HtmlContent ||
+        obj instanceof JsonContent
+      );
+    }
+  },
+} as const;

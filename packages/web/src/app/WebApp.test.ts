@@ -1,8 +1,10 @@
 import "reflect-metadata";
 import { inject } from "@tomasjs/core/dependency-injection";
 import {
+  HtmlContent,
   HTTP_STATUS_CODES,
   HttpClient,
+  HttpContentType,
   HttpHeaders,
   IHttpClient,
   JsonContent,
@@ -58,7 +60,12 @@ import {
   ProblemDetailsExtensionsFactoryContext,
 } from "./ProblemDetailsErrorHandler";
 import { HTTP_STATUS } from "@/HttpStatus";
-import { ProblemDetails, ProblemDetailsExtensions } from "@/problems";
+import {
+  ProblemDetails,
+  ProblemDetailsBuilder,
+  ProblemDetailsContent,
+  ProblemDetailsExtensions,
+} from "@/problems";
 import { TomasError } from "@tomasjs/core/errors";
 
 describe("app/WebApp", () => {
@@ -1469,6 +1476,197 @@ describe("app/WebApp", () => {
         "authentication",
         "authorization",
       ]);
+    });
+
+    it("should respond with a ServerResponse", async () => {
+      const expectedStatus = HTTP_STATUS_CODES.accepted;
+      const expectedContent = "ServerResponse works!";
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", () => {
+            return new ServerResponse({
+              status: expectedStatus,
+              content: PlainTextContent.from(expectedContent),
+            });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+      expect(response.status).toBe(expectedStatus);
+      expect(response.body.toString()).toMatch(expectedContent);
+    });
+
+    it("should respond with HttpContent", async () => {
+      const expectedStatus = HTTP_STATUS_CODES.ok;
+      const expectedContent = HtmlContent.from(/*html*/ `<h1>Home</h1>`);
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", () => {
+            return expectedContent;
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+      expect(response.status).toBe(expectedStatus);
+      expect(response.headers["content-type"]).toMatch(expectedContent.type);
+      expect(response.body.toString()).toMatch(expectedContent.toString());
+    });
+
+    it("should respond with ProblemDetails", async () => {
+      const problems = new ProblemDetailsBuilder()
+        .withStatus(HTTP_STATUS_CODES.conflict)
+        .withTitle("A conflict ocurred")
+        .build();
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", () => {
+            return problems;
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+      expect(response.status).toBe(problems.status);
+      expect(response.headers["content-type"]).toMatch(<HttpContentType>"application/problem+json");
+
+      const responseJson = response.body.toString();
+      const responseProblems = JSON.parse(responseJson);
+      expect(responseProblems.status).toBe(problems.status);
+      expect(responseProblems.title).toMatch(problems.title);
+    });
+
+    it("should respond with ProblemDetailsContent", async () => {
+      const problems = new ProblemDetailsBuilder()
+        .withStatus(HTTP_STATUS_CODES.forbidden)
+        .withTitle("Permission denied")
+        .build();
+
+      const problemsContent = ProblemDetailsContent.from(problems);
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", () => {
+            return problemsContent;
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+      expect(response.status).toBe(problems.status);
+      expect(response.headers["content-type"]).toMatch(<HttpContentType>"application/problem+json");
+
+      const responseJson = response.body.toString();
+      const responseProblems = JSON.parse(responseJson);
+      expect(responseProblems.status).toBe(problems.status);
+      expect(responseProblems.title).toMatch(problems.title);
+    });
+
+    it("should respond with a status", async () => {
+      const expectedStatus = HTTP_STATUS_CODES.noContent;
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", () => {
+            return expectedStatus;
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+      expect(response.status).toBe(expectedStatus);
+    });
+
+    it("should respond with plain text", async () => {
+      const expectedStatus = HTTP_STATUS_CODES.ok;
+      const expectedContent = "Plain text works!";
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", () => {
+            return expectedContent;
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+      expect(response.status).toBe(expectedStatus);
+      expect(response.headers["content-type"]).toMatch(<HttpContentType>"text/plain");
+      expect(response.body.toString()).toMatch(expectedContent);
+    });
+
+    it("should respond with json", async () => {
+      const expectedStatus = HTTP_STATUS_CODES.ok;
+      const expectedContent = { tenantId: 1, userId: "2" };
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", () => {
+            return expectedContent;
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+      expect(response.status).toBe(expectedStatus);
+      expect(response.headers["content-type"]).toMatch(<HttpContentType>"application/json");
+
+      const responseJson = response.body.toString();
+      const responseContent = JSON.parse(responseJson);
+      expect(responseContent).toMatchObject(expectedContent);
+    });
+
+    it("should respond with json class", async () => {
+      class MyResponse {
+        constructor(readonly foo: string, readonly fizz: string) {}
+      }
+
+      const expectedStatus = HTTP_STATUS_CODES.ok;
+      const expectedContent = new MyResponse("bar", "buzz");
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", () => {
+            return expectedContent;
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+      expect(response.status).toBe(expectedStatus);
+      expect(response.headers["content-type"]).toMatch(<HttpContentType>"application/json");
+
+      const responseJson = response.body.toString();
+      const responseContent = JSON.parse(responseJson);
+      expect(responseContent).toMatchObject(expectedContent);
     });
   });
 
