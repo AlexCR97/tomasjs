@@ -12,7 +12,7 @@ export class Executable {
 
   constructor(private readonly command: string, options?: Partial<ExecutableOptions>) {
     this.options = {
-      onStdOut: options?.onStdOut ?? ((data) => process.stdout.write(escape("black", data))),
+      onStdOut: options?.onStdOut ?? ((data) => process.stdout.write(data)),
       onStdErr: options?.onStdErr ?? ((data) => process.stderr.write(escape("red", data))),
     };
   }
