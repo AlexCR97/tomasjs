@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import { CONFIGURATION, IConfiguration } from "@tomasjs/core/configuration";
 import { ConsoleAppBuilder } from "@tomasjs/core/console";
 import { inject } from "@tomasjs/core/dependency-injection";
 import { ILogger, LOGGER } from "@tomasjs/core/logging";
@@ -14,12 +15,14 @@ class Greeter {
 new ConsoleAppBuilder()
   .setupConfiguration((config) => {
     // App configuration goes here
+
+    config.addJsonSource();
   })
   .setupLogging((logging) => {
     // Logging setup goes here
   })
-  .setupBus((bus) => {
-    // Bus setup goes here
+  .setupMessaging((messaging) => {
+    // Messaging setup goes here
   })
   .setupContainer((container) => {
     // Custom services go here
@@ -29,8 +32,11 @@ new ConsoleAppBuilder()
   .addEntryPoint(({ services }) => {
     // Your application logic goes here
 
+    const config = services.getOrThrow<IConfiguration>(CONFIGURATION);
     const greeter = services.getOrThrow(Greeter);
-    greeter.greet("TomasJS");
+
+    const username = config.section("username")?.value<string>("string") ?? "stranger";
+    greeter.greet(username);
   })
   .build()
   .then((app) => app.start());
