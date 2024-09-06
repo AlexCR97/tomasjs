@@ -10,7 +10,7 @@ import { ILogger, ILoggerBuilder, LOGGER_BUILDER } from "@tomasjs/core/logging";
 import { inject } from "@tomasjs/core/dependency-injection";
 import { join } from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
-import { IConfiguration, configurationToken } from "@tomasjs/core/configuration";
+import { CONFIGURATION, IConfiguration } from "@tomasjs/core/configuration";
 
 export class MegaTemplateDownloader implements ProjectTemplateDownloader {
   private readonly logger: ILogger;
@@ -19,7 +19,7 @@ export class MegaTemplateDownloader implements ProjectTemplateDownloader {
     @inject(LOGGER_BUILDER)
     loggerBuilder: ILoggerBuilder,
 
-    @inject(configurationToken)
+    @inject(CONFIGURATION)
     private readonly config: IConfiguration
   ) {
     this.logger = loggerBuilder

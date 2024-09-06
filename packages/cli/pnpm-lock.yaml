@@ -12,8 +12,8 @@ importers:
         specifier: ^5.0.5
         version: 5.0.5
       '@tomasjs/core':
-        specifier: ^2.3.0
-        version: 2.3.0(reflect-metadata@0.2.2)
+        specifier: ^2.7.0
+        version: 2.7.0(reflect-metadata@0.2.2)
       commander:
         specifier: ^12.1.0
         version: 12.1.0
@@ -402,8 +402,8 @@ packages:
   '@sinonjs/fake-timers@10.3.0':
     resolution: {integrity: sha512-V4BG07kuYSUkTCSBHG8G8TNhM+F19jXFWnQtzj+we8DrkpSBCee9Z3Ms8yiGer/dlmhe35/Xdgyo3/0rQKg7YA==}
 
-  '@tomasjs/core@2.3.0':
-    resolution: {integrity: sha512-UajwtZmoOA3Hflb3NKha1Pykcwtjg+xCfiEn+NQMESYKMr+VAOcoBNMFFstJUW01XYflV6l9Uqkq1Q04ryckFg==}
+  '@tomasjs/core@2.7.0':
+    resolution: {integrity: sha512-7X78ETXV1+EiRUxBLaIWICCorBp7g72+rPOVHaiWv9SAfkcBEyx6sPBy7H0jJJjtVHR0bdc7f6o0BCzkHHGjDQ==}
     peerDependencies:
       reflect-metadata: ^0.2.1
 
@@ -2121,7 +2121,7 @@ snapshots:
     dependencies:
       '@sinonjs/commons': 3.0.1
 
-  '@tomasjs/core@2.3.0(reflect-metadata@0.2.2)':
+  '@tomasjs/core@2.7.0(reflect-metadata@0.2.2)':
     dependencies:
       reflect-metadata: 0.2.2
 

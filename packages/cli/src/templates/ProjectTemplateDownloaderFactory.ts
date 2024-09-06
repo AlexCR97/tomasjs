@@ -1,6 +1,6 @@
 import { inject } from "@tomasjs/core/dependency-injection";
 import { ProjectTemplateDownloader } from "./ProjectTemplateDownloader";
-import { IConfiguration, configurationToken } from "@tomasjs/core/configuration";
+import { CONFIGURATION, IConfiguration } from "@tomasjs/core/configuration";
 import { MegaTemplateDownloader } from "./MegaTemplateDownloader";
 import { TomasError } from "@tomasjs/core/errors";
 import { ILoggerBuilder, LOGGER_BUILDER } from "@tomasjs/core/logging";
@@ -13,7 +13,7 @@ export interface IProjectTemplateDownloaderFactory {
 
 export class ProjectTemplateDownloaderFactory implements IProjectTemplateDownloaderFactory {
   constructor(
-    @inject(configurationToken)
+    @inject(CONFIGURATION)
     private readonly config: IConfiguration,
 
     @inject(LOGGER_BUILDER)
