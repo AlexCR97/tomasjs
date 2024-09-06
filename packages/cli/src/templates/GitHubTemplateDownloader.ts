@@ -1,5 +1,4 @@
 import { ResultSuccess, ResultFailure, Result } from "@tomasjs/core/system";
-import { File } from "megajs";
 import {
   DownloadResult,
   ProjectTemplateDownloader,
@@ -10,20 +9,21 @@ import { ILogger, ILoggerBuilder, LOGGER_BUILDER } from "@tomasjs/core/logging";
 import { inject } from "@tomasjs/core/dependency-injection";
 import { join } from "node:path";
 import { mkdir, writeFile } from "node:fs/promises";
-import { IConfiguration, configurationToken } from "@tomasjs/core/configuration";
+import { CONFIGURATION, IConfiguration } from "@tomasjs/core/configuration";
+import { HttpClient } from "@tomasjs/core/http";
 
-export class MegaTemplateDownloader implements ProjectTemplateDownloader {
+export class GitHubTemplateDownloader implements ProjectTemplateDownloader {
   private readonly logger: ILogger;
 
   constructor(
     @inject(LOGGER_BUILDER)
     loggerBuilder: ILoggerBuilder,
 
-    @inject(configurationToken)
+    @inject(CONFIGURATION)
     private readonly config: IConfiguration
   ) {
     this.logger = loggerBuilder
-      .withCategory(MegaTemplateDownloader.name)
+      .withCategory(GitHubTemplateDownloader.name)
       .withLevel("debug")
       .build();
   }
@@ -34,11 +34,12 @@ export class MegaTemplateDownloader implements ProjectTemplateDownloader {
     try {
       const url = this.getZipFileUrl(type);
 
-      const zipFile = File.fromURL(url);
-      await zipFile.loadAttributes();
+      const response = await new HttpClient().get(url);
 
-      const zipFileName = zipFile.name;
-      const zipFileBuffer = await zipFile.downloadBuffer({});
+      response.throwIfError();
+
+      const zipFileName = `${type}.zip`;
+      const zipFileBuffer = response.body.data;
 
       const currentWorkingDirectory = process.cwd();
       this.logger.debug(`currentWorkingDirectory: ${currentWorkingDirectory}`);
@@ -66,11 +67,13 @@ export class MegaTemplateDownloader implements ProjectTemplateDownloader {
   }
 
   private getZipFileUrl(type: TemplateType): string {
-    return this.config
+    const templatesUrl = this.config
       .sectionOrThrow("templateDownloader")
       .sectionOrThrow("strategies")
-      .sectionOrThrow("mega")
-      .sectionOrThrow(type)
+      .sectionOrThrow("github")
+      .sectionOrThrow("templatesUrl")
       .valueOrThrow<string>("string");
+
+    return templatesUrl.replaceAll("{templateType}", type);
   }
 }

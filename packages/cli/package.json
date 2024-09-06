@@ -1,6 +1,6 @@
 {
   "name": "@tomasjs/cli",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "TomasJS CLI",
   "author": "viex",
   "license": "ISC",
@@ -26,14 +26,13 @@
   },
   "dependencies": {
     "@inquirer/prompts": "^5.0.5",
-    "@tomasjs/core": "^2.3.0",
+    "@tomasjs/core": "^2.7.0",
     "commander": "^12.1.0",
-    "megajs": "^1.2.2",
     "reflect-metadata": "^0.2.1",
     "yauzl": "^3.1.3"
   },
   "peerDependencies": {
-    "@tomasjs/core": "^2.3.0",
+    "@tomasjs/core": "^2.7.0",
     "reflect-metadata": "^0.2.1"
   },
   "devDependencies": {

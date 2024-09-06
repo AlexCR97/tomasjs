@@ -12,11 +12,7 @@
     "start": "tomasjs start"
   },
   "dependencies": {
-    "@tomasjs/core": "^2.3.0",
-    "reflect-metadata": "^0.2.1"
-  },
-  "peerDependencies": {
-    "@tomasjs/core": "^2.3.0",
+    "@tomasjs/core": "^2.7.0",
     "reflect-metadata": "^0.2.1"
   },
   "devDependencies": {

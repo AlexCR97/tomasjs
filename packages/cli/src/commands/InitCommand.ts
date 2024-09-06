@@ -124,6 +124,10 @@ export class InitCommand implements CommandFactory {
           value: "console",
           name: "Console App",
         },
+        {
+          value: "web-api-beta",
+          name: "Web API (beta)",
+        },
       ],
     });
   }

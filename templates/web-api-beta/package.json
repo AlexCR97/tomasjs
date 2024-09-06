@@ -13,7 +13,10 @@
   },
   "dependencies": {
     "@tomasjs/core": "^2.7.0",
-    "reflect-metadata": "^0.2.1"
+    "@tomasjs/web": "2.2.0-beta",
+    "jsonwebtoken": "^9.0.2",
+    "reflect-metadata": "^0.2.1",
+    "url-pattern": "^1.0.3"
   },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.4",

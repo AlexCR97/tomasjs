@@ -25,7 +25,6 @@ export class StartCommand implements CommandFactory {
             throw new Error("Could not find project in current directory");
           }
 
-          // TODO Preserve output color
           const result = await Executable.run("node ./dist/app.js", {
             onStdOut: (data) => process.stdout.write(data),
             onStdErr: (data) => process.stderr.write(data),
