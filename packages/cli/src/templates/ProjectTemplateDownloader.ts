@@ -6,7 +6,7 @@ export interface ProjectTemplateDownloader {
   download(type: TemplateType): Promise<ResultSuccess<DownloadResult> | ResultFailure<Error>>;
 }
 
-export type TemplateType = "empty" | "console";
+export type TemplateType = "empty" | "console" | "web-api-beta";
 
 export type DownloadResult = {
   downloadedPath: string;
