@@ -3,6 +3,7 @@ export {
   Endpoint,
   EndpointContext,
   EndpointHandler,
+  EndpointHandlerResult,
   EndpointOptions,
   IEndpoint,
   IEndpointContext,
@@ -28,7 +29,7 @@ export {
   HttpPipelineBuilderDelegate,
   IHttpPipelineBuilder,
 } from "./HttpPipelineBuilder";
-export { HttpResponse, HttpResponseOptions } from "./HttpResponse";
+export { ServerResponse, ServerResponseOptions } from "./ServerResponse";
 export { HttpServer, HttpServerOptions, IHttpServer } from "./HttpServer";
 export {
   InterceptorContext,
@@ -43,6 +44,18 @@ export {
   isMiddlewareFunction,
 } from "./Middleware";
 export { IMiddlewareAggregate, MiddlewareAggregate } from "./MiddlewareAggregate";
+export { errorExtension } from "./ProblemDetailsErrorExtension";
+export {
+  ProblemDetailsConfigureContext,
+  ProblemDetailsConfigureFunction,
+  ProblemDetailsConfigureResult,
+  ProblemDetailsExtensionOption,
+  ProblemDetailsExtensionsFactory,
+  ProblemDetailsExtensionsFactoryContext,
+  ProblemDetailsOptions,
+  isProblemDetailsExtensionsFactory,
+  problemDetails,
+} from "./ProblemDetailsErrorHandler";
 export {
   IQueryParams,
   PlainQueryParams,

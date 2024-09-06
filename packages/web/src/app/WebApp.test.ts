@@ -1,12 +1,19 @@
 import "reflect-metadata";
 import { inject } from "@tomasjs/core/dependency-injection";
 import {
+  HtmlContent,
+  HTTP_STATUS,
   HTTP_STATUS_CODES,
   HttpClient,
+  HttpContentType,
   HttpHeaders,
   IHttpClient,
   JsonContent,
   PlainTextContent,
+  ProblemDetails,
+  ProblemDetailsBuilder,
+  ProblemDetailsContent,
+  ProblemDetailsExtensions,
 } from "@tomasjs/core/http";
 import { ILogger, LOGGER, LoggerConfiguration } from "@tomasjs/core/logging";
 import { testHttpServer } from "@/test";
@@ -45,7 +52,7 @@ import {
   IAuthorizationPolicyFactory,
 } from "./Authorization";
 import { Endpoint } from "./Endpoint";
-import { HttpResponse, IHttpServer } from "@/server";
+import { ServerResponse, IHttpServer } from "@/server";
 import { Claims, rolePolicy } from "@/auth";
 import {
   IProblemDetailsConfigure,
@@ -57,8 +64,6 @@ import {
   ProblemDetailsExtensionsFactory,
   ProblemDetailsExtensionsFactoryContext,
 } from "./ProblemDetailsErrorHandler";
-import { HTTP_STATUS } from "@/HttpStatus";
-import { ProblemDetails, ProblemDetailsExtensions } from "@/problems";
 import { TomasError } from "@tomasjs/core/errors";
 
 describe("app/WebApp", () => {
@@ -213,7 +218,7 @@ describe("app/WebApp", () => {
               ? HTTP_STATUS_CODES.ok
               : HTTP_STATUS_CODES.unauthorized;
 
-            return new HttpResponse({ status });
+            return new ServerResponse({ status });
           });
         })
         .build();
@@ -242,7 +247,7 @@ describe("app/WebApp", () => {
               ? HTTP_STATUS_CODES.ok
               : HTTP_STATUS_CODES.unauthorized;
 
-            return new HttpResponse({ status });
+            return new ServerResponse({ status });
           });
         })
         .build();
@@ -273,7 +278,7 @@ describe("app/WebApp", () => {
               ? HTTP_STATUS_CODES.ok
               : HTTP_STATUS_CODES.unauthorized;
 
-            return new HttpResponse({ status });
+            return new ServerResponse({ status });
           });
         })
         .build();
@@ -304,7 +309,7 @@ describe("app/WebApp", () => {
               ? HTTP_STATUS_CODES.ok
               : HTTP_STATUS_CODES.unauthorized;
 
-            return new HttpResponse({ status });
+            return new ServerResponse({ status });
           });
         })
         .build();
@@ -338,7 +343,7 @@ describe("app/WebApp", () => {
               ? HTTP_STATUS_CODES.ok
               : HTTP_STATUS_CODES.unauthorized;
 
-            return new HttpResponse({ status });
+            return new ServerResponse({ status });
           });
         })
         .build();
@@ -366,7 +371,7 @@ describe("app/WebApp", () => {
             return req.headers[secretHeaderKey] === secretHeaderValue;
           });
 
-          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+          pipeline.get("/", () => new ServerResponse({ status: HTTP_STATUS_CODES.ok }));
         })
         .build();
 
@@ -389,7 +394,7 @@ describe("app/WebApp", () => {
         .setupHttpPipeline((pipeline) => {
           pipeline.useGuard(new MyGuard());
 
-          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+          pipeline.get("/", () => new ServerResponse({ status: HTTP_STATUS_CODES.ok }));
         })
         .build();
 
@@ -415,7 +420,7 @@ describe("app/WebApp", () => {
         .setupHttpPipeline((pipeline) => {
           pipeline.useGuard(MyGuard);
 
-          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+          pipeline.get("/", () => new ServerResponse({ status: HTTP_STATUS_CODES.ok }));
         })
         .build();
 
@@ -440,7 +445,7 @@ describe("app/WebApp", () => {
         .setupHttpPipeline((pipeline) => {
           pipeline.useGuard(new MyGuard());
 
-          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+          pipeline.get("/", () => new ServerResponse({ status: HTTP_STATUS_CODES.ok }));
         })
         .build();
 
@@ -468,7 +473,7 @@ describe("app/WebApp", () => {
         .setupHttpPipeline((pipeline) => {
           pipeline.useGuard(MyGuard);
 
-          pipeline.get("/", () => new HttpResponse({ status: HTTP_STATUS_CODES.ok }));
+          pipeline.get("/", () => new ServerResponse({ status: HTTP_STATUS_CODES.ok }));
         })
         .build();
 
@@ -499,7 +504,7 @@ describe("app/WebApp", () => {
           pipeline.get("/", ({ services, user }) => {
             expect(user.authenticated).toBe(true);
             expect(user.claims.toPlain()).toMatchObject(claims.toPlain());
-            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+            return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
           });
         })
         .build();
@@ -529,7 +534,7 @@ describe("app/WebApp", () => {
           pipeline.get("/", ({ user }) => {
             expect(user.authenticated).toBe(true);
             expect(user.claims.toPlain()).toMatchObject(claims.toPlain());
-            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+            return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
           });
         })
         .build();
@@ -562,7 +567,7 @@ describe("app/WebApp", () => {
           pipeline.get("/", ({ user }) => {
             expect(user.authenticated).toBe(true);
             expect(user.claims.toPlain()).toMatchObject(claims.toPlain());
-            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+            return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
           });
         })
         .build();
@@ -589,7 +594,7 @@ describe("app/WebApp", () => {
           pipeline.get("/", ({ user }) => {
             expect(user.authenticated).toBe(true);
             expect(user.claims.toPlain()).toMatchObject(claims.toPlain());
-            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+            return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
           });
         })
         .build();
@@ -619,7 +624,7 @@ describe("app/WebApp", () => {
           pipeline.get("/", ({ user }) => {
             expect(user.authenticated).toBe(true);
             expect(user.claims.toPlain()).toMatchObject(claims.toPlain());
-            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+            return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
           });
         })
         .build();
@@ -656,7 +661,7 @@ describe("app/WebApp", () => {
             expect(user.authorized).toBe(true);
             expect(user.claims.has("role")).toBe(true);
             expect(user.claims.get("role")).toMatch(role);
-            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+            return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
           });
         })
         .build();
@@ -688,7 +693,7 @@ describe("app/WebApp", () => {
             expect(user.authorized).toBe(true);
             expect(user.claims.has("role")).toBe(true);
             expect(user.claims.get("role")).toMatch(role);
-            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+            return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
           });
         })
         .build();
@@ -723,7 +728,7 @@ describe("app/WebApp", () => {
             expect(user.authorized).toBe(true);
             expect(user.claims.has("role")).toBe(true);
             expect(user.claims.get("role")).toMatch(role);
-            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+            return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
           });
         })
         .build();
@@ -754,7 +759,7 @@ describe("app/WebApp", () => {
             expect(user.authorized).toBe(true);
             expect(user.claims.has("role")).toBe(true);
             expect(user.claims.get("role")).toMatch(role);
-            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+            return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
           });
         })
         .build();
@@ -787,7 +792,7 @@ describe("app/WebApp", () => {
             expect(user.authorized).toBe(true);
             expect(user.claims.has("role")).toBe(true);
             expect(user.claims.get("role")).toMatch(role);
-            return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+            return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
           });
         })
         .build();
@@ -811,7 +816,7 @@ describe("app/WebApp", () => {
             handler: ({ services }) => {
               const logger = services.getOrThrow<ILogger>(LOGGER);
               logger.debug("Endpoints work!");
-              return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+              return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
             },
           });
         })
@@ -834,7 +839,7 @@ describe("app/WebApp", () => {
             ({ services }) => {
               const logger = services.getOrThrow<ILogger>(LOGGER);
               logger.debug("Endpoint with shorthand works!");
-              return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+              return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
             },
             {
               guards: [() => true],
@@ -859,7 +864,7 @@ describe("app/WebApp", () => {
             ({ services }) => {
               const logger = services.getOrThrow<ILogger>(LOGGER);
               logger.debug("Endpoint with GET shorthand works!");
-              return new HttpResponse({ status: HTTP_STATUS_CODES.ok });
+              return new ServerResponse({ status: HTTP_STATUS_CODES.ok });
             },
             {
               guards: [() => true],
@@ -895,7 +900,7 @@ describe("app/WebApp", () => {
             logger.debug("Order ID: {orderId}", { orderId });
             expect(orderId).toMatch(testParams.orderId);
 
-            return new HttpResponse({
+            return new ServerResponse({
               status: HTTP_STATUS_CODES.ok,
               content: JsonContent.from(params.toPlain()),
             });
@@ -967,7 +972,7 @@ describe("app/WebApp", () => {
             Endpoint.get("/a", ({ user }) => {
               expect(user.authenticated).toBe(true);
               expect(user.authorized).toBe(true);
-              return new HttpResponse({
+              return new ServerResponse({
                 status: HTTP_STATUS_CODES.ok,
                 content: JsonContent.from(aggregation),
               });
@@ -983,7 +988,7 @@ describe("app/WebApp", () => {
             Endpoint.get("/b", ({ user }) => {
               expect(user.authenticated).toBe(true);
               expect(user.authorized).toBe(true);
-              return new HttpResponse({
+              return new ServerResponse({
                 status: HTTP_STATUS_CODES.ok,
                 content: JsonContent.from(aggregation),
               });
@@ -1104,7 +1109,7 @@ describe("app/WebApp", () => {
             Endpoint.get("/a", ({ user }) => {
               expect(user.authenticated).toBe(true);
               expect(user.authorized).toBe(true);
-              return new HttpResponse({
+              return new ServerResponse({
                 status: HTTP_STATUS_CODES.ok,
                 content: JsonContent.from(aggregation),
               });
@@ -1120,7 +1125,7 @@ describe("app/WebApp", () => {
             Endpoint.get("/b", ({ user }) => {
               expect(user.authenticated).toBe(true);
               expect(user.authorized).toBe(true);
-              return new HttpResponse({
+              return new ServerResponse({
                 status: HTTP_STATUS_CODES.ok,
                 content: JsonContent.from(aggregation),
               });
@@ -1246,7 +1251,7 @@ describe("app/WebApp", () => {
             Endpoint.get("/a", ({ user }) => {
               expect(user.authenticated).toBe(true);
               expect(user.authorized).toBe(true);
-              return new HttpResponse({
+              return new ServerResponse({
                 status: HTTP_STATUS_CODES.ok,
                 content: JsonContent.from(aggregation),
               });
@@ -1262,7 +1267,7 @@ describe("app/WebApp", () => {
             Endpoint.get("/b", ({ user }) => {
               expect(user.authenticated).toBe(true);
               expect(user.authorized).toBe(true);
-              return new HttpResponse({
+              return new ServerResponse({
                 status: HTTP_STATUS_CODES.ok,
                 content: JsonContent.from(aggregation),
               });
@@ -1398,7 +1403,7 @@ describe("app/WebApp", () => {
             Endpoint.get("/a", ({ user }) => {
               expect(user.authenticated).toBe(true);
               expect(user.authorized).toBe(true);
-              return new HttpResponse({
+              return new ServerResponse({
                 status: HTTP_STATUS_CODES.ok,
                 content: JsonContent.from(aggregation),
               });
@@ -1414,7 +1419,7 @@ describe("app/WebApp", () => {
             Endpoint.get("/b", ({ user }) => {
               expect(user.authenticated).toBe(true);
               expect(user.authorized).toBe(true);
-              return new HttpResponse({
+              return new ServerResponse({
                 status: HTTP_STATUS_CODES.ok,
                 content: JsonContent.from(aggregation),
               });
@@ -1469,6 +1474,197 @@ describe("app/WebApp", () => {
         "authentication",
         "authorization",
       ]);
+    });
+
+    it("should respond with a ServerResponse", async () => {
+      const expectedStatus = HTTP_STATUS_CODES.accepted;
+      const expectedContent = "ServerResponse works!";
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", () => {
+            return new ServerResponse({
+              status: expectedStatus,
+              content: PlainTextContent.from(expectedContent),
+            });
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+      expect(response.status).toBe(expectedStatus);
+      expect(response.body.toString()).toMatch(expectedContent);
+    });
+
+    it("should respond with HttpContent", async () => {
+      const expectedStatus = HTTP_STATUS_CODES.ok;
+      const expectedContent = HtmlContent.from(/*html*/ `<h1>Home</h1>`);
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", () => {
+            return expectedContent;
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+      expect(response.status).toBe(expectedStatus);
+      expect(response.headers["content-type"]).toMatch(expectedContent.type);
+      expect(response.body.toString()).toMatch(expectedContent.toString());
+    });
+
+    it("should respond with ProblemDetails", async () => {
+      const problems = new ProblemDetailsBuilder()
+        .withStatus(HTTP_STATUS_CODES.conflict)
+        .withTitle("A conflict ocurred")
+        .build();
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", () => {
+            return problems;
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+      expect(response.status).toBe(problems.status);
+      expect(response.headers["content-type"]).toMatch(<HttpContentType>"application/problem+json");
+
+      const responseJson = response.body.toString();
+      const responseProblems = JSON.parse(responseJson);
+      expect(responseProblems.status).toBe(problems.status);
+      expect(responseProblems.title).toMatch(problems.title);
+    });
+
+    it("should respond with ProblemDetailsContent", async () => {
+      const problems = new ProblemDetailsBuilder()
+        .withStatus(HTTP_STATUS_CODES.forbidden)
+        .withTitle("Permission denied")
+        .build();
+
+      const problemsContent = ProblemDetailsContent.from(problems);
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", () => {
+            return problemsContent;
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+      expect(response.status).toBe(problems.status);
+      expect(response.headers["content-type"]).toMatch(<HttpContentType>"application/problem+json");
+
+      const responseJson = response.body.toString();
+      const responseProblems = JSON.parse(responseJson);
+      expect(responseProblems.status).toBe(problems.status);
+      expect(responseProblems.title).toMatch(problems.title);
+    });
+
+    it("should respond with a status", async () => {
+      const expectedStatus = HTTP_STATUS_CODES.noContent;
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", () => {
+            return expectedStatus;
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+      expect(response.status).toBe(expectedStatus);
+    });
+
+    it("should respond with plain text", async () => {
+      const expectedStatus = HTTP_STATUS_CODES.ok;
+      const expectedContent = "Plain text works!";
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", () => {
+            return expectedContent;
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+      expect(response.status).toBe(expectedStatus);
+      expect(response.headers["content-type"]).toMatch(<HttpContentType>"text/plain");
+      expect(response.body.toString()).toMatch(expectedContent);
+    });
+
+    it("should respond with json", async () => {
+      const expectedStatus = HTTP_STATUS_CODES.ok;
+      const expectedContent = { tenantId: 1, userId: "2" };
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", () => {
+            return expectedContent;
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+      expect(response.status).toBe(expectedStatus);
+      expect(response.headers["content-type"]).toMatch(<HttpContentType>"application/json");
+
+      const responseJson = response.body.toString();
+      const responseContent = JSON.parse(responseJson);
+      expect(responseContent).toMatchObject(expectedContent);
+    });
+
+    it("should respond with json class", async () => {
+      class MyResponse {
+        constructor(readonly foo: string, readonly fizz: string) {}
+      }
+
+      const expectedStatus = HTTP_STATUS_CODES.ok;
+      const expectedContent = new MyResponse("bar", "buzz");
+
+      app = await new WebAppBuilder({ server })
+        .setupLogging((logging) => logging.withConfiguration(loggerConfig))
+        .setupHttpPipeline((pipeline) => {
+          pipeline.get("/", () => {
+            return expectedContent;
+          });
+        })
+        .build();
+
+      await app.start();
+
+      const response = await client.get("/");
+      expect(response.status).toBe(expectedStatus);
+      expect(response.headers["content-type"]).toMatch(<HttpContentType>"application/json");
+
+      const responseJson = response.body.toString();
+      const responseContent = JSON.parse(responseJson);
+      expect(responseContent).toMatchObject(expectedContent);
     });
   });
 

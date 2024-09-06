@@ -3,8 +3,12 @@ import { HttpMethod, IHttpContent, PlainHttpHeaders } from "@tomasjs/core/http";
 import { isHttpMethod } from "@tomasjs/core/http/HttpMethod";
 import { IUserReader } from "@/auth";
 import { isFunction, isInRange, isNotNull } from "@tomasjs/core/system";
-import { IEndpointContext as ServerEndpointContext } from "@/server";
-import { HttpResponse, IQueryParams, IRouteParams } from "@/server";
+import {
+  EndpointHandlerResult,
+  IQueryParams,
+  IRouteParams,
+  IEndpointContext as ServerEndpointContext,
+} from "@/server";
 import { AuthenticationPolicyType } from "./Authentication";
 import { AuthorizationPolicyType } from "./Authorization";
 import { GuardType } from "./Guard";
@@ -18,7 +22,9 @@ export type PlainEndpoint = {
   options?: EndpointOptions;
 };
 
-export type EndpointHandler = (context: IEndpointContext) => HttpResponse | Promise<HttpResponse>;
+export type EndpointHandler = (
+  context: IEndpointContext
+) => EndpointHandlerResult | Promise<EndpointHandlerResult>;
 
 export interface IEndpointContext extends ServerEndpointContext {
   readonly services: IServiceProvider;

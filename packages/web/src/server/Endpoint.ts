@@ -1,16 +1,28 @@
-import { HTTP_STATUS_CODES, HttpMethod, IHttpContent, PlainHttpHeaders } from "@tomasjs/core/http";
+import {
+  HtmlContent,
+  HTTP_STATUS_CODES,
+  HttpMethod,
+  IHttpContent,
+  JsonContent,
+  PlainHttpHeaders,
+  PlainTextContent,
+  ProblemDetails,
+  ProblemDetailsContent,
+  RawContent,
+} from "@tomasjs/core/http";
 import { AuthenticationPolicyFunction, AuthorizationPolicyFunction, IUserReader } from "@/auth";
 import { MiddlewareFunction } from "./Middleware";
 import { InterceptorFunction } from "./Interceptor";
 import { GuardFunction } from "./Guard";
 import { MiddlewareAggregate } from "./MiddlewareAggregate";
-import { HttpResponse } from "./HttpResponse";
+import { ServerResponse } from "./ServerResponse";
 import { IRequestContext, IRequestContextReader, RequestContext } from "./RequestContext";
 import { IRouteParams } from "./RouteParams";
 import { IQueryParams } from "./QueryParams";
 import { UrlParser } from "./UrlParser";
 import { IResponseWriter } from "./ResponseWriter";
 import { HttpPipeline } from "./HttpPipeline";
+import { isNotNull } from "@tomasjs/core/system";
 
 export type PlainEndpoint = {
   method: HttpMethod;
@@ -19,11 +31,23 @@ export type PlainEndpoint = {
   options?: EndpointOptions;
 };
 
-export type EndpointHandler = (context: IEndpointContext) => HttpResponse | Promise<HttpResponse>;
+export type EndpointHandler = (
+  context: IEndpointContext
+) => EndpointHandlerResult | Promise<EndpointHandlerResult>;
 
 export interface IEndpointContext extends IRequestContextReader {
   params: IRouteParams;
 }
+
+export type EndpointHandlerResult =
+  | ServerResponse
+  | IHttpContent<unknown>
+  | ProblemDetails
+  | ProblemDetailsContent
+  | number
+  | string
+  | Record<any, unknown>
+  | unknown;
 
 export class EndpointContext implements IEndpointContext {
   constructor(
@@ -157,13 +181,13 @@ export class Endpoint implements IEndpoint {
 
 export function endpoints(endpoints: PlainEndpoint[]): MiddlewareFunction {
   return async ({ req, res, next }) => {
-    const httpResponse = await handleRequest(req, res);
+    const serverResponse = await handleRequest(req, res);
 
-    if (httpResponse !== null) {
+    if (serverResponse !== null) {
       res
-        .withContent(httpResponse.content)
-        .withHeaders(httpResponse.headers)
-        .withStatus(httpResponse.status);
+        .withContent(serverResponse.content)
+        .withHeaders(serverResponse.headers)
+        .withStatus(serverResponse.status);
     }
 
     return await next();
@@ -172,7 +196,7 @@ export function endpoints(endpoints: PlainEndpoint[]): MiddlewareFunction {
   async function handleRequest(
     req: IRequestContext,
     res: IResponseWriter
-  ): Promise<HttpResponse | null> {
+  ): Promise<ServerResponse | null> {
     const urlParser = new UrlParser(req.url);
 
     const endpoint = endpoints.find(({ method, path }) => {
@@ -180,7 +204,7 @@ export function endpoints(endpoints: PlainEndpoint[]): MiddlewareFunction {
     });
 
     if (endpoint === undefined) {
-      return new HttpResponse({
+      return new ServerResponse({
         status: HTTP_STATUS_CODES.notFound,
       });
     }
@@ -209,6 +233,66 @@ export function endpoints(endpoints: PlainEndpoint[]): MiddlewareFunction {
     }
 
     const context = EndpointContext.from(endpoint, req);
-    return await endpoint.handler(context);
+    const result = await endpoint.handler(context);
+    return ServerResponseFactory.from(result);
   }
 }
+
+export const ServerResponseFactory = {
+  from(result: EndpointHandlerResult): ServerResponse {
+    if (result instanceof ServerResponse) {
+      return result;
+    }
+
+    if (isHttpContent(result)) {
+      return new ServerResponse({ status: HTTP_STATUS_CODES.ok, content: result });
+    }
+
+    if (result instanceof ProblemDetails) {
+      return new ServerResponse({
+        status: result.status,
+        content: ProblemDetailsContent.from(result),
+      });
+    }
+
+    if (result instanceof ProblemDetailsContent) {
+      const problems = result.readData();
+      return new ServerResponse({
+        status: problems.status,
+        content: result,
+      });
+    }
+
+    if (typeof result === "number") {
+      return new ServerResponse({ status: result });
+    }
+
+    if (typeof result === "string") {
+      return new ServerResponse({
+        status: HTTP_STATUS_CODES.ok,
+        content: PlainTextContent.from(result),
+      });
+    }
+
+    if (typeof result === "object" && isNotNull(result)) {
+      return new ServerResponse({
+        status: HTTP_STATUS_CODES.ok,
+        content: JsonContent.from(result),
+      });
+    }
+
+    return new ServerResponse({
+      status: HTTP_STATUS_CODES.ok,
+      content: JsonContent.from(result as any),
+    });
+
+    function isHttpContent(obj: unknown): obj is IHttpContent<unknown> {
+      return (
+        obj instanceof RawContent ||
+        obj instanceof PlainTextContent ||
+        obj instanceof HtmlContent ||
+        obj instanceof JsonContent
+      );
+    }
+  },
+} as const;

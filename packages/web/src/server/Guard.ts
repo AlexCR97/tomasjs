@@ -1,10 +1,9 @@
-import { HttpResponse } from "@/server";
+import { ServerResponse } from "@/server";
 import { IRequestContext, IResponseWriter } from "@/server";
 import { InvalidOperationError } from "@tomasjs/core/errors";
-import { HTTP_STATUS } from "@/HttpStatus";
 import { isFunction, isInRange, isNotNull } from "@tomasjs/core/system";
-import { ProblemDetails, ProblemDetailsContent } from "@/problems";
 import { MiddlewareFunction } from "./Middleware";
+import { HTTP_STATUS, ProblemDetails, ProblemDetailsContent } from "@tomasjs/core/http";
 
 export type GuardFunction = (context: GuardContext) => GuardResult | Promise<GuardResult>;
 
@@ -36,7 +35,7 @@ export function guard(guard: GuardFunction): MiddlewareFunction {
   ) {
     const problemDetails = buildProblemDetails(req, status);
     const content = ProblemDetailsContent.from(problemDetails);
-    const response = new HttpResponse({
+    const response = new ServerResponse({
       status: problemDetails.status,
       content,
       headers: {

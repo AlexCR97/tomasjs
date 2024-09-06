@@ -1,17 +1,19 @@
 import { IServiceProvider } from "@tomasjs/core/dependency-injection";
-import { Constructor, isConstructor, isFunction, isInRange, isNotNull } from "@tomasjs/core/system";
 import {
-  errorExtension,
+  HTTP_STATUS,
   IProblemDetails,
   IProblemDetailsBuilder,
-  problemDetails,
   ProblemDetailsExtensions,
+} from "@tomasjs/core/http";
+import { Constructor, isConstructor, isFunction, isInRange, isNotNull } from "@tomasjs/core/system";
+import {
+  IRequestContext,
   ProblemDetailsConfigureFunction as ServerProblemDetailsConfigureFunction,
   ProblemDetailsExtensionOption as ServerProblemDetailsExtensionOption,
-} from "@/problems";
-import { IRequestContext } from "@/server";
+  errorExtension,
+  problemDetails,
+} from "@/server";
 import { ErrorHandlerFunction, IErrorHandler, IErrorHandlerFactory } from "./ErrorHandler";
-import { HTTP_STATUS } from "@/HttpStatus";
 
 export type ProblemDetailsOptions = {
   configure?: ProblemDetailsConfigure;

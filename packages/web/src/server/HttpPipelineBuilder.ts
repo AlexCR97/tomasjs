@@ -1,5 +1,5 @@
 import { AuthenticationPolicyFunction, AuthorizationPolicyFunction } from "@/auth";
-import { HttpResponse } from "@/server";
+import { ServerResponse } from "@/server";
 import { InvalidOperationError } from "@tomasjs/core/errors";
 import { HTTP_STATUS_CODES, HttpMethod, PlainTextContent } from "@tomasjs/core/http";
 import { MiddlewareFunction } from "./Middleware";
@@ -39,7 +39,7 @@ export class HttpPipelineBuilder implements IHttpPipelineBuilder {
   private errorHandler: ErrorHandlerFunction | undefined;
 
   private readonly defaultErrorHandler: ErrorHandlerFunction = async ({ res }) => {
-    const response = new HttpResponse({
+    const response = new ServerResponse({
       status: HTTP_STATUS_CODES.internalServerError,
       content: PlainTextContent.from("An unexpected error occurred on the server"),
     });

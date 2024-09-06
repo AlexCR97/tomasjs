@@ -4,11 +4,11 @@ import {
   IHttpContent,
   JsonContent,
   PlainTextContent,
+  ProblemDetailsContent,
   RawContent,
 } from "@tomasjs/core/http";
 import { readToBuffer } from "@tomasjs/core/system/streams";
 import { IncomingMessage } from "node:http";
-import { ProblemDetailsContent } from "../problems/ProblemDetailsContent";
 
 export class ContentFactory {
   constructor(private readonly contentType: HttpContentType, private readonly data: Buffer) {}
