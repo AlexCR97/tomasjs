@@ -36,6 +36,8 @@ export class GitHubTemplateDownloader implements ProjectTemplateDownloader {
 
       const response = await new HttpClient().get(url);
 
+      response.throwIfError();
+
       const zipFileName = `${type}.zip`;
       const zipFileBuffer = response.body.data;
 
