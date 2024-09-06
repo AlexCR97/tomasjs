@@ -15,10 +15,6 @@
     "@tomasjs/core": "^2.7.0",
     "reflect-metadata": "^0.2.1"
   },
-  "peerDependencies": {
-    "@tomasjs/core": "^2.7.0",
-    "reflect-metadata": "^0.2.1"
-  },
   "devDependencies": {
     "@tsconfig/node18": "^18.2.4",
     "@types/jest": "^29.5.12",
