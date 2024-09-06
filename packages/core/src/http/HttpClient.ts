@@ -10,13 +10,8 @@ import {
 import { request as sendHttpsRequest } from "node:https";
 import { InvalidOperationError } from "@/errors";
 import { ILogger, NullLogger } from "@/logging";
-import {
-  HttpContentFactory,
-  HttpContentType,
-  IHttpContent,
-  isJsonContent,
-  JsonRecord,
-} from "./HttpContent";
+import { HttpContentType, IHttpContent, JsonRecord } from "./HttpContent";
+import { HttpContentFactory } from "./HttpContentFactory";
 import {
   HttpHeaders,
   HttpHeaderValue,
@@ -28,7 +23,6 @@ import { HttpMethod, isHttpMethod } from "./HttpMethod";
 import { HttpRequest, HttpRequestError, IHttpRequest } from "./HttpRequest";
 import { HttpResponse, IHttpResponse } from "./HttpResponse";
 import { readToBuffer } from "@/system/streams";
-import { JsonResponseError } from "./JsonResponseError";
 import { pipe } from "@/system";
 
 export type IHttpClient = IHttpClientMethods & IHttpClientMethodsJson;
@@ -455,12 +449,7 @@ export class HttpClient implements IHttpClient {
   ): Promise<TResponse>;
   async sendJson<TResponse extends JsonRecord, TRequest>(...args: any[]): Promise<TResponse> {
     const response = await getResponse(this, args);
-
-    if (isJsonContent<TResponse>(response.body)) {
-      return response.body.readData();
-    }
-
-    throw new JsonResponseError(response);
+    return response.body.readJson<TResponse>();
 
     async function getResponse<TResponse, TRequest>(
       thiz: HttpClient,

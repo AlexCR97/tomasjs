@@ -1,3 +1,5 @@
+import { ErrorOptions, TomasError } from "@/errors";
+
 export const HTTP_CONTENT_TYPES = [
   "application/EDI-X12",
   "application/EDIFACT",
@@ -66,6 +68,8 @@ export interface IHttpContent<T> {
   readonly type: HttpContentType;
   readonly data: Buffer;
   readData(): T;
+  readJson<TJson extends JsonRecord>(): TJson;
+  readText(): string;
   toString(): string;
 }
 
@@ -76,8 +80,21 @@ export class RawContent implements IHttpContent<Buffer> {
     return this.data;
   }
 
-  toString(): string {
+  readJson<TJson extends JsonRecord>(): TJson {
+    try {
+      const json = this.readText();
+      return JSON.parse(json);
+    } catch (err) {
+      throw new JsonContentError(this, { innerError: err });
+    }
+  }
+
+  readText(): string {
     return this.data.toString();
+  }
+
+  toString(): string {
+    return this.readText();
   }
 }
 
@@ -88,6 +105,19 @@ export class PlainTextContent implements IHttpContent<string> {
 
   readData(): string {
     return this.data.toString();
+  }
+
+  readJson<TJson extends JsonRecord>(): TJson {
+    try {
+      const json = this.readData();
+      return JSON.parse(json);
+    } catch (err) {
+      throw new JsonContentError(this, { innerError: err });
+    }
+  }
+
+  readText(): string {
+    return this.readData();
   }
 
   toString(): string {
@@ -107,6 +137,14 @@ export class HtmlContent implements IHttpContent<string> {
 
   readData(): string {
     return this.data.toString();
+  }
+
+  readJson<TJson extends JsonRecord>(): TJson {
+    throw new JsonContentError(this);
+  }
+
+  readText(): string {
+    return this.readData();
   }
 
   toString(): string {
@@ -129,6 +167,15 @@ export class JsonContent<T extends JsonRecord> implements IHttpContent<T> {
     return JSON.parse(json);
   }
 
+  readJson<TJson extends JsonRecord>(): TJson {
+    const json = this.data.toString();
+    return JSON.parse(json);
+  }
+
+  readText(): string {
+    return this.toString();
+  }
+
   toString(): string {
     const obj = this.readData();
     return JSON.stringify(obj, undefined, 2);
@@ -147,24 +194,12 @@ export function isJsonContent<T extends JsonRecord>(obj: unknown): obj is JsonCo
   return obj instanceof JsonContent;
 }
 
-export interface IHttpContentFactory {
-  from(contentType: HttpContentType, data: Buffer): IHttpContent<unknown>;
+export class JsonContentError<T> extends TomasError {
+  constructor(readonly content: IHttpContent<T>, options?: ErrorOptions) {
+    super(
+      "core/http/JsonContent",
+      `Content of type ${content.type} cannot be converted into JSON`,
+      options
+    );
+  }
 }
-
-export const HttpContentFactory: IHttpContentFactory = {
-  from(contentType: HttpContentType, data: Buffer): IHttpContent<unknown> {
-    if (contentType.includes("text/plain")) {
-      return new PlainTextContent(data);
-    }
-
-    if (contentType.includes("text/html")) {
-      return new HtmlContent(data);
-    }
-
-    if (contentType.includes("application/json")) {
-      return new JsonContent(data);
-    }
-
-    return new RawContent(contentType, data);
-  },
-} as const;

@@ -1,4 +1,4 @@
-import { AppBuilder, IEnvironment, IApp, environmentToken, IAppBuilder } from "@/app";
+import { AppBuilder, IEnvironment, IApp, IAppBuilder, ENVIRONMENT } from "@/app";
 import { CONFIGURATION, IConfiguration } from "@/configuration";
 import { IContainerBuilder, IServiceProvider } from "@/dependency-injection";
 import { InvalidOperationError, TomasError } from "@/errors";
@@ -27,7 +27,7 @@ export class ConsoleAppBuilder extends AppBuilder<ConsoleApp> implements IConsol
   protected override async buildApp(containerBuilder: IContainerBuilder): Promise<ConsoleApp> {
     const services = await containerBuilder.buildServiceProvider();
     const configuration = services.getOrThrow<IConfiguration>(CONFIGURATION);
-    const environment = services.getOrThrow<IEnvironment>(environmentToken);
+    const environment = services.getOrThrow<IEnvironment>(ENVIRONMENT);
     return new ConsoleApp(configuration, environment, services);
   }
 }

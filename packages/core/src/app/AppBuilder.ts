@@ -6,7 +6,7 @@ import {
   IServiceProvider,
 } from "@/dependency-injection";
 import { ILoggerSetup, LoggerSetup } from "@/logging";
-import { Environment, IEnvironment, environmentToken } from "./Environment";
+import { ENVIRONMENT, Environment, IEnvironment } from "./Environment";
 import { IMessagingSetup, MessagingSetup } from "@/messaging";
 
 export interface IAppBuilder<TApp extends IApp> {
@@ -45,7 +45,7 @@ export abstract class AppBuilder<TApp extends IApp> implements IAppBuilder<TApp>
     });
 
     this.containerBuilderDelegates.push((container) => {
-      container.add("singleton", environmentToken, env);
+      container.add("singleton", ENVIRONMENT, env);
     });
   }
 
