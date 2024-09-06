@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { inject } from "@tomasjs/core/dependency-injection";
 import {
   HtmlContent,
+  HTTP_STATUS,
   HTTP_STATUS_CODES,
   HttpClient,
   HttpContentType,
@@ -9,6 +10,10 @@ import {
   IHttpClient,
   JsonContent,
   PlainTextContent,
+  ProblemDetails,
+  ProblemDetailsBuilder,
+  ProblemDetailsContent,
+  ProblemDetailsExtensions,
 } from "@tomasjs/core/http";
 import { ILogger, LOGGER, LoggerConfiguration } from "@tomasjs/core/logging";
 import { testHttpServer } from "@/test";
@@ -59,13 +64,6 @@ import {
   ProblemDetailsExtensionsFactory,
   ProblemDetailsExtensionsFactoryContext,
 } from "./ProblemDetailsErrorHandler";
-import { HTTP_STATUS } from "@/HttpStatus";
-import {
-  ProblemDetails,
-  ProblemDetailsBuilder,
-  ProblemDetailsContent,
-  ProblemDetailsExtensions,
-} from "@/problems";
 import { TomasError } from "@tomasjs/core/errors";
 
 describe("app/WebApp", () => {

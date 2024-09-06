@@ -44,6 +44,18 @@ export {
   isMiddlewareFunction,
 } from "./Middleware";
 export { IMiddlewareAggregate, MiddlewareAggregate } from "./MiddlewareAggregate";
+export { errorExtension } from "./ProblemDetailsErrorExtension";
+export {
+  ProblemDetailsConfigureContext,
+  ProblemDetailsConfigureFunction,
+  ProblemDetailsConfigureResult,
+  ProblemDetailsExtensionOption,
+  ProblemDetailsExtensionsFactory,
+  ProblemDetailsExtensionsFactoryContext,
+  ProblemDetailsOptions,
+  isProblemDetailsExtensionsFactory,
+  problemDetails,
+} from "./ProblemDetailsErrorHandler";
 export {
   IQueryParams,
   PlainQueryParams,

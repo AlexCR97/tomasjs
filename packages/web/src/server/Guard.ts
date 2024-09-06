@@ -1,10 +1,9 @@
 import { ServerResponse } from "@/server";
 import { IRequestContext, IResponseWriter } from "@/server";
 import { InvalidOperationError } from "@tomasjs/core/errors";
-import { HTTP_STATUS } from "@/HttpStatus";
 import { isFunction, isInRange, isNotNull } from "@tomasjs/core/system";
-import { ProblemDetails, ProblemDetailsContent } from "@/problems";
 import { MiddlewareFunction } from "./Middleware";
+import { HTTP_STATUS, ProblemDetails, ProblemDetailsContent } from "@tomasjs/core/http";
 
 export type GuardFunction = (context: GuardContext) => GuardResult | Promise<GuardResult>;
 

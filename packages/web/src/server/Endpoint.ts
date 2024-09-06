@@ -6,6 +6,8 @@ import {
   JsonContent,
   PlainHttpHeaders,
   PlainTextContent,
+  ProblemDetails,
+  ProblemDetailsContent,
   RawContent,
 } from "@tomasjs/core/http";
 import { AuthenticationPolicyFunction, AuthorizationPolicyFunction, IUserReader } from "@/auth";
@@ -21,7 +23,6 @@ import { UrlParser } from "./UrlParser";
 import { IResponseWriter } from "./ResponseWriter";
 import { HttpPipeline } from "./HttpPipeline";
 import { isNotNull } from "@tomasjs/core/system";
-import { ProblemDetails, ProblemDetailsContent } from "@/problems";
 
 export type PlainEndpoint = {
   method: HttpMethod;

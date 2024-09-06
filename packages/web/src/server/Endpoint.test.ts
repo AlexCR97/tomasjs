@@ -6,6 +6,8 @@ import {
   IHttpClient,
   JsonContent,
   PlainTextContent,
+  ProblemDetailsBuilder,
+  ProblemDetailsContent,
 } from "@tomasjs/core/http";
 import { ServerResponse, IHttpServer } from "@/server";
 import { testHttpServer } from "@/test";
@@ -13,7 +15,6 @@ import { Endpoint } from "./Endpoint";
 import { MiddlewareFunction } from "./Middleware";
 import { InterceptorFunction } from "./Interceptor";
 import { GuardFunction } from "./Guard";
-import { ProblemDetailsBuilder, ProblemDetailsContent } from "@/problems";
 
 describe("server/Endpoint", () => {
   let server: IHttpServer;

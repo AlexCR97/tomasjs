@@ -1,14 +1,14 @@
-import { isFunction, isInRange, isNotNull } from "@tomasjs/core/system";
-import { HTTP_STATUS } from "@/HttpStatus";
-import { ErrorHandlerFunction, IRequestContext } from "@/server";
 import {
+  HTTP_STATUS,
   IProblemDetails,
   IProblemDetailsBuilder,
   ProblemDetails,
   ProblemDetailsBuilder,
+  ProblemDetailsContent,
   ProblemDetailsExtensions,
-} from "./ProblemDetails";
-import { ProblemDetailsContent } from "./ProblemDetailsContent";
+} from "@tomasjs/core/http";
+import { isFunction, isInRange, isNotNull } from "@tomasjs/core/system";
+import { ErrorHandlerFunction, IRequestContext } from "@/server";
 
 export type ProblemDetailsOptions = {
   configure?: ProblemDetailsConfigureFunction;
