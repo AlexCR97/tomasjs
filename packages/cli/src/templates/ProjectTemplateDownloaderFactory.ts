@@ -1,7 +1,6 @@
 import { inject } from "@tomasjs/core/dependency-injection";
 import { ProjectTemplateDownloader } from "./ProjectTemplateDownloader";
 import { CONFIGURATION, IConfiguration } from "@tomasjs/core/configuration";
-import { MegaTemplateDownloader } from "./MegaTemplateDownloader";
 import { TomasError } from "@tomasjs/core/errors";
 import { ILoggerBuilder, LOGGER_BUILDER } from "@tomasjs/core/logging";
 import { GitHubTemplateDownloader } from "./GitHubTemplateDownloader";
@@ -26,10 +25,6 @@ export class ProjectTemplateDownloaderFactory implements IProjectTemplateDownloa
       .sectionOrThrow("templateDownloader")
       .sectionOrThrow("use")
       .valueOrThrow<string>("string");
-
-    if (strategy === "mega") {
-      return new MegaTemplateDownloader(this.loggerBuilder, this.config);
-    }
 
     if (strategy === "github") {
       return new GitHubTemplateDownloader(this.loggerBuilder, this.config);

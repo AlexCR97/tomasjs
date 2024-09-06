@@ -28,7 +28,6 @@
     "@inquirer/prompts": "^5.0.5",
     "@tomasjs/core": "^2.7.0",
     "commander": "^12.1.0",
-    "megajs": "^1.2.2",
     "reflect-metadata": "^0.2.1",
     "yauzl": "^3.1.3"
   },
