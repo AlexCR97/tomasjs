@@ -1,6 +1,6 @@
 # Console App
 
-In this tutorial you'll create an app the logs cat facts to the terminal.
+In this tutorial you'll create an app that logs cat facts to the terminal.
 
 > You can achieve the same result with fewer code, but the intent is to display the framework's features.
 
