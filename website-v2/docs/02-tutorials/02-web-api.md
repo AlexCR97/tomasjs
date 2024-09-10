@@ -29,6 +29,23 @@ The following files will be created:
     tsconfig.json
 ```
 
+We'll start with the following template in the `src/app.ts` file:
+
+```ts
+import "reflect-metadata";
+import { RequestProfiler, WebAppBuilder } from "@tomasjs/web/app";
+
+new WebAppBuilder()
+  .setupContainer((container) => {
+    // Register services
+  })
+  .setupHttpPipeline((pipeline) => {
+    pipeline.use(RequestProfiler);
+  })
+  .build()
+  .then((app) => app.start());
+```
+
 ## The todo item
 
 First let's create a class that will represent an item in our todo list.

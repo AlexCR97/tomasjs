@@ -22,6 +22,7 @@ The following files will be created:
     /src
         app.ts
     .gitignore
+    appconfig.json
     jest.config.ts
     package.json
     pnpm-lock.yaml
@@ -30,12 +31,17 @@ The following files will be created:
     tsconfig.json
 ```
 
-## The app's configuration file
+## The app's configuration
 
-Create the file `appconfig.json` in the root of your project (alongside the `package.json` file)
+In your app's configuration file (`appconfig.json`), place the following content:
 
 ```json
 {
+  "logging": {
+    "default": {
+      "level": "info"
+    }
+  },
   "meowfacts": {
     "url": "https://meowfacts.herokuapp.com",
     "count": 3
@@ -52,15 +58,17 @@ In the `src/app.ts` file import the following modules:
 // src/app.ts
 
 import "reflect-metadata";
-import { configurationToken, IConfiguration } from "@tomasjs/core/configuration";
+import { CONFIGURATION, IConfiguration } from "@tomasjs/core/configuration";
 import { ConsoleAppBuilder } from "@tomasjs/core/console";
-import { Bus, requestHandler, RequestHandler } from "@tomasjs/core/cqrs";
-import { HttpClient } from "@tomasjs/core/http";
 import { inject } from "@tomasjs/core/dependency-injection";
+import { HttpClient } from "@tomasjs/core/http";
 import { ILogger, LOGGER } from "@tomasjs/core/logging";
+import { Message } from "@tomasjs/core/messaging";
+import { IProcessor } from "@tomasjs/core/messaging/Processor";
+import { ISender, SENDER } from "@tomasjs/core/messaging/Sender";
 ```
 
-## Creating the MeowFactsApi service
+## The MeowFactsApi service
 
 Create the `MeowFactsApi` service:
 
@@ -76,7 +84,7 @@ class MeowFactsApi {
   private readonly options: MeowFactsOptions;
   private readonly client = new HttpClient();
 
-  constructor(@inject(configurationToken) config: IConfiguration) {
+  constructor(@inject(CONFIGURATION) config: IConfiguration) {
     this.options = config.sectionOrThrow("meowfacts").valueOrThrow("object");
   }
 
@@ -91,7 +99,7 @@ class MeowFactsApi {
 }
 ```
 
-## Creating the CatEmojiPicker service
+## The CatEmojiPicker service
 
 Create the `CatEmojiPicker` service:
 
@@ -101,7 +109,7 @@ Create the `CatEmojiPicker` service:
 class CatEmojiPicker {
   private readonly emojis: string[];
 
-  constructor(@inject(configurationToken) config: IConfiguration) {
+  constructor(@inject(CONFIGURATION) config: IConfiguration) {
     this.emojis = config.sectionOrThrow("catEmojis").valueOrThrow<string[]>("object");
   }
 
@@ -114,26 +122,26 @@ class CatEmojiPicker {
 }
 ```
 
-## Creating the DisplayFactRequestHandler service
+## The DisplayFactRequestProcessor service
 
-Create the `DisplayFactRequestHandler` service:
+Create the `DisplayFactRequestProcessor` service:
 
 ```ts
 // src/app.ts
 
-class DisplayFactsRequest {
+class DisplayFactsRequest implements Message {
+  readonly type = DisplayFactsRequest.name;
   constructor(readonly facts: string[]) {}
 }
 
-@requestHandler(DisplayFactsRequest)
-class DisplayFactRequestHandler implements RequestHandler<DisplayFactsRequest, void> {
+class DisplayFactsProcessor implements IProcessor<DisplayFactsRequest> {
   constructor(
     @inject(CatEmojiPicker) private readonly emojiPicker: CatEmojiPicker,
     @inject(LOGGER) private readonly logger: ILogger
   ) {}
 
-  async handle(request: DisplayFactsRequest): Promise<void> {
-    for (const fact of request.facts) {
+  async process(message: DisplayFactsRequest): Promise<void> {
+    for (const fact of message.facts) {
       const emoji = this.emojiPicker.getRandomEmoji();
       this.logger.info(`${emoji} ${fact}`);
     }
@@ -143,27 +151,39 @@ class DisplayFactRequestHandler implements RequestHandler<DisplayFactsRequest, v
 
 ## Bootstrapping your application
 
-Bootstrap your app:
+Now lets build the console app:
 
 ```ts
 // src/app.ts
 
 new ConsoleAppBuilder()
   .setupConfiguration((config) => {
+    // Add the configuration settings from the appconfig.json file
     config.addJsonSource();
   })
-  .setupBus((bus) => {
-    bus.addRequestHandlers(DisplayFactRequestHandler);
+  .setupMessaging((messaging) => {
+    // Register the message type and the processor for that type
+    messaging.withProcessor(DisplayFactsRequest.name, DisplayFactsProcessor);
   })
   .setupContainer((container) => {
+    // Register our custom services
     container.add("singleton", MeowFactsApi);
     container.add("singleton", CatEmojiPicker);
   })
   .addEntryPoint(async ({ services }) => {
+    // This is where your application starts
+
+    // get an instance of the MeowFactsApi service
     const meowFactsApi = services.getOrThrow(MeowFactsApi);
-    const bus = services.getOrThrow(Bus);
+
+    // get an instance of the ISender messaging service
+    const sender = services.getOrThrow<ISender>(SENDER);
+
+    // get some random facts
     const facts = await meowFactsApi.getRandomFacts();
-    await bus.send(new DisplayFactsRequest(facts));
+
+    // send the DisplayFactsRequest
+    await sender.send(new DisplayFactsRequest(facts));
   })
   .build()
   .then((app) => app.start());
@@ -193,12 +213,14 @@ The complete program looks like this:
 // src/app.ts
 
 import "reflect-metadata";
-import { configurationToken, IConfiguration } from "@tomasjs/core/configuration";
+import { CONFIGURATION, IConfiguration } from "@tomasjs/core/configuration";
 import { ConsoleAppBuilder } from "@tomasjs/core/console";
-import { Bus, requestHandler, RequestHandler } from "@tomasjs/core/cqrs";
-import { HttpClient } from "@tomasjs/core/http";
 import { inject } from "@tomasjs/core/dependency-injection";
+import { HttpClient } from "@tomasjs/core/http";
 import { ILogger, LOGGER } from "@tomasjs/core/logging";
+import { Message } from "@tomasjs/core/messaging";
+import { IProcessor } from "@tomasjs/core/messaging/Processor";
+import { ISender, SENDER } from "@tomasjs/core/messaging/Sender";
 
 type MeowFactsOptions = {
   url: string;
@@ -209,7 +231,7 @@ class MeowFactsApi {
   private readonly options: MeowFactsOptions;
   private readonly client = new HttpClient();
 
-  constructor(@inject(configurationToken) config: IConfiguration) {
+  constructor(@inject(CONFIGURATION) config: IConfiguration) {
     this.options = config.sectionOrThrow("meowfacts").valueOrThrow("object");
   }
 
@@ -226,7 +248,7 @@ class MeowFactsApi {
 class CatEmojiPicker {
   private readonly emojis: string[];
 
-  constructor(@inject(configurationToken) config: IConfiguration) {
+  constructor(@inject(CONFIGURATION) config: IConfiguration) {
     this.emojis = config.sectionOrThrow("catEmojis").valueOrThrow<string[]>("object");
   }
 
@@ -238,19 +260,19 @@ class CatEmojiPicker {
   }
 }
 
-class DisplayFactsRequest {
+class DisplayFactsRequest implements Message {
+  readonly type = DisplayFactsRequest.name;
   constructor(readonly facts: string[]) {}
 }
 
-@requestHandler(DisplayFactsRequest)
-class DisplayFactRequestHandler implements RequestHandler<DisplayFactsRequest, void> {
+class DisplayFactsProcessor implements IProcessor<DisplayFactsRequest> {
   constructor(
     @inject(CatEmojiPicker) private readonly emojiPicker: CatEmojiPicker,
     @inject(LOGGER) private readonly logger: ILogger
   ) {}
 
-  async handle(request: DisplayFactsRequest): Promise<void> {
-    for (const fact of request.facts) {
+  async process(message: DisplayFactsRequest): Promise<void> {
+    for (const fact of message.facts) {
       const emoji = this.emojiPicker.getRandomEmoji();
       this.logger.info(`${emoji} ${fact}`);
     }
@@ -259,20 +281,32 @@ class DisplayFactRequestHandler implements RequestHandler<DisplayFactsRequest, v
 
 new ConsoleAppBuilder()
   .setupConfiguration((config) => {
+    // Add the configuration settings from the appconfig.json file
     config.addJsonSource();
   })
-  .setupBus((bus) => {
-    bus.addRequestHandlers(DisplayFactRequestHandler);
+  .setupMessaging((messaging) => {
+    // Register the message type and the processor for that type
+    messaging.withProcessor(DisplayFactsRequest.name, DisplayFactsProcessor);
   })
   .setupContainer((container) => {
+    // Register our custom services
     container.add("singleton", MeowFactsApi);
     container.add("singleton", CatEmojiPicker);
   })
   .addEntryPoint(async ({ services }) => {
+    // This is where your application starts
+
+    // get an instance of the MeowFactsApi service
     const meowFactsApi = services.getOrThrow(MeowFactsApi);
-    const bus = services.getOrThrow(Bus);
+
+    // get an instance of the ISender messaging service
+    const sender = services.getOrThrow<ISender>(SENDER);
+
+    // get some random facts
     const facts = await meowFactsApi.getRandomFacts();
-    await bus.send(new DisplayFactsRequest(facts));
+
+    // send the DisplayFactsRequest
+    await sender.send(new DisplayFactsRequest(facts));
   })
   .build()
   .then((app) => app.start());
