@@ -1,31 +1,53 @@
 /**
- * Starts a transformation pipeline.
- * @param input The initial input of the pipe
- * @returns A pipe which can then be used to chain transformations.
+ * Creates a new pipeline for transforming data.
+ *
+ * This function initializes a new transformation pipeline with an optional input value.
+ *
+ * @template TInput The type of the input value.
+ * @param {TInput} [input] - The initial input value for the pipeline.
+ * @returns {IPipe<TInput>} A new `IPipe` instance that allows chaining transformations.
+ *
+ * @example
+ * const result = pipe(5)
+ *   .pipe(x => x * 2)
+ *   .pipe(x => x + 3)
+ *   .get();
+ * // result is 13
  */
 export function pipe<TInput>(input?: TInput): IPipe<TInput> {
   const pipeline = new TransformationPipeline(input);
   return new Pipe(pipeline);
 }
 
+/**
+ * Represents a transformation function that takes an input of type {@link TInput} and returns an output of type {@link TOutput}.
+ *
+ * @template TInput The type of the input value.
+ * @template TOutput The type of the output value.
+ * @param {TInput} input - The input value.
+ * @returns {TOutput} The transformed output value.
+ */
 export type Transform<TInput, TOutput> = (input: TInput) => TOutput;
 
 /**
- * Represents a transformation pipeline.
- * @template TInput - The input type of the pipeline.
+ * A pipeline that allows chaining of transformations.
+ *
+ * @template TInput The type of the initial input value.
  */
-interface IPipe<TInput> {
+export interface IPipe<TInput> {
   /**
-   * Applies a transformation to the current input value and returns a new pipe with the transformed value.
-   * @template TOutput - The output type of the transformation.
-   * @param {(input: TInput) => TOutput} transform - The transformation to apply.
-   * @returns {Pipe<TOutput>} A new pipe with the transformed value.
+   * Adds a transformation to the pipeline and returns a new {@link IPipe} instance for further chaining.
+   *
+   * @template TOutput The type of the output value from the transformation.
+   * @param transform The transformation function to add.
+   * @returns A new {@link IPipe} instance with the added transformation.
    */
   pipe<TOutput>(transform: (input: TInput) => TOutput): IPipe<TOutput>;
 
   /**
-   * Returns the current value of the pipe.
-   * @returns {TInput} The current value.
+   * Retrieves the final result after applying all transformations.
+   *
+   * @returns {TInput} The final result after all transformations.
    */
   get(): TInput;
 }

@@ -9,5 +9,5 @@ export { isFunction } from "./isFunction";
 export { isInRange } from "./isInRange";
 export { isNotNull } from "./isNotNull";
 export { merge } from "./merge";
-export { pipe } from "./pipe";
+export { IPipe, Transform, pipe } from "./pipe";
 export { timeout } from "./timeout";
