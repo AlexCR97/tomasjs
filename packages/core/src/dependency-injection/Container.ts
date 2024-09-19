@@ -1,4 +1,4 @@
-import { isConstructor } from "@/system";
+import { Constructor, isConstructor } from "@/system";
 import { Scope, isScope } from "./Scope";
 import {
   ConstructorServiceDescriptor,
@@ -8,7 +8,14 @@ import {
 } from "./ServiceDescriptor";
 import { ServiceFactory, isServiceFactory } from "./ServiceFactory";
 import { IServiceProvider, ServiceProvider } from "./ServiceProvider";
-import { ConstructorToken, Token, ValueToken, isConstructorToken, isValueToken } from "./Token";
+import {
+  ConstructorToken,
+  ServiceFactoryToken,
+  Token,
+  ValueToken,
+  isConstructorToken,
+  isValueToken,
+} from "./Token";
 import {
   ContainerSetup,
   ContainerSetupFunction,
@@ -17,17 +24,116 @@ import {
 import { InvalidOperationError } from "@/errors";
 import { ContainerBuilderDelegate } from "./ContainerBuilderDelegate";
 
+/**
+ * A dependency injection container that manages service registration.
+ */
 export interface IContainer {
+  /** Gets the number of registered services. */
   get count(): number;
+
+  /**
+   * Registers a service identified by a {@link ConstructorToken}.
+   * The provided {@link constructor} is then used to resolve the service.
+   *
+   * @template T The type of the service.
+   * @param scope - The lifetime {@link Scope} of the service.
+   * @param constructor - The {@link Constructor} that identifies the service and that is then used to resolve the service.
+   * @returns The current container instance for chaining.
+   */
   add<T>(scope: Scope, constructor: ConstructorToken<T>): IContainer;
+
+  /**
+   * Registers a service identified by a {@link ServiceFactoryToken}.
+   * The provided {@link factory} is then used to resolve the service.
+   *
+   * @template T The type of the service.
+   * @param scope - The lifetime {@link Scope} of the service.
+   * @param factory - The {@link ServiceFactory} that identifies the service and that is then used to resolve the service.
+   * @returns The current container instance for chaining.
+   */
   add<T>(scope: Scope, factory: ServiceFactory<T>): IContainer;
+
+  /**
+   * Registers a service identified by a {@link ValueToken}.
+   * The provided {@link constructor} is then used to resolve the service.
+   *
+   * @template T The type of the service.
+   * @param scope - The lifetime {@link Scope} of the service.
+   * @param token - The {@link ValueToken} that identifies the service.
+   * @param constructor - The {@link Constructor} used to resolve the service.
+   * @returns The current container instance for chaining.
+   */
   add<T>(scope: Scope, token: ValueToken, constructor: ConstructorToken<T>): IContainer;
+
+  /**
+   * Registers a service identified by a {@link ValueToken}.
+   * The provided {@link factory} is then used to resolve the service.
+   *
+   * @template T The type of the service.
+   * @param scope - The lifetime {@link Scope} of the service.
+   * @param token - The {@link ValueToken} that identifies the service.
+   * @param factory - The {@link ServiceFactory} used to resolve the service.
+   * @returns The current container instance for chaining.
+   */
   add<T>(scope: Scope, token: ValueToken, factory: ServiceFactory<T>): IContainer;
+
+  /**
+   * Registers a service identified by a {@link ValueToken}.
+   * The provided {@link value} is then used to resolve the service. Since it's a static value,
+   * the service resolution consists of simply returning the registered value without
+   * any extra computations.
+   *
+   * @template T The type of the service.
+   * @param scope - The lifetime {@link Scope} of the service.
+   * @param token - The {@link ValueToken} that identifies the service.
+   * @param value - The static value to register as the service.
+   * @returns The current container instance for chaining.
+   */
   add<T>(scope: Scope, token: ValueToken, value: T): IContainer;
+
+  /**
+   * This method is an alias to the {@link add} method with the {@link Scope}, {@link ValueToken} and {@link T} overload.
+   *
+   * Registers a service identified by a {@link ValueToken}.
+   * The provided {@link value} is then used to resolve the service. Since it's a static value,
+   * the service resolution consists of simply returning the registered value without
+   * any extra computations.
+   *
+   * @template T The type of the service.
+   * @param scope - The lifetime {@link Scope} of the service.
+   * @param token - The {@link ValueToken} that identifies the service.
+   * @param value - The static value to register as the service.
+   * @returns The current container instance for chaining.
+   */
   addValue<T>(scope: Scope, token: ValueToken, value: T): IContainer;
+
+  /** Removes all registered services from the container. */
   clear(): void;
+
+  /**
+   * Checks if a service with the given token is registered in the container.
+   *
+   * @template T The type of the service.
+   * @param token - The token identifying the service.
+   * @returns `true` if the service is registered, otherwise `false`.
+   */
   contains<T>(token: Token<T>): boolean;
+
+  /**
+   * Removes a service with the given token from the container.
+   *
+   * @template T The type of the service.
+   * @param token - The token identifying the service.
+   * @returns `true` if the service was successfully removed, otherwise `false`.
+   */
   remove<T>(token: Token<T>): boolean;
+
+  /**
+   * Takes the registered services and builds them into {@link ServiceDescriptor}s, which are
+   * then passed to an {@link IServiceProvider} to manage service resolution and retrieval.
+   *
+   * @returns The service provider.
+   */
   build(): IServiceProvider;
 }
 
@@ -151,17 +257,125 @@ export class Container implements IContainer {
   }
 }
 
+/**
+ * A builder for constructing an {@link IContainer}.
+ *
+ * It builds upon the {@link IContainer} interface and provides a fluent API
+ * for chaining, with additional methods for custom setups and delegation.
+ */
 export interface IContainerBuilder {
+  /**
+   * Registers a service identified by a {@link ConstructorToken}.
+   * The provided {@link constructor} is then used to resolve the service.
+   *
+   * @template T The type of the service.
+   * @param scope - The lifetime {@link Scope} of the service.
+   * @param constructor - The {@link Constructor} that identifies the service and that is then used to resolve the service.
+   * @returns The current builder instance for chaining.
+   */
   add<T>(scope: Scope, constructor: ConstructorToken<T>): IContainerBuilder;
+
+  /**
+   * Registers a service identified by a {@link ServiceFactoryToken}.
+   * The provided {@link factory} is then used to resolve the service.
+   *
+   * @template T The type of the service.
+   * @param scope - The lifetime {@link Scope} of the service.
+   * @param factory - The {@link ServiceFactory} that identifies the service and that is then used to resolve the service.
+   * @returns The current builder instance for chaining.
+   */
   add<T>(scope: Scope, factory: ServiceFactory<T>): IContainerBuilder;
+
+  /**
+   * Registers a service identified by a {@link ValueToken}.
+   * The provided {@link constructor} is then used to resolve the service.
+   *
+   * @template T The type of the service.
+   * @param scope - The lifetime {@link Scope} of the service.
+   * @param token - The {@link ValueToken} that identifies the service.
+   * @param constructor - The {@link Constructor} used to resolve the service.
+   * @returns The current builder instance for chaining.
+   */
   add<T>(scope: Scope, token: ValueToken, constructor: ConstructorToken<T>): IContainerBuilder;
+
+  /**
+   * Registers a service identified by a {@link ValueToken}.
+   * The provided {@link factory} is then used to resolve the service.
+   *
+   * @template T The type of the service.
+   * @param scope - The lifetime {@link Scope} of the service.
+   * @param token - The {@link ValueToken} that identifies the service.
+   * @param factory - The {@link ServiceFactory} used to resolve the service.
+   * @returns The current builder instance for chaining.
+   */
   add<T>(scope: Scope, token: ValueToken, factory: ServiceFactory<T>): IContainerBuilder;
+
+  /**
+   * Registers a service identified by a {@link ValueToken}.
+   * The provided {@link value} is then used to resolve the service. Since it's a static value,
+   * the service resolution consists of simply returning the registered value without
+   * any extra computations.
+   *
+   * @template T The type of the service.
+   * @param scope - The lifetime {@link Scope} of the service.
+   * @param token - The {@link ValueToken} that identifies the service.
+   * @param value - The static value to register as the service.
+   * @returns The current builder instance for chaining.
+   */
   add<T>(scope: Scope, token: ValueToken, value: T): IContainerBuilder;
+
+  /**
+   * This method is an alias to the {@link add} method with the {@link Scope}, {@link ValueToken} and {@link T} overload.
+   *
+   * Registers a service identified by a {@link ValueToken}.
+   * The provided {@link value} is then used to resolve the service. Since it's a static value,
+   * the service resolution consists of simply returning the registered value without
+   * any extra computations.
+   *
+   * @template T The type of the service.
+   * @param scope - The lifetime {@link Scope} of the service.
+   * @param token - The {@link ValueToken} that identifies the service.
+   * @param value - The static value to register as the service.
+   * @returns The current container instance for chaining.
+   */
   addValue<T>(scope: Scope, token: ValueToken, value: T): IContainerBuilder;
+
+  /**
+   * Configures the container by using the provided setup function.
+   *
+   * @param setup - A function that performs setup operations on the container.
+   * @returns The current builder instance for chaining.
+   */
   setup(setup: ContainerSetupFunction): IContainerBuilder;
+
+  /**
+   * Configures the container by using the provided asynchronous setup function.
+   *
+   * @param setup - A function that performs asynchronous setup operations on the container.
+   * @returns The current builder instance for chaining.
+   */
   setup(setup: ContainerSetupFunctionAsync): IContainerBuilder;
+
+  /**
+   * Configures the builder by using the provided delegate function.
+   *
+   * @param delegate - A function used to configure the current builder.
+   * @returns The current builder instance for chaining.
+   */
   delegate(delegate: ContainerBuilderDelegate): IContainerBuilder;
+
+  /**
+   * Creates an {@link IContainer} by applying all the setups as specified by the builder.
+   *
+   * @returns A promise that resolves with the built container.
+   */
   buildContainer(): Promise<IContainer>;
+
+  /**
+   * Creates an {@link IServiceProvider} by applying all the setups to an {@link IContainer} as specified by the builder.
+   *
+   * @returns A promise that resolves with the built service provider.
+   */
   buildServiceProvider(): Promise<IServiceProvider>;
 }
 

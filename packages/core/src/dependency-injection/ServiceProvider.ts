@@ -9,18 +9,74 @@ import { Scope } from "./Scope";
 import { InjectDecoratorMetadata } from "./@inject";
 import { InvalidOperationError, TomasError } from "@/errors";
 
+/**
+ * An {@link IServiceProvider} tracks the services registered in a DI container and
+ * exposes an API to manage service resolution and retrieval based on service descriptors.
+ */
 export interface IServiceProvider {
+  /**
+   * Gets the number of registered services.
+   */
   get count(): number;
+
+  /**
+   * Finds all instances of a service identified by the given token.
+   *
+   * @template T The type of the service.
+   * @param token - The token identifying the service.
+   * @returns An array of service instances.
+   */
   find<T>(token: Token<T>): readonly T[];
+
+  /**
+   * Retrieves a single instance of a service identified by the given token.
+   *
+   * @template T The type of the service.
+   * @param token - The token identifying the service.
+   * @returns The service instance or `undefined` if not found.
+   */
   get<T>(token: Token<T>): T | undefined;
+
+  /**
+   * Retrieves a single instance of a service, throwing an error if not found.
+   *
+   * @template T The type of the service.
+   * @param token - The token identifying the service.
+   * @returns The service instance.
+   * @throws {ServiceNotFoundError} If no service is found with the token.
+   */
   getOrThrow<T>(token: Token<T>): T;
+
+  /**
+   * Retrieves the last registered instance of a service identified by the given token.
+   *
+   * @template T The type of the service.
+   * @param token - The token identifying the service.
+   * @returns The last service instance or `undefined` if not found.
+   */
   last<T>(token: Token<T>): T | undefined;
+
+  /**
+   * Retrieves the last registered instance of a service, throwing an error if not found.
+   *
+   * @template T The type of the service.
+   * @param token - The token identifying the service.
+   * @returns The last service instance.
+   * @throws {ServiceNotFoundError} If no service is found with the token.
+   */
   lastOrThrow<T>(token: Token<T>): T;
 }
 
+/**
+ * A {@link ServiceProvider} tracks the services registered in a DI container and
+ * exposes an API to manage service resolution and retrieval based on service descriptors.
+ */
 export class ServiceProvider implements IServiceProvider {
   private readonly resolvedServices = new Map<Token<any>, any>();
 
+  /**
+   * @param serviceDescriptors - The list of service descriptors tracked by the provider.
+   */
   constructor(private readonly serviceDescriptors: readonly ServiceDescriptor<any, any>[]) {}
 
   get count(): number {
@@ -149,7 +205,15 @@ export class ServiceProvider implements IServiceProvider {
   }
 }
 
+/**
+ * Thrown when a requested service is not found in the service provider.
+ *
+ * @template T The type of the service.
+ */
 export class ServiceNotFoundError<T> extends TomasError {
+  /**
+   * @param token - The token identifying the missing service.
+   */
   constructor(token: Token<T>) {
     super("core/di/ServiceNotFound", `No such service found with token ${token}`, {
       data: { token },
