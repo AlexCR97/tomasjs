@@ -5,5 +5,9 @@
     "titleBar.activeBackground": "#3b3b3b",
     "titleBar.activeForeground": "#cfcfcf"
   },
-  "cmake.configureOnOpen": false
+  "cmake.configureOnOpen": false,
+  "deno.enable": true,
+  "deno.enablePaths": [
+    "./src/core"
+  ]
 }
