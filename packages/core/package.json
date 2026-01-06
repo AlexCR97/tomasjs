@@ -17,7 +17,8 @@
     "test": "jest",
     "publish": "cd ./dist && npm publish --access public",
     "pack": "cd ./dist && npm pack",
-    "link": "cd ./dist && npm link"
+    "link": "cd ./dist && npm link",
+    "typedoc": "typedoc --options ./typedoc.json"
   },
   "dependencies": {
     "reflect-metadata": "^0.2.1"

@@ -1,0 +1,33 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["./src"],
+  "entryPointStrategy": "expand",
+  "exclude": ["**/*.test.ts", "**/*_test.ts", "**/index.ts"],
+  "excludeNotDocumented": true,
+  "excludeInternal": true,
+  "excludeExternals": true,
+  "excludePrivate": true,
+  "excludeProtected": true,
+  "excludeReferences": true,
+  "includeVersion": true,
+  // "navigation": {
+  //   "compactFolders": true,
+  //   "includeCategories": true,
+  //   "includeFolders": true,
+  //   "includeGroups": true
+  // },
+  "readme": "./readme.md",
+  "requiredToBeDocumented": [
+    "Enum",
+    "EnumMember",
+    "Variable",
+    "Function",
+    "Class",
+    "Interface",
+    "Property",
+    "Method",
+    "Accessor",
+    "TypeAlias"
+  ],
+  "visibilityFilters": {}
+}
